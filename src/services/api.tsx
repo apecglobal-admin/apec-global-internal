@@ -5,9 +5,9 @@ export const loginWeb = createAsyncThunk(
   'user/loginWeb', 
   async (payload: any, thunkAPI) => {
     try {
-      const { username, password }: any = payload; 
+      const { email, password }: any = payload; 
       const response = await apiAxiosInstance.post(`/auth/login`,{      
-        username,
+        email,
         password,
       });
       return response.data;
