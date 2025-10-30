@@ -92,9 +92,9 @@ export default function ProgramSection() {
                   <div>
                     <div className="flex items-center gap-2 text-sm font-semibold text-white">
                       {item.name}
-                      {"badge" in item && <span className="text-lg leading-none">{item.badge}</span>}
+                      {"badge" in item && <span className="text-lg leading-none">{item.badge as any}</span>}
                     </div>
-                    {"dept" in item && <div className="text-xs uppercase tracking-widest text-amber-200">{item.dept}</div>}
+                    {"dept" in item && <div className="text-xs uppercase tracking-widest text-amber-200">{item.dept as any}</div>}
                   </div>
                 </div>
                 <div className="text-right">
