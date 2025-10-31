@@ -136,7 +136,7 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <div className="mt-6 text-center">
+          {/* <div className="mt-6 text-center">
             <p className="text-sm text-slate-400">
               Chưa có tài khoản?{" "}
               <a
@@ -146,7 +146,7 @@ export default function LoginPage() {
                 Đăng ký ngay
               </a>
             </p>
-          </div>
+          </div> */}
 
           {/* <div className="mt-6 flex items-center gap-3">
             <div className="h-px flex-1 bg-slate-800"></div>
