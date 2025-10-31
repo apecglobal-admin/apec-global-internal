@@ -169,7 +169,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-slate-950 p-3 sm:p-6 lg:p-8">
-      <Header />
+      {/* <Header /> */}
       <style>{`
         @keyframes shimmer {
           0% {
@@ -605,7 +605,7 @@ export default function ProfilePage() {
                               ← Quay lại
                             </button>
                           </div>
-                          <div className="space-y-3 sm:space-y-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                             {mockData.projects.map((project, index) => (
                               <div
                                 key={index}
