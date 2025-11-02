@@ -1,5 +1,7 @@
 "use client";
 
+import { logout } from "@/src/features/user/userSlice";
+import { fetchUserInfo } from "@/src/services/api";
 import {
   Bell,
   ChevronDown,
@@ -13,13 +15,23 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function Header() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const { userInfo } = useSelector((state: any) => state.user);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("userToken");
+    if (token) {
+      dispatch(fetchUserInfo(token) as any);
+    }
+  }, [dispatch]);
+
+  console.log("User Info in Header:", userInfo);
 
   useEffect(() => {
     function handleClickOutside(event: any) {
@@ -31,6 +43,13 @@ export default function Header() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("userToken");
+    dispatch(logout());
+    setIsDropdownOpen(false);
+    router.push("/login");
+  };
 
   return (
     <header className="border-b border-slate-800 bg-slate-950">
@@ -120,7 +139,7 @@ export default function Header() {
                   <div className="p-2">
                     {userInfo ? (
                       <>
-                        <button className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-slate-300 transition hover:bg-slate-800 hover:text-white cursor-pointer">
+                        <button className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-slate-300 transition hover:bg-slate-800 hover:text-white cursor-pointer" onClick={() => router.push('/profile')}>
                           <User size={18} />
                           <span>Thông tin cá nhân</span>
                         </button>
@@ -129,13 +148,16 @@ export default function Header() {
                           <span>Cài đặt</span>
                         </button>
                         <div className="my-2 border-t border-slate-800"></div>
-                        <button className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-red-400 transition hover:bg-slate-800 hover:text-red-300 cursor-pointer">
+                        <button className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-red-400 transition hover:bg-slate-800 hover:text-red-300 cursor-pointer" onClick={handleLogout}>
                           <LogOut size={18} />
                           <span>Đăng xuất</span>
                         </button>
                       </>
                     ) : (
-                      <button className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm font-medium text-white transition hover:bg-blue-600 cursor-pointer" onClick={() => router.push("/login")}>
+                      <button
+                        className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm font-medium text-white transition hover:bg-blue-600 cursor-pointer"
+                        onClick={() => router.push("/login")}
+                      >
                         <LogIn size={18} />
                         <span>Đăng nhập</span>
                       </button>
