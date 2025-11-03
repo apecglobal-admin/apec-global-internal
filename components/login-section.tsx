@@ -45,7 +45,7 @@ export default function LoginSection() {
             className="w-full rounded-2xl border border-blue-600 bg-slate-900 px-4 py-3 text-sm text-white placeholder:text-blue-200 focus:border-blue-500 focus:outline-none"
           />
         )}
-        <button className="w-full rounded-2xl bg-blue-600 py-3 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-blue-500">
+        <button className="w-full rounded-2xl bg-active-blue-metallic py-3 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-blue-500">
           Đăng nhập
         </button>
       </div>
