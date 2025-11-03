@@ -18,15 +18,18 @@ export const loginWeb = createAsyncThunk(
 );
 
 export const fetchUserInfo = createAsyncThunk(
-  'user/fetchUserInfo', 
-  async (token: any, thunkAPI) => {
+  'user/fetchUserInfo',
+  async (token: string, thunkAPI) => {
     try {
-      const response = await apiAxiosInstance.post(`/auth/user`,{      
-        token
+      const response = await apiAxiosInstance.get('/employees/profile', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
-      return response.data;
+      return response.data.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
   }
 );
+
