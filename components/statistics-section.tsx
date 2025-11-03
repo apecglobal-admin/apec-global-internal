@@ -30,10 +30,10 @@ export default function StatisticsSection() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2 sm:flex-nowrap">
-          <button className="rounded-full border border-slate-800 bg-slate-900/70 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-slate-200 transition hover:border-blue-500 hover:text-white">
+          <button className="rounded-full border border-slate-800 bg-slate-900/70 px-4 py-2 text-xs font-semibold uppercase text-slate-200 transition hover:border-blue-500 hover:text-white">
             Xuất Excel
           </button>
-          <button className="rounded-full border border-slate-800 bg-slate-900/70 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-slate-200 transition hover:border-blue-500 hover:text-white">
+          <button className="rounded-full border border-slate-800 bg-slate-900/70 px-4 py-2 text-xs font-semibold uppercase text-slate-200 transition hover:border-blue-500 hover:text-white">
             Xuất PDF
           </button>
         </div>

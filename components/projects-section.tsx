@@ -9,6 +9,7 @@ const clusters = [
     progress: 60,
     members: ["Ban Đầu tư", "Apec Capital", "Khối Pháp chế"],
     reportLink: "#",
+    profileLink: "#",
     reportLabel: "PowerBI",
     assets: ["Hồ sơ dự án", "Pitch deck", "Video overview"],
   },
@@ -20,6 +21,7 @@ const clusters = [
     progress: 78,
     members: ["Khối Công nghệ", "Sản phẩm", "Marketing"],
     reportLink: "#",
+    profileLink: "#",
     reportLabel: "PowerBI",
     assets: ["Roadmap phát triển", "Tài liệu API", "Demo sản phẩm"],
   },
@@ -31,6 +33,7 @@ const clusters = [
     progress: 42,
     members: ["GuardCam Team", "Khối An ninh", "Đối tác kỹ thuật"],
     reportLink: "#",
+    profileLink: "#",
     reportLabel: "Google Sheet",
     assets: ["Catalogue thiết bị", "Video demo", "Checklist triển khai"],
   },
@@ -42,6 +45,7 @@ const clusters = [
     progress: 55,
     members: ["LifeCare HQ", "Khối Vận hành", "Đối tác y tế"],
     reportLink: "#",
+    profileLink: "#",
     reportLabel: "PowerBI",
     assets: ["Quy trình dịch vụ", "Brochure đối tác", "Video trải nghiệm"],
   },
@@ -53,6 +57,7 @@ const clusters = [
     progress: 25,
     members: ["Ecoop Team", "Chuỗi cung ứng", "Khối Pháp chế"],
     reportLink: "#",
+    profileLink: "#",
     reportLabel: "Google Sheet",
     assets: ["SOP vận hành", "Tài liệu hợp tác", "Video giới thiệu"],
   },
@@ -104,10 +109,16 @@ export default function ProjectsSection() {
                   </div>
                   <a
                     href={item.reportLink}
-                    className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 text-blue-300 hover:border-blue-500 hover:text-white"
+                    className="flex items-center justify-between rounded-xl border border-yellow-400/40 bg-slate-900/60 px-3 py-2 text-blue-300 hover:border-blue-500 hover:text-white"
                   >
                     Báo cáo tiến độ tuần/tháng
                     <span className="text-xs uppercase tracking-widest">{item.reportLabel}</span>
+                  </a>
+                  <a
+                    href={item.profileLink}
+                    className="flex items-center justify-between rounded-xl border border-yellow-400/40 bg-slate-900/60 px-3 py-2 text-blue-300 hover:border-blue-500 hover:text-white"
+                  >
+                    Hồ sơ năng lực
                   </a>
                 </div>
               </div>
