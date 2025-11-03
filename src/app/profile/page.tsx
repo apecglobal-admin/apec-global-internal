@@ -60,14 +60,14 @@ export default function ProfilePage() {
   };
 
   // Transform API data to chart format
-  const skillsData = userInfo?.skills?.map(skill => ({
+  const skillsData = userInfo?.skills?.map((skill: any) => ({
     skill: skill.name,
     value: parseFloat(skill.value),
     fullMark: 100
   })) || [];
 
   // Project statistics from API
-  const projectStats = userInfo?.projects?.project_status?.map(status => {
+  const projectStats = userInfo?.projects?.project_status?.map((status: any) => {
     let label = "";
     switch(status.id) {
       case 2: label = "Đang thực hiện"; break;
@@ -127,19 +127,19 @@ export default function ProfilePage() {
   // Calculate level progress
   const currentExp = parseFloat(userInfo?.exp || 0);
   const currentLevel = userInfo?.level || 1;
-  const expForNextLevel = currentLevel * 1000; // Example: 1000 XP per level
+  const expForNextLevel = currentLevel * userInfo?.next_exp; // Example: 1000 XP per level
   const expProgress = (currentExp / expForNextLevel) * 100;
   const expRemaining = expForNextLevel - currentExp;
 
   // Format date
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: any) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
     return date.toLocaleDateString("vi-VN");
   };
 
   // Get position name (you can map position_id to actual names)
-  const getPositionName = (positionId) => {
+  const getPositionName = (positionId: any) => {
     const positions = {
       5: "Senior Developer",
       // Add more position mappings
@@ -147,7 +147,7 @@ export default function ProfilePage() {
     return positions[positionId] || "Nhân viên";
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status : any) => {
     switch (status) {
       case "completed":
         return (
@@ -176,7 +176,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 p-3 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-slate-950 p-0">
       <style>{`
         @keyframes shimmer {
           0% { transform: translateX(-100%); }
@@ -187,8 +187,8 @@ export default function ProfilePage() {
         }
       `}</style>
 
-      <div className="mt-5 mx-auto max-w-7xl mb-5">
-        <div className="mb-4 sm:mb-6 rounded-xl sm:rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-6 lg:p-8">
+      <div className="mt-0 mx-0 max-w-none mb-0">
+        <div className="mb-0 rounded-none border-x-0 border-t-0 border border-slate-800 bg-slate-900 p-4 sm:p-6 lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row">
             {/* Left Side: Avatar & Info */}
             <div className="flex flex-row lg:flex-col items-start lg:items-start lg:w-1/4 rounded-xl border-2 border-slate-800 bg-slate-950/50 p-4 sm:p-5 gap-4">
@@ -450,7 +450,7 @@ export default function ProfilePage() {
                         </ResponsiveContainer>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                          {skillsData.map((skill, index) => (
+                          {skillsData.map((skill: any, index: any) => (
                             <div
                               key={index}
                               className="flex items-center gap-2 sm:gap-3 p-2 rounded-lg bg-slate-950/50"
@@ -615,7 +615,7 @@ export default function ProfilePage() {
                                   </ResponsiveContainer>
                                 </div>
                                 <div className="mt-4 sm:mt-6 grid grid-cols-3 gap-2 sm:gap-3">
-                                  {projectStats.map((stat, index) => (
+                                  {projectStats.map((stat: any, index: any) => (
                                     <div key={index} className="text-center p-3 sm:p-4 rounded-lg bg-slate-950 border border-slate-800">
                                       <div className={`h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full mx-auto mb-2 ${
                                         stat.skill === "Hoàn thành" ? "bg-green-500" :
