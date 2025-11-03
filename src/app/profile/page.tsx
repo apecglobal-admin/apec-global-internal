@@ -59,12 +59,12 @@ const mockUserInfo = {
   exp: 8500,
   next_exp: 1000,
   skills: [
-    { icon: "⚛️", name: "React.js", value: "95" },
-    { icon: "🌐", name: "Node.js", value: "88" },
-    { icon: "🔹", name: "TypeScript", value: "92" },
-    { icon: "🎨", name: "UI/UX Design", value: "85" },
-    { icon: "👥", name: "Team Leadership", value: "90" },
-    { icon: "📊", name: "Project Management", value: "87" },
+    { icon: "⚛️", name: "React.js", value: "100" },
+    { icon: "🌐", name: "Node.js", value: "50" },
+    { icon: "🔹", name: "TypeScript", value: "100" },
+    { icon: "🎨", name: "UI/UX Design", value: "0" },
+    { icon: "👥", name: "Team Leadership", value: "100" },
+    { icon: "📊", name: "Project Management", value: "50" },
   ],
   projects: {
     total_projects: 24,
@@ -140,160 +140,104 @@ function ProfilePage() {
       `}</style>
 
       <div className="mt-0 mx-0 max-w-none mb-0 flex-1">
-        <div className="relative h-full mb-0 rounded-none border-x-0 border-t-0 border border-slate-800 bg-slate-900 p-4 sm:p-6 lg:p-8">
+        <div className="relative h-full mb-0 rounded-none border-x-0 border-t-0 border border-slate-800 bg-gradient-to-tl from-[#0c2954] to-transparent p-4 sm:p-6 lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row">
-            <div className="flex flex-row lg:flex-col items-start lg:items-start lg:w-1/4 rounded-xl border-2 border-slate-800 bg-slate-950/50 p-4 sm:p-5 gap-4">
-              <div className="relative w-32 sm:w-40 lg:w-full lg:max-w-xs flex-shrink-0">
-                <div className="relative h-32 w-32 sm:h-40 sm:w-40 lg:h-48 lg:w-48 lg:mx-auto border-4 shadow-lg overflow-hidden rounded">
-                  <img
-                    src={images[currentImage]}
-                    alt={`Profile ${currentImage + 1}`}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
+            <div className="lg:w-1/5">
+              <div className="sticky top-8 space-y-6">
+                <div className="relative">
+                  <div className="relative w-full aspect-square">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl blur-xl" />
+                    <div className="relative h-full w-full rounded-2xl border-2 border-slate-700 overflow-hidden shadow-2xl bg-slate-900">
+                      <img
+                        src={images[currentImage]}
+                        alt="Profile"
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
 
-                <button
-                  onClick={prevImage}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 bg-slate-900/90 hover:bg-slate-800 text-white p-1.5 lg:p-2 rounded-full border border-slate-700 hover:border-blue-500 transition"
-                >
-                  <ChevronLeft size={16} className="lg:hidden" />
-                  <ChevronLeft size={20} className="hidden lg:block" />
-                </button>
-                <button
-                  onClick={nextImage}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 bg-slate-900/90 hover:bg-slate-800 text-white p-1.5 lg:p-2 rounded-full border border-slate-700 hover:border-blue-500 transition"
-                >
-                  <ChevronRight size={16} className="lg:hidden" />
-                  <ChevronRight size={20} className="hidden lg:block" />
-                </button>
-
-                <div className="flex justify-center gap-2 mt-2 lg:mt-3">
-                  {images.map((_, index) => (
                     <button
-                      key={index}
-                      onClick={() => setCurrentImage(index)}
-                      className={`h-1.5 w-1.5 lg:h-2 lg:w-2 rounded-full transition ${
-                        currentImage === index
-                          ? "bg-blue-500 w-4 lg:w-6"
-                          : "bg-slate-700 hover:bg-slate-600"
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
+                      onClick={prevImage}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-slate-900/80 backdrop-blur-sm hover:bg-blue-500/20 text-white p-2 rounded-full border border-slate-700 hover:border-blue-400 transition-all duration-300"
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-900/80 backdrop-blur-sm hover:bg-blue-500/20 text-white p-2 rounded-full border border-slate-700 hover:border-blue-400 transition-all duration-300"
+                    >
+                      <ChevronRight size={18} />
+                    </button>
 
-              <div className="flex-1 lg:mt-6 w-full">
-                <div className="hidden lg:block mb-6 w-full max-w-xs">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-slate-300">
-                      Cấp độ {currentLevel}
-                    </span>
-                    <span className="text-xs font-medium text-blue-400">
-                      {currentExp.toFixed(0)} / {expForNextLevel} XP
-                    </span>
-                  </div>
-                  <div className="relative w-full h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-                    <div
-                      className="h-full bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 rounded-full transition-all duration-500 shadow-lg shadow-blue-500/50"
-                      style={{ width: `${expProgress}%` }}
-                    ></div>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1.5 text-center lg:text-left">
-                    Còn {expRemaining.toFixed(0)} XP để lên cấp{" "}
-                    {currentLevel + 1}
-                  </p>
-                </div>
-
-                <div className="text-left lg:text-left p-3 sm:p-4 lg:p-5 rounded-xl border-2 border-slate-800 bg-slate-950/50">
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white mb-1 lg:mb-2">
-                    {mockUserInfo.name}
-                  </h1>
-                  <p className="text-sm sm:text-base lg:text-lg text-blue-400 font-semibold mb-3 lg:mb-4">
-                    {getPositionName(mockUserInfo.position_id)}
-                  </p>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-slate-300">
-                      <Mail
-                        size={14}
-                        className="text-slate-500 flex-shrink-0 lg:hidden"
-                      />
-                      <Mail
-                        size={16}
-                        className="text-slate-500 flex-shrink-0 hidden lg:block"
-                      />
-                      <span className="text-xs lg:text-sm break-all">
-                        {mockUserInfo.id}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-300">
-                      <Phone
-                        size={14}
-                        className="text-slate-500 flex-shrink-0 lg:hidden"
-                      />
-                      <FileUser
-                        size={16}
-                        className="text-slate-500 flex-shrink-0 hidden lg:block"
-                      />
-                      <span className="text-xs lg:text-sm">
-                        {mockUserInfo.department}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-300">
-                      <MapPin
-                        size={14}
-                        className="text-slate-500 flex-shrink-0 lg:hidden"
-                      />
-                      <MapPin
-                        size={16}
-                        className="text-slate-500 flex-shrink-0 hidden lg:block"
-                      />
-                      <span className="text-xs lg:text-sm">
-                        {mockUserInfo.area}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-300">
-                      <Calendar
-                        size={14}
-                        className="text-slate-500 flex-shrink-0 lg:hidden"
-                      />
-                      <Calendar
-                        size={16}
-                        className="text-slate-500 flex-shrink-0 hidden lg:block"
-                      />
-                      <span className="text-xs lg:text-sm">
-                        Ngày vào: {formatDate(mockUserInfo.join_date)}
-                      </span>
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+                      {images.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentImage(index)}
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            currentImage === index
+                              ? 'bg-blue-400 w-6'
+                              : 'bg-slate-700 hover:bg-slate-600 w-2'
+                          }`}
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>
 
-                <div className="lg:hidden mt-3 w-full">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-slate-300">
-                      Cấp độ {currentLevel}
-                    </span>
-                    <span className="text-xs font-medium text-blue-400">
-                      {currentExp.toFixed(0)} / {expForNextLevel} XP
-                    </span>
+                <div className="space-y-4">
+                  <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
+                    <h2 className="text-2xl font-bold text-slate-100 mb-1">
+                      {mockUserInfo.name}
+                    </h2>
+                    <p className="text-sm font-semibold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                      {getPositionName(mockUserInfo.position_id)}
+                    </p>
                   </div>
-                  <div className="relative w-full h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-                    <div
-                      className="h-full bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 rounded-full transition-all duration-500 shadow-lg shadow-blue-500/50"
-                      style={{ width: `${expProgress}%` }}
-                    ></div>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+
+                  <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-4 space-y-3 hover:border-slate-700 transition-colors">
+                    <div className="flex items-center gap-3 text-slate-300 hover:text-slate-100 transition-colors">
+                      <Mail size={16} className="text-blue-400 flex-shrink-0" />
+                      <span className="text-xs truncate">{mockUserInfo.email}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-slate-300 hover:text-slate-100 transition-colors">
+                      <Briefcase size={16} className="text-blue-400 flex-shrink-0" />
+                      <span className="text-xs">{mockUserInfo.department}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-slate-300 hover:text-slate-100 transition-colors">
+                      <MapPin size={16} className="text-blue-400 flex-shrink-0" />
+                      <span className="text-xs">{mockUserInfo.area}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-slate-300 hover:text-slate-100 transition-colors">
+                      <Calendar size={16} className="text-blue-400 flex-shrink-0" />
+                      <span className="text-xs">{formatDate(mockUserInfo.join_date)}</span>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1.5">
-                    Còn {expRemaining.toFixed(0)} XP để lên cấp{" "}
-                    {currentLevel + 1}
-                  </p>
+
+                  <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold text-slate-300">
+                        Level {currentLevel}
+                      </span>
+                      <span className="text-xs font-bold text-blue-400">
+                        {currentExp.toFixed(0)}/{expForNextLevel}
+                      </span>
+                    </div>
+                    <div className="relative w-full h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                      <div
+                        className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-400 rounded-full transition-all duration-500 shadow-lg shadow-blue-500/50"
+                        style={{ width: `${expProgress}%` }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2">
+                      {expRemaining.toFixed(0)} XP to next level
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex-1 lg:w-3/4 flex flex-col">
+            <div className="flex-1 lg:w-4/5 flex flex-col">
               <div className="flex-1 mb-6">
                 <TabNavigation
                   activeTab={activeTab}

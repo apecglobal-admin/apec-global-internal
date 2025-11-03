@@ -158,7 +158,7 @@ function CareerTab({ userInfo }: any) {
                           <div className="flex-1 h-1.5 bg-slate-700/50 rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all ${
-                                isCompleted ? "bg-green-500" : "bg-blue-500"
+                                isCompleted ? "bg-green-500" : "bg-gradient-to-r from-blue-500 to-cyan-400"
                               }`}
                               style={{ width: `${progress}%` }}
                             ></div>
