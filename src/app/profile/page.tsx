@@ -2,7 +2,6 @@
 
 import Footer from "@/components/footer";
 import Header from "@/components/header";
-import { fetchUserInfo } from "@/src/services/api";
 import {
   Mail,
   Phone,
@@ -20,8 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useState } from "react";
 import {
   RadarChart,
   Radar,
@@ -37,18 +35,109 @@ import {
   CartesianGrid,
 } from "recharts";
 
-export default function ProfilePage() {
-  const dispatch = useDispatch();
-  const { userInfo } = useSelector((state: any) => state.user);
+// Mock Data
+const mockUserInfo = {
+  name: "Nguyễn Văn An",
+  email: "nguyen.van.an@company.com",
+  phone: "0123 456 789",
+  address: "123 Nguyễn Huệ, Quận 1, TP.HCM",
+  join_date: "2023-01-15",
+  position_id: 5,
+  avatar_url: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop",
+  second_avatar_url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
+  third_avatar_url: "https://images.unsplash.com/photo-1556157382-97eda2d62296?w=400&h=400&fit=crop",
+  level: 12,
+  exp: 8500,
+  next_exp: 1000,
+  skills: [
+    { name: "React.js", value: "95" },
+    { name: "Node.js", value: "88" },
+    { name: "TypeScript", value: "92" },
+    { name: "UI/UX Design", value: "85" },
+    { name: "Team Leadership", value: "90" },
+    { name: "Project Management", value: "87" },
+  ],
+  projects: {
+    total_projects: 24,
+    total_members_projects: 18,
+    project_status: [
+      { id: 2, count: 5 },  // Đang thực hiện
+      { id: 3, count: 16 }, // Hoàn thành
+      { id: 4, count: 3 },  // Tạm dừng
+    ],
+  },
+  certificates: {
+    certificate_name: "AWS Certified Solutions Architect",
+  },
+  educations: {
+    degree_level: "thac_si",
+    major: "Khoa học máy tính",
+    school_name: "Đại học Bách Khoa TP.HCM",
+    graduation_year: "2020",
+  },
+};
 
+const mockPerformance = [
+  { month: "T1", score: 85 },
+  { month: "T2", score: 88 },
+  { month: "T3", score: 92 },
+  { month: "T4", score: 90 },
+  { month: "T5", score: 95 },
+  { month: "T6", score: 93 },
+];
+
+const mockProjects = [
+  {
+    name: "E-Commerce Platform Redesign",
+    client: "TechMart Vietnam",
+    status: "completed",
+    progress: 100,
+    startDate: "01/01/2024",
+    endDate: "15/03/2024",
+    team: 8,
+    budget: "500M VNĐ",
+  },
+  {
+    name: "Mobile Banking App",
+    client: "VietBank Digital",
+    status: "in-progress",
+    progress: 75,
+    startDate: "10/02/2024",
+    endDate: "30/04/2024",
+    team: 12,
+    budget: "800M VNĐ",
+  },
+  {
+    name: "CRM System Integration",
+    client: "SalesForce VN",
+    status: "completed",
+    progress: 100,
+    startDate: "15/12/2023",
+    endDate: "28/02/2024",
+    team: 6,
+    budget: "350M VNĐ",
+  },
+  {
+    name: "AI Chatbot Development",
+    client: "CustomerCare Corp",
+    status: "paused",
+    progress: 45,
+    startDate: "01/03/2024",
+    endDate: "30/06/2024",
+    team: 10,
+    budget: "600M VNĐ",
+  },
+];
+
+export default function ProfilePage() {
   const [currentImage, setCurrentImage] = useState(0);
   const [activeTab, setActiveTab] = useState("skills");
   const [showRecentProjects, setShowRecentProjects] = useState(false);
 
   const images = [
-    userInfo?.avatar_url || "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop",
-    userInfo?.second_avatar_url || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
-    userInfo?.third_avatar_url || "https://images.unsplash.com/photo-1556157382-97eda2d62296?w=400&h=400&fit=crop",
+    mockUserInfo.avatar_url,
+    mockUserInfo.second_avatar_url,
+    mockUserInfo.third_avatar_url,
   ];
 
   const nextImage = () => {
@@ -59,95 +148,87 @@ export default function ProfilePage() {
     setCurrentImage((prev) => (prev - 1 + images.length) % images.length);
   };
 
-  // Transform API data to chart format
-  const skillsData = userInfo?.skills?.map((skill: any) => ({
+  // Transform data to chart format
+  const skillsData = mockUserInfo.skills.map((skill) => ({
     skill: skill.name,
     value: parseFloat(skill.value),
-    fullMark: 100
-  })) || [];
+    fullMark: 100,
+  }));
 
-  // Project statistics from API
-  const projectStats = userInfo?.projects?.project_status?.map((status: any) => {
+  // Project statistics
+  const projectStats = mockUserInfo.projects.project_status.map((status) => {
     let label = "";
-    switch(status.id) {
-      case 2: label = "Đang thực hiện"; break;
-      case 3: label = "Hoàn thành"; break;
-      case 4: label = "Tạm dừng"; break;
-      default: label = "Khác";
+    switch (status.id) {
+      case 2:
+        label = "Đang thực hiện";
+        break;
+      case 3:
+        label = "Hoàn thành";
+        break;
+      case 4:
+        label = "Tạm dừng";
+        break;
+      default:
+        label = "Khác";
     }
     return {
       skill: label,
       value: status.count,
-      fullMark: 50
+      fullMark: 50,
     };
-  }) || [];
+  });
 
-  // Mock performance data (since not available in API)
-  const mockPerformance = [
-    { month: "T1", score: 85 },
-    { month: "T2", score: 88 },
-    { month: "T3", score: 92 },
-    { month: "T4", score: 90 },
-    { month: "T5", score: 95 },
-    { month: "T6", score: 93 },
-  ];
-
-  // Mock achievements (since not available in API)
+  // Achievements
   const mockAchievements = [
-    { title: "Nhân viên xuất sắc Q1 2024", icon: Award, color: "bg-yellow-500" },
-    { title: `Hoàn thành ${userInfo?.projects?.total_projects || 0} dự án`, icon: Target, color: "bg-blue-500" },
-    { title: userInfo?.certificates?.certificate_name || "Chứng chỉ chuyên môn", icon: FileText, color: "bg-green-500" },
-    { title: `Level ${userInfo?.level || 1}`, icon: TrendingUp, color: "bg-purple-500" },
-  ];
-
-  // Mock projects (since detailed project list not in API)
-  const mockProjects = [
     {
-      name: "E-Commerce Platform Redesign",
-      client: "TechMart Vietnam",
-      status: "completed",
-      progress: 100,
-      startDate: "01/01/2024",
-      endDate: "15/03/2024",
-      team: 8,
-      budget: "500M VNĐ",
+      title: "Nhân viên xuất sắc Q1 2024",
+      icon: Award,
+      color: "bg-yellow-500",
     },
     {
-      name: "Mobile Banking App",
-      client: "VietBank Digital",
-      status: "in-progress",
-      progress: 75,
-      startDate: "10/02/2024",
-      endDate: "30/04/2024",
-      team: 12,
-      budget: "800M VNĐ",
+      title: `Hoàn thành ${mockUserInfo.projects.total_projects} dự án`,
+      icon: Target,
+      color: "bg-blue-500",
+    },
+    {
+      title: mockUserInfo.certificates.certificate_name,
+      icon: FileText,
+      color: "bg-green-500",
+    },
+    {
+      title: `Level ${mockUserInfo.level}`,
+      icon: TrendingUp,
+      color: "bg-purple-500",
     },
   ];
 
   // Calculate level progress
-  const currentExp = parseFloat(userInfo?.exp || 0);
-  const currentLevel = userInfo?.level || 1;
-  const expForNextLevel = currentLevel * userInfo?.next_exp; // Example: 1000 XP per level
+  const currentExp = parseFloat(mockUserInfo.exp);
+  const currentLevel = mockUserInfo.level;
+  const expForNextLevel = currentLevel * mockUserInfo.next_exp;
   const expProgress = (currentExp / expForNextLevel) * 100;
   const expRemaining = expForNextLevel - currentExp;
 
   // Format date
-  const formatDate = (dateString: any) => {
+  const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
     return date.toLocaleDateString("vi-VN");
   };
 
-  // Get position name (you can map position_id to actual names)
-  const getPositionName = (positionId: any) => {
-    const positions = {
+  // Get position name
+  const getPositionName = (positionId: number) => {
+    const positions: { [key: number]: string } = {
       5: "Senior Developer",
-      // Add more position mappings
+      4: "Mid-level Developer",
+      3: "Junior Developer",
+      2: "Intern",
+      1: "Trainee",
     };
     return positions[positionId] || "Nhân viên";
   };
 
-  const getStatusBadge = (status : any) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
         return (
@@ -252,45 +333,70 @@ export default function ProfilePage() {
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
                   </div>
                   <p className="text-xs text-slate-500 mt-1.5 text-center lg:text-left">
-                    Còn {expRemaining.toFixed(0)} XP để lên cấp {currentLevel + 1}
+                    Còn {expRemaining.toFixed(0)} XP để lên cấp{" "}
+                    {currentLevel + 1}
                   </p>
                 </div>
 
                 <div className="text-left lg:text-left p-3 sm:p-4 lg:p-5 rounded-xl border-2 border-slate-800 bg-slate-950/50">
                   <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white mb-1 lg:mb-2">
-                    {userInfo?.name || "N/A"}
+                    {mockUserInfo.name}
                   </h1>
                   <p className="text-sm sm:text-base lg:text-lg text-blue-400 font-semibold mb-3 lg:mb-4">
-                    {getPositionName(userInfo?.position_id)}
+                    {getPositionName(mockUserInfo.position_id)}
                   </p>
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-slate-300">
-                      <Mail size={14} className="text-slate-500 flex-shrink-0 lg:hidden" />
-                      <Mail size={16} className="text-slate-500 flex-shrink-0 hidden lg:block" />
+                      <Mail
+                        size={14}
+                        className="text-slate-500 flex-shrink-0 lg:hidden"
+                      />
+                      <Mail
+                        size={16}
+                        className="text-slate-500 flex-shrink-0 hidden lg:block"
+                      />
                       <span className="text-xs lg:text-sm break-all">
-                        {userInfo?.email || "N/A"}
+                        {mockUserInfo.email}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-slate-300">
-                      <Phone size={14} className="text-slate-500 flex-shrink-0 lg:hidden" />
-                      <Phone size={16} className="text-slate-500 flex-shrink-0 hidden lg:block" />
+                      <Phone
+                        size={14}
+                        className="text-slate-500 flex-shrink-0 lg:hidden"
+                      />
+                      <Phone
+                        size={16}
+                        className="text-slate-500 flex-shrink-0 hidden lg:block"
+                      />
                       <span className="text-xs lg:text-sm">
-                        {userInfo?.phone || "N/A"}
+                        {mockUserInfo.phone}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-slate-300">
-                      <MapPin size={14} className="text-slate-500 flex-shrink-0 lg:hidden" />
-                      <MapPin size={16} className="text-slate-500 flex-shrink-0 hidden lg:block" />
+                      <MapPin
+                        size={14}
+                        className="text-slate-500 flex-shrink-0 lg:hidden"
+                      />
+                      <MapPin
+                        size={16}
+                        className="text-slate-500 flex-shrink-0 hidden lg:block"
+                      />
                       <span className="text-xs lg:text-sm">
-                        {userInfo?.address || "N/A"}
+                        {mockUserInfo.address}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-slate-300">
-                      <Calendar size={14} className="text-slate-500 flex-shrink-0 lg:hidden" />
-                      <Calendar size={16} className="text-slate-500 flex-shrink-0 hidden lg:block" />
+                      <Calendar
+                        size={14}
+                        className="text-slate-500 flex-shrink-0 lg:hidden"
+                      />
+                      <Calendar
+                        size={16}
+                        className="text-slate-500 flex-shrink-0 hidden lg:block"
+                      />
                       <span className="text-xs lg:text-sm">
-                        Gia nhập: {formatDate(userInfo?.join_date)}
+                        Gia nhập: {formatDate(mockUserInfo.join_date)}
                       </span>
                     </div>
                   </div>
@@ -314,7 +420,8 @@ export default function ProfilePage() {
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
                   </div>
                   <p className="text-xs text-slate-500 mt-1.5">
-                    Còn {expRemaining.toFixed(0)} XP để lên cấp {currentLevel + 1}
+                    Còn {expRemaining.toFixed(0)} XP để lên cấp{" "}
+                    {currentLevel + 1}
                   </p>
                 </div>
               </div>
@@ -380,97 +487,113 @@ export default function ProfilePage() {
                 {/* Tab Content: Skills */}
                 {activeTab === "skills" && (
                   <div>
-                    {skillsData.length > 0 ? (
-                      <>
-                        <ResponsiveContainer width="100%" height={300} className="sm:hidden">
-                          <RadarChart data={skillsData}>
-                            <PolarGrid stroke="#475569" strokeWidth={1.5} />
-                            <PolarAngleAxis
-                              dataKey="skill"
-                              tick={{ fill: "#cbd5e1", fontSize: 10, fontWeight: 500 }}
-                            />
-                            <PolarRadiusAxis
-                              angle={90}
-                              domain={[0, 100]}
-                              tick={{ fill: "#94a3b8", fontSize: 10 }}
-                              tickCount={6}
-                            />
-                            <Radar
-                              name="Kỹ năng"
-                              dataKey="value"
-                              stroke="#3b82f6"
-                              fill="#3b82f6"
-                              fillOpacity={0.7}
-                              strokeWidth={2}
-                            />
-                            <Tooltip
-                              contentStyle={{
-                                backgroundColor: "#1e293b",
-                                border: "1px solid #334155",
-                                borderRadius: "8px",
-                                padding: "8px",
-                              }}
-                              labelStyle={{ color: "#e2e8f0", fontWeight: "bold", fontSize: "12px" }}
-                              itemStyle={{ color: "#60a5fa", fontSize: "12px" }}
-                            />
-                          </RadarChart>
-                        </ResponsiveContainer>
-                        <ResponsiveContainer width="100%" height={400} className="hidden sm:block">
-                          <RadarChart data={skillsData}>
-                            <PolarGrid stroke="#475569" strokeWidth={1.5} />
-                            <PolarAngleAxis
-                              dataKey="skill"
-                              tick={{ fill: "#cbd5e1", fontSize: 14, fontWeight: 500 }}
-                            />
-                            <PolarRadiusAxis
-                              angle={90}
-                              domain={[0, 100]}
-                              tick={{ fill: "#94a3b8", fontSize: 12 }}
-                              tickCount={6}
-                            />
-                            <Radar
-                              name="Kỹ năng"
-                              dataKey="value"
-                              stroke="#3b82f6"
-                              fill="#3b82f6"
-                              fillOpacity={0.7}
-                              strokeWidth={2}
-                            />
-                            <Tooltip
-                              contentStyle={{
-                                backgroundColor: "#1e293b",
-                                border: "1px solid #334155",
-                                borderRadius: "8px",
-                                padding: "10px",
-                              }}
-                              labelStyle={{ color: "#e2e8f0", fontWeight: "bold", marginBottom: "5px" }}
-                              itemStyle={{ color: "#60a5fa" }}
-                            />
-                          </RadarChart>
-                        </ResponsiveContainer>
+                    <ResponsiveContainer
+                      width="100%"
+                      height={300}
+                      className="sm:hidden"
+                    >
+                      <RadarChart data={skillsData}>
+                        <PolarGrid stroke="#475569" strokeWidth={1.5} />
+                        <PolarAngleAxis
+                          dataKey="skill"
+                          tick={{
+                            fill: "#cbd5e1",
+                            fontSize: 10,
+                            fontWeight: 500,
+                          }}
+                        />
+                        <PolarRadiusAxis
+                          angle={90}
+                          domain={[0, 100]}
+                          tick={{ fill: "#94a3b8", fontSize: 10 }}
+                          tickCount={6}
+                        />
+                        <Radar
+                          name="Kỹ năng"
+                          dataKey="value"
+                          stroke="#3b82f6"
+                          fill="#3b82f6"
+                          fillOpacity={0.7}
+                          strokeWidth={2}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#1e293b",
+                            border: "1px solid #334155",
+                            borderRadius: "8px",
+                            padding: "8px",
+                          }}
+                          labelStyle={{
+                            color: "#e2e8f0",
+                            fontWeight: "bold",
+                            fontSize: "12px",
+                          }}
+                          itemStyle={{ color: "#60a5fa", fontSize: "12px" }}
+                        />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                    <ResponsiveContainer
+                      width="100%"
+                      height={400}
+                      className="hidden sm:block"
+                    >
+                      <RadarChart data={skillsData}>
+                        <PolarGrid stroke="#475569" strokeWidth={1.5} />
+                        <PolarAngleAxis
+                          dataKey="skill"
+                          tick={{
+                            fill: "#cbd5e1",
+                            fontSize: 14,
+                            fontWeight: 500,
+                          }}
+                        />
+                        <PolarRadiusAxis
+                          angle={90}
+                          domain={[0, 100]}
+                          tick={{ fill: "#94a3b8", fontSize: 12 }}
+                          tickCount={6}
+                        />
+                        <Radar
+                          name="Kỹ năng"
+                          dataKey="value"
+                          stroke="#3b82f6"
+                          fill="#3b82f6"
+                          fillOpacity={0.7}
+                          strokeWidth={2}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#1e293b",
+                            border: "1px solid #334155",
+                            borderRadius: "8px",
+                            padding: "10px",
+                          }}
+                          labelStyle={{
+                            color: "#e2e8f0",
+                            fontWeight: "bold",
+                            marginBottom: "5px",
+                          }}
+                          itemStyle={{ color: "#60a5fa" }}
+                        />
+                      </RadarChart>
+                    </ResponsiveContainer>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                          {skillsData.map((skill: any, index: any) => (
-                            <div
-                              key={index}
-                              className="flex items-center gap-2 sm:gap-3 p-2 rounded-lg bg-slate-950/50"
-                            >
-                              <div className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0"></div>
-                              <span className="text-xs sm:text-sm text-slate-300 font-medium flex-1">
-                                {skill.skill}
-                              </span>
-                              <span className="text-xs sm:text-sm font-bold text-blue-400">
-                                {skill.value}%
-                              </span>
-                            </div>
-                          ))}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                      {skillsData.map((skill, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 sm:gap-3 p-2 rounded-lg bg-slate-950/50"
+                        >
+                          <div className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0"></div>
+                          <span className="text-xs sm:text-sm text-slate-300 font-medium flex-1">
+                            {skill.skill}
+                          </span>
+                          <span className="text-xs sm:text-sm font-bold text-blue-400">
+                            {skill.value}%
+                          </span>
                         </div>
-                      </>
-                    ) : (
-                      <div className="text-center py-12 text-slate-400">
-                        Chưa có dữ liệu kỹ năng
-                      </div>
-                    )}
+                      ))}
+                    </div>
                   </div>
                 )}
 
@@ -489,9 +612,11 @@ export default function ProfilePage() {
                               </span>
                             </div>
                             <div className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                              {userInfo?.projects?.total_projects || 0}
+                              {mockUserInfo.projects.total_projects}
                             </div>
-                            <div className="text-xs text-slate-400">Tổng số dự án</div>
+                            <div className="text-xs text-slate-400">
+                              Tổng số dự án
+                            </div>
                           </div>
 
                           <div className="rounded-lg sm:rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
@@ -502,9 +627,11 @@ export default function ProfilePage() {
                               </span>
                             </div>
                             <div className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                              {userInfo?.projects?.total_members_projects || 0}
+                              {mockUserInfo.projects.total_members_projects}
                             </div>
-                            <div className="text-xs text-slate-400">Dự án tham gia</div>
+                            <div className="text-xs text-slate-400">
+                              Dự án tham gia
+                            </div>
                           </div>
 
                           <div className="rounded-lg sm:rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
@@ -530,9 +657,11 @@ export default function ProfilePage() {
                               </span>
                             </div>
                             <div className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                              {userInfo?.certificates ? 1 : 0}
+                              1
                             </div>
-                            <div className="text-xs text-slate-400">Đạt được</div>
+                            <div className="text-xs text-slate-400">
+                              Đạt được
+                            </div>
                           </div>
                         </div>
 
@@ -551,90 +680,99 @@ export default function ProfilePage() {
                                 Chi tiết
                               </button>
                             </div>
-                            {projectStats.length > 0 ? (
-                              <>
-                                <div className="flex justify-center">
-                                  <ResponsiveContainer width="100%" height={250} className="sm:hidden">
-                                    <RadarChart data={projectStats}>
-                                      <PolarGrid stroke="#334155" />
-                                      <PolarAngleAxis
-                                        dataKey="skill"
-                                        tick={{ fill: "#94a3b8", fontSize: 11 }}
-                                      />
-                                      <PolarRadiusAxis
-                                        angle={90}
-                                        domain={[0, 50]}
-                                        tick={{ fill: "#64748b", fontSize: 10 }}
-                                      />
-                                      <Radar
-                                        name="Dự án"
-                                        dataKey="value"
-                                        stroke="#10b981"
-                                        fill="#10b981"
-                                        fillOpacity={0.6}
-                                      />
-                                      <Tooltip
-                                        contentStyle={{
-                                          backgroundColor: "#1e293b",
-                                          border: "1px solid #334155",
-                                          borderRadius: "8px",
-                                          fontSize: "12px",
-                                        }}
-                                        labelStyle={{ color: "#e2e8f0" }}
-                                      />
-                                    </RadarChart>
-                                  </ResponsiveContainer>
-                                  <ResponsiveContainer width="100%" height={300} className="hidden sm:block">
-                                    <RadarChart data={projectStats}>
-                                      <PolarGrid stroke="#334155" />
-                                      <PolarAngleAxis
-                                        dataKey="skill"
-                                        tick={{ fill: "#94a3b8", fontSize: 14 }}
-                                      />
-                                      <PolarRadiusAxis
-                                        angle={90}
-                                        domain={[0, 50]}
-                                        tick={{ fill: "#64748b" }}
-                                      />
-                                      <Radar
-                                        name="Dự án"
-                                        dataKey="value"
-                                        stroke="#10b981"
-                                        fill="#10b981"
-                                        fillOpacity={0.6}
-                                      />
-                                      <Tooltip
-                                        contentStyle={{
-                                          backgroundColor: "#1e293b",
-                                          border: "1px solid #334155",
-                                          borderRadius: "8px",
-                                        }}
-                                        labelStyle={{ color: "#e2e8f0" }}
-                                      />
-                                    </RadarChart>
-                                  </ResponsiveContainer>
+                            <div className="flex justify-center">
+                              <ResponsiveContainer
+                                width="100%"
+                                height={250}
+                                className="sm:hidden"
+                              >
+                                <RadarChart data={projectStats}>
+                                  <PolarGrid stroke="#334155" />
+                                  <PolarAngleAxis
+                                    dataKey="skill"
+                                    tick={{ fill: "#94a3b8", fontSize: 11 }}
+                                  />
+                                  <PolarRadiusAxis
+                                    angle={90}
+                                    domain={[0, 50]}
+                                    tick={{ fill: "#64748b", fontSize: 10 }}
+                                  />
+                                  <Radar
+                                    name="Dự án"
+                                    dataKey="value"
+                                    stroke="#10b981"
+                                    fill="#10b981"
+                                    fillOpacity={0.6}
+                                  />
+                                  <Tooltip
+                                    contentStyle={{
+                                      backgroundColor: "#1e293b",
+                                      border: "1px solid #334155",
+                                      borderRadius: "8px",
+                                      fontSize: "12px",
+                                    }}
+                                    labelStyle={{ color: "#e2e8f0" }}
+                                  />
+                                </RadarChart>
+                              </ResponsiveContainer>
+                              <ResponsiveContainer
+                                width="100%"
+                                height={300}
+                                className="hidden sm:block"
+                              >
+                                <RadarChart data={projectStats}>
+                                  <PolarGrid stroke="#334155" />
+                                  <PolarAngleAxis
+                                    dataKey="skill"
+                                    tick={{ fill: "#94a3b8", fontSize: 14 }}
+                                  />
+                                  <PolarRadiusAxis
+                                    angle={90}
+                                    domain={[0, 50]}
+                                    tick={{ fill: "#64748b" }}
+                                  />
+                                  <Radar
+                                    name="Dự án"
+                                    dataKey="value"
+                                    stroke="#10b981"
+                                    fill="#10b981"
+                                    fillOpacity={0.6}
+                                  />
+                                  <Tooltip
+                                    contentStyle={{
+                                      backgroundColor: "#1e293b",
+                                      border: "1px solid #334155",
+                                      borderRadius: "8px",
+                                    }}
+                                    labelStyle={{ color: "#e2e8f0" }}
+                                  />
+                                </RadarChart>
+                              </ResponsiveContainer>
+                            </div>
+                            <div className="mt-4 sm:mt-6 grid grid-cols-3 gap-2 sm:gap-3">
+                              {projectStats.map((stat, index) => (
+                                <div
+                                  key={index}
+                                  className="text-center p-3 sm:p-4 rounded-lg bg-slate-950 border border-slate-800"
+                                >
+                                  <div
+                                    className={`h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full mx-auto mb-2 ${
+                                      stat.skill === "Hoàn thành"
+                                        ? "bg-green-500"
+                                        : stat.skill === "Đang thực hiện"
+                                        ? "bg-blue-500"
+                                        : "bg-yellow-500"
+                                    }`}
+                                  ></div>
+                                  <div className="text-xl sm:text-2xl font-bold text-white">
+                                    {stat.value}
+                                  </div>
+                                  <div className="text-xs text-slate-400">
+                                    {stat.skill}
+                                  </div>
                                 </div>
-                                <div className="mt-4 sm:mt-6 grid grid-cols-3 gap-2 sm:gap-3">
-                                  {projectStats.map((stat: any, index: any) => (
-                                    <div key={index} className="text-center p-3 sm:p-4 rounded-lg bg-slate-950 border border-slate-800">
-                                      <div className={`h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full mx-auto mb-2 ${
-                                        stat.skill === "Hoàn thành" ? "bg-green-500" :
-                                        stat.skill === "Đang thực hiện" ? "bg-blue-500" :
-                                        "bg-yellow-500"
-                                      }`}></div>
-                                      <div className="text-xl sm:text-2xl font-bold text-white">
-                                        {stat.value}
-                                      </div>
-                                      <div className="text-xs text-slate-400">{stat.skill}</div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </>
-                            ) : (
-                              <div className="text-center py-12 text-slate-400">
-                                Chưa có dữ liệu dự án
-                              </div>
-                            )}
+                              ))}
+                            </div>
                           </div>
 
                           {/* Performance Chart */}
@@ -642,11 +780,25 @@ export default function ProfilePage() {
                             <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6">
                               Hiệu suất (6 tháng)
                             </h3>
-                            <ResponsiveContainer width="100%" height={250} className="sm:hidden">
+                            <ResponsiveContainer
+                              width="100%"
+                              height={250}
+                              className="sm:hidden"
+                            >
                               <BarChart data={mockPerformance}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                <XAxis dataKey="month" stroke="#94a3b8" tick={{ fontSize: 11 }} />
-                                <YAxis stroke="#94a3b8" tick={{ fontSize: 11 }} />
+                                <CartesianGrid
+                                  strokeDasharray="3 3"
+                                  stroke="#334155"
+                                />
+                                <XAxis
+                                  dataKey="month"
+                                  stroke="#94a3b8"
+                                  tick={{ fontSize: 11 }}
+                                />
+                                <YAxis
+                                  stroke="#94a3b8"
+                                  tick={{ fontSize: 11 }}
+                                />
                                 <Tooltip
                                   contentStyle={{
                                     backgroundColor: "#1e293b",
@@ -656,12 +808,23 @@ export default function ProfilePage() {
                                   }}
                                   labelStyle={{ color: "#e2e8f0" }}
                                 />
-                                <Bar dataKey="score" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                                <Bar
+                                  dataKey="score"
+                                  fill="#3b82f6"
+                                  radius={[6, 6, 0, 0]}
+                                />
                               </BarChart>
                             </ResponsiveContainer>
-                            <ResponsiveContainer width="100%" height={300} className="hidden sm:block">
+                            <ResponsiveContainer
+                              width="100%"
+                              height={300}
+                              className="hidden sm:block"
+                            >
                               <BarChart data={mockPerformance}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                <CartesianGrid
+                                  strokeDasharray="3 3"
+                                  stroke="#334155"
+                                />
                                 <XAxis dataKey="month" stroke="#94a3b8" />
                                 <YAxis stroke="#94a3b8" />
                                 <Tooltip
@@ -672,7 +835,11 @@ export default function ProfilePage() {
                                   }}
                                   labelStyle={{ color: "#e2e8f0" }}
                                 />
-                                <Bar dataKey="score" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+                                <Bar
+                                  dataKey="score"
+                                  fill="#3b82f6"
+                                  radius={[8, 8, 0, 0]}
+                                />
                               </BarChart>
                             </ResponsiveContainer>
                           </div>
@@ -693,63 +860,68 @@ export default function ProfilePage() {
                               ← Quay lại
                             </button>
                           </div>
-                          {mockProjects.length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                              {mockProjects.map((project, index) => (
-                                <div
-                                  key={index}
-                                  className="rounded-lg border border-slate-800 bg-slate-950 p-4 sm:p-5 hover:border-blue-500/50 transition"
-                                >
-                                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
-                                    <div className="flex-1">
-                                      <h4 className="text-base sm:text-lg font-bold text-white mb-1">
-                                        {project.name}
-                                      </h4>
-                                      <p className="text-xs sm:text-sm text-slate-400">
-                                        Khách hàng: {project.client}
-                                      </p>
-                                    </div>
-                                    {getStatusBadge(project.status)}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                            {mockProjects.map((project, index) => (
+                              <div
+                                key={index}
+                                className="rounded-lg border border-slate-800 bg-slate-950 p-4 sm:p-5 hover:border-blue-500/50 transition"
+                              >
+                                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
+                                  <div className="flex-1">
+                                    <h4 className="text-base sm:text-lg font-bold text-white mb-1">
+                                      {project.name}
+                                    </h4>
+                                    <p className="text-xs sm:text-sm text-slate-400">
+                                      Khách hàng: {project.client}
+                                    </p>
                                   </div>
+                                  {getStatusBadge(project.status)}
+                                </div>
 
-                                  <div className="mb-3">
-                                    <div className="flex justify-between items-center mb-2">
-                                      <span className="text-xs sm:text-sm font-bold text-blue-400">
-                                        {project.progress}%
-                                      </span>
-                                    </div>
-                                    <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-                                      <div
-                                        className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full transition-all"
-                                        style={{ width: `${project.progress}%` }}
-                                      ></div>
-                                    </div>
+                                <div className="mb-3">
+                                  <div className="flex justify-between items-center mb-2">
+                                    <span className="text-xs sm:text-sm font-bold text-blue-400">
+                                      {project.progress}%
+                                    </span>
                                   </div>
-
-                                  <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
-                                    <div className="flex items-center gap-2 text-slate-400">
-                                      <Calendar size={14} className="text-slate-500 flex-shrink-0" />
-                                      <span>
-                                        {project.startDate} - {project.endDate}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-slate-400">
-                                      <Users size={14} className="text-slate-500 flex-shrink-0" />
-                                      <span>{project.team} thành viên</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-slate-400 col-span-2">
-                                      <Briefcase size={14} className="text-slate-500 flex-shrink-0" />
-                                      <span>Ngân sách: {project.budget}</span>
-                                    </div>
+                                  <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full transition-all"
+                                      style={{
+                                        width: `${project.progress}%`,
+                                      }}
+                                    ></div>
                                   </div>
                                 </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="text-center py-12 text-slate-400">
-                              Chưa có dữ liệu dự án chi tiết
-                            </div>
-                          )}
+
+                                <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
+                                  <div className="flex items-center gap-2 text-slate-400">
+                                    <Calendar
+                                      size={14}
+                                      className="text-slate-500 flex-shrink-0"
+                                    />
+                                    <span>
+                                      {project.startDate} - {project.endDate}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-slate-400">
+                                    <Users
+                                      size={14}
+                                      className="text-slate-500 flex-shrink-0"
+                                    />
+                                    <span>{project.team} thành viên</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-slate-400 col-span-2">
+                                    <Briefcase
+                                      size={14}
+                                      className="text-slate-500 flex-shrink-0"
+                                    />
+                                    <span>Ngân sách: {project.budget}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </>
                     )}
@@ -781,33 +953,42 @@ export default function ProfilePage() {
                         );
                       })}
                     </div>
-                    
+
                     {/* Additional Info */}
-                    {userInfo?.educations && (
-                      <div className="mt-6 rounded-lg border border-slate-800 bg-slate-950 p-5">
-                        <h4 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-                          <FileText size={20} className="text-blue-400" />
-                          Trình độ học vấn
-                        </h4>
-                        <div className="space-y-2 text-sm">
-                          <p className="text-slate-300">
-                            <span className="text-slate-500">Bằng cấp:</span>{" "}
-                            {userInfo.educations.degree_level === "tien_si" ? "Tiến sĩ" :
-                             userInfo.educations.degree_level === "thac_si" ? "Thạc sĩ" :
-                             userInfo.educations.degree_level === "dai_hoc" ? "Đại học" : "N/A"}
-                          </p>
-                          <p className="text-slate-300">
-                            <span className="text-slate-500">Chuyên ngành:</span> {userInfo.educations.major}
-                          </p>
-                          <p className="text-slate-300">
-                            <span className="text-slate-500">Trường:</span> {userInfo.educations.school_name}
-                          </p>
-                          <p className="text-slate-300">
-                            <span className="text-slate-500">Năm tốt nghiệp:</span> {userInfo.educations.graduation_year}
-                          </p>
-                        </div>
+                    <div className="mt-6 rounded-lg border border-slate-800 bg-slate-950 p-5">
+                      <h4 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                        <FileText size={20} className="text-blue-400" />
+                        Trình độ học vấn
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <p className="text-slate-300">
+                          <span className="text-slate-500">Bằng cấp:</span>{" "}
+                          {mockUserInfo.educations.degree_level === "tien_si"
+                            ? "Tiến sĩ"
+                            : mockUserInfo.educations.degree_level === "thac_si"
+                            ? "Thạc sĩ"
+                            : mockUserInfo.educations.degree_level === "dai_hoc"
+                            ? "Đại học"
+                            : "N/A"}
+                        </p>
+                        <p className="text-slate-300">
+                          <span className="text-slate-500">
+                            Chuyên ngành:
+                          </span>{" "}
+                          {mockUserInfo.educations.major}
+                        </p>
+                        <p className="text-slate-300">
+                          <span className="text-slate-500">Trường:</span>{" "}
+                          {mockUserInfo.educations.school_name}
+                        </p>
+                        <p className="text-slate-300">
+                          <span className="text-slate-500">
+                            Năm tốt nghiệp:
+                          </span>{" "}
+                          {mockUserInfo.educations.graduation_year}
+                        </p>
                       </div>
-                    )}
+                    </div>
                   </div>
                 )}
               </div>

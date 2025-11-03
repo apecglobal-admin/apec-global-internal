@@ -23,9 +23,14 @@ export default function LoginPage() {
       };
 
       const res = await dispatch(loginWeb(payload) as any);
-      if (res) {
+      console.log("Kết quả đăng nhập:", res);
+      if (res.status === 200 || res.status === 201) {
         localStorage.setItem("userToken", res.payload.token);
         router.push("/");
+      } else if (res.status === 429) {
+        alert(res.payload.message);
+      } else {
+         alert(res.payload.message);
       }
     } catch (error) {
       console.error("Đăng nhập thất bại:", error);
