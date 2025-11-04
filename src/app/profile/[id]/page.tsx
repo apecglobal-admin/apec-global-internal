@@ -25,49 +25,49 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 // ==================== MOCK DATA ====================
 const mockUserInfo = {
-  id: 1,
-  name: "Nguyễn Văn An",
-  email: "nguyen.van.an@company.com",
-  phone: "0123 456 789",
-  address: "123 Nguyễn Huệ, Quận 1, TP.HCM",
-  join_date: "2023-01-15",
-  area: "Khu vực chính",
-  position_id: 5,
-  department: "Phát triển phần mềm",
+  id: 2,
+  name: "Trần Văn Bảo",
+  email: "tran.van.bao@company.com",
+  phone: "0987 654 321",
+  address: "456 Lê Lợi, Quận 3, TP.HCM",
+  join_date: "2022-05-10",
+  area: "Khu vực phụ",
+  position_id: 10,
+  department: "An ninh",
   avatar_url:
-    "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop",
+    "https://res.cloudinary.com/dpovm17vr/image/upload/v1762239382/6466c0fa019b8dc5d48a_naeesm.jpg",
   second_avatar_url:
-    "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
+    "https://res.cloudinary.com/dpovm17vr/image/upload/v1762239382/afd17443b522397c6033_c37hib.jpg",
   third_avatar_url:
-    "https://images.unsplash.com/photo-1556157382-97eda2d62296?w=400&h=400&fit=crop",
-  level: 12,
-  exp: 8500,
-  next_exp: 1000,
+    "https://res.cloudinary.com/dpovm17vr/image/upload/v1762239382/9dc31744d6255a7b0334_fbpfgw.jpg",
+  level: 5,
+  exp: 1200,
+  next_exp: 300,
   skills: [
-    { icon: "⚛️", name: "React.js", value: "100" },
-    { icon: "🌐", name: "Node.js", value: "50" },
-    { icon: "🔹", name: "TypeScript", value: "100" },
-    { icon: "🎨", name: "UI/UX Design", value: "0" },
-    { icon: "👥", name: "Team Leadership", value: "100" },
-    { icon: "📊", name: "Project Management", value: "50" },
+    { icon: "🛡️", name: "Security Patrol", value: "100" },
+    { icon: "🚨", name: "Emergency Response", value: "80" },
+    { icon: "📞", name: "Communication", value: "70" },
+    { icon: "🎯", name: "Observation", value: "90" },
+    { icon: "💪", name: "Physical Fitness", value: "100" },
+    { icon: "📝", name: "Reporting", value: "60" },
   ],
   projects: {
-    total_projects: 24,
-    total_members_projects: 18,
+    total_projects: 12,
+    total_members_projects: 4,
     project_status: [
-      { id: 2, count: 5 },
-      { id: 3, count: 16 },
-      { id: 4, count: 3 },
+      { id: 2, count: 2 },
+      { id: 3, count: 8 },
+      { id: 4, count: 2 },
     ],
   },
   certificates: {
-    certificate_name: "AWS Certified Solutions Architect",
+    certificate_name: "Chứng chỉ An ninh cơ bản",
   },
   educations: {
-    degree_level: "thac_si",
-    major: "Khoa học máy tính",
-    school_name: "Đại học Bách Khoa TP.HCM",
-    graduation_year: "2020",
+    degree_level: "cao_dang",
+    major: "An ninh trật tự",
+    school_name: "Trường Cao đẳng Cảnh sát Nhân dân",
+    graduation_year: "2018",
   },
 };
 
@@ -82,7 +82,7 @@ const getPositionName = (positionId: any) => {
   return positions[positionId] || "Nhân viên";
 };
 
-function ProfilePage() {
+function ProfilePage({params}: any) {
   const [currentImage, setCurrentImage] = useState(0);
   const [activeTab, setActiveTab] = useState("skills");
 
@@ -139,7 +139,7 @@ function ProfilePage() {
                           <img
                             src={images[currentImage]}
                             alt="Profile"
-                            className="h-full w-full object-cover"
+                            className="h-full w-full"
                           />
                         </div>
 
