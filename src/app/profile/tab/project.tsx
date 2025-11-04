@@ -133,62 +133,6 @@ function ProjectsTab({ userInfo }: any) {
     <div className="space-y-6">
       {!showRecentProjects ? (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <div className="rounded-lg sm:rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-2">
-                <Briefcase className="text-blue-500" size={20} />
-                <span className="text-xs font-semibold text-slate-500 uppercase">
-                  Dự án
-                </span>
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                {userInfo.projects.total_projects}
-              </div>
-              <div className="text-xs text-slate-400">Tổng số dự án</div>
-            </div>
-
-            <div className="rounded-lg sm:rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-2">
-                <Users className="text-purple-500" size={20} />
-                <span className="text-xs font-semibold text-slate-500 uppercase">
-                  Thành viên
-                </span>
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                {userInfo.projects.total_members_projects}
-              </div>
-              <div className="text-xs text-slate-400">Dự án tham gia</div>
-            </div>
-
-            <div className="rounded-lg sm:rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-2">
-                <TrendingUp className="text-pink-500" size={20} />
-                <span className="text-xs font-semibold text-slate-500 uppercase">
-                  Cấp độ
-                </span>
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                {userInfo.level}
-              </div>
-              <div className="text-xs text-green-400">
-                {userInfo.exp.toFixed(0)} XP
-              </div>
-            </div>
-
-            <div className="rounded-lg sm:rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-2">
-                <Award className="text-yellow-500" size={20} />
-                <span className="text-xs font-semibold text-slate-500 uppercase">
-                  Chứng chỉ
-                </span>
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                1
-              </div>
-              <div className="text-xs text-slate-400">Đạt được</div>
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <div className="rounded-lg sm:rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
               <div className="flex justify-between mb-4">

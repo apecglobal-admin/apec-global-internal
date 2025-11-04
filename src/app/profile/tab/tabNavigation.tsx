@@ -1,149 +1,110 @@
-import { useRef, useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Home,
+  Briefcase,
+  Award,
+  User,
+  Layers,
+  ListTodo,
+  Rocket,
+  Link2,
+  X,
+  Menu,
+} from "lucide-react";
 
 function TabNavigation({ activeTab, setActiveTab }: any) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [showLeftArrow, setShowLeftArrow] = useState(false);
-  const [showRightArrow, setShowRightArrow] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const tabs = [
-    { id: "skills", label: "Kỹ năng" },
-    { id: "projects", label: "Dự án" },
-    { id: "career", label: "Lộ trình" },
-    { id: "tasks", label: "Nhiệm vụ" },
-    { id: "personal", label: "Cá nhân" },
-    { id: "achievements", label: "Thành tích" },
-    { id: "card", label: "Thẻ Apec" },
-    { id: "link", label: "Liên kết" },
+    { id: "skills", label: "Kỹ năng", icon: <Rocket size={18} /> },
+    { id: "projects", label: "Dự án", icon: <Briefcase size={18} /> },
+    { id: "career", label: "Lộ trình", icon: <Layers size={18} /> },
+    { id: "tasks", label: "Nhiệm vụ", icon: <ListTodo size={18} /> },
+    { id: "personal", label: "Cá nhân", icon: <User size={18} /> },
+    { id: "achievements", label: "Thành tích", icon: <Award size={18} /> },
+    { id: "card", label: "Thẻ Apec", icon: <Home size={18} /> },
+    { id: "link", label: "Liên kết", icon: <Link2 size={18} /> },
   ];
 
-  // Check scroll position để show/hide arrows
-  const checkScroll = () => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      setShowLeftArrow(scrollLeft > 0);
-      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 1);
-    }
-  };
-
-  useEffect(() => {
-    checkScroll();
-    window.addEventListener('resize', checkScroll);
-    return () => window.removeEventListener('resize', checkScroll);
-  }, []);
-
-  // Scroll sang trái
-  const scrollLeft = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
-    }
-  };
-
-  // Scroll sang phải
-  const scrollRight = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
-    }
-  };
-
   return (
-    <div className="relative border-b border-slate-800 mb-6">
-      {/* Nút scroll trái */}
-      {showLeftArrow && (
-        <button
-          onClick={scrollLeft}
-          className="absolute left-0 top-0 bottom-0 z-20 w-10 bg-gradient-to-r from-slate-900 via-slate-900/90 to-transparent hover:from-slate-800 transition-all flex items-center justify-start pl-2"
-          aria-label="Scroll left"
-        >
-          <svg
-            className="w-5 h-5 text-slate-400 hover:text-blue-400 transition-colors"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </button>
-      )}
-
-      {/* Nút scroll phải */}
-      {showRightArrow && (
-        <button
-          onClick={scrollRight}
-          className="absolute right-0 top-0 bottom-0 z-20 w-10 bg-gradient-to-l from-slate-900 via-slate-900/90 to-transparent hover:from-slate-800 transition-all flex items-center justify-end pr-2"
-          aria-label="Scroll right"
-        >
-          <svg
-            className="w-5 h-5 text-slate-400 hover:text-blue-400 transition-colors"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
-      )}
-
-      {/* Tabs container */}
-      <div
-        ref={scrollContainerRef}
-        onScroll={checkScroll}
-        className="flex gap-2 overflow-x-auto overflow-y-hidden scrollbar-hide scroll-smooth px-4"
-      >
-        {tabs.map((tab) => (
-          <motion.button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`relative px-4 sm:px-6 py-4 text-xs sm:text-base font-semibold transition-all duration-300 whitespace-nowrap ${
-              activeTab === tab.id
-                ? "text-blue-400"
-                : "text-slate-400 hover:text-slate-300"
-            }`}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <motion.span
-              initial={{ opacity: 0.7 }}
-              animate={{ opacity: activeTab === tab.id ? 1 : 0.7 }}
-              transition={{ duration: 0.2 }}
+    <>
+      {/* 💻 Desktop giữ nguyên */}
+      <div className="hidden md:block border-b border-slate-800 mb-6">
+        <div className="flex gap-4 px-6">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative px-4 py-3 text-sm font-semibold transition ${
+                activeTab === tab.id
+                  ? "text-blue-400 border-b-2 border-blue-400"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
             >
               {tab.label}
-            </motion.span>
-            {activeTab === tab.id && (
-              <motion.div
-                layoutId="activeTab"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-600 via-blue-400 to-blue-600 shadow-lg shadow-blue-500/50"
-                transition={{
-                  type: "spring",
-                  stiffness: 500,
-                  damping: 30
-                }}
-              />
-            )}
-          </motion.button>
-        ))}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <style jsx>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
-    </div>
+      {/* 📱 Mobile Floating Button */}
+      <div className="md:hidden fixed bottom-6 inset-x-0 flex justify-center items-end z-50">
+        {/* Floating Button */}
+        <motion.button
+          onClick={() => setIsOpen(!isOpen)}
+          className="relative z-50 flex items-center justify-center w-14 h-14 rounded-full bg-blue-500 text-white shadow-lg shadow-blue-500/40 border border-blue-400/40 backdrop-blur-lg active:scale-95 transition"
+          whileTap={{ scale: 0.9 }}
+        >
+          {isOpen ? <X size={22} /> : <Menu size={22} />}
+        </motion.button>
+
+        {/* Overlay */}
+        <AnimatePresence>
+          {isOpen && (
+            <>
+              <motion.div
+                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsOpen(false)}
+              />
+
+              {/* Tabs Menu */}
+              <motion.div
+                className="absolute bottom-20 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-slate-900/80 backdrop-blur-xl border border-slate-700/70 rounded-2xl shadow-2xl z-50 p-3"
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 30, scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 250, damping: 20 }}
+              >
+                <div className="grid grid-cols-4 gap-3">
+                  {tabs.map((tab) => (
+                    <motion.button
+                      key={tab.id}
+                      onClick={() => {
+                        setActiveTab(tab.id);
+                        setIsOpen(false);
+                      }}
+                      className={`flex flex-col items-center justify-center p-2 rounded-xl text-[11px] font-medium transition-all duration-150 ${
+                        activeTab === tab.id
+                          ? "bg-blue-500/90 text-white shadow-md"
+                          : "bg-slate-800/60 text-slate-300 hover:bg-slate-700/70"
+                      }`}
+                      whileTap={{ scale: 0.92 }}
+                    >
+                      <div className="mb-1">{tab.icon}</div>
+                      {tab.label}
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+    </>
   );
 }
 

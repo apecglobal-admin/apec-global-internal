@@ -2,28 +2,12 @@
 
 import {
   Mail,
-  Phone,
   MapPin,
   Calendar,
   Briefcase,
-  Award,
-  TrendingUp,
-  Users,
-  FileText,
-  Target,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
   ChevronLeft,
   ChevronRight,
-  Trophy,
-  Star,
-  ListTodo,
-  ClipboardList,
-  ArrowUp,
-  Lock,
-  Unlock,
-  FileUser,
+ 
 } from "lucide-react";
 import { useState } from "react";
 
@@ -38,6 +22,8 @@ import CardTab from "./tab/card";
 import LinkTab from "./tab/link";
 import { CircleMenu, CircleMenuItem } from "react-circular-menu";
 import Flag from "react-flagkit";
+import Header from "@/components/header";
+import Footer from "@/components/footer";
 // ==================== MOCK DATA ====================
 const mockUserInfo = {
   id: 1,
@@ -138,13 +124,93 @@ function ProfilePage() {
           animation: shimmer 2s infinite;
         }
       `}</style>
-
+<Header/>
       <div className="mt-0 mx-0 max-w-none mb-0 flex-1">
         <div className="relative h-full mb-0 rounded-none border-x-0 border-t-0 border border-slate-800 bg-gradient-to-tl from-[#0c2954] to-transparent p-4 sm:p-6 lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row">
             <div className="lg:w-1/5">
               <div className="sticky top-8 space-y-6">
-                <div className="relative">
+                {/* Mobile: Avatar and Info side by side */}
+                <div className="lg:hidden space-y-3">
+                  <div className="flex gap-4">
+                    <div className="relative w-32 flex-shrink-0">
+                      <div className="relative w-full aspect-square">
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl blur-xl" />
+                        <div className="relative h-full w-full rounded-2xl border-2 border-slate-700 overflow-hidden shadow-2xl bg-slate-900">
+                          <img
+                            src={images[currentImage]}
+                            alt="Profile"
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+
+                        <button
+                          onClick={prevImage}
+                          className="absolute left-1 top-1/2 -translate-y-1/2 bg-slate-900/80 backdrop-blur-sm hover:bg-blue-500/20 text-white p-1 rounded-full border border-slate-700 hover:border-blue-400 transition-all duration-300"
+                        >
+                          <ChevronLeft size={14} />
+                        </button>
+                        <button
+                          onClick={nextImage}
+                          className="absolute right-1 top-1/2 -translate-y-1/2 bg-slate-900/80 backdrop-blur-sm hover:bg-blue-500/20 text-white p-1 rounded-full border border-slate-700 hover:border-blue-400 transition-all duration-300"
+                        >
+                          <ChevronRight size={14} />
+                        </button>
+
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                          {images.map((_, index) => (
+                            <button
+                              key={index}
+                              onClick={() => setCurrentImage(index)}
+                              className={`h-1.5 rounded-full transition-all duration-300 ${
+                                currentImage === index
+                                  ? 'bg-blue-400 w-4'
+                                  : 'bg-slate-700 hover:bg-slate-600 w-1.5'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mobile: User Info */}
+                    <div className="flex-1">
+                      <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-3 h-full flex flex-col justify-center">
+                        <h2 className="text-lg font-bold text-slate-100 mb-1">
+                          {mockUserInfo.name}
+                        </h2>
+                        <p className="text-xs font-semibold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                          {getPositionName(mockUserInfo.position_id)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mobile: EXP Bar */}
+                  <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold text-slate-300">
+                        Level {currentLevel}
+                      </span>
+                      <span className="text-xs font-bold text-blue-400">
+                        {currentExp.toFixed(0)}/{expForNextLevel}
+                      </span>
+                    </div>
+                    <div className="relative w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                      <div
+                        className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-400 rounded-full transition-all duration-500 shadow-lg shadow-blue-500/50"
+                        style={{ width: `${expProgress}%` }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {expRemaining.toFixed(0)} XP to next level
+                    </p>
+                  </div>
+                </div>
+
+                {/* Desktop: Original Layout */}
+                <div className="hidden lg:block relative">
                   <div className="relative w-full aspect-square">
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl blur-xl" />
                     <div className="relative h-full w-full rounded-2xl border-2 border-slate-700 overflow-hidden shadow-2xl bg-slate-900">
@@ -184,7 +250,28 @@ function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="hidden lg:block bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-slate-300">
+                      Level {currentLevel}
+                    </span>
+                    <span className="text-xs font-bold text-blue-400">
+                      {currentExp.toFixed(0)}/{expForNextLevel}
+                    </span>
+                  </div>
+                  <div className="relative w-full h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-400 rounded-full transition-all duration-500 shadow-lg shadow-blue-500/50"
+                      style={{ width: `${expProgress}%` }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    {expRemaining.toFixed(0)} XP to next level
+                  </p>
+                </div>
+
+                <div className="hidden lg:block space-y-4">
                   <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
                     <h2 className="text-2xl font-bold text-slate-100 mb-1">
                       {mockUserInfo.name}
@@ -211,27 +298,6 @@ function ProfilePage() {
                       <Calendar size={16} className="text-blue-400 flex-shrink-0" />
                       <span className="text-xs">{formatDate(mockUserInfo.join_date)}</span>
                     </div>
-                  </div>
-
-                  <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-slate-300">
-                        Level {currentLevel}
-                      </span>
-                      <span className="text-xs font-bold text-blue-400">
-                        {currentExp.toFixed(0)}/{expForNextLevel}
-                      </span>
-                    </div>
-                    <div className="relative w-full h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-                      <div
-                        className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-400 rounded-full transition-all duration-500 shadow-lg shadow-blue-500/50"
-                        style={{ width: `${expProgress}%` }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-                    </div>
-                    <p className="text-xs text-slate-500 mt-2">
-                      {expRemaining.toFixed(0)} XP to next level
-                    </p>
                   </div>
                 </div>
               </div>
@@ -269,32 +335,6 @@ function ProfilePage() {
               </div>
             </div>
           </div>
-          {/* <div style={{ position: 'absolute', bottom: '100px', right: '20px' }}>
-      <CircleMenu
-        startAngle={90}
-        rotationAngle={270}
-        itemSize={2}
-        radius={4}
-        rotationAngleInclusive={false}
-      >
-        <CircleMenuItem
-          onClick={() => alert("Clicked the item")}
-          tooltip="Email"
-          tooltipPlacement="right"
-        >
-          <CheckCircle2 />
-        </CircleMenuItem>
-        <CircleMenuItem tooltip="Help">
-          <Users />
-        </CircleMenuItem>
-        <CircleMenuItem tooltip="Location" tooltipPlacement="top">
-          <Mail />
-        </CircleMenuItem>
-        <CircleMenuItem tooltip="Info">
-          <Flag country="US" />
-        </CircleMenuItem>
-      </CircleMenu>
-    </div> */}
         </div>
         
       </div>

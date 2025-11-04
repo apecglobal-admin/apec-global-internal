@@ -322,48 +322,48 @@ function TasksTab() {
         {selectedTask === null ? (
           <>
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex gap-2 flex-wrap">
-                <button
-                  onClick={() => setTaskFilter("all")}
-                  className={`px-4 py-2 rounded-full font-semibold text-sm transition ${
-                    taskFilter === "all"
-                      ? "bg-blue-500 text-white"
-                      : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-                  }`}
-                >
-                  Tất cả ({allTasks.length})
-                </button>
-                <button
-                  onClick={() => setTaskFilter("daily")}
-                  className={`px-4 py-2 rounded-full font-semibold text-sm transition ${
-                    taskFilter === "daily"
-                      ? "bg-blue-500 text-white"
-                      : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-                  }`}
-                >
-                  Hằng ngày ({mockTasks.daily.length})
-                </button>
-                <button
-                  onClick={() => setTaskFilter("personal")}
-                  className={`px-4 py-2 rounded-full font-semibold text-sm transition ${
-                    taskFilter === "personal"
-                      ? "bg-blue-500 text-white"
-                      : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-                  }`}
-                >
-                  Cá nhân ({mockTasks.personal.length})
-                </button>
-                <button
-                  onClick={() => setTaskFilter("team")}
-                  className={`px-4 py-2 rounded-full font-semibold text-sm transition ${
-                    taskFilter === "team"
-                      ? "bg-blue-500 text-white"
-                      : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-                  }`}
-                >
-                  Chung ({mockTasks.team.length})
-                </button>
-              </div>
+              <div className="flex gap-2 overflow-x-auto pb-2">
+  <button
+    onClick={() => setTaskFilter("all")}
+    className={`px-4 py-2 rounded-full font-semibold text-sm transition whitespace-nowrap ${
+      taskFilter === "all"
+        ? "bg-blue-500 text-white"
+        : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+    }`}
+  >
+    Tất cả ({allTasks.length})
+  </button>
+  <button
+    onClick={() => setTaskFilter("daily")}
+    className={`px-4 py-2 rounded-full font-semibold text-sm transition whitespace-nowrap ${
+      taskFilter === "daily"
+        ? "bg-blue-500 text-white"
+        : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+    }`}
+  >
+    Hằng ngày ({mockTasks.daily.length})
+  </button>
+  <button
+    onClick={() => setTaskFilter("personal")}
+    className={`px-4 py-2 rounded-full font-semibold text-sm transition whitespace-nowrap ${
+      taskFilter === "personal"
+        ? "bg-blue-500 text-white"
+        : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+    }`}
+  >
+    Cá nhân ({mockTasks.personal.length})
+  </button>
+  <button
+    onClick={() => setTaskFilter("team")}
+    className={`px-4 py-2 rounded-full font-semibold text-sm transition whitespace-nowrap ${
+      taskFilter === "team"
+        ? "bg-blue-500 text-white"
+        : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+    }`}
+  >
+    Chung ({mockTasks.team.length})
+  </button>
+</div>
               
               <div className="flex gap-2">
                 <button
