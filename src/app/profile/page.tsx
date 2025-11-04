@@ -71,8 +71,8 @@ const mockUserInfo = {
   },
 };
 
-const getPositionName = (positionId: any) => {
-  const positions = {
+const getPositionName = (positionId: number) => {
+  const positions: Record<number, string> = {
     5: "Senior Developer",
     4: "Mid-level Developer",
     3: "Junior Developer",
@@ -86,7 +86,9 @@ function ProfilePage() {
   const [currentImage, setCurrentImage] = useState(0);
   const [activeTab, setActiveTab] = useState("skills");
 
-  const currentExp = parseFloat(mockUserInfo.exp);
+const currentExp = typeof mockUserInfo.exp === 'string' 
+  ? parseFloat(mockUserInfo.exp) 
+  : mockUserInfo.exp;
   const currentLevel = mockUserInfo.level;
   const expForNextLevel = currentLevel * mockUserInfo.next_exp;
   const expProgress = (currentExp / expForNextLevel) * 100;

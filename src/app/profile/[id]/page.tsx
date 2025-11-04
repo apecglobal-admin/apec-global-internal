@@ -44,13 +44,13 @@ const mockUserInfo = {
   exp: 1200,
   next_exp: 300,
   skills: [
-    { icon: "🛡️", name: "Security Patrol", value: "100" },
-    { icon: "🚨", name: "Emergency Response", value: "80" },
-    { icon: "📞", name: "Communication", value: "70" },
-    { icon: "🎯", name: "Observation", value: "90" },
-    { icon: "💪", name: "Physical Fitness", value: "100" },
-    { icon: "📝", name: "Reporting", value: "60" },
-  ],
+  { icon: "🛡️", name: "Tuần tra an ninh", value: "100" },
+  { icon: "🚨", name: "Ứng phó khẩn cấp", value: "80" },
+  { icon: "📞", name: "Giao tiếp", value: "70" },
+  { icon: "🎯", name: "Quan sát", value: "90" },
+  { icon: "💪", name: "Thể lực", value: "100" },
+  { icon: "📝", name: "Báo cáo", value: "60" },
+],
   projects: {
     total_projects: 12,
     total_members_projects: 4,
@@ -71,13 +71,13 @@ const mockUserInfo = {
   },
 };
 
-const getPositionName = (positionId: any) => {
-  const positions = {
-    5: "Senior Developer",
-    4: "Mid-level Developer",
-    3: "Junior Developer",
-    2: "Intern",
-    1: "Trainee",
+const getPositionName = (positionId: number) => {
+  const positions: Record<number, string> = {
+    5: "Tổng chỉ huy",
+    4: "Trưởng ban chỉ huy bảo vệ",
+    3: "Trưởng ban bảo vệ",
+    2: "Bảo vệ chính thức",
+    1: "Bảo vệ thực tập",
   };
   return positions[positionId] || "Nhân viên";
 };
@@ -86,7 +86,9 @@ function ProfilePage({params}: any) {
   const [currentImage, setCurrentImage] = useState(0);
   const [activeTab, setActiveTab] = useState("skills");
 
-  const currentExp = parseFloat(mockUserInfo.exp);
+  const currentExp = typeof mockUserInfo.exp === 'string' 
+  ? parseFloat(mockUserInfo.exp) 
+  : mockUserInfo.exp;
   const currentLevel = mockUserInfo.level;
   const expForNextLevel = currentLevel * mockUserInfo.next_exp;
   const expProgress = (currentExp / expForNextLevel) * 100;
@@ -216,7 +218,7 @@ function ProfilePage({params}: any) {
                       <img
                         src={images[currentImage]}
                         alt="Profile"
-                        className="h-full w-full object-cover"
+                        className="h-full w-full"
                       />
                     </div>
 
