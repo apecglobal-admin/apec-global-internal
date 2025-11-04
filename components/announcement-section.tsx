@@ -161,7 +161,7 @@ export default function AnnouncementSection() {
             key={item.key}
             onClick={() => setActiveCategory(item.key)}
             className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition sm:px-5 sm:text-sm ${
-              activeCategory === item.key ? "bg-blue-600 text-white" : "border border-slate-800 text-slate-300 hover:border-blue-500 hover:text-white"
+              activeCategory === item.key ? "bg-active-blue-metallic" : "border border-slate-800 text-slate-300 hover:border-blue-500 hover:text-white"
             }`}
           >
             {item.label}
