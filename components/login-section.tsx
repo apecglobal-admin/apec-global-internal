@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { loginWeb } from "@/src/services/api";
 import { Eye, EyeOff, Lock } from "lucide-react";
+import { logout } from "@/src/features/user/userSlice";
 
 export default function LoginSection() {
     const [enableOtp, setEnableOtp] = useState(false);
@@ -12,7 +13,6 @@ export default function LoginSection() {
     const router = useRouter();
     const { status, error, userInfo } = useSelector((state: any) => state.user);
   console.log("userInfo", userInfo);
-  
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -43,6 +43,12 @@ export default function LoginSection() {
         } catch (error) {
             console.error("Đăng nhập thất bại:", error);
         }
+    };
+
+    const handleLogout = () => {
+      localStorage.removeItem("userToken");
+      dispatch(logout());
+      router.push("/login");
     };
 
     return (
@@ -163,10 +169,7 @@ export default function LoginSection() {
                   </div>
 
                   <button
-                    onClick={() => {
-                      dispatch({ type: 'user/logout' });
-                      window.location.reload();
-                    }}
+                    onClick={handleLogout}
                     className="w-full rounded-2xl py-3 text-sm font-semibold uppercase tracking-wide transition bg-red-600 hover:bg-red-700 text-white cursor-pointer"
                   >
                     Đăng xuất
