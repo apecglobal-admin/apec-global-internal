@@ -40,7 +40,7 @@ const quickLinks = [
 
 export default function PolicySection() {
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-950/80 to-slate-900 p-6 sm:p-8">
+    <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-950 to-slate-900 p-6 sm:p-8">
       <div className="space-y-8">
         <div className="space-y-6">
           <div className="space-y-4">

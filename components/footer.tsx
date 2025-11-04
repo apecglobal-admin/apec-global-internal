@@ -7,18 +7,18 @@ export default function Footer() {
         <div>
         <a
                     href="#"
-                    className="flex items-center gap-3 sm:gap-3 text-blue-400 flex-shrink-0"
+                    className="flex items-center gap-3 sm:gap-3 text-white flex-shrink-0"
                 >
                     <img
                         src="https://res.cloudinary.com/dbt97thds/image/upload/v1751877069/rzasmzadpuv8tlbdigmh.png"
                         alt="APECGLOBAL Logo"
-                        className="w-12 h-12 sm:w-16 sm:h-16 lg:w-[70px] lg:h-[70px]"
+                        className="w-16 h-12 sm:w-20 sm:h-16 lg:w-[100px] lg:h-[70px]"
                     />
                     <div>
-                        <div className="text-xl sm:text-2xl font-extrabold tracking-wide">
+                        <div className="text-xl sm:text-2xl font-extrabold tracking-wide text-blue-400">
                             APEC GLOBAL
                         </div>
-                        <div className="text-xs sm:text-sm uppercase tracking-[0.05em] text-slate-400">
+                        <div className="text-xs sm:text-sm uppercase tracking-[0.05em] font-bold text-white">
                             Kiến tạo giá trị - Làm Chủ Tương Lai
                         </div>
                     </div>

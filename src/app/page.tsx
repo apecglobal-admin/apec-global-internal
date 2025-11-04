@@ -13,6 +13,7 @@ import Footer from "@/components/footer";
 
 // import Tabs UI
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+
 const nav = [
     { value: "statistics", label: "Thống kê báo cáo" },
     { value: "policy", label: "Chính sách nội bộ" },
@@ -21,6 +22,8 @@ const nav = [
     { value: "additional", label: "Các mục bổ sung" },
 ];
 export default function Home() {
+
+
     return (
         <div className="min-h-screen bg-slate-950 text-white">
             <Header />
@@ -44,33 +47,29 @@ export default function Home() {
                 {/* Tabs */}
 
                 <Tabs defaultValue="statistics" className="mt-10 w-full">
-                    <TabsList className="inline-flex flex-wrap justify-start w-full gap-2 bg-custom-blue-gradient rounded-2xl border border-slate-700 backdrop-blur-sm mb-8 p-3 h-auto">
+                    <TabsList className="inline-flex flex-wrap justify-start w-full gap-2 bg-slate-800/50 rounded-2xl backdrop-blur-sm mb-8 p-3 h-auto">
                         {nav.map((tab, index) => (
                             <TabsTrigger
-                                key={tab.value}
-                                value={tab.value}
-                                className="inline-flex items-center justify-center whitespace-nowrap min-w-[110px] sm:min-w-[140px] px-4 py-3 sm:px-5 sm:py-3.5 
-    rounded-full 
-    font-medium text-sm text-slate-400
+  key={tab.value}
+  value={tab.value}
+//   style={{ border: "1.4px solid rgb(57,68,75)" }} // border mặc định
+  className="
+    inline-flex items-center justify-center whitespace-nowrap 
+    min-w-[110px] sm:min-w-[140px] px-4 py-3 sm:px-5 sm:py-3.5 
+    rounded-full font-medium text-sm text-slate-400
     transition-all duration-200 
-    bg-slate-800/50 border border-slate-700/50
+    bg-slate-800/50
 
+    hover:bg-slate-700/50 hover:text-slate-200 hover:border-teal-300/80
+    border-[rgb(57,68,75)]
 
-    data-[state=active]:bg-gradient-to-br 
-    data-[state=active]:from-blue-300/70 
-    data-[state=active]:to-blue-900 
-    data-[state=active]:text-white
-    data-[state=active]:border-blue-600/50 
-    data-[state=active]:shadow-lg 
-    data-[state=active]:shadow-black/50
-
-    hover:bg-slate-700/50 hover:text-slate-200 hover:border-slate-600"
-                            >
-                                <span
-                                    className="
-                    data-[state=active]:text-green-300
-                "
-                                >
+    data-[state=active]:bg-white 
+    data-[state=active]:text-black
+    data-[state=active]:border-[rgb(92,197,199)]
+    data-[state=active]:shadow-[0_0_5px_1px_rgb(92,197,199)]
+  "
+>
+                                <span>
                                     {tab.label}
                                 </span>
                             </TabsTrigger>
@@ -80,35 +79,35 @@ export default function Home() {
                     <div className="space-y-6">
                         <TabsContent
                             value="statistics"
-                            className="animate-in fade-in-50 duration-300 bg-active-blue-metallic p-1 sm:p-2 rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 bg-[#434F58] p-[2px] rounded-2xl "
                         >
                             <StatisticsSection />
                         </TabsContent>
 
                         <TabsContent
                             value="policy"
-                            className="animate-in fade-in-50 duration-300 bg-active-blue-metallic p-1 sm:p-2 rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 bg-[#434F58] p-[2px] rounded-2xl "
                         >
                             <PolicySection />
                         </TabsContent>
 
                         <TabsContent
                             value="event"
-                            className="animate-in fade-in-50 duration-300 bg-active-blue-metallic p-1 sm:p-2 rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 bg-[#434F58] p-[2px] rounded-2xl "
                         >
                             <EventSection />
                         </TabsContent>
 
                         <TabsContent
                             value="projects"
-                            className="animate-in fade-in-50 duration-300 bg-active-blue-metallic p-1 sm:p-2 rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 bg-[#434F58] p-[2px] rounded-2xl "
                         >
                             <ProjectsSection />
                         </TabsContent>
 
                         <TabsContent
                             value="additional"
-                            className="animate-in fade-in-50 duration-300 bg-active-blue-metallic p-1 sm:p-2 rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 bg-[#434F58] p-[2px] rounded-2xl "
                         >
                             <AdditionalSection />
                         </TabsContent>
