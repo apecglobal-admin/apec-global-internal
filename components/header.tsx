@@ -89,11 +89,11 @@ export default function Header() {
                         className="w-12 h-12 sm:w-16 sm:h-16 lg:w-[70px] lg:h-[70px]"
                     />
                     <div>
-                        <div className="text-xl sm:text-2xl font-extrabold tracking-wide">
-                            APECGLOBAL
+                        <div className="text-xl sm:text-2xl font-extrabold tracking-wide text-blue-400">
+                            APEC GLOBAL
                         </div>
-                        <div className="text-xs sm:text-sm uppercase tracking-[0.2em] text-slate-400">
-                            Empower Future Together
+                        <div className="text-xs sm:text-sm uppercase tracking-[0.05em] text-slate-400">
+                            Kiến tạo giá trị - Làm Chủ Tương Lai
                         </div>
                     </div>
                 </a>
