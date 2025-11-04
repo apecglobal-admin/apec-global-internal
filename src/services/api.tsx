@@ -10,6 +10,10 @@ export const loginWeb = createAsyncThunk(
         email,
         password,
       });
+      if (typeof window !== "undefined") {
+        localStorage.setItem("userToken", response.data.token);
+      }
+      
       return response.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);

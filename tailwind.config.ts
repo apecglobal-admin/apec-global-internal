@@ -7,7 +7,11 @@ export default {
     './components/**/*.{js,ts,jsx,tsx,mdx}'
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        greenColor: "rgb(92,197,199)"
+      }
+    },
   },
   plugins: [],
 }

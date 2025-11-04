@@ -28,7 +28,7 @@ const weeklyHighlights = [
 
 export default function AdditionalSection() {
   return (
-    <section className="rounded-3xl border border-slate-800 bg-slate-950/60 p-6 sm:p-7 lg:p-8">
+    <section className="rounded-2xl border border-slate-800 bg-slate-950 p-6 sm:p-7 lg:p-8">
       <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400 sm:text-sm">Các mục bổ sung</div>
       <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">Hệ sinh thái hỗ trợ nội bộ</h2>
       <p className="mt-2 max-w-3xl text-sm text-slate-400">

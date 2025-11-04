@@ -65,7 +65,7 @@ const clusters = [
 
 export default function ProjectsSection() {
   return (
-    <section className="rounded-3xl border border-slate-800 bg-slate-950/70 p-6 sm:p-7 lg:p-8">
+    <section className="rounded-2xl border border-slate-800 bg-slate-950 p-6 sm:p-7 lg:p-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400 sm:text-sm">Danh mục dự án</div>
