@@ -87,7 +87,7 @@ export default function EventSection() {
   }, [])
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-950/85 to-slate-900 p-6 sm:p-7 lg:p-8">
+    <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-950 to-slate-900 p-6 sm:p-7 lg:p-8">
       <div className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-blue-500/20 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 right-0 h-72 w-72 translate-x-24 translate-y-16 rounded-full bg-emerald-500/10 blur-3xl" />
 

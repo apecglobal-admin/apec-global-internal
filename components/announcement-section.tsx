@@ -129,8 +129,9 @@ export default function AnnouncementSection() {
     setData((prev) => prev.map((item) => (item.id === id ? { ...item, read: !item.read } : item)))
   }
 
+
   return (
-    <section className="rounded-3xl border border-slate-800 bg-slate-950/60 p-6 sm:p-7 lg:p-8">
+    <section style={{border: "1.5px solid #434F58"}} className="rounded-3xl bg-slate-950/60 p-6 sm:p-7 lg:p-8">
       <div className="flex flex-col gap-4">
         <div>
           <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400 sm:text-sm">Thông báo</div>
@@ -161,7 +162,7 @@ export default function AnnouncementSection() {
             key={item.key}
             onClick={() => setActiveCategory(item.key)}
             className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition sm:px-5 sm:text-sm ${
-              activeCategory === item.key ? "bg-active-blue-metallic" : "border border-slate-800 text-slate-300 hover:border-blue-500 hover:text-white"
+              activeCategory === item.key ? "bg-active-blue-metallic" : "border border-slate-800 text-slate-300 hover:border-teal-300/80 hover:text-white"
             }`}
           >
             {item.label}
@@ -208,13 +209,13 @@ export default function AnnouncementSection() {
                 <p className="mt-2 text-sm text-slate-300">{item.summary}</p>
               </div>
               <div className="flex items-center gap-3 sm:gap-4 md:flex-col md:items-end">
-                <span className={`text-xs font-semibold uppercase tracking-widest ${item.read ? "text-emerald-300" : "text-orange-300"}`}>
+                <span className={`text-xs font-semibold uppercase tracking-widest ${item.read ? "text-color-green" : "text-orange-300"}`}>
                   {item.read ? "Đã đọc" : "Chưa đọc"}
                 </span>
                 <button
                   onClick={() => toggleRead(item.id)}
                   className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                    item.read ? "border border-slate-700 text-slate-300 hover:border-blue-500 hover:text-white" : "bg-blue-600 text-white hover:bg-blue-500"
+                    item.read ? "border border-slate-700 text-slate-300 hover:border-teal-300/80 hover:text-white" : "bg-blue-600 text-white hover:bg-blue-500"
                   }`}
                 >
                   {item.read ? "Đánh dấu chưa đọc" : "Đánh dấu đã đọc"}

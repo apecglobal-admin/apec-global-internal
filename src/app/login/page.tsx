@@ -3,35 +3,36 @@
 import { loginWeb } from "@/src/services/api";
 import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function LoginPage() {
   const dispatch = useDispatch();
   const router = useRouter();
+  const {status, error} = useSelector((state: any) => state.user);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  
+  useEffect(() => {
+    if (status === "succeeded") {
+      router.push("/");
+    } else if (status === "failed" && error) {
+      alert(error);
+    }
+  }, [status]);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    console.log("Đăng nhập với:", { email, password });
+    // console.log("Đăng nhập với:", { email, password });
     try {
       const payload = {
         email,
         password,
       };
 
-      const res = await dispatch(loginWeb(payload) as any);
-      console.log("Kết quả đăng nhập:", res);
-      if (res.status === 200 || res.status === 201) {
-        localStorage.setItem("userToken", res.payload.token);
-        router.push("/");
-      } else if (res.status === 429) {
-        alert(res.payload.message);
-      } else {
-         alert(res.payload.message);
-      }
+      await dispatch(loginWeb(payload) as any);
+
     } catch (error) {
       console.error("Đăng nhập thất bại:", error);
     }

@@ -20,7 +20,7 @@ const technologyMetrics = [
 
 export default function StatisticsSection() {
   return (
-    <section className="rounded-3xl border border-slate-800 bg-slate-950/70 p-6 sm:p-7 lg:p-8">
+    <section className="rounded-2xl border border-slate-800 bg-slate-950 p-6 sm:p-7 lg:p-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400 sm:text-sm">Thống kê & báo cáo</div>
