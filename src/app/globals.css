@@ -95,6 +95,14 @@
   border-color: var(--color-green-main-bg);
 }
 
+
+
+.px-8 {
+  padding-inline: calc(var(--spacing) * 8);
+}
+
+
+
 .bg-custom-blue-gradient {
   /* Tạo gradient tuyến tính 3 màu: Xanh - Đen - Xanh */
   background-image: linear-gradient(
