@@ -3,7 +3,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { loginWeb } from "@/src/services/api";
+import { fetchUserInfo, loginWeb } from "@/src/services/api";
 import { Eye, EyeOff, Lock } from "lucide-react";
 import { logout } from "@/src/features/user/userSlice";
 
@@ -12,7 +12,6 @@ export default function LoginSection() {
     const dispatch = useDispatch();
     const router = useRouter();
     const { status, error, userInfo } = useSelector((state: any) => state.user);
-  console.log("userInfo", userInfo);
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -21,14 +20,7 @@ export default function LoginSection() {
         setPassword("");
         setEmail("");
     };
-    useEffect(() => {
-        if (status === "succeeded") {
-            clearForm();
-            window.location.reload()
-        } else if (status === "failed" && error) {
-            alert(error);
-        }
-    }, [status]);
+
 
     const handleLogin = async (e: any) => {
         e.preventDefault();
@@ -39,7 +31,17 @@ export default function LoginSection() {
                 password,
             };
 
-            await dispatch(loginWeb(payload) as any);
+            const res = await dispatch(loginWeb(payload) as any);
+            if (status === "succeeded") {
+                const token = localStorage.getItem("userToken");
+                if (token) {
+                    dispatch(fetchUserInfo(token) as any);
+                }
+            } else if (status === "failed" && error) {
+                alert(error);
+            }
+            
+
         } catch (error) {
             console.error("Đăng nhập thất bại:", error);
         }
