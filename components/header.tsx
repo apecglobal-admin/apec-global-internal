@@ -231,7 +231,7 @@ export default function Header() {
                         <a
                             key={item.label}
                             href={item.href}
-                            className="text-slate-300 py-2 px-3 rounded hover:bg-white hover:text-white"
+                            className="text-slate-300 py-2 px-3 rounded hover:bg-white hover:text-black"
                             onClick={() => setIsSidebarOpen(false)}
                         >
                             {item.label}

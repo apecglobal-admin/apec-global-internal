@@ -65,8 +65,8 @@ export default function Slider({ slides = fallbackSlides }: SliderProps) {
         setCurrent((current - 1 + slides.length) % slides.length);
 
     return (
-        <div className="flex flex-col sm:flex-row items-center justify-between rounded-3xl border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900/80 to-slate-950 px-6 py-4">
-            <div className="flex flex-col items-center sm:items-start text-center sm:text-left sm:w-2/3">
+        <div className="relative flex flex-col sm:flex-row items-center justify-between rounded-3xl border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900/80 to-slate-950 px-6 py-4">
+            <div className="flex flex-col items-center sm:items-start text-center sm:text-left sm:w-2/3 md:mr-5">
                 <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start sm:flex-nowrap sm:gap-4">
                     <div className="rounded-full border border-blue-500/50 bg-blue-500/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-blue-300">
                         {slides[current].highlight}
@@ -107,15 +107,14 @@ export default function Slider({ slides = fallbackSlides }: SliderProps) {
                     </button>
                 </div>
             </div>
-
-            {/* Hình ảnh bên phải */}
-            <div className="flex justify-center sm:w-1/2 mt-8 sm:mt-0">
+            <div className="md:w-1/3 sm:w-1/3 w-3/4 sm:mt-0  mt-8  w-full rounded-lg overflow-hidden" style={{ height: "280px" }}>
                 <Image
                     src={slides[current].image}
                     alt={slides[current].image}
                     width={0}
                     height={0}
-                    className="w-1/2 object-contain"
+                    className="w-full h-full  rounded-md object-fix"
+
                 />
             </div>
         </div>
