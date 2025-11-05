@@ -68,10 +68,10 @@ export default function Header() {
         { label: "Dự án", href: "#" },
         { label: "Sự kiện", href: "#" },
         { label: "Chính sách", href: "#" },
-        { label: "Thống kê", href: "#" },
-        { label: "Thi đua", href: "#" },
-        { label: "Trợ giúp", href: "#" },
-        { label: "Liên hệ", href: "#" },
+        { label: "Thống kê", href: "/analysis" },
+        { label: "Thi đua", href: "/compet" },
+        { label: "Trợ giúp", href: "/support" },
+        { label: "Liên hệ", href: "/contact" },
     ];
 
     return (
