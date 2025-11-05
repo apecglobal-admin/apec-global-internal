@@ -63,7 +63,7 @@ export default function Header() {
     };
 
     const menuItems = [
-        { label: "Trang chủ", href: "#" },
+        { label: "Trang chủ", href: "/" },
         { label: "Tin tức", href: "#" },
         { label: "Dự án", href: "#" },
         { label: "Sự kiện", href: "#" },
@@ -80,7 +80,7 @@ export default function Header() {
             <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4 max-w-7xl mx-auto w-full">
                 {/* Logo */}
                 <a
-                    href="#"
+                    href="/"
                     className="flex items-center gap-3 sm:gap-3 text-white flex-shrink-0"
                 >
                     <img
@@ -167,7 +167,7 @@ export default function Header() {
                                         {userInfo ? (
                                             <>
                                                 <button
-                                                    className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-slate-300 transition hover:bg-white hover:text-white cursor-pointer"
+                                                    className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-slate-300 transition hover:bg-white hover:text-black cursor-pointer"
                                                     onClick={() =>
                                                         router.push("/profile")
                                                     }
@@ -177,13 +177,13 @@ export default function Header() {
                                                         Thông tin cá nhân
                                                     </span>
                                                 </button>
-                                                <button className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-slate-300 transition hover:bg-white hover:text-white cursor-pointer">
+                                                <button className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-slate-300 transition hover:bg-white hover:text-black cursor-pointer">
                                                     <Settings size={18} />
                                                     <span>Cài đặt</span>
                                                 </button>
                                                 <div className="my-2 border-t border-white"></div>
                                                 <button
-                                                    className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-red-400 transition hover:bg-white hover:text-red-300 cursor-pointer"
+                                                    className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-red-400 transition hover:bg-white hover:text-red-600 cursor-pointer"
                                                     onClick={handleLogout}
                                                 >
                                                     <LogOut size={18} />
