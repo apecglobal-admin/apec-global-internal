@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const apiAxiosInstance= axios.create({
-  baseURL: 'https://apec-global-backend.onrender.com/api/v1', 
+  baseURL: 'http://192.168.1.71:5000/api/v1', 
   headers: {
     'Content-Type': 'application/json',
   },

@@ -1,3 +1,4 @@
+import { listTypeTask, personTasks } from "@/src/services/api";
 import {
   Calendar,
   Clock,
@@ -11,248 +12,112 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 // Types
-type JobStatus = "completed" | "in-progress" | "pending";
 type TaskStatus = "completed" | "in-progress" | "pending";
 type Priority = "high" | "medium" | "low";
 
-interface Job {
+interface SubtaskEmployee {
   id: number;
-  title: string;
-  status: JobStatus;
+  employee_id: number;
+  process: number;
+  created_at: string;
+  updated_at: string;
+  subtask_status: {
+    id: number;
+    name: string;
+    status: boolean;
+  };
 }
 
-interface BaseTask {
+interface Subtask {
   id: number;
-  title: string;
-  description: string;
-  priority: Priority;
-  status: TaskStatus;
-  dueDate: string;
-  progress: number;
-  jobs: Job[];
-  exp: number;
+  name: string;
+  description: string | null;
+  subtask_employee: SubtaskEmployee[];
 }
 
-interface DailyTask extends BaseTask {
-  isDaily: true;
+interface Task {
+  id: string;
+  task_id: number;
+  employee_id: number;
+  process: string;
+  task_status: number;
+  created_at: string;
+  updated_at: string;
+  employee: {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+  };
+  task: {
+    id: number;
+    name: string;
+    description: string;
+    type_task: number;
+    date_start: string;
+    date_end: string;
+    task_status: {
+      id: number;
+      name: string;
+      status: boolean;
+    };
+    task_priority: {
+      id: number;
+      name: string;
+    };
+    subtasks: Subtask[];
+  };
 }
 
-interface PersonalTask extends BaseTask {
-  isDaily?: false;
+interface TypeTask {
+  id: string;
+  name: string;
 }
-
-interface TeamTask extends BaseTask {
-  assignedTo: string[];
-  isDaily?: false;
-}
-
-type Task = DailyTask | PersonalTask | TeamTask;
-
-// Mock Data
-const mockTasks: {
-  daily: DailyTask[];
-  personal: PersonalTask[];
-  team: TeamTask[];
-} = {
-  daily: [
-    {
-      id: 101,
-      title: "Daily Standup Meeting",
-      description: "Họp standup với team lúc 9:00 AM",
-      priority: "medium",
-      status: "completed",
-      dueDate: "2024-12-03",
-      progress: 100,
-      jobs: [
-        { id: 201, title: "Báo cáo công việc hôm qua", status: "completed" },
-        { id: 202, title: "Chia sẻ kế hoạch hôm nay", status: "completed" },
-        { id: 203, title: "Thảo luận blockers", status: "completed" },
-      ],
-      exp: 50,
-      isDaily: true,
-    },
-    {
-      id: 102,
-      title: "Code Review Daily Tasks",
-      description: "Review code của team members",
-      priority: "high",
-      status: "in-progress",
-      dueDate: "2024-12-03",
-      progress: 60,
-      jobs: [
-        { id: 204, title: "Review morning PRs", status: "completed" },
-        { id: 205, title: "Review afternoon PRs", status: "in-progress" },
-        { id: 206, title: "Leave feedback", status: "pending" },
-      ],
-      exp: 100,
-      isDaily: true,
-    },
-    {
-      id: 103,
-      title: "Cập nhật tiến độ dự án",
-      description: "Cập nhật Jira và báo cáo với PM",
-      priority: "medium",
-      status: "pending",
-      dueDate: "2024-12-03",
-      progress: 0,
-      jobs: [
-        { id: 207, title: "Update Jira tickets", status: "pending" },
-        { id: 208, title: "Gửi báo cáo cho PM", status: "pending" },
-      ],
-      exp: 75,
-      isDaily: true,
-    },
-    {
-      id: 104,
-      title: "Kiểm tra Email & Slack",
-      description: "Đọc và phản hồi các tin nhắn quan trọng",
-      priority: "low",
-      status: "completed",
-      dueDate: "2024-12-03",
-      progress: 100,
-      jobs: [
-        { id: 209, title: "Đọc email buổi sáng", status: "completed" },
-        { id: 210, title: "Trả lời tin nhắn Slack", status: "completed" },
-      ],
-      exp: 30,
-      isDaily: true,
-    },
-  ],
-  personal: [
-    {
-      id: 1,
-      title: "Hoàn thiện module Authentication",
-      description: "Cập nhật flow đăng nhập và xác thực 2FA",
-      priority: "high",
-      status: "in-progress",
-      dueDate: "2024-12-15",
-      progress: 65,
-      jobs: [
-        { id: 1, title: "Thiết kế UI flow đăng nhập", status: "completed" },
-        { id: 2, title: "Implement API authentication", status: "completed" },
-        { id: 3, title: "Tích hợp 2FA", status: "in-progress" },
-        { id: 4, title: "Viết unit tests", status: "pending" },
-      ],
-      exp: 500,
-    },
-    {
-      id: 2,
-      title: "Code review cho team member",
-      description: "Review pull request của 3 thành viên",
-      priority: "medium",
-      status: "completed",
-      dueDate: "2024-12-01",
-      progress: 100,
-      jobs: [
-        { id: 5, title: "Review PR #123", status: "completed" },
-        { id: 6, title: "Review PR #124", status: "completed" },
-        { id: 7, title: "Review PR #125", status: "completed" },
-      ],
-      exp: 300,
-    },
-    {
-      id: 3,
-      title: "Tối ưu hiệu suất Database",
-      description: "Phân tích và tối ưu các query chậm",
-      priority: "high",
-      status: "pending",
-      dueDate: "2024-12-20",
-      progress: 0,
-      jobs: [
-        { id: 8, title: "Phân tích slow queries", status: "pending" },
-        { id: 9, title: "Tạo indexes", status: "pending" },
-        { id: 10, title: "Optimize queries", status: "pending" },
-        { id: 11, title: "Load testing", status: "pending" },
-      ],
-      exp: 600,
-    },
-  ],
-  team: [
-    {
-      id: 4,
-      title: "Sprint Planning Q1 2025",
-      description: "Lập kế hoạch sprint cho quý 1",
-      priority: "high",
-      status: "in-progress",
-      dueDate: "2024-12-10",
-      progress: 80,
-      jobs: [
-        { id: 12, title: "Gather requirements", status: "completed" },
-        { id: 13, title: "Estimate tasks", status: "completed" },
-        { id: 14, title: "Assign resources", status: "in-progress" },
-        { id: 15, title: "Create timeline", status: "pending" },
-      ],
-      exp: 400,
-      assignedTo: ["Nguyễn Văn An", "Trần Thị Bình", "Lê Văn Cường"],
-    },
-    {
-      id: 5,
-      title: "Đào tạo công nghệ mới",
-      description: "Workshop về React 19 và Server Components",
-      priority: "medium",
-      status: "completed",
-      dueDate: "2024-11-30",
-      progress: 100,
-      jobs: [
-        { id: 16, title: "Chuẩn bị tài liệu", status: "completed" },
-        { id: 17, title: "Demo ứng dụng mẫu", status: "completed" },
-        { id: 18, title: "Q&A session", status: "completed" },
-      ],
-      exp: 350,
-      assignedTo: ["Nguyễn Văn An", "Phạm Thị Dung"],
-    },
-    {
-      id: 6,
-      title: "Migration hệ thống Legacy",
-      description: "Chuyển đổi từ monolith sang microservices",
-      priority: "high",
-      status: "in-progress",
-      dueDate: "2025-01-31",
-      progress: 45,
-      jobs: [
-        { id: 19, title: "Phân tích kiến trúc hiện tại", status: "completed" },
-        { id: 20, title: "Thiết kế microservices", status: "completed" },
-        { id: 21, title: "Implement Auth service", status: "in-progress" },
-        { id: 22, title: "Implement User service", status: "pending" },
-        { id: 23, title: "Implement Payment service", status: "pending" },
-        { id: 24, title: "Testing & deployment", status: "pending" },
-      ],
-      exp: 800,
-      assignedTo: [
-        "Nguyễn Văn An",
-        "Trần Thị Bình",
-        "Lê Văn Cường",
-        "Hoàng Văn Em",
-      ],
-    },
-  ],
-};
 
 function TasksTab() {
-  const [taskFilter, setTaskFilter] = useState<
-    "all" | "daily" | "personal" | "team"
-  >("daily");
-  const [selectedTask, setSelectedTask] = useState<number | null>(null);
+  const dispatch = useDispatch();
+  const { tasks, typeTask } = useSelector((state: any) => state.user);
+  const [page] = useState(1);
+  const [limit] = useState(100);
+
+  useEffect(() => {
+    dispatch(listTypeTask() as any);
+    const token = localStorage.getItem("userToken");
+    if (token) {
+      const payload = {
+        page,
+        limit,
+        token,
+      };
+      dispatch(personTasks(payload as any) as any);
+    }
+  }, [dispatch, page, limit]);
+
+  useEffect(() => {
+    if (typeTask && typeTask.length > 0) {
+      setTaskFilter(parseInt(typeTask[0].id));
+    }
+  }, [typeTask]);
+
+  const [taskFilter, setTaskFilter] = useState<number | "all">(
+    typeTask[0]?.id || "all"
+  );
+  const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
 
-  const allTasks: Task[] = [
-    ...mockTasks.daily,
-    ...mockTasks.personal,
-    ...mockTasks.team,
-  ];
+  // Get filtered tasks based on type_task
   const filteredTasks: Task[] =
     taskFilter === "all"
-      ? allTasks
-      : taskFilter === "daily"
-      ? mockTasks.daily
-      : taskFilter === "personal"
-      ? mockTasks.personal
-      : mockTasks.team;
+      ? tasks || []
+      : (tasks || []).filter(
+          (task: Task) => task.task.type_task === taskFilter
+        );
 
   // Pagination logic
   const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
@@ -261,17 +126,40 @@ function TasksTab() {
   const currentTasks = filteredTasks.slice(startIndex, endIndex);
 
   // Reset to page 1 when filter changes
-  const handleFilterChange = (filter: "all" | "daily" | "personal" | "team") => {
+  const handleFilterChange = (filter: number | "all") => {
     setTaskFilter(filter);
     setCurrentPage(1);
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const getTaskStatusBadge = (status: TaskStatus) => {
+  // Map task_status.id to status
+  const getTaskStatus = (statusId: number): TaskStatus => {
+    switch (statusId) {
+      case 1:
+        return "pending";
+      case 2:
+        return "in-progress";
+      case 3:
+        return "completed";
+      default:
+        return "pending";
+    }
+  };
+
+  // Map task_priority.name to priority
+  const getPriorityLevel = (priorityName: string): Priority => {
+    const name = priorityName.toLowerCase();
+    if (name.includes("cao") || name.includes("high")) return "high";
+    if (name.includes("thấp") || name.includes("low")) return "low";
+    return "medium";
+  };
+
+  const getTaskStatusBadge = (statusId: number) => {
+    const status = getTaskStatus(statusId);
     switch (status) {
       case "completed":
         return (
@@ -299,7 +187,8 @@ function TasksTab() {
     }
   };
 
-  const getPriorityBadge = (priority: Priority) => {
+  const getPriorityBadge = (priorityName: string) => {
+    const priority = getPriorityLevel(priorityName);
     switch (priority) {
       case "high":
         return (
@@ -324,7 +213,8 @@ function TasksTab() {
     }
   };
 
-  const getJobStatusIcon = (status: JobStatus) => {
+  const getSubtaskStatusIcon = (statusId: number) => {
+    const status = getTaskStatus(statusId);
     switch (status) {
       case "completed":
         return <CheckCircle2 size={16} className="text-green-500" />;
@@ -343,6 +233,35 @@ function TasksTab() {
     return date.toLocaleDateString("vi-VN");
   };
 
+  // Calculate completed subtasks
+  const getCompletedSubtasks = (subtasks: Subtask[]) => {
+    return subtasks.filter((subtask) =>
+      subtask.subtask_employee.some(
+        (se) => getTaskStatus(se.subtask_status.id) === "completed"
+      )
+    ).length;
+  };
+
+  // Calculate task progress
+  const calculateProgress = (task: Task): number => {
+    const processValue = parseFloat(task.process);
+    if (!isNaN(processValue)) {
+      return Math.round(processValue);
+    }
+
+    const subtasks = task.task.subtasks;
+    if (subtasks.length === 0) return 0;
+
+    const completed = getCompletedSubtasks(subtasks);
+    return Math.round((completed / subtasks.length) * 100);
+  };
+
+  // Get task count by type
+  const getTaskCountByType = (typeId: number) => {
+    return (tasks || []).filter((task: Task) => task.task.type_task === typeId)
+      .length;
+  };
+
   return (
     <div className="min-h-screen bg-slate-900 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -350,46 +269,21 @@ function TasksTab() {
           <>
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex gap-2 overflow-x-auto pb-2">
-                {/* <button
-                  onClick={() => handleFilterChange("all")}
-                  className={`px-4 py-2 rounded-full font-semibold text-sm transition whitespace-nowrap ${
-                    taskFilter === "all"
-                      ? "bg-blue-500 text-white"
-                      : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-                  }`}
-                >
-                  Tất cả ({allTasks.length})
-                </button> */}
-                <button
-                  onClick={() => handleFilterChange("daily")}
-                  className={`px-4 py-2 rounded-full font-semibold text-sm transition whitespace-nowrap ${
-                    taskFilter === "daily"
-                      ? "bg-blue-500 text-white"
-                      : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-                  }`}
-                >
-                  Hằng ngày ({mockTasks.daily.length})
-                </button>
-                <button
-                  onClick={() => handleFilterChange("personal")}
-                  className={`px-4 py-2 rounded-full font-semibold text-sm transition whitespace-nowrap ${
-                    taskFilter === "personal"
-                      ? "bg-blue-500 text-white"
-                      : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-                  }`}
-                >
-                  Cá nhân ({mockTasks.personal.length})
-                </button>
-                <button
-                  onClick={() => handleFilterChange("team")}
-                  className={`px-4 py-2 rounded-full font-semibold text-sm transition whitespace-nowrap ${
-                    taskFilter === "team"
-                      ? "bg-blue-500 text-white"
-                      : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-                  }`}
-                >
-                  Chung ({mockTasks.team.length})
-                </button>
+                {typeTask &&
+                  Array.isArray(typeTask) &&
+                  typeTask.map((type: TypeTask) => (
+                    <button
+                      key={type.id}
+                      onClick={() => handleFilterChange(parseInt(type.id))}
+                      className={`px-4 py-2 rounded-full font-semibold text-sm transition whitespace-nowrap ${
+                        taskFilter === parseInt(type.id)
+                          ? "bg-blue-500 text-white"
+                          : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                      }`}
+                    >
+                      {type.name} ({getTaskCountByType(parseInt(type.id))})
+                    </button>
+                  ))}
               </div>
 
               <div className="hidden md:flex gap-2">
@@ -418,81 +312,94 @@ function TasksTab() {
               </div>
             </div>
 
-            <div
-              className={
-                viewMode === "grid"
-                  ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"
-                  : "space-y-3"
-              }
-            >
-              {currentTasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="rounded-lg border border-slate-800 bg-slate-950 p-4 sm:p-5 hover:border-blue-500/50 transition cursor-pointer"
-                  onClick={() => setSelectedTask(task.id)}
-                >
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <div className="flex-1">
-                      <h4 className="text-base sm:text-lg font-bold text-white mb-1">
-                        {task.title}
-                      </h4>
-                      <p className="text-xs sm:text-sm text-slate-400 mb-2">
-                        {task.description}
-                      </p>
-                      {"assignedTo" in task && task.assignedTo && (
-                        <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Users size={14} />
-                          <span>{task.assignedTo.join(", ")}</span>
+            {currentTasks.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-slate-400 text-lg">Không có nhiệm vụ nào</p>
+              </div>
+            ) : (
+              <div
+                className={
+                  viewMode === "grid"
+                    ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"
+                    : "space-y-3"
+                }
+              >
+                {currentTasks.map((task) => {
+                  const progress = calculateProgress(task);
+                  const completedSubtasks = getCompletedSubtasks(
+                    task.task.subtasks
+                  );
+                  const totalSubtasks = task.task.subtasks.length;
+
+                  return (
+                    <div
+                      key={task.id}
+                      className="rounded-lg border border-slate-800 bg-slate-950 p-4 sm:p-5 hover:border-blue-500/50 transition cursor-pointer"
+                      onClick={() => setSelectedTask(task.id)}
+                    >
+                      <div className="flex items-start justify-between gap-4 mb-3">
+                        <div className="flex-1">
+                          <h4 className="text-base sm:text-lg font-bold text-white mb-1">
+                            {task.task.name}
+                          </h4>
+                          <p className="text-xs sm:text-sm text-slate-400 mb-2">
+                            {task.task.description}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-slate-500">
+                            <Users size={14} />
+                            <span>{task.employee.name}</span>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      {getTaskStatusBadge(task.status)}
-                      {getPriorityBadge(task.priority)}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 mb-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-semibold text-slate-300">
-                        Tiến độ:{" "}
-                        {
-                          task.jobs.filter((j) => j.status === "completed")
-                            .length
-                        }
-                        /{task.jobs.length} công việc
-                      </span>
-                      <span className="text-xs font-bold text-blue-400">
-                        {task.progress}%
-                      </span>
-                    </div>
-                    <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full transition-all"
-                        style={{ width: `${task.progress}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-4 text-slate-400">
-                      <div className="flex items-center gap-1">
-                        <Calendar size={14} className="text-slate-500" />
-                        <span>{formatDate(task.dueDate)}</span>
+                        <div className="flex flex-col items-end gap-2">
+                          {getTaskStatusBadge(task.task.task_status.id)}
+                          {getPriorityBadge(task.task.task_priority.name)}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <ClipboardList size={14} className="text-slate-500" />
-                        <span>{task.jobs.length} công việc</span>
+
+                      <div className="space-y-2 mb-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-semibold text-slate-300">
+                            Tiến độ: {completedSubtasks}/{totalSubtasks} công
+                            việc
+                          </span>
+                          <span className="text-xs font-bold text-blue-400">
+                            {progress}%
+                          </span>
+                        </div>
+                        <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full transition-all"
+                            style={{ width: `${progress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-4 text-slate-400">
+                          <div className="flex items-center gap-1">
+                            <Calendar size={14} className="text-slate-500" />
+                            <span>{formatDate(task.task.date_end)}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <ClipboardList
+                              size={14}
+                              className="text-slate-500"
+                            />
+                            <span>{totalSubtasks} công việc</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 text-yellow-400">
+                          <Star size={14} className="fill-yellow-400" />
+                          <span className="font-semibold">
+                            +{totalSubtasks * 50} XP
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 text-yellow-400">
-                      <Star size={14} className="fill-yellow-400" />
-                      <span className="font-semibold">+{task.exp} XP</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
@@ -510,19 +417,21 @@ function TasksTab() {
                 </button>
 
                 <div className="flex gap-2">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => handlePageChange(page)}
-                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition ${
-                        currentPage === page
-                          ? "bg-blue-500 text-white"
-                          : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`px-4 py-2 rounded-lg font-semibold text-sm transition ${
+                          currentPage === page
+                            ? "bg-blue-500 text-white"
+                            : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
                 </div>
 
                 <button
@@ -542,15 +451,25 @@ function TasksTab() {
             {/* Pagination Info */}
             {filteredTasks.length > 0 && (
               <div className="text-center text-sm text-slate-400">
-                Hiển thị {startIndex + 1} - {Math.min(endIndex, filteredTasks.length)} trong tổng số {filteredTasks.length} nhiệm vụ
+                Hiển thị {startIndex + 1} -{" "}
+                {Math.min(endIndex, filteredTasks.length)} trong tổng số{" "}
+                {filteredTasks.length} nhiệm vụ
               </div>
             )}
           </>
         ) : (
           <>
             {(() => {
-              const task = allTasks.find((t) => t.id === selectedTask);
+              const task = (tasks || []).find(
+                (t: Task) => t.id === selectedTask
+              );
               if (!task) return null;
+
+              const progress = calculateProgress(task);
+              const completedSubtasks = getCompletedSubtasks(
+                task.task.subtasks
+              );
+              const totalSubtasks = task.task.subtasks.length;
 
               return (
                 <div className="space-y-6">
@@ -570,32 +489,40 @@ function TasksTab() {
                     <div className="flex items-start justify-between gap-4 mb-4">
                       <div className="flex-1">
                         <h4 className="text-xl sm:text-2xl font-bold text-white mb-2">
-                          {task.title}
+                          {task.task.name}
                         </h4>
                         <p className="text-sm text-slate-400 mb-3">
-                          {task.description}
+                          {task.task.description}
                         </p>
-                        {"assignedTo" in task && task.assignedTo && (
-                          <div className="flex items-center gap-2 text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
-                            <Users size={16} className="text-slate-500" />
-                            <span className="font-semibold">Thành viên:</span>
-                            <span>{task.assignedTo.join(", ")}</span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-2 text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
+                          <Users size={16} className="text-slate-500" />
+                          <span className="font-semibold">
+                            Người thực hiện:
+                          </span>
+                          <span>{task.employee.name}</span>
+                        </div>
                       </div>
                       <div className="flex flex-col gap-2 items-end">
-                        {getTaskStatusBadge(task.status)}
-                        {getPriorityBadge(task.priority)}
+                        {getTaskStatusBadge(task.task.task_status.id)}
+                        {getPriorityBadge(task.task.task_priority.name)}
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                       <div className="bg-slate-900 p-3 rounded-lg">
                         <div className="text-xs text-slate-500 mb-1">
+                          Ngày bắt đầu
+                        </div>
+                        <div className="text-sm font-semibold text-white">
+                          {formatDate(task.task.date_start)}
+                        </div>
+                      </div>
+                      <div className="bg-slate-900 p-3 rounded-lg">
+                        <div className="text-xs text-slate-500 mb-1">
                           Hạn chót
                         </div>
                         <div className="text-sm font-semibold text-white">
-                          {formatDate(task.dueDate)}
+                          {formatDate(task.task.date_end)}
                         </div>
                       </div>
                       <div className="bg-slate-900 p-3 rounded-lg">
@@ -603,11 +530,7 @@ function TasksTab() {
                           Công việc
                         </div>
                         <div className="text-sm font-semibold text-white">
-                          {
-                            task.jobs.filter((j) => j.status === "completed")
-                              .length
-                          }
-                          /{task.jobs.length}
+                          {completedSubtasks}/{totalSubtasks}
                         </div>
                       </div>
                       <div className="bg-slate-900 p-3 rounded-lg">
@@ -615,15 +538,7 @@ function TasksTab() {
                           Tiến độ
                         </div>
                         <div className="text-sm font-semibold text-blue-400">
-                          {task.progress}%
-                        </div>
-                      </div>
-                      <div className="bg-slate-900 p-3 rounded-lg">
-                        <div className="text-xs text-slate-500 mb-1">
-                          Điểm XP
-                        </div>
-                        <div className="text-sm font-semibold text-yellow-400">
-                          +{task.exp} XP
+                          {progress}%
                         </div>
                       </div>
                     </div>
@@ -634,13 +549,13 @@ function TasksTab() {
                           Tiến độ tổng quan
                         </span>
                         <span className="text-sm font-bold text-blue-400">
-                          {task.progress}%
+                          {progress}%
                         </span>
                       </div>
                       <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 rounded-full transition-all"
-                          style={{ width: `${task.progress}%` }}
+                          style={{ width: `${progress}%` }}
                         ></div>
                       </div>
                     </div>
@@ -648,42 +563,54 @@ function TasksTab() {
                     <div>
                       <h5 className="text-base font-bold text-white mb-3 flex items-center gap-2">
                         <ClipboardList size={18} className="text-blue-400" />
-                        Danh sách công việc ({task.jobs.length})
+                        Danh sách công việc ({totalSubtasks})
                       </h5>
                       <div className="space-y-2">
-                        {task.jobs.map((job) => (
-                          <div
-                            key={job.id}
-                            className={`flex items-center gap-3 p-3 rounded-lg border transition ${
-                              job.status === "completed"
-                                ? "border-green-500/30 bg-green-500/10"
-                                : job.status === "in-progress"
-                                ? "border-blue-500/30 bg-blue-500/10"
-                                : "border-slate-700 bg-slate-900"
-                            }`}
-                          >
-                            {getJobStatusIcon(job.status)}
-                            <span
-                              className={`flex-1 text-sm ${
-                                job.status === "completed"
-                                  ? "text-slate-400 line-through"
-                                  : "text-white font-medium"
+                        {task.task.subtasks.map((subtask: any) => {
+                          const subtaskEmployee = subtask.subtask_employee[0];
+                          const statusId =
+                            subtaskEmployee?.subtask_status?.id || 1;
+                          const status = getTaskStatus(statusId);
+
+                          return (
+                            <div
+                              key={subtask.id}
+                              className={`flex items-center gap-3 p-3 rounded-lg border transition ${
+                                status === "completed"
+                                  ? "border-green-500/30 bg-green-500/10"
+                                  : status === "in-progress"
+                                  ? "border-blue-500/30 bg-blue-500/10"
+                                  : "border-slate-700 bg-slate-900"
                               }`}
                             >
-                              {job.title}
-                            </span>
-                            {job.status === "completed" && (
-                              <span className="text-xs font-semibold text-green-400">
-                                Hoàn thành
+                              {getSubtaskStatusIcon(statusId)}
+                              <span
+                                className={`flex-1 text-sm ${
+                                  status === "completed"
+                                    ? "text-slate-400 line-through"
+                                    : "text-white font-medium"
+                                }`}
+                              >
+                                {subtask.name}
                               </span>
-                            )}
-                            {job.status === "in-progress" && (
-                              <span className="text-xs font-semibold text-blue-400">
-                                Đang làm
-                              </span>
-                            )}
-                          </div>
-                        ))}
+                              {status === "completed" && (
+                                <span className="text-xs font-semibold text-green-400">
+                                  Hoàn thành
+                                </span>
+                              )}
+                              {status === "in-progress" && (
+                                <span className="text-xs font-semibold text-blue-400">
+                                  Đang làm
+                                </span>
+                              )}
+                              {status === "pending" && (
+                                <span className="text-xs font-semibold text-slate-400">
+                                  Chờ xử lý
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
