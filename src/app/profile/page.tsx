@@ -189,7 +189,6 @@ function ProfilePage() {
           animation: shimmer 2s infinite;
         }
       `}</style>
-      <Header />
       <div className="mt-0 mx-0 max-w-none mb-0 flex-1">
         <div className="relative h-full mb-0 rounded-none border-x-0 border-t-0 border border-slate-800 bg-gradient-to-tl from-[#0c2954] to-transparent p-4 sm:p-6 lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row mb-12">

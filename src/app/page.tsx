@@ -26,7 +26,6 @@ export default function Home() {
 
     return (
         <div className="min-h-screen bg-slate-950 text-white">
-            <Header />
 
             <main className="mx-auto w-full max-w-7xl px-4 py-10 space-y-10 sm:px-6 sm:py-12 sm:space-y-12 md:px-8 md:py-14 lg:px-8 lg:py-16 lg:space-y-16">
                 <Slider />
@@ -118,7 +117,6 @@ export default function Home() {
                 <ProgramSection />
             </main>
 
-            <Footer />
         </div>
     );
 }
