@@ -1,59 +1,77 @@
-import {
-  Award,
-  TrendingUp,
-  FileText,
-  Target,
+import { listAchievements } from "@/src/services/api";
+import { Award, TrendingUp, FileText, Target, LucideIcon } from "lucide-react";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
-} from "lucide-react";
-import { useState } from "react";
+// Map icon names to Lucide components
+const iconMap: Record<string, LucideIcon> = {
+  "file-text": FileText,
+  "target": Target,
+  "award": Award,
+  "trending-up": TrendingUp,
+};
+
+// Map category names to colors
+const categoryColorMap: Record<string, string> = {
+  "Chứng chỉ": "bg-green-500",
+  "Năng suất": "bg-blue-500",
+  "Giải thưởng": "bg-yellow-500",
+  "default": "bg-purple-500",
+};
 
 function AchievementsTab({ userInfo }: any) {
-  const mockAchievements = [
-    {
-      title: "Nhân viên xuất sắc Q1 2024",
-      icon: Award,
-      color: "bg-yellow-500",
-    },
-    {
-      title: `Hoàn thành ${userInfo.projects.total_projects} dự án`,
-      icon: Target,
-      color: "bg-blue-500",
-    },
-    {
-      title: userInfo.certificates.certificate_name,
-      icon: FileText,
-      color: "bg-green-500",
-    },
-    {
-      title: `Level ${userInfo.level}`,
-      icon: TrendingUp,
-      color: "bg-purple-500",
-    },
-  ];
+  const dispatch = useDispatch();
+  const { achievements } = useSelector((state: any) => state.user);
+
+  useEffect(() => {
+    const token = localStorage.getItem("userToken");
+    if(token) {
+      dispatch(listAchievements(token as any) as any);
+    }
+  }, [dispatch]);
+
+  const getIconComponent = (iconName: string): LucideIcon => {
+    return iconMap[iconName] || Award;
+  };
+
+  const getCategoryColor = (categoryName: string): string => {
+    return categoryColorMap[categoryName] || categoryColorMap.default;
+  };
 
   return (
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {mockAchievements.map((achievement, index) => {
-          const Icon = achievement.icon;
-          return (
-            <div
-              key={index}
-              className="flex items-center gap-4 rounded-lg border border-slate-800 bg-slate-950 p-5 hover:border-blue-500 transition"
-            >
+        {achievements && achievements.length > 0 ? (
+          achievements.map((achievement: any) => {
+            const Icon = getIconComponent(achievement.achievement_category.icon);
+            const colorClass = getCategoryColor(achievement.achievement_category.name);
+            
+            return (
               <div
-                className={`flex h-14 w-14 items-center justify-center rounded-full ${achievement.color} flex-shrink-0`}
+                key={achievement.id}
+                className="flex items-center gap-4 rounded-lg border border-slate-800 bg-slate-950 p-5 hover:border-blue-500 transition"
               >
-                <Icon size={28} className="text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-base font-semibold text-white leading-tight">
-                  {achievement.title}
+                <div
+                  className={`flex h-14 w-14 items-center justify-center rounded-full ${colorClass} flex-shrink-0`}
+                >
+                  <Icon size={28} className="text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-base font-semibold text-white leading-tight">
+                    {achievement.title}
+                  </div>
+                  <div className="text-xs text-slate-400 mt-1">
+                    {achievement.achievement_category.name}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        ) : (
+          <div className="col-span-2 text-center text-slate-400 py-8">
+            Chưa có thành tựu nào
+          </div>
+        )}
       </div>
 
       <div className="mt-6 rounded-lg border border-slate-800 bg-slate-950 p-5">

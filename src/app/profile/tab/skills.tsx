@@ -17,7 +17,7 @@ function SkillsTab({ userInfo }: any) {
   }));
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 items-start">
+    <div className="flex flex-col">
       {/* Radar Chart */}
       <div className="w-full">
         <ResponsiveContainer width="100%" height={250} className="sm:hidden">
@@ -101,7 +101,7 @@ function SkillsTab({ userInfo }: any) {
       </div>
 
       {/* Skills List */}
-      <div className="grid grid-cols-2 lg:flex lg:flex-col gap-3 lg:gap-4">
+      <div className="grid grid-cols-2 gap-3 lg:gap-4">
         {skillsData.map((skill: any, index: number) => (
           <div
             key={index}
