@@ -18,6 +18,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import SearchBar from "./searchBar";
 
 export default function Header() {
     const router = useRouter();
@@ -64,18 +65,16 @@ export default function Header() {
 
     const menuItems = [
         { label: "Trang chủ", href: "/" },
-        { label: "Tin tức", href: "#" },
-        { label: "Dự án", href: "#" },
-        { label: "Sự kiện", href: "#" },
-        { label: "Chính sách", href: "#" },
+        { label: "Dự án", href: "/project" },
+        { label: "Sự kiện", href: "/event" },
+        { label: "Chính sách", href: "/policy" },
         { label: "Thống kê", href: "/analysis" },
         { label: "Thi đua", href: "/compet" },
-        { label: "Trợ giúp", href: "/support" },
         { label: "Liên hệ", href: "/contact" },
     ];
 
     return (
-        <header className="bg-slate-white border-b border-slate-400  w-full">
+        <header className="bg-slate-900/50 border-b border-slate-400  w-full">
             {/* Top Bar */}
             <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4 max-w-7xl mx-auto w-full">
                 {/* Logo */}
@@ -124,14 +123,7 @@ export default function Header() {
             <div className="border-t border-slate-400">
                 <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 max-w-7xl mx-auto flex items-center gap-2 flex-wrap">
                     {/* Search */}
-                    <div className="flex-1 flex items-center gap-2 rounded-full bg-slate-600/50 px-4 py-2 text-sm text-slate-300">
-                        <Search size={18} className="text-white" />
-                        <input
-                            type="text"
-                            placeholder="Tìm kiếm toàn hệ thống"
-                            className="w-full bg-transparent text-sm text-white placeholder:text-white focus:outline-none"
-                        />
-                    </div>
+                    <SearchBar />
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 ml-auto">

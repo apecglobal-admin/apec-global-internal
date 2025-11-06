@@ -1,7 +1,5 @@
 "use client";
 
-import Footer from "@/components/footer";
-import Header from "@/components/header";
 import { useMemo, useState } from "react";
 
 const departmentsRanking = [
@@ -57,8 +55,6 @@ const CompanyLeaderboard = () => {
   }, [activeTab]);
   return (
     <div className="min-h-screen bg-slate-950 text-slate-300 p-6">
-      {/* Header */}
-      <Header />
 
       <section className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-950/80 to-slate-900 p-6 sm:p-7 lg:p-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -191,7 +187,6 @@ const CompanyLeaderboard = () => {
           </div>
         </div>
       </section>
-      <Footer />
     </div>
   );
 };

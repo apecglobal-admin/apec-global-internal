@@ -52,12 +52,11 @@ export default function AnalysisPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
-        <Header />
       {/* Achievements Grid */}
       <section id="stats" className="py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">Thành Tích Nổi Bật 2024</h2>
+            <h2 className="text-4xl font-bold mb-4">Thành Tích Nổi Bật 2025</h2>
             <p className="text-slate-400 text-lg">Con số ấn tượng minh chứng cho sự phát triển vượt bậc</p>
           </div>
           
@@ -163,21 +162,6 @@ export default function AnalysisPage() {
         </div>
       </section>
 
-      {/* Partners Section */}
-      <section className="py-20 px-4 bg-slate-900">
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">Đối Tác Chiến Lược</h2>
-          <p className="text-slate-400 mb-12">Hợp tác cùng những thương hiệu công nghệ hàng đầu thế giới</p>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
-            {partners.map((partner, index) => (
-              <div key={index} className="bg-slate-950 border border-slate-800 rounded-xl p-6 hover:border-blue-500 transition flex items-center justify-center">
-                <span className="text-xl font-bold text-slate-400 hover:text-white transition">{partner}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="py-20 px-4">
@@ -193,9 +177,6 @@ export default function AnalysisPage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-     <Footer/>
     </div>
   );
 }
