@@ -26,15 +26,16 @@ export default function Header() {
     const { userInfo } = useSelector((state: any) => state.user);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const dropdownRef = useRef(null);
-    const sidebarRef = useRef(null);
-    
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const sidebarRef = useRef<HTMLDivElement>(null);
+ 
     useEffect(() => {
         const token = localStorage.getItem("userToken");
         if (token) {
             dispatch(fetchUserInfo(token) as any);
         }
-    }, []);
+    }, [dispatch]);
+    console.log("userinfo", userInfo)
 
     useEffect(() => {
         function handleClickOutside(event: any) {
