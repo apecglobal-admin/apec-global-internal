@@ -1,81 +1,34 @@
+import { personCareer } from "@/src/services/api";
 import { Briefcase, CheckCircle2, Trophy } from "lucide-react";
-import { useState } from "react";
-
-const mockCareerPath = {
-  currentPosition: "Senior Developer",
-  currentLevel: 12,
-  positions: [
-    {
-      id: 1,
-      name: "Senior Developer",
-      level: 12,
-      tasksRequired: 75,
-      tasksCompleted: 58,
-      status: "current",
-      unlocked: true,
-      requirements: [
-        {
-          id: 1,
-          text: "Hoàn thành 75 nhiệm vụ dự án",
-          completed: false,
-          progress: 58,
-          total: 75,
-        },
-        {
-          id: 2,
-          text: "Mentor 3 junior developers",
-          completed: false,
-          progress: 1,
-          total: 3,
-        },
-        {
-          id: 3,
-          text: "Lead 2 dự án lớn thành công",
-          completed: false,
-          progress: 1,
-          total: 2,
-        },
-        {
-          id: 4,
-          text: "Đạt 90% review code quality",
-          completed: false,
-          progress: 85,
-          total: 90,
-        },
-        {
-          id: 5,
-          text: "Hoàn thành 5 technical presentations",
-          completed: false,
-          progress: 3,
-          total: 5,
-        },
-      ],
-    },
-  ],
-  progressData: [
-    { position: "Trainee", completed: 10 },
-    { position: "Intern", completed: 20 },
-    { position: "Junior", completed: 35 },
-    { position: "Mid", completed: 50 },
-    { position: "Senior", completed: 58 },
-  ],
-};
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 function CareerTab({ userInfo }: any) {
-  const currentPosition = mockCareerPath.positions.find(
-    (p) => p.status === "current"
-  );
-  const completedRequirements =
-    currentPosition?.requirements.filter(
-      (r) => r.completed || r.progress >= r.total
-    ).length || 0;
-  const totalRequirements = currentPosition?.requirements.length || 0;
-  const overallProgress =
-    totalRequirements > 0
-      ? (completedRequirements / totalRequirements) * 100
-      : 0;
+  const dispatch = useDispatch();
+  const { careers } = useSelector((state: any) => state.user);
 
-  if (!currentPosition) return null;
+  useEffect(() => {
+    const token = localStorage.getItem("userToken");
+    if (token) {
+      dispatch(personCareer(token as any) as any);
+    }
+  }, [dispatch]);
+
+  const currentCareer = careers && careers.length > 0 ? careers[0] : null;
+
+  if (!currentCareer) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-white text-sm">Đang tải thông tin nghề nghiệp...</p>
+      </div>
+    );
+  }
+
+  const completedRequirements = currentCareer.requirements.filter(
+    (req: any) => req.is_completed
+  ).length;
+  const totalRequirements = currentCareer.requirements.length;
+  const overallProgress = currentCareer.progress.percent;
 
   return (
     <div className="max-h-screen overflow-hidden">
@@ -88,10 +41,10 @@ function CareerTab({ userInfo }: any) {
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">
-                {currentPosition.name}
+                {currentCareer.career_level}
               </h2>
               <p className="text-blue-100 text-xs">
-                Level {currentPosition.level}
+                Level {currentCareer.level_order}
               </p>
             </div>
           </div>
@@ -110,18 +63,13 @@ function CareerTab({ userInfo }: any) {
 
       {/* Checklist Items - Compact */}
       <div className="space-y-2">
-        {currentPosition.requirements.map((req, index) => {
-          const progress =
-            req.total > 1
-              ? (req.progress / req.total) * 100
-              : req.completed
-              ? 100
-              : 0;
-          const isCompleted = req.completed || req.progress >= req.total;
+        {currentCareer.requirements.map((req: any, index: number) => {
+          const progress = req.progress_percent;
+          const isCompleted = req.is_completed;
 
           return (
             <div
-              key={req.id}
+              key={req.requirement_id}
               className={`relative rounded-lg border transition-all ${
                 isCompleted
                   ? "bg-green-500/10 border-green-500/50"
@@ -149,16 +97,18 @@ function CareerTab({ userInfo }: any) {
                           : "text-white"
                       }`}
                     >
-                      {req.text}
+                      {req.name}
                     </p>
 
-                    {req.total > 1 && (
+                    {req.target_value > 1 && (
                       <div className="mt-1.5 space-y-1">
                         <div className="flex items-center gap-2">
                           <div className="flex-1 h-1.5 bg-slate-700/50 rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all ${
-                                isCompleted ? "bg-green-500" : "bg-gradient-to-r from-blue-500 to-cyan-400"
+                                isCompleted
+                                  ? "bg-green-500"
+                                  : "bg-gradient-to-r from-blue-500 to-cyan-400"
                               }`}
                               style={{ width: `${progress}%` }}
                             ></div>
@@ -168,7 +118,7 @@ function CareerTab({ userInfo }: any) {
                               isCompleted ? "text-green-400" : "text-blue-400"
                             }`}
                           >
-                            {req.progress}/{req.total}
+                            {req.actual_value}/{req.target_value}
                           </span>
                         </div>
                       </div>
@@ -182,19 +132,21 @@ function CareerTab({ userInfo }: any) {
       </div>
 
       {/* Compact Next Level */}
-      <div className="mt-4 bg-slate-800/30 rounded-lg p-3 border border-slate-700/50">
-        <div className="flex items-center gap-2">
-          <Trophy size={16} className="text-purple-400 flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-white">
-              Cấp độ tiếp theo: Team Lead
-            </p>
-            <p className="text-[11px] text-slate-400">
-              Hoàn thành tất cả yêu cầu để mở khóa
-            </p>
+      {currentCareer.next_level && (
+        <div className="mt-4 bg-slate-800/30 rounded-lg p-3 border border-slate-700/50">
+          <div className="flex items-center gap-2">
+            <Trophy size={16} className="text-purple-400 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-white">
+                Cấp độ tiếp theo: {currentCareer.next_level.name}
+              </p>
+              <p className="text-[11px] text-slate-400">
+                {currentCareer.next_level.description}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
