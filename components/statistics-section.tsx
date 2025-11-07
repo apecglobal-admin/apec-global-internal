@@ -20,20 +20,20 @@ const technologyMetrics = [
 
 export default function StatisticsSection() {
   return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-950 p-6 sm:p-7 lg:p-8">
+    <section className="rounded-2xl  bg-gray-200/40 p-6 sm:p-7 lg:p-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400 sm:text-sm">Thống kê & báo cáo</div>
+          <div className="text-xs font-semibold uppercase tracking-[0.4em] text-teal-400 sm:text-sm">Thống kê & báo cáo</div>
           <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">Dashboard realtime</h2>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-white">
             Dữ liệu đồng bộ từ ERP, CRM và ApecTech Dashboard giúp theo dõi hiệu suất, tài chính, nhân sự và tiến độ công nghệ.
           </p>
         </div>
         <div className="flex flex-wrap gap-2 sm:flex-nowrap">
-          <button className="rounded-full border border-slate-800 bg-slate-900/70 px-4 py-2 text-xs font-semibold uppercase text-slate-200 transition hover:border-blue-500 hover:text-white">
+          <button className="rounded-full border border-slate-800 bg-slate-900/70 px-4 py-2 text-xs font-semibold uppercase text-white transition hover:border-blue-500 hover:text-white">
             Xuất Excel
           </button>
-          <button className="rounded-full border border-slate-800 bg-slate-900/70 px-4 py-2 text-xs font-semibold uppercase text-slate-200 transition hover:border-blue-500 hover:text-white">
+          <button className="rounded-full border border-slate-800 bg-slate-900/70 px-4 py-2 text-xs font-semibold uppercase text-white transition hover:border-blue-500 hover:text-white">
             Xuất PDF
           </button>
         </div>

@@ -19,13 +19,13 @@ const nav = [
     { value: "policy", label: "Chính sách nội bộ" },
     { value: "event", label: "Sự kiện" },
     { value: "projects", label: "Danh mục dự án" },
-    { value: "additional", label: "Các mục bổ sung" },
+    { value: "additional", label: "Hệ sinh thái" },
 ];
 export default function Home() {
 
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white">
+        <div className="min-h-screen bg-white  text-white">
 
             <main className="mx-auto w-full max-w-7xl px-4 py-10 space-y-10 sm:px-6 sm:py-12 sm:space-y-12 md:px-8 md:py-14 lg:px-8 lg:py-16 lg:space-y-16">
                 <Slider />
@@ -46,7 +46,13 @@ export default function Home() {
                 {/* Tabs */}
 
                 <Tabs defaultValue="statistics" className="mt-10 w-full">
-                    <TabsList className="inline-flex flex-wrap justify-start w-full gap-2 bg-slate-800/50 rounded-2xl backdrop-blur-sm mb-8 p-3 h-auto">
+                    <TabsList 
+                                style={{
+                                    background: "rgba(213, 212, 212, 0.6)",
+                                    border: "1px solid rgb(120, 116, 116) ",
+                                    boxShadow: "0 0 10px 2px rgb(169, 169, 170)",
+                                }}
+                    className="inline-flex flex-wrap justify-start w-full gap-2 bg-slate-800/50 rounded-2xl backdrop-blur-sm mb-8 p-3 h-auto ">
                         {nav.map((tab, index) => (
                             <TabsTrigger
   key={tab.value}
@@ -78,35 +84,35 @@ export default function Home() {
                     <div className="space-y-6">
                         <TabsContent
                             value="statistics"
-                            className="animate-in fade-in-50 duration-300 bg-[#434F58] p-[2px] rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 bg-gray-500 p-[2px] rounded-2xl "
                         >
                             <StatisticsSection />
                         </TabsContent>
 
                         <TabsContent
                             value="policy"
-                            className="animate-in fade-in-50 duration-300 bg-[#434F58] p-[2px] rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 bg-gray-500 p-[2px] rounded-2xl "
                         >
                             <PolicySection />
                         </TabsContent>
 
                         <TabsContent
                             value="event"
-                            className="animate-in fade-in-50 duration-300 bg-[#434F58] p-[2px] rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 bg-gray-500 p-[2px] rounded-2xl "
                         >
                             <EventSection />
                         </TabsContent>
 
                         <TabsContent
                             value="projects"
-                            className="animate-in fade-in-50 duration-300 bg-[#434F58] p-[2px] rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 bg-gray-500 p-[2px] rounded-2xl "
                         >
                             <ProjectsSection />
                         </TabsContent>
 
                         <TabsContent
                             value="additional"
-                            className="animate-in fade-in-50 duration-300 bg-[#434F58] p-[2px] rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 bg-gray-500 p-[2px] rounded-2xl "
                         >
                             <AdditionalSection />
                         </TabsContent>

@@ -12,6 +12,7 @@ import {
     ExternalLink,
 } from "lucide-react";
 import { colorClasses, colorMap } from "@/src/utils/color";
+import CalendarDefault from "@/components/calendarDefault";
 
 const eventStats = [
     { value: "24", label: "Sự kiện 2025", subLabel: "Đã xác nhận lịch" },
@@ -106,19 +107,19 @@ const timelineHighlights = [
         title: "Innovation Summit",
         timeframe: "15-16/11",
         status: "Đang chuẩn bị",
-        variant: "text-emerald-300",
+        variant: "text-emerald-400",
     },
     {
         title: "Chuỗi đào tạo lãnh đạo",
         timeframe: "Tuần 1-3/11",
         status: "Đang triển khai",
-        variant: "text-blue-300",
+        variant: "text-blue-400",
     },
     {
         title: "Team Building Tech",
         timeframe: "22/11",
         status: "Sắp diễn ra",
-        variant: "text-orange-300",
+        variant: "text-orange-400",
     },
 ];
 
@@ -139,6 +140,12 @@ const MONTHS = [
 ];
 
 type EventType = "internal" | "external" | "all";
+
+const eventTypes: any = [
+    { key: "all", label: "Tất cả" },
+    { key: "internal", label: "Nội bộ" },
+    { key: "external", label: "Đối ngoại" },
+];
 
 export default function EventsPage() {
     const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 1)); // November 2025
@@ -240,19 +247,19 @@ export default function EventsPage() {
     const calendarDays = getCalendarDays();
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 sm:p-6 lg:p-8">
+        <div className="min-h-screen bg-gray-200 p-4 sm:p-6 lg:p-8">
             <div className="mx-auto max-w-7xl">
                 {/* Header */}
                 <div className="mb-8 space-y-4">
-                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.4em] text-blue-400 sm:text-sm">
-                        <Sparkles size={16} className="text-blue-300" />
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.4em] text-teal-400 sm:text-sm">
+                        <Sparkles size={16} className="text-teal-400" />
                         Sự kiện
                     </div>
                     <div className="space-y-3">
-                        <h1 className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+                        <h1 className="text-3xl font-bold text-teal-400 sm:text-4xl lg:text-5xl">
                             Lịch sự kiện nội bộ & đối ngoại
                         </h1>
-                        <p className="max-w-3xl text-sm text-slate-400 sm:text-base">
+                        <p className="max-w-3xl text-sm text-black sm:text-base">
                             Theo dõi tiến độ tổ chức, đăng ký tham gia và thư
                             viện media sau sự kiện. Bảng điều phối tập trung
                             giúp đồng bộ thông tin giữa các phòng ban.
@@ -270,28 +277,33 @@ export default function EventsPage() {
                         return (
                             <div
                                 key={stat.label}
-                                className="group rounded-2xl border border-slate-700/80 border-l-4 bg-slate-900/60 p-5 shadow-inner shadow-black/10 transition"
+                                className="group rounded-2xl border border-slate-700/80 border-l-6 bg-slate-900/60 p-5 shadow-inner shadow-black/10 transition"
                                 style={{
                                     borderLeftColor: borderColor,
-                                    boxShadow: `inset 0 0 10px rgba(0,0,0,0.1)`,
+                                    boxShadow:
+                                        "0 0 10px 2px rgba(0, 0, 0, 0.6)",
                                 }}
                                 onMouseEnter={(e) =>
-                                    (e.currentTarget.style.boxShadow = `0 0 20px ${borderColor}40`)
+                                    (e.currentTarget.style.boxShadow = `0 0 20px ${borderColor}80`)
                                 }
                                 onMouseLeave={(e) =>
                                     (e.currentTarget.style.boxShadow = `inset 0 0 10px rgba(0,0,0,0.1)`)
                                 }
                             >
-                                <div
-                                    className={`text-3xl font-bold ${colorClass}`}
-                                >
-                                    {stat.value}
-                                </div>
-                                <div className="mt-1 text-lg uppercase tracking-widest text-white font-semibold">
-                                    {stat.label}
-                                </div>
-                                <div className="text-[11px] text-slate-300">
-                                    {stat.subLabel}
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <div
+                                            className={`text-3xl font-bold ${colorClass}`}
+                                        >
+                                            {stat.value}
+                                        </div>
+                                        <div className="mt-1 text-lg uppercase tracking-widest text-white font-semibold">
+                                            {stat.label}
+                                        </div>
+                                        <div className="text-[11px] text-slate-300">
+                                            {stat.subLabel}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -299,62 +311,39 @@ export default function EventsPage() {
                 </div>
 
                 {/* Filters */}
-                <div className="mb-6 rounded-3xl border border-slate-800 bg-slate-900/70 p-5 shadow-lg shadow-blue-500/10">
-                    <div className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+                <div className="mb-6 rounded-3xl border border-slate-800 bg-gray-400 p-5 shadow-lg shadow-blue-500/10 inset-shadow-sm inset-shadow-black/30">
+                    <div className="text-xs font-semibold uppercase tracking-widest text-white">
                         Lọc theo loại sự kiện
                     </div>
                     <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                        <button
-                            onClick={() => {
-                                setActiveType("all");
-                                setSelectedDate(null);
-                            }}
-                            className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition ${
-                                activeType === "all"
-                                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
-                                    : "border border-slate-800 text-slate-300 hover:border-blue-500 hover:text-white"
-                            }`}
-                        >
-                            Tất cả
-                        </button>
-                        <button
-                            onClick={() => {
-                                setActiveType("internal");
-                                setSelectedDate(null);
-                            }}
-                            className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition ${
-                                activeType === "internal"
-                                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
-                                    : "border border-slate-800 text-slate-300 hover:border-blue-500 hover:text-white"
-                            }`}
-                        >
-                            Nội bộ
-                        </button>
-                        <button
-                            onClick={() => {
-                                setActiveType("external");
-                                setSelectedDate(null);
-                            }}
-                            className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition ${
-                                activeType === "external"
-                                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
-                                    : "border border-slate-800 text-slate-300 hover:border-blue-500 hover:text-white"
-                            }`}
-                        >
-                            Đối ngoại
-                        </button>
+                        {/* ✅ Render tự động */}
+                        {eventTypes.map((type: any) => (
+                            <button
+                                key={type.key}
+                                onClick={() => {
+                                    setActiveType(type.key);
+                                    setSelectedDate(null);
+                                }}
+                                className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition ${
+                                    activeType === type.key
+                                        ? "bg-active-blue-metallic"
+                                        : "border border-gray-700 bg-gray-500 text-slate-300 hover:border-blue-500 hover:text-white"
+                                }`}
+                            >
+                                {type.label}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
                 <div className="grid gap-6 lg:grid-cols-[1fr_1.5fr]">
                     {/* Calendar Section */}
-                    <div className="space-y-4">
-                        <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6">
-                            {/* Calendar Header */}
+                    {/* <div className="space-y-4">
+                        <div className="rounded-3xl border border-slate-800 bg-gray-400 p-5 sm:p-6">
                             <div className="flex items-center justify-between">
                                 <button
                                     onClick={goToPreviousMonth}
-                                    className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                                    className="rounded-lg p-2 text-black transition hover:bg-slate-800 hover:text-white"
                                 >
                                     <ChevronLeft size={20} />
                                 </button>
@@ -362,26 +351,24 @@ export default function EventsPage() {
                                     <div className="text-lg font-semibold text-white">
                                         {MONTHS[currentMonth]}
                                     </div>
-                                    <div className="text-sm text-blue-300">
+                                    <div className="text-sm text-blue-600 font-bold">
                                         {currentYear}
                                     </div>
                                 </div>
                                 <button
                                     onClick={goToNextMonth}
-                                    className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                                    className="rounded-lg p-2 text-black transition hover:bg-slate-800 hover:text-white"
                                 >
                                     <ChevronRight size={20} />
                                 </button>
                             </div>
 
-                            {/* Weekday Headers */}
-                            <div className="mt-4 grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-widest text-slate-400">
+                            <div className="mt-4 grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-widest text-white">
                                 {WEEKDAYS.map((day) => (
                                     <div key={day}>{day}</div>
                                 ))}
                             </div>
 
-                            {/* Calendar Grid */}
                             <div className="mt-2 grid grid-cols-7 gap-2">
                                 {calendarDays.map((day, index) => {
                                     if (!day) {
@@ -412,16 +399,16 @@ export default function EventsPage() {
                                     const isSelected = selectedDate === dateStr;
 
                                     let bgClass =
-                                        "bg-slate-900/50 text-slate-400";
+                                        "bg-gray-300 text-slate-400";
                                     if (hasInternal && hasExternal) {
                                         bgClass =
                                             "bg-gradient-to-br from-blue-500/30 to-emerald-500/30 text-white border-blue-400";
                                     } else if (hasInternal) {
                                         bgClass =
-                                            "bg-blue-500/20 text-blue-100 border-blue-500";
+                                            "bg-blue-500 text-blue-100 border-blue-500";
                                     } else if (hasExternal) {
                                         bgClass =
-                                            "bg-emerald-500/20 text-emerald-100 border-emerald-500";
+                                            "bg-emerald-500 text-emerald-100 border-emerald-500";
                                     }
 
                                     return (
@@ -432,7 +419,7 @@ export default function EventsPage() {
                                             }
                                             className={`relative aspect-square rounded-lg border transition hover:scale-105 ${bgClass} ${
                                                 isSelected
-                                                    ? "ring-2 ring-blue-400 ring-offset-2 ring-offset-slate-900"
+                                                    ? "ring-2 ring-blue-400 ring-offset-2 "
                                                     : "border-transparent"
                                             } ${
                                                 events.length > 0
@@ -440,7 +427,7 @@ export default function EventsPage() {
                                                     : "cursor-default"
                                             }`}
                                         >
-                                            <span className="text-sm font-medium">
+                                            <span className="text-sm font-medium text-black">
                                                 {day}
                                             </span>
                                             {hasReminderActive && (
@@ -456,7 +443,6 @@ export default function EventsPage() {
                                 })}
                             </div>
 
-                            {/* Legend */}
                             <div className="mt-4 space-y-2 text-xs text-white">
                                 <div className="flex items-center gap-2">
                                     <span className="h-3 w-3 rounded-full bg-blue-500"></span>
@@ -473,7 +459,6 @@ export default function EventsPage() {
                             </div>
                         </div>
 
-                        {/* Quick Action */}
                         <div className="rounded-3xl border border-slate-800 bg-slate-950/60 p-5 text-xs text-slate-400 shadow-lg shadow-blue-500/10">
                             <div className="text-xs font-semibold uppercase tracking-widest text-blue-300">
                                 Gợi ý điều phối
@@ -488,21 +473,32 @@ export default function EventsPage() {
                                 Tạo nhắc nhở mới
                             </button>
                         </div>
-                    </div>
+                    </div> */}
 
+                    <div className="space-y-4">
+                        <CalendarDefault
+                            events={allEvents}
+                            selectedDate={selectedDate}
+                            onDateSelect={setSelectedDate}
+                            allowNavigation={true}
+                            initialDate={currentDate}
+                            showLegend={true}
+                            reminders={reminders}
+                        />
+                    </div>
                     {/* Events List Section */}
                     <div className="space-y-4">
                         {selectedDate && (
                             <div className="rounded-2xl border border-blue-500/50 bg-blue-500/10 p-4">
                                 <div className="flex items-center justify-between">
-                                    <div className="text-sm font-semibold text-blue-200">
+                                    <div className="text-sm font-semibold text-blue-500">
                                         Sự kiện ngày{" "}
                                         {new Date(selectedDate).getDate()}/
                                         {currentMonth + 1}/{currentYear}
                                     </div>
                                     <button
                                         onClick={() => setSelectedDate(null)}
-                                        className="text-xs text-blue-300 hover:text-white"
+                                        className="text-xs text-blue-500 hover:text-white"
                                     >
                                         Xem tất cả
                                     </button>
@@ -516,7 +512,7 @@ export default function EventsPage() {
                                     size={48}
                                     className="mx-auto text-slate-600"
                                 />
-                                <p className="mt-4 text-slate-400">
+                                <p className="mt-4 text-black">
                                     Không có sự kiện trong ngày này
                                 </p>
                             </div>
@@ -525,11 +521,11 @@ export default function EventsPage() {
                                 {filteredEvents.map((event) => (
                                     <div
                                         key={event.id}
-                                        className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 transition hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/10 sm:p-6"
+                                        className="rounded-3xl border border-slate-800 bg-gray-400 p-5 transition hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/10 sm:p-6"
                                     >
                                         <div className="space-y-4">
                                             <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-widest">
-                                                <span className="flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-blue-200">
+                                                <span className="flex items-center gap-2 rounded-full border border-blue-500 bg-blue-500/70 px-3 py-1 text-white">
                                                     <Calendar size={14} />
                                                     {new Date(
                                                         event.date
@@ -539,7 +535,7 @@ export default function EventsPage() {
                                                         event.date
                                                     ).getMonth() + 1}
                                                 </span>
-                                                <span className="flex items-center gap-1 text-slate-300">
+                                                <span className="flex items-center gap-1 text-white">
                                                     <Clock size={14} />
                                                     {event.time}
                                                 </span>
@@ -547,8 +543,8 @@ export default function EventsPage() {
                                                     className={`rounded-full px-3 py-1 ${
                                                         event.type ===
                                                         "internal"
-                                                            ? "bg-blue-500/20 text-blue-300"
-                                                            : "bg-emerald-500/20 text-emerald-300"
+                                                            ? "bg-blue-500 text-white"
+                                                            : "bg-emerald-500 text-white"
                                                     }`}
                                                 >
                                                     {event.type === "internal"
@@ -556,7 +552,7 @@ export default function EventsPage() {
                                                         : "Đối ngoại"}
                                                 </span>
                                                 {hasReminder(event.id) && (
-                                                    <span className="flex items-center gap-1 rounded-full border border-orange-400/50 bg-orange-500/10 px-3 py-1 text-orange-300">
+                                                    <span className="flex items-center gap-1 rounded-full border border-orange-400 bg-orange-500/70 px-3 py-1 text-white">
                                                         <BellRing
                                                             size={14}
                                                             className="animate-pulse"
@@ -570,20 +566,20 @@ export default function EventsPage() {
                                                 <h3 className="text-xl font-semibold text-white">
                                                     {event.name}
                                                 </h3>
-                                                <p className="text-sm text-slate-300">
+                                                <p className="text-sm text-white/80">
                                                     {event.description}
                                                 </p>
-                                                <p className="flex items-center gap-2 text-xs uppercase tracking-widest text-slate-400">
+                                                <p className="flex items-center gap-2 text-xs uppercase tracking-widest text-white/80">
                                                     <MapPin
                                                         size={14}
-                                                        className="text-blue-300"
+                                                        className="text-white/80"
                                                     />
                                                     {event.location}
                                                 </p>
                                             </div>
 
                                             <div className="flex flex-wrap gap-3">
-                                                <button className="flex-1 rounded-full bg-blue-600 px-5 py-2.5 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-blue-500">
+                                                <button className="bg-active-blue-metallic flex-1 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-blue-500">
                                                     Đăng ký tham gia
                                                 </button>
                                                 <button
@@ -592,7 +588,7 @@ export default function EventsPage() {
                                                     }
                                                     className={`flex flex-1 items-center justify-center gap-2 rounded-full border px-5 py-2.5 text-xs font-semibold uppercase tracking-widest transition ${
                                                         hasReminder(event.id)
-                                                            ? "border-orange-500 bg-orange-500/20 text-orange-300 hover:bg-orange-500/30"
+                                                            ? "border-orange-500 bg-orange-500/70 text-white hover:bg-orange-500/30"
                                                             : "border-slate-700 bg-slate-800/50 text-blue-300 hover:border-blue-500 hover:bg-slate-800 hover:text-white"
                                                     }`}
                                                 >
@@ -618,22 +614,22 @@ export default function EventsPage() {
                         )}
 
                         {/* Timeline Highlights */}
-                        <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6">
-                            <div className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-300 sm:text-sm">
+                        <div className="rounded-3xl border border-slate-800 bg-gray-400 p-5 sm:p-6">
+                            <div className="text-xs font-bold uppercase tracking-[0.4em] text-teal-300 sm:text-sm">
                                 Điểm nhấn timeline
                             </div>
                             <div className="mt-4 space-y-3">
                                 {timelineHighlights.map((item) => (
                                     <div
                                         key={item.title}
-                                        className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4"
+                                        className="rounded-2xl border border-slate-800 bg-gray-500 p-4"
                                     >
                                         <div className="flex items-start justify-between gap-2">
                                             <div>
                                                 <div className="text-sm font-semibold text-white">
                                                     {item.title}
                                                 </div>
-                                                <div className="text-xs uppercase tracking-widest text-slate-400">
+                                                <div className="text-xs uppercase tracking-widest text-white/80">
                                                     {item.timeframe}
                                                 </div>
                                             </div>
@@ -649,8 +645,8 @@ export default function EventsPage() {
                         </div>
 
                         {/* Past Events */}
-                        <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6">
-                            <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400 sm:text-sm">
+                        <div className="rounded-3xl border border-slate-800 bg-gray-400 p-5 sm:p-6">
+                            <div className="text-xs font-bold uppercase tracking-[0.4em] text-teal-300 sm:text-sm">
                                 Thư viện sự kiện
                             </div>
                             <div className="mt-4 space-y-2">
@@ -658,14 +654,14 @@ export default function EventsPage() {
                                     <a
                                         key={event.id}
                                         href={event.mediaLink}
-                                        className="flex items-center justify-between gap-2 rounded-2xl border border-transparent bg-slate-950/60 px-4 py-3 text-sm text-slate-300 transition hover:border-blue-500/40 hover:bg-slate-950/80 hover:text-white"
+                                        className="flex items-center justify-between gap-2 rounded-2xl border border-transparent bg-gray-500 px-4 py-3 text-sm text-slate-300 transition hover:border-blue-500/40 hover:bg-slate-950/80 hover:text-white"
                                     >
-                                        <span>{event.name}</span>
+                                        <span className="text-white">{event.name}</span>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-xs uppercase tracking-widest text-slate-500">
+                                            <span className="text-xs uppercase tracking-widest text-white">
                                                 {event.date}
                                             </span>
-                                            <ExternalLink size={14} />
+                                            <ExternalLink size={14} className="text-white"/>
                                         </div>
                                     </a>
                                 ))}
