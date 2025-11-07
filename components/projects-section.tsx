@@ -65,12 +65,12 @@ const clusters = [
 
 export default function ProjectsSection() {
   return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-950 p-6 sm:p-7 lg:p-8">
+    <section className="rounded-2xl  bg-gray-200/40 p-6 sm:p-7 lg:p-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400 sm:text-sm">Danh mục dự án</div>
+          <div className="text-xs font-semibold uppercase tracking-[0.4em] text-teal-400 sm:text-sm">Danh mục dự án</div>
           <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">Các dự án trọng điểm tập đoàn</h2>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-white">
             Theo dõi mục tiêu, tiến độ và tài nguyên mỗi dự án. Dữ liệu đồng bộ tự động với báo cáo PowerBI và Google Sheet hàng tuần.
           </p>
         </div>

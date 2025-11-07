@@ -129,23 +129,23 @@ export default function EventSection() {
   }
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-950 to-slate-900 p-6 sm:p-7 lg:p-8">
+    <section className="relative overflow-hidden rounded-2xl  bg-gray-200/40 p-6 sm:p-7 lg:p-8">
       {/* Background effects */}
-      <div className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-blue-500/20 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 right-0 h-72 w-72 translate-x-24 translate-y-16 rounded-full bg-emerald-500/10 blur-3xl" />
+      {/* <div className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-blue-500/20 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 right-0 h-72 w-72 translate-x-24 translate-y-16 rounded-full bg-emerald-500/10 blur-3xl" /> */}
 
       <div className="relative space-y-8">
         {/* Header */}
         <div className="space-y-6">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.4em] text-blue-400 sm:text-sm">
-            <Sparkles size={16} className="text-blue-300" /> Sự kiện
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.4em] text-teal-400 sm:text-sm">
+            <Sparkles size={16} className="text-teal-400" /> Sự kiện
           </div>
 
           <div className="space-y-3">
             <h2 className="text-2xl font-bold text-white sm:text-3xl">
               Lịch sự kiện nội bộ & đối ngoại
             </h2>
-            <p className="max-w-3xl text-sm text-slate-400">
+            <p className="max-w-3xl text-sm text-white">
               Theo dõi tiến độ tổ chức, đăng ký tham gia và thư viện media sau sự kiện. Bảng điều phối tập trung giúp
               đồng bộ thông tin giữa các phòng ban.
             </p>
@@ -167,7 +167,12 @@ export default function EventSection() {
         </div>
 
         {/* Bộ lọc */}
-        <div className="mt-8 rounded-3xl border border-slate-800 bg-slate-900/70 p-5 shadow-lg shadow-blue-500/10">
+        <div 
+          style={{
+            border: "2px solid rgb(118, 118, 118) ",
+            boxShadow: "0 0 5px 1px rgb(118, 118, 118)",
+        }}
+        className="mt-8 rounded-3xl border border-slate-800 bg-slate-900/70 p-5 shadow-lg shadow-blue-500/10">
           <div className="text-xs font-semibold uppercase tracking-widest text-slate-400">Lọc theo loại sự kiện</div>
           <div className="mt-3 grid gap-2 sm:grid-cols-3">
             {[
@@ -180,8 +185,8 @@ export default function EventSection() {
                 onClick={() => setActiveType(btn.value as EventType)}
                 className={`rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-widest transition ${
                   activeType === btn.value
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
-                    : "border border-slate-800 text-slate-300 hover:border-blue-500 hover:text-white"
+                    ? "bg-active-blue-metallic"
+                    : "border border-slate-800 text-slate-300 hover:border-teal-500 hover:text-white"
                 }`}
               >
                 {btn.label}
@@ -191,8 +196,8 @@ export default function EventSection() {
         </div>
 
         {/* Calendar */}
-        <div className="relative mt-8 space-y-6">
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6">
+        <div className="relative mt-8 space-y-6 ">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6 inset-shadow-sm inset-shadow-black/50">
             <div className="flex items-center justify-between text-sm font-semibold text-white">
               <span>Tháng {currentMonth + 1}/{currentYear}</span>
               <span className="text-blue-300">Calendar</span>
@@ -253,15 +258,15 @@ export default function EventSection() {
           </div>
 
           {selectedDate && (
-          <div className="rounded-2xl border border-blue-500/50 bg-blue-500/10 p-4">
+          <div className="rounded-2xl border border-blue-500 bg-blue-500/50 p-4">
             <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold text-blue-200">
+                <div className="text-sm font-semibold text-white">
                     Sự kiện ngày {new Date(selectedDate).getDate()}/
                     {currentMonth + 1}/{currentYear}
                 </div>
                 <button
                     onClick={() => setSelectedDate(null)}
-                    className="text-xs text-yellow-300 hover:text-white"
+                    className="text-xs text-teal-300 hover:text-white"
                 >
                     Xem tất cả
                 </button>
@@ -274,7 +279,11 @@ export default function EventSection() {
             {filteredEvents.map((event) => (
               <div
                 key={event.id}
-                className="flex flex-col gap-6 rounded-3xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6 transition hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/10"
+                style={{
+                  border: "2px solid rgb(127, 127, 127) ",
+                  boxShadow: "0 0 10px 1px rgb(109, 109, 109)",
+              }}
+                className="flex flex-col gap-6 rounded-3xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6 transition hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/10"
               >
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-widest text-slate-400">
@@ -311,15 +320,15 @@ export default function EventSection() {
 
                 {/* Hành động */}
                 <div className="flex w-full flex-wrap gap-3 text-sm text-slate-300">
-                  <button className="flex-1 rounded-full bg-blue-600 px-5 py-2 font-semibold uppercase tracking-widest text-white transition hover:bg-blue-500">
+                  <button className="bg-active-blue-metallic flex-1 rounded-full bg-blue-600 px-5 py-2 font-semibold uppercase tracking-widest text-white transition hover:bg-blue-500">
                     Đăng ký tham gia
                   </button>
                   <button
                     onClick={() => toggleReminder(event.id)}
                     className={`flex-1 rounded-full px-5 py-2 font-semibold uppercase tracking-widest transition ${
                       event.reminder
-                        ? "bg-orange-500/20 text-orange-300 hover:bg-orange-500/30"
-                        : "border border-slate-800 text-slate-300 hover:border-blue-500 hover:text-white"
+                        ? "bg-orange-500/70 text-orange-300 hover:bg-orange-500/30"
+                        : "bg-gray-500 border border-slate-800 text-slate-300 hover:border-blue-500 hover:text-white"
                     }`}
                   >
                     {event.reminder ? "Hủy nhắc" : "Nhắc nhở"}

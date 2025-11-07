@@ -40,14 +40,14 @@ const quickLinks = [
 
 export default function PolicySection() {
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-950 to-slate-900 p-6 sm:p-8">
+    <section className="relative overflow-hidden rounded-2xl  bg-gray-200/40 p-6 sm:p-8">
       <div className="space-y-8">
         <div className="space-y-6">
           <div className="space-y-4">
-            <div className="text-xs font-semibold uppercase tracking-[0.35em] text-blue-400 sm:text-sm">Chính sách nội bộ</div>
+            <div className="text-xs font-semibold uppercase tracking-[0.35em] text-teal-400 sm:text-sm">Chính sách nội bộ</div>
             <div className="space-y-3">
               <h2 className="text-2xl font-bold text-white sm:text-3xl">Kho chính sách tập trung</h2>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-white">
                 Tra cứu nhanh, tải tài liệu chuẩn hóa và ký nhận điện tử trên từng chính sách để đảm bảo tuân thủ đồng nhất toàn hệ thống.
               </p>
             </div>

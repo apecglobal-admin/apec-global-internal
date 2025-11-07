@@ -75,13 +75,13 @@ export default function Header() {
     ];
 
     return (
-        <header className="bg-slate-900/50 border-b border-slate-400  w-full">
+        <header className="bg-white border-b border-slate-400  w-full">
             {/* Top Bar */}
             <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4 max-w-7xl mx-auto w-full">
                 {/* Logo */}
                 <a
                     href="/"
-                    className="flex items-center gap-3 sm:gap-3 text-white flex-shrink-0"
+                    className="flex items-center gap-3 sm:gap-3 flex-shrink-0"
                 >
                     <img
                         src="https://res.cloudinary.com/dbt97thds/image/upload/v1751877069/rzasmzadpuv8tlbdigmh.png"
@@ -89,22 +89,22 @@ export default function Header() {
                         className="w-16 h-12 sm:w-20 sm:h-16 lg:w-[100px] lg:h-[70px]"
                     />
                     <div>
-                        <div className="text-xl sm:text-2xl font-extrabold tracking-wide text-blue-400">
+                        <div className="text-xl sm:text-2xl font-extrabold tracking-wide text-blue-600 text-shadow-lg/20">
                             APEC GLOBAL
                         </div>
-                        <div className="text-xs sm:text-sm uppercase tracking-[0.05em] font-semibold text-white">
+                        <div className="text-xs sm:text-sm uppercase tracking-[0.05em] font-semibold text-black">
                             Kiến tạo giá trị - Làm Chủ Tương Lai
                         </div>
                     </div>
                 </a>
 
                 {/* Desktop Navigation */}
-                <nav className="hidden xl:flex items-center gap-4 lg:gap-3 text-sm font-normal uppercase tracking-wide  flex-1 justify-center">
+                <nav className="hidden xl:flex items-center gap-4 lg:gap-3 text-md font-normal uppercase tracking-wide  flex-1 justify-center">
                     {menuItems.map((item) => (
                         <a
                             key={item.label}
                             href={item.href}
-                            className="hover:text-slate-400 transition whitespace-nowrap text-white"
+                            className="hover:text-slate-400 transition whitespace-nowrap text-black font-bold"
                         >
                             {item.label}
                         </a>
@@ -114,24 +114,24 @@ export default function Header() {
                 {/* Mobile Hamburger */}
                 <button
                     onClick={() => setIsSidebarOpen(true)}
-                    className="xl:hidden flex h-10 w-10 items-center justify-center rounded-full border border-white bg-slate-900 text-slate-300 transition hover:border-blue-500 hover:text-white"
+                    className="xl:hidden flex h-10 w-10 items-center justify-center rounded-full border border-gray-800 bg-gray-500 text-slate-300 transition hover:border-blue-500 hover:text-white shadow-xl"
                 >
-                    <Menu size={20} />
+                    <Menu size={20} className="text-black font-bold" />
                 </button>
             </div>
 
             {/* Search & Actions */}
-            <div className="border-t border-slate-400">
+            <div className="border-t border-black">
                 <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 max-w-7xl mx-auto flex items-center gap-2 flex-wrap">
                     {/* Search */}
                     <SearchBar />
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 ml-auto">
-                        <button className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-white bg-slate-900 text-slate-300 transition hover:border-blue-500 hover:text-white">
+                        <button className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-white bg-gray-400 text-white transition hover:border-blue-500 hover:text-white">
                             <Bell size={18} className="text-white"/>
                         </button>
-                        <button className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-white bg-slate-900 text-slate-300 transition hover:border-blue-500 hover:text-white">
+                        <button className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-white bg-gray-400 text-white transition hover:border-blue-500 hover:text-white">
                             <Mail size={18} className="text-white"/>
                         </button>
 
@@ -141,7 +141,7 @@ export default function Header() {
                                 onClick={() =>
                                     setIsDropdownOpen(!isDropdownOpen)
                                 }
-                                className="flex items-center gap-2 rounded-full border border-white bg-slate-900 px-2 sm:px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-blue-500 hover:text-white"
+                                className="flex items-center gap-2 rounded-full border border-white bg-gray-400 px-2 sm:px-3 py-2 text-sm font-semibold text-white transition hover:border-blue-500 hover:text-white"
                             >
                                 <UserCircle2 size={20} className="text-white" />
                                 <span className="hidden sm:inline">
@@ -155,7 +155,7 @@ export default function Header() {
                                 />
                             </button>
                             {isDropdownOpen && (
-                                <div className="absolute right-0 mt-2 w-72 rounded-lg border border-white bg-slate-900 shadow-xl z-50">
+                                <div className="absolute right-0 mt-2 w-72 rounded-lg border border-white bg-gray-400 shadow-xl z-50">
                                     <div className="p-2">
                                         {userInfo ? (
                                             <>
@@ -185,7 +185,7 @@ export default function Header() {
                                             </>
                                         ) : (
                                             <button
-                                                className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm font-medium text-white transition hover:bg-blue-600 cursor-pointer"
+                                                className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm font-medium text-white transition hover:bg-blue-400 cursor-pointer"
                                                 onClick={() =>
                                                     router.push("/login")
                                                 }
@@ -207,14 +207,14 @@ export default function Header() {
             <div
                 className={`fixed top-0 right-0 h-full z-50 transform ${
                     isSidebarOpen ? "translate-x-0" : "translate-x-full"
-                } transition-transform duration-300 ease-in-out bg-slate-950 w-1/2 border-l border-white`}
+                } transition-transform duration-300 ease-in-out bg-white w-1/2 border-l border-black`}
                 ref={sidebarRef}
             >
-                <div className="flex justify-between items-center p-4 border-b border-white">
-                    <span className="text-white font-bold text-lg">Menu</span>
+                <div className="flex justify-between items-center p-4 border-b border-black">
+                    <span className="text-black font-bold text-lg">Menu</span>
                     <button
                         onClick={() => setIsSidebarOpen(false)}
-                        className="text-slate-300 hover:text-white"
+                        className="text-black rounded-full border border-gray-800 p-1 bg-gray-400 hover:text-white hover:bg-black shadow-xl/20"
                     >
                         <X size={20} />
                     </button>
@@ -224,7 +224,7 @@ export default function Header() {
                         <a
                             key={item.label}
                             href={item.href}
-                            className="text-slate-300 py-2 px-3 rounded hover:bg-white hover:text-black"
+                            className="text-black  py-2 px-3 rounded hover:bg-gray-400 hover:text-black"
                             onClick={() => setIsSidebarOpen(false)}
                         >
                             {item.label}
