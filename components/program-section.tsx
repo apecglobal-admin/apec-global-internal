@@ -39,7 +39,11 @@ export default function ProgramSection() {
   }, [activeTab])
 
   return (
-    <section className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-950/80 to-slate-900 p-6 sm:p-7 lg:p-8">
+    <section 
+    style={{
+      boxShadow: "0 0 10px 3px rgb(169, 169, 170)",
+  }}
+    className="rounded-3xl border border-slate-800  bg-gray-400 p-6 sm:p-7 lg:p-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div className="text-xs font-semibold uppercase tracking-[0.4em] text-amber-400 sm:text-sm">Thi đua & khen thưởng</div>
@@ -52,7 +56,7 @@ export default function ProgramSection() {
           <button
             onClick={() => setActiveTab("departments")}
             className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition ${
-              activeTab === "departments" ? "bg-amber-500 text-slate-950" : "border border-amber-500/60 text-amber-300 hover:bg-amber-500/20"
+              activeTab === "departments" ? "bg-amber-500 text-slate-950" : "border border-amber-500/60 text-amber-300 hover:bg-amber-500"
             }`}
           >
             Phòng ban
@@ -60,7 +64,7 @@ export default function ProgramSection() {
           <button
             onClick={() => setActiveTab("individuals")}
             className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition ${
-              activeTab === "individuals" ? "bg-amber-500 text-slate-950" : "border border-amber-500/60 text-amber-300 hover:bg-amber-500/20"
+              activeTab === "individuals" ? "bg-amber-500 text-slate-950" : "border border-amber-500/60 text-amber-300 hover:bg-amber-500"
             }`}
           >
             Cá nhân
@@ -68,7 +72,7 @@ export default function ProgramSection() {
           <button
             onClick={() => setActiveTab("projects")}
             className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition ${
-              activeTab === "projects" ? "bg-amber-500 text-slate-950" : "border border-amber-500/60 text-amber-300 hover:bg-amber-500/20"
+              activeTab === "projects" ? "bg-amber-500 text-slate-950" : "border border-amber-500/60 text-amber-300 hover:bg-amber-500"
             }`}
           >
             Dự án
@@ -77,7 +81,7 @@ export default function ProgramSection() {
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
-        <div className="rounded-3xl border border-amber-500/20 bg-slate-950/80 p-5 sm:p-6">
+        <div className="rounded-3xl border border-amber-500/20 bg-gray-600/70 p-5 sm:p-6">
           <div className="text-xs uppercase tracking-widest text-amber-200">Bảng xếp hạng</div>
           <ul className="mt-4 space-y-3">
             {rankingData.map((item, index) => (
@@ -107,7 +111,7 @@ export default function ProgramSection() {
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-2xl border border-amber-500/30 bg-slate-950/80 p-5 sm:p-6">
+          <div className="rounded-2xl border border-amber-500/30 bg-gray-600/70 p-5 sm:p-6">
             <div className="text-xs uppercase tracking-widest text-amber-200">Module</div>
             <div className="mt-4 grid gap-3">
               {modules.map((module) => (
@@ -123,7 +127,7 @@ export default function ProgramSection() {
               ))}
             </div>
           </div>
-          <div className="rounded-2xl border border-amber-500/20 bg-slate-950/70 p-5 sm:p-6 text-center">
+          <div className="rounded-2xl border border-amber-500/20 bg-gray-600/70 p-5 sm:p-6 text-center">
             <div className="text-xs uppercase tracking-widest text-amber-200">Vinh danh tập thể xuất sắc</div>
             <div className="mt-3 text-2xl font-bold text-white">GuardCam AI Hub</div>
             <p className="mt-2 text-sm text-slate-300">

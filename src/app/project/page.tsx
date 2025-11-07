@@ -175,19 +175,19 @@ export default function ProjectsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 sm:p-6 lg:p-8">
+        <div className="min-h-screen bg-gray-200 p-4 sm:p-6 lg:p-8">
             <div className="mx-auto max-w-7xl">
                 {/* Header */}
                 <div className="mb-8 space-y-4">
-                    <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-400 sm:text-sm">
+                    <div className="text-xs font-semibold uppercase tracking-[0.4em] text-teal-400 sm:text-sm">
                         Danh mục dự án
                     </div>
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div className="flex-1">
-                            <h1 className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+                            <h1 className="text-3xl font-bold text-teal-400 sm:text-4xl lg:text-5xl">
                                 Các dự án trọng điểm tập đoàn
                             </h1>
-                            <p className="mt-3 max-w-3xl text-sm text-slate-400 sm:text-base">
+                            <p className="mt-3 max-w-3xl text-sm text-black sm:text-base">
                                 Theo dõi mục tiêu, tiến độ và tài nguyên mỗi dự
                                 án. Dữ liệu đồng bộ tự động với báo cáo PowerBI
                                 và Google Sheet hàng tuần.
@@ -211,13 +211,13 @@ export default function ProjectsPage() {
                         return (
                             <div
                                 key={stat.label}
-                                className="group rounded-2xl border border-slate-700/80 border-l-4 bg-slate-900/60 p-5 shadow-inner shadow-black/10 transition"
+                                className="group rounded-2xl border border-slate-700/80 border-l-6 bg-slate-900/60 p-5 shadow-inner shadow-black/10 transition"
                                 style={{
                                     borderLeftColor: borderColor,
-                                    boxShadow: `inset 0 0 10px rgba(0,0,0,0.1)`,
+                                    boxShadow: "0 0 10px 2px rgba(0, 0, 0, 0.6)",
                                 }}
                                 onMouseEnter={(e) =>
-                                    (e.currentTarget.style.boxShadow = `0 0 20px ${borderColor}40`)
+                                    (e.currentTarget.style.boxShadow = `0 0 20px ${borderColor}80`)
                                 }
                                 onMouseLeave={(e) =>
                                     (e.currentTarget.style.boxShadow = `inset 0 0 10px rgba(0,0,0,0.1)`)
@@ -248,15 +248,15 @@ export default function ProjectsPage() {
                 </div>
 
                 {/* Filters */}
-                <div className="mb-6 flex flex-wrap items-center gap-3">
-                    <div className="text-xs font-semibold uppercase tracking-widest text-white">
+                <div className="mb-6 flex flex-wrap items-center gap-3 bg-gray-500 p-3 rounded-full  inset-shadow-sm inset-shadow-black/50">
+                    <div className="text-xs font-semibold uppercase tracking-widest text-white ml-4">
                         Lọc theo trạng thái:
                     </div>
                     <button
                         onClick={() => setFilterStatus("all")}
                         className={`rounded-full px-4 py-2 text-xs font-semibold uppercase transition ${
                             filterStatus === "all"
-                                ? "bg-blue-500/20 text-blue-300 border border-blue-500/50"
+                                ? "bg-blue-300 text-blue-500 border border-blue-500/50"
                                 : "bg-slate-900/70 text-slate-400 border border-slate-800 hover:text-slate-200"
                         }`}
                     >
@@ -266,7 +266,7 @@ export default function ProjectsPage() {
                         onClick={() => setFilterStatus("on-track")}
                         className={`rounded-full px-4 py-2 text-xs font-semibold uppercase transition ${
                             filterStatus === "on-track"
-                                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50"
+                                ? "bg-emerald-300 text-emerald-500 border border-emerald-500/50"
                                 : "bg-slate-900/70 text-slate-400 border border-slate-800 hover:text-slate-200"
                         }`}
                     >
@@ -278,7 +278,7 @@ export default function ProjectsPage() {
                         onClick={() => setFilterStatus("attention")}
                         className={`rounded-full px-4 py-2 text-xs font-semibold uppercase transition ${
                             filterStatus === "attention"
-                                ? "bg-amber-500/20 text-amber-300 border border-amber-500/50"
+                                ? "bg-amber-300 text-amber-500 border border-amber-500/50"
                                 : "bg-slate-900/70 text-slate-400 border border-slate-800 hover:text-slate-200"
                         }`}
                     >
@@ -298,11 +298,11 @@ export default function ProjectsPage() {
                         return (
                             <article
                                 key={project.title}
-                                className="group rounded-2xl border border-gray-500/60 bg-slate-900/60 p-5 transition hover:border-blue-500/50 hover:bg-slate-900/80 sm:p-6"
+                                className="group rounded-2xl border border-black bg-slate-900/60 p-5 transition hover:border-blue-500/50 hover:bg-slate-900/80 sm:p-6"
                             >
                                 <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
                                     {/* Left Column */}
-                                    <div className="flex-1 space-y-4">
+                                    <div className="flex-1 space-y-4 font-bold">
                                         <div>
                                             <div className="flex flex-wrap items-start gap-3">
                                                 <h3 className="text-xl font-semibold text-white sm:text-2xl group-hover:text-blue-300">
@@ -314,7 +314,7 @@ export default function ProjectsPage() {
                                                     {statusBadge.label}
                                                 </span>
                                             </div>
-                                            <p className="mt-1 text-sm uppercase tracking-widest text-blue-300">
+                                            <p className="mt-1 text-sm uppercase tracking-widest text-blue-400">
                                                 {project.subtitle}
                                             </p>
                                         </div>
@@ -345,12 +345,12 @@ export default function ProjectsPage() {
                                         </div>
 
                                         {/* Assets */}
-                                        <div className="flex flex-wrap gap-2">
+                                        <div className="flex flex-wrap gap-2 ">
                                             {project.assets.map((asset) => (
                                                 <a
                                                     key={asset}
                                                     href="#"
-                                                    className="rounded-full border border-slate-700 bg-slate-800/50 px-3 py-1.5 text-xs text-slate-300 transition hover:border-blue-500 hover:bg-slate-800 hover:text-white"
+                                                    className="rounded-full border border-slate-700 bg-teal-400/50 px-3 py-1.5 text-xs text-white transition hover:border-blue-500 hover:bg-slate-800 hover:text-white"
                                                 >
                                                     {asset}
                                                 </a>
@@ -359,20 +359,21 @@ export default function ProjectsPage() {
                                     </div>
 
                                     {/* Right Column */}
-                                    <div className="w-full space-y-4 lg:w-80">
+                                    <div className="w-full space-y-4 lg:w-80 font-bold">
                                         {/* Progress */}
                                         <div>
-                                            <div className="flex items-center justify-between text-xs uppercase tracking-widest text-slate-400">
+                                            <div className="flex items-center justify-between text-xs uppercase tracking-widest text-white">
                                                 <span>Tiến độ hoàn thành</span>
-                                                <span className="text-lg font-bold text-blue-300">
+                                                <span className="text-lg font-bold text-blue-500">
                                                     {project.progress}%
                                                 </span>
                                             </div>
-                                            <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-slate-800">
+                                            <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-slate-800 shadow-lg shadow-cyan-500/50">
                                                 <div
-                                                    className="h-full rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-400 transition-all"
+                                                    className="h-full rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-400 transition-all "
                                                     style={{
                                                         width: `${project.progress}%`,
+                                                        
                                                     }}
                                                 ></div>
                                             </div>
@@ -475,7 +476,7 @@ export default function ProjectsPage() {
                                 key={project.title}
                                 className="flex items-center gap-4"
                             >
-                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-sm font-semibold text-blue-300">
+                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-teal-300/70 text-sm font-semibold text-white">
                                     {index + 1}
                                 </div>
                                 <div className="flex-1">
@@ -484,7 +485,7 @@ export default function ProjectsPage() {
                                             <div className="font-medium text-slate-200">
                                                 {project.title}
                                             </div>
-                                            <div className="text-xs text-slate-500">
+                                            <div className="text-xs text-white/60">
                                                 {project.phase}
                                             </div>
                                         </div>
@@ -492,7 +493,7 @@ export default function ProjectsPage() {
                                             <div className="text-sm font-semibold text-blue-300">
                                                 {project.progress}%
                                             </div>
-                                            <div className="text-xs text-slate-500">
+                                            <div className="text-xs text-white/60">
                                                 {project.lastUpdate}
                                             </div>
                                         </div>
