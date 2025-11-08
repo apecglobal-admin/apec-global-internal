@@ -160,31 +160,31 @@ export default function ProjectsPage() {
         const badges: any = {
             "on-track": {
                 label: "Đúng tiến độ",
-                class: "bg-emerald-500/20 text-emerald-300 border-emerald-500/50",
+                class: "bg-emerald-500 text-white border-emerald-500/50",
             },
             attention: {
                 label: "Cần quan tâm",
-                class: "bg-amber-500/20 text-amber-300 border-amber-500/50",
+                class: "bg-amber-500 text-white border-amber-500/50",
             },
             planning: {
                 label: "Lên kế hoạch",
-                class: "bg-blue-500/20 text-blue-300 border-blue-500/50",
+                class: "bg-blue-500 text-white border-blue-500/50",
             },
         };
         return badges[status] || badges["on-track"];
     };
 
     return (
-        <div className="min-h-screen bg-gray-200 p-4 sm:p-6 lg:p-8">
+        <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
             <div className="mx-auto max-w-7xl">
                 {/* Header */}
                 <div className="mb-8 space-y-4">
-                    <div className="text-xs font-semibold uppercase tracking-[0.4em] text-teal-400 sm:text-sm">
+                    <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-950 sm:text-sm">
                         Danh mục dự án
                     </div>
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div className="flex-1">
-                            <h1 className="text-3xl font-bold text-teal-400 sm:text-4xl lg:text-5xl">
+                            <h1 className="text-3xl font-bold text-blue-950 sm:text-4xl lg:text-5xl">
                                 Các dự án trọng điểm tập đoàn
                             </h1>
                             <p className="mt-3 max-w-3xl text-sm text-black sm:text-base">
@@ -193,7 +193,7 @@ export default function ProjectsPage() {
                                 và Google Sheet hàng tuần.
                             </p>
                         </div>
-                        <button className="flex items-center justify-center gap-2 rounded-full border border-slate-800 bg-slate-900/70 px-5 py-3 text-sm font-semibold uppercase tracking-widest text-blue-300 transition hover:border-blue-500 hover:bg-slate-900 hover:text-white">
+                        <button className="flex items-center justify-center gap-2 rounded-full border border-orange-500 bg-orange-400 px-5 py-3 text-sm font-semibold uppercase tracking-widest text-white transition hover:border-orange-600 hover:bg-orange-500 hover:text-white">
                             <Download size={16} />
                             Tải báo cáo tổng hợp
                         </button>
@@ -211,10 +211,9 @@ export default function ProjectsPage() {
                         return (
                             <div
                                 key={stat.label}
-                                className="group rounded-2xl border border-slate-700/80 border-l-6 bg-slate-900/60 p-5 shadow-inner shadow-black/10 transition"
+                                className="group rounded-2xl border border-slate-700/80 border-l-6 bg-gray-200 p-5 shadow-inner shadow-black/10 transition"
                                 style={{
                                     borderLeftColor: borderColor,
-                                    boxShadow: "0 0 10px 2px rgba(0, 0, 0, 0.6)",
                                 }}
                                 onMouseEnter={(e) =>
                                     (e.currentTarget.style.boxShadow = `0 0 20px ${borderColor}80`)
@@ -230,10 +229,10 @@ export default function ProjectsPage() {
                                         >
                                             {stat.value}
                                         </div>
-                                        <div className="mt-1 text-lg uppercase tracking-widest text-white font-semibold">
+                                        <div className={`mt-1 text-lg uppercase tracking-widest font-semibold ${colorClass}`}>
                                             {stat.label}
                                         </div>
-                                        <div className="text-[11px] text-slate-300">
+                                        <div className="text-[11px] text-black">
                                             {stat.subLabel}
                                         </div>
                                     </div>
@@ -248,16 +247,16 @@ export default function ProjectsPage() {
                 </div>
 
                 {/* Filters */}
-                <div className="mb-6 flex flex-wrap items-center gap-3 bg-gray-500 p-3 rounded-full  inset-shadow-sm inset-shadow-black/50">
-                    <div className="text-xs font-semibold uppercase tracking-widest text-white ml-4">
+                <div className="mb-6 flex flex-wrap items-center gap-3 bg-gray-200 p-3 rounded-full  inset-shadow-sm inset-shadow-black/50">
+                    <div className="text-xs font-bold uppercase tracking-widest text-black ml-4">
                         Lọc theo trạng thái:
                     </div>
                     <button
                         onClick={() => setFilterStatus("all")}
                         className={`rounded-full px-4 py-2 text-xs font-semibold uppercase transition ${
                             filterStatus === "all"
-                                ? "bg-blue-300 text-blue-500 border border-blue-500/50"
-                                : "bg-slate-900/70 text-slate-400 border border-slate-800 hover:text-slate-200"
+                                ? "bg-blue-500 text-white border border-blue-500"
+                                : "bg-gray-300 text-gray-500 border border-gray-500 hover:text-slate-200"
                         }`}
                     >
                         Tất cả ({clusters.length})
@@ -266,8 +265,8 @@ export default function ProjectsPage() {
                         onClick={() => setFilterStatus("on-track")}
                         className={`rounded-full px-4 py-2 text-xs font-semibold uppercase transition ${
                             filterStatus === "on-track"
-                                ? "bg-emerald-300 text-emerald-500 border border-emerald-500/50"
-                                : "bg-slate-900/70 text-slate-400 border border-slate-800 hover:text-slate-200"
+                                ? "bg-emerald-500 text-white border border-emerald-500/50"
+                                : "bg-gray-300 text-gray-500 border border-gray-500 hover:text-slate-200"
                         }`}
                     >
                         Đúng tiến độ (
@@ -278,8 +277,8 @@ export default function ProjectsPage() {
                         onClick={() => setFilterStatus("attention")}
                         className={`rounded-full px-4 py-2 text-xs font-semibold uppercase transition ${
                             filterStatus === "attention"
-                                ? "bg-amber-300 text-amber-500 border border-amber-500/50"
-                                : "bg-slate-900/70 text-slate-400 border border-slate-800 hover:text-slate-200"
+                                ? "bg-amber-500 text-white border border-amber-500/50"
+                                : "bg-gray-300 text-gray-500 border border-gray-500 hover:text-slate-200"
                         }`}
                     >
                         Cần quan tâm (
@@ -298,14 +297,14 @@ export default function ProjectsPage() {
                         return (
                             <article
                                 key={project.title}
-                                className="group rounded-2xl border border-black bg-slate-900/60 p-5 transition hover:border-blue-500/50 hover:bg-slate-900/80 sm:p-6"
+                                className="group rounded-2xl border border-black bg-gray-200 p-5 transition  sm:p-6"
                             >
                                 <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
                                     {/* Left Column */}
                                     <div className="flex-1 space-y-4 font-bold">
                                         <div>
                                             <div className="flex flex-wrap items-start gap-3">
-                                                <h3 className="text-xl font-semibold text-white sm:text-2xl group-hover:text-blue-300">
+                                                <h3 className="text-xl font-extrabold text-blue-950 sm:text-2xl ">
                                                     {project.title}
                                                 </h3>
                                                 <span
@@ -314,20 +313,20 @@ export default function ProjectsPage() {
                                                     {statusBadge.label}
                                                 </span>
                                             </div>
-                                            <p className="mt-1 text-sm uppercase tracking-widest text-blue-400">
+                                            <p className="mt-1 text-sm uppercase tracking-widest text-blue-950">
                                                 {project.subtitle}
                                             </p>
                                         </div>
 
-                                        <p className="text-sm text-slate-300">
+                                        <p className="text-sm text-black">
                                             {project.objective}
                                         </p>
 
                                         <div className="flex flex-wrap gap-3 text-xs">
-                                            <span className="rounded-full border border-slate-800 bg-slate-950/50 px-3 py-1.5 text-slate-400">
+                                            <span className="rounded-full border border-gray-500 bg-white px-3 py-1.5 text-black">
                                                 {project.phase}
                                             </span>
-                                            <span className="rounded-full border border-slate-800 bg-slate-950/50 px-3 py-1.5 text-slate-400">
+                                            <span className="rounded-full border border-gray-500 bg-white  px-3 py-1.5 text-black">
                                                 <Users
                                                     size={12}
                                                     className="mr-1 inline"
@@ -335,7 +334,7 @@ export default function ProjectsPage() {
                                                 Thành viên:{" "}
                                                 {project.members.length}
                                             </span>
-                                            <span className="rounded-full border border-slate-800 bg-slate-950/50 px-3 py-1.5 text-slate-400">
+                                            <span className="rounded-full border border-gray-500 bg-white px-3 py-1.5 text-black">
                                                 <Calendar
                                                     size={12}
                                                     className="mr-1 inline"
@@ -350,7 +349,7 @@ export default function ProjectsPage() {
                                                 <a
                                                     key={asset}
                                                     href="#"
-                                                    className="rounded-full border border-slate-700 bg-teal-400/50 px-3 py-1.5 text-xs text-white transition hover:border-blue-500 hover:bg-slate-800 hover:text-white"
+                                                    className="rounded-full border border-black bg-blue-950 px-3 py-1.5 text-xs text-white transition hover:border-blue-500 hover:bg-teal-500 hover:text-white"
                                                 >
                                                     {asset}
                                                 </a>
@@ -362,9 +361,9 @@ export default function ProjectsPage() {
                                     <div className="w-full space-y-4 lg:w-80 font-bold">
                                         {/* Progress */}
                                         <div>
-                                            <div className="flex items-center justify-between text-xs uppercase tracking-widest text-white">
+                                            <div className="flex items-center justify-between text-xs uppercase tracking-widest font-bold text-orange-600">
                                                 <span>Tiến độ hoàn thành</span>
-                                                <span className="text-lg font-bold text-blue-500">
+                                                <span className="text-lg font-bold text-orange-600">
                                                     {project.progress}%
                                                 </span>
                                             </div>
@@ -380,8 +379,8 @@ export default function ProjectsPage() {
                                         </div>
 
                                         {/* Team Members */}
-                                        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
-                                            <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                                        <div className="rounded-xl border border-slate-800 bg-white p-3">
+                                            <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-black">
                                                 Thành viên phụ trách
                                             </div>
                                             <div className="space-y-1">
@@ -389,7 +388,7 @@ export default function ProjectsPage() {
                                                     (member) => (
                                                         <div
                                                             key={member}
-                                                            className="text-xs text-slate-300"
+                                                            className="text-xs text-black"
                                                         >
                                                             • {member}
                                                         </div>
@@ -402,19 +401,19 @@ export default function ProjectsPage() {
                                         <div className="space-y-2">
                                             <a
                                                 href={project.reportLink}
-                                                className="flex items-center justify-between rounded-xl border border-blue-500/40 bg-slate-900/60 px-4 py-2.5 text-sm text-blue-300 transition hover:border-blue-500 hover:bg-slate-900 hover:text-white"
+                                                className="flex items-center justify-between rounded-xl border border-orange-500 bg-orange-400 px-4 py-2.5 text-sm text-white transition hover:bg-orange-500 hover:text-white"
                                             >
                                                 <span className="flex items-center gap-2">
                                                     <BarChart3 size={16} />
                                                     Báo cáo tiến độ
                                                 </span>
-                                                <span className="text-xs uppercase tracking-widest text-slate-400">
+                                                <span className="text-xs uppercase tracking-widest">
                                                     {project.reportLabel}
                                                 </span>
                                             </a>
                                             <a
                                                 href={project.profileLink}
-                                                className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm text-slate-300 transition hover:border-blue-500 hover:bg-slate-900 hover:text-white"
+                                                className="flex items-center justify-between rounded-xl border border-orange-500 bg-orange-400 px-4 py-2.5 text-sm text-white transition hover:bg-orange-500 hover:text-white"
                                             >
                                                 <span className="flex items-center gap-2">
                                                     <FileText size={16} />
@@ -427,8 +426,8 @@ export default function ProjectsPage() {
                                         {/* Issues Alert - Chỉ hiển thị nếu có vấn đề */}
                                         {project.issues &&
                                             project.issues.length > 0 && (
-                                                <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3">
-                                                    <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-amber-300">
+                                                <div className="rounded-xl border border-amber-500/30 bg-amber-500/40 p-3">
+                                                    <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-orange-600">
                                                         <span>⚠️</span>
                                                         <span>
                                                             Vấn đề cần xử lý
@@ -439,7 +438,7 @@ export default function ProjectsPage() {
                                                             (issue, idx) => (
                                                                 <li
                                                                     key={idx}
-                                                                    className="text-xs text-amber-200/80"
+                                                                    className="text-xs text-orange-600"
                                                                 >
                                                                     • {issue}
                                                                 </li>
@@ -466,8 +465,8 @@ export default function ProjectsPage() {
                 )}
 
                 {/* Timeline Overview */}
-                <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
-                    <h3 className="mb-4 text-lg font-semibold text-white">
+                <div className="mt-8 rounded-2xl border border-slate-800 bg-gray-200 p-6">
+                    <h3 className="mb-4 text-xl font-bold text-blue-950">
                         Tổng quan roadmap
                     </h3>
                     <div className="space-y-3">
@@ -476,24 +475,24 @@ export default function ProjectsPage() {
                                 key={project.title}
                                 className="flex items-center gap-4"
                             >
-                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-teal-300/70 text-sm font-semibold text-white">
+                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-orange-400 text-sm font-semibold text-white">
                                     {index + 1}
                                 </div>
                                 <div className="flex-1">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <div className="font-medium text-slate-200">
+                                            <div className="font-bold text-blue-950">
                                                 {project.title}
                                             </div>
-                                            <div className="text-xs text-white/60">
+                                            <div className="text-xs text-black/70">
                                                 {project.phase}
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-sm font-semibold text-blue-300">
+                                            <div className="text-lg font-bold text-orange-400">
                                                 {project.progress}%
                                             </div>
-                                            <div className="text-xs text-white/60">
+                                            <div className="text-xs text-black">
                                                 {project.lastUpdate}
                                             </div>
                                         </div>

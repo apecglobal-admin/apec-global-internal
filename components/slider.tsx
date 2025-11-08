@@ -66,11 +66,12 @@ export default function Slider({ slides = fallbackSlides }: SliderProps) {
 
     return (
         <div 
-        style={{boxShadow: "0 0 10px 2px rgb(169, 169, 170)"}}
-        className="relative flex flex-col sm:flex-row items-center justify-between rounded-3xl border border-slate-800 bg-gray-300 px-6 py-4 ">
+        style={{boxShadow: "0 0 5px 2px rgb(216, 216, 216)"}}
+        className="relative flex flex-col sm:flex-row items-center justify-between rounded-3xl border border-slate-800 bg-gray-100 px-6 py-4 ">
             <div className="flex flex-col items-center sm:items-start text-center sm:text-left sm:w-2/3 md:mr-5">
                 <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start sm:flex-nowrap sm:gap-4">
-                    <div className="rounded-full border border-teal-400 bg-teal-400 px-4 py-1 text-xs font-extrabold uppercase tracking-widest text-white">
+                    <div 
+                    className="rounded-full border border-black bg-blue-950 px-4 py-1 text-xs font-extrabold uppercase tracking-widest text-white">
                         {slides[current].highlight}
                     </div>
                     <div className="flex gap-1">
@@ -79,8 +80,8 @@ export default function Slider({ slides = fallbackSlides }: SliderProps) {
                                 key={idx}
                                 className={`h-1.5 w-8 rounded-full transition sm:w-12 ${
                                     idx === current
-                                        ? "bg-teal-400"
-                                        : "bg-slate-700"
+                                        ? "bg-blue-950"
+                                        : "bg-gray-400"
                                 }`}
                             ></div>
                         ))}
@@ -90,20 +91,20 @@ export default function Slider({ slides = fallbackSlides }: SliderProps) {
                 <div className="mt-5 text-2xl font-semibold text-black/80 sm:text-3xl md:text-4xl">
                     {slides[current].title}
                 </div>
-                <div className="mt-3 max-w-3xl text-base text-white sm:text-lg font-semibold ">
+                <div className="mt-3 max-w-3xl text-base text-black/60 sm:text-lg font-bold ">
                     {slides[current].description}
                 </div>
 
                 <div className="mt-6 flex flex-wrap justify-center sm:justify-start gap-3">
                     <button
                         onClick={prev}
-                        className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-700 bg-gray-500 text-white transition hover:border-blue-500"
+                        className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-700 bg-gray-300 text-black transition hover:border-blue-500"
                     >
                         <ChevronLeft size={22} />
                     </button>
                     <button
                         onClick={next}
-                        className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-700 bg-gray-500 text-white transition hover:border-blue-500"
+                        className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-700 bg-gray-300 text-black transition hover:border-blue-500"
                     >
                         <ChevronRight size={22} />
                     </button>

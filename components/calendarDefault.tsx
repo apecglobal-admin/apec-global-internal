@@ -72,7 +72,7 @@ const CalendarDefault = ({
 
   const getEventsForDate = (day: number) => {
     const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    return events.filter((event) => event.date === dateStr);
+    return events.filter((event: any) => event.date === dateStr);
   };
 
   const hasReminder = (eventId: number) => {
@@ -82,7 +82,7 @@ const CalendarDefault = ({
   const calendarDays = getCalendarDays();
 
   return (
-    <div className={`rounded-3xl border border-slate-800 bg-gray-400 p-5 sm:p-6 ${className}`}>
+    <div className={`rounded-3xl border border-slate-800 bg-gray-300 p-5 sm:p-6 ${className}`}>
       {/* Calendar Header */}
       <div className="flex items-center justify-between">
         {allowNavigation ? (
@@ -94,7 +94,7 @@ const CalendarDefault = ({
               <ChevronLeft size={20} />
             </button>
             <div className="text-center">
-              <div className="text-lg font-semibold text-white">
+              <div className="text-lg font-semibold text-black">
                 {MONTHS[currentMonth]}
               </div>
               <div className="text-sm font-bold text-blue-600">{currentYear}</div>
@@ -108,7 +108,7 @@ const CalendarDefault = ({
           </>
         ) : (
           <div className="w-full text-center">
-            <div className="text-lg font-semibold text-white">
+            <div className="text-lg font-semibold text-black">
               {MONTHS[currentMonth]}
             </div>
             <div className="text-sm font-bold text-blue-600">{currentYear}</div>
@@ -117,7 +117,7 @@ const CalendarDefault = ({
       </div>
 
       {/* Weekday Headers */}
-      <div className="mt-4 grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-widest text-white">
+      <div className="mt-4 grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-widest text-black">
         {WEEKDAYS.map((day) => (
           <div key={day}>{day}</div>
         ))}
@@ -131,9 +131,9 @@ const CalendarDefault = ({
           }
 
           const dayEvents = getEventsForDate(day);
-          const hasInternal = dayEvents.some((e) => e.type === "internal");
-          const hasExternal = dayEvents.some((e) => e.type === "external");
-          const hasReminderActive = dayEvents.some((e) => hasReminder(e.id));
+          const hasInternal = dayEvents.some((e: any) => e.type === "internal");
+          const hasExternal = dayEvents.some((e: any) => e.type === "external");
+          const hasReminderActive = dayEvents.some((e: any) => hasReminder(e.id));
           const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           const isSelected = selectedDate === dateStr;
 
@@ -170,7 +170,7 @@ const CalendarDefault = ({
 
       {/* Legend */}
       {showLegend && (
-        <div className="mt-4 space-y-2 text-xs text-white">
+        <div className="mt-4 space-y-2 text-xs text-black">
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full bg-blue-500"></span>
             <span>Sự kiện nội bộ</span>

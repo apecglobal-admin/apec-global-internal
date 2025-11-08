@@ -59,13 +59,13 @@ export default function LoginSection() {
                 boxShadow: "0 0 10px 2px rgb(169, 169, 170)",
             }}
         >
-            <div className="text-xs font-semibold uppercase tracking-[0.4em] text-teal-400 sm:text-sm">
+            <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-950 sm:text-sm">
                 Apec ID
             </div>
 
             {!userInfo && (
                 <>
-                    <h2 className="mt-2 text-2xl font-extrabold text-teal-200 sm:text-3xl text-shadow-lg/30">
+                    <h2 className="mt-2 text-2xl font-extrabold text-blue-950 sm:text-3xl">
                         Cổng đăng nhập nội bộ
                     </h2>
                     <p className="mt-2 text-sm  text-black ">
@@ -80,8 +80,8 @@ export default function LoginSection() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="Email"
-                            className="w-full rounded-2xl border border-slate-800 px-4 py-3 text-sm text-black placeholder:text-black
-                focus:border-blue-500 focus:outline-none bg-gray-400/60 focus:bg-white transition-colors"
+                            className="w-full rounded-2xl border border-slate-400 px-4 py-3 text-sm text-black placeholder:text-black
+                focus:border-blue-500 focus:outline-none bg-white focus:bg-white transition-colors"
                         />
                         <div className="relative">
                             <input
@@ -90,8 +90,8 @@ export default function LoginSection() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="Mật khẩu"
-                                className="w-full rounded-2xl border border-slate-800 px-4 py-3 text-sm text-black placeholder:text-black
-                  focus:border-blue-500 focus:outline-none bg-gray-400/60 focus:bg-white transition-colors"
+                                className="w-full rounded-2xl border border-slate-400 px-4 py-3 text-sm text-black placeholder:text-black
+                  focus:border-blue-500 focus:outline-none bg-white focus:bg-white transition-colors"
                             />
                             <button
                                 type="button"
@@ -131,8 +131,7 @@ export default function LoginSection() {
                         )}
                         <button
                             onClick={handleLogin}
-                            className="w-full rounded-2xl py-3 text-sm font-semibold uppercase tracking-wide transition bg-active-blue-metallic cursor-pointer"
-                            style={{ color: "rgb(0, 251, 255)" }}
+                            className="w-full rounded-2xl py-3 text-sm font-semibold text-white uppercase tracking-wide transition bg-active-blue-metallic cursor-pointer"
                         >
                             Đăng nhập
                         </button>
@@ -193,8 +192,7 @@ export default function LoginSection() {
                     <span>Quản lý hồ sơ cá nhân</span>
                     <a
                         href="#"
-                        className="transition hover:text-blue-300"
-                        style={{ color: "rgb(0, 251, 255)" }}
+                        className="transition hover:text-blue-300 text-blue-950 font-bold"
                     >
                         Cập nhật
                     </a>
@@ -203,8 +201,7 @@ export default function LoginSection() {
                     <span>Chấm công realtime</span>
                     <a
                         href="#"
-                        className="text-blue-400 transition hover:text-blue-300"
-                        style={{ color: "rgb(0, 251, 255)" }}
+                        className="text-blue-400 transition hover:text-blue-300 text-blue-950 font-bold"
                     >
                         Mở bảng công
                     </a>
@@ -213,8 +210,7 @@ export default function LoginSection() {
                     <span>KPI và liên kết thi đua</span>
                     <a
                         href="#"
-                        className="text-blue-400 transition hover:text-blue-300"
-                        style={{ color: "rgb(0, 251, 255)" }}
+                        className="text-blue-400 transition hover:text-blue-300 text-blue-950 font-bold"
                     >
                         Xem KPI
                     </a>
@@ -223,8 +219,7 @@ export default function LoginSection() {
                     <span>Bảng lương nội bộ</span>
                     <a
                         href="#"
-                        className="text-blue-400 transition hover:text-blue-300"
-                        style={{ color: "rgb(0, 251, 255)" }}
+                        className="text-blue-400 transition hover:text-blue-300 text-blue-950 font-bold"
                     >
                         Tải bảng lương
                     </a>

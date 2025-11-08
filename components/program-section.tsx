@@ -41,14 +41,14 @@ export default function ProgramSection() {
   return (
     <section 
     style={{
-      boxShadow: "0 0 10px 3px rgb(169, 169, 170)",
+      boxShadow: "0 0 10px 3px rgb(212, 212, 214)",
   }}
-    className="rounded-3xl border border-slate-800  bg-gray-400 p-6 sm:p-7 lg:p-8">
+    className="rounded-3xl border border-slate-800  bg-gray-200 p-6 sm:p-7 lg:p-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-[0.4em] text-amber-400 sm:text-sm">Thi đua & khen thưởng</div>
-          <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">Bảng xếp hạng realtime</h2>
-          <p className="mt-2 text-sm text-slate-200">
+          <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-950 sm:text-sm">Thi đua & khen thưởng</div>
+          <h2 className="mt-2 text-2xl font-extrabold text-blue-950 sm:text-3xl">Bảng xếp hạng realtime</h2>
+          <p className="mt-2 text-sm text-black/80">
             Cập nhật tự động từ ERP, phản ánh KPI, điểm thưởng, huy hiệu và danh hiệu của từng phòng ban, cá nhân và dự án.
           </p>
         </div>
@@ -56,7 +56,7 @@ export default function ProgramSection() {
           <button
             onClick={() => setActiveTab("departments")}
             className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition ${
-              activeTab === "departments" ? "bg-amber-500 text-slate-950" : "border border-amber-500/60 text-amber-300 hover:bg-amber-500"
+              activeTab === "departments" ? "bg-amber-500 text-white" : "border border-black/50 bg-gray-300 text-black/50 hover:bg-amber-500"
             }`}
           >
             Phòng ban
@@ -64,7 +64,7 @@ export default function ProgramSection() {
           <button
             onClick={() => setActiveTab("individuals")}
             className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition ${
-              activeTab === "individuals" ? "bg-amber-500 text-slate-950" : "border border-amber-500/60 text-amber-300 hover:bg-amber-500"
+              activeTab === "individuals" ? "bg-amber-500 text-white" : "border border-black/50 bg-gray-300 text-black/50 hover:bg-amber-500"
             }`}
           >
             Cá nhân
@@ -72,7 +72,7 @@ export default function ProgramSection() {
           <button
             onClick={() => setActiveTab("projects")}
             className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition ${
-              activeTab === "projects" ? "bg-amber-500 text-slate-950" : "border border-amber-500/60 text-amber-300 hover:bg-amber-500"
+              activeTab === "projects" ? "bg-amber-500 text-white" : "border border-black/50 bg-gray-300 text-black/50 hover:bg-amber-500"
             }`}
           >
             Dự án
@@ -81,20 +81,20 @@ export default function ProgramSection() {
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
-        <div className="rounded-3xl border border-amber-500/20 bg-gray-600/70 p-5 sm:p-6">
-          <div className="text-xs uppercase tracking-widest text-amber-200">Bảng xếp hạng</div>
+        <div className="rounded-3xl border border-gray-700 bg-gray-300 p-5 sm:p-6">
+          <div className="text-md uppercase tracking-widest font-extrabold text-orange-600">Bảng xếp hạng</div>
           <ul className="mt-4 space-y-3">
             {rankingData.map((item, index) => (
               <li
                 key={item.name}
-                className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-4 sm:px-5"
+                className="flex items-center justify-between rounded-2xl border border-black/50 bg-white px-4 py-4 sm:px-5"
               >
                 <div className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-amber-500/40 text-lg font-bold text-amber-300">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-orange-600 text-lg font-bold text-orange-600">
                     {index + 1}
                   </div>
                   <div>
-                    <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-black">
                       {item.name}
                       {"badge" in item && <span className="text-lg leading-none">{item.badge as any}</span>}
                     </div>
@@ -102,8 +102,8 @@ export default function ProgramSection() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-bold text-amber-300">{item.score}</div>
-                  <div className="text-xs text-emerald-300">{item.trend}</div>
+                  <div className="text-lg font-bold text-orange-600">{item.score}</div>
+                  <div className="text-xs font-bold text-emerald-700">{item.trend}</div>
                 </div>
               </li>
             ))}
@@ -111,26 +111,26 @@ export default function ProgramSection() {
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-2xl border border-amber-500/30 bg-gray-600/70 p-5 sm:p-6">
-            <div className="text-xs uppercase tracking-widest text-amber-200">Module</div>
+          <div className="rounded-2xl border border-gray-700 bg-gray-300 p-5 sm:p-6">
+            <div className="text-md uppercase tracking-widest font-extrabold text-orange-600">Module</div>
             <div className="mt-4 grid gap-3">
               {modules.map((module) => (
-                <div key={module.title} className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-200">
+                <div key={module.title} className="flex items-center justify-between rounded-xl border border-slate-800 bg-white px-4 py-3 text-sm text-slate-200">
                   <div>
-                    <div className="font-semibold text-white">{module.title}</div>
-                    <div className="text-xs text-slate-400">{module.description}</div>
+                    <div className="font-semibold text-black">{module.title}</div>
+                    <div className="text-xs text-black">{module.description}</div>
                   </div>
-                  <span className="rounded-full border border-amber-500/40 px-3 py-1 text-xs uppercase tracking-widest text-amber-300">
+                  <span className="rounded-full border font-semibold border-orange-600 px-3 py-1 text-xs uppercase tracking-widest text-orange-600">
                     {module.status}
                   </span>
                 </div>
               ))}
             </div>
           </div>
-          <div className="rounded-2xl border border-amber-500/20 bg-gray-600/70 p-5 sm:p-6 text-center">
-            <div className="text-xs uppercase tracking-widest text-amber-200">Vinh danh tập thể xuất sắc</div>
-            <div className="mt-3 text-2xl font-bold text-white">GuardCam AI Hub</div>
-            <p className="mt-2 text-sm text-slate-300">
+          <div className="rounded-2xl border border-gray-700 bg-amber-300/40 p-5 sm:p-6 text-center">
+            <div className="text-xs uppercase tracking-widest font-extrabold text-orange-600">Vinh danh tập thể xuất sắc</div>
+            <div className="mt-3 text-2xl font-extrabold text-white text-shadow-lg">GuardCam AI Hub</div>
+            <p className="mt-2 text-sm text-black">
               Dẫn đầu quý III với 132% KPI, 08 sáng kiến đổi mới và chỉ số hài lòng nhân sự đạt 4.8/5.
             </p>
           </div>

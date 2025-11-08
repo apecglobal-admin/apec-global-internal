@@ -133,24 +133,24 @@ export default function AnnouncementSection() {
   return (
     <section 
     style={{border: "1px solid rgb(101, 101, 101)"}} 
-    className="rounded-3xl bg-gray-300 p-6 sm:p-7 lg:p-8 inset-shadow-sm inset-shadow-black/50">
+    className="rounded-3xl bg-gray-200 p-6 sm:p-7 lg:p-8 inset-shadow-sm inset-shadow-black/30">
       <div className="flex flex-col gap-4">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-[0.4em] text-teal-300 sm:text-lg">Thông báo</div>
-          <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl  text-shadow-lg/40">Trung tâm thông báo nội bộ</h2>
+          <div className="text-xs font-extrabold uppercase tracking-[0.4em] text-blue-950 sm:text-lg">Thông báo</div>
+          <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl text-shadow-lg/30">Trung tâm thông báo nội bộ</h2>
           <p className="mt-2 max-w-2xl font-semibold text-sm text-black/80">
             Cập nhật tức thời từ Ban Lãnh đạo, hành chính, nhân sự và các dự án. Đánh dấu đã đọc để đồng bộ với hồ sơ KPI của bạn.
           </p>
         </div>
-        <div className="flex w-full flex-wrap items-center gap-2 rounded-2xl border border-slate-800 bg-gray-500 px-3 py-2 text-sm text-slate-300 sm:w-auto sm:flex-nowrap sm:rounded-full sm:px-4 inset-shadow-sm inset-shadow-black/50">
-          <span className="text-xs uppercase tracking-wide text-teal-400 sm:text-sm">Lọc phòng ban:</span>
+        <div className="flex w-full flex-wrap items-center gap-2 rounded-2xl border border-slate-00 bg-gray-300 px-3 py-2 text-sm text-slate-300 sm:w-auto sm:flex-nowrap sm:rounded-full sm:px-4 ">
+          <span className="text-xs uppercase tracking-wide text-black sm:text-sm">Lọc phòng ban:</span>
           <select
             value={selectedDepartment}
             onChange={(event) => setSelectedDepartment(event.target.value)}
-            className="w-full bg-transparent text-white focus:outline-none sm:w-auto"
+            className="w-full bg-transparent text-black focus:outline-none sm:w-auto"
           >
             {departments.map((department) => (
-              <option key={department} value={department} className="bg-slate-900 text-slate-300">
+              <option key={department} value={department} className="bg-gray-300 text-black">
                 {department}
               </option>
             ))}
@@ -164,7 +164,7 @@ export default function AnnouncementSection() {
             key={item.key}
             onClick={() => setActiveCategory(item.key)}
             className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition sm:px-5 sm:text-sm ${
-              activeCategory === item.key ? "bg-active-blue-metallic" : "border border-slate-800/50 bg-gray-500/70 text-slate-300 hover:border-teal-300/80 hover:text-white"
+              activeCategory === item.key ? "bg-active-blue-metallic" : "border border-gray-600/50 bg-gray-300 text-gray-600/50 hover:border-teal-300/80 hover:text-white"
             }`}
           >
             {item.label}
@@ -174,13 +174,13 @@ export default function AnnouncementSection() {
 
       <div className="mt-7 space-y-4 sm:mt-8">
         {isLoading && (
-          <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/60 px-5 py-10 text-center text-slate-400 sm:px-6 sm:py-12">
+          <div className="rounded-2xl border border-dashed border-slate-700 bg-gray-300 px-5 py-10 text-center text-slate-400 sm:px-6 sm:py-12">
             Đang tải dữ liệu...
           </div>
         )}
 
         {!isLoading && filtered.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/60 px-5 py-10 text-center text-slate-400 sm:px-6 sm:py-12">
+          <div className="rounded-2xl border border-dashed border-slate-700 bg-gray-300 px-5 py-10 text-center text-slate-400 sm:px-6 sm:py-12">
             Không có thông báo nào cho bộ lọc hiện tại.
           </div>
         )}
@@ -189,35 +189,35 @@ export default function AnnouncementSection() {
           filtered.map((item) => (
             <div
               key={item.id}
-              className="flex flex-col gap-4 rounded-2xl border border-slate-800 bg-gray-500/80 p-4 sm:p-4 md:flex-row md:items-center md:justify-between"
+              className="flex flex-col gap-4 rounded-2xl border border-slate-800 bg-gray-300 p-4 sm:p-4 md:flex-row md:items-center md:justify-between"
             >
               <div>
                 <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-widest text-white">
                   <span
                     className={`rounded-full px-3 py-1 text-[10px] font-semibold sm:text-xs text-white ${
                       item.category === "urgent"
-                        ? "bg-red-500/80 "
+                        ? "bg-red-500/80 border border-red-800 "
                         : item.category === "general"
-                        ? "bg-blue-600"
-                        : "bg-teal-400"
+                        ? "bg-blue-950 border border-blue-950 "
+                        : "bg-blue-950 border border-blue-950 "
                     }`}
                   >
                     {item.category === "urgent" ? "Khẩn cấp" : item.category === "general" ? "Nội bộ" : "Cá nhân"}
                   </span>
-                  <span className="text-teal-300 font-semibold">{item.department}</span>
-                  <span className="text-white">{item.date}</span>
+                  <span className="text-blue-950 font-semibold">{item.department}</span>
+                  <span className="text-blue-950 font-semibold">{item.date}</span>
                 </div>
-                <h3 className="mt-3 text-lg font-semibold text-white sm:text-xl">{item.title}</h3>
-                <p className="mt-2 text-sm text-slate-200">{item.summary}</p>
+                <h3 className="mt-3 text-lg font-semibold text-black sm:text-xl">{item.title}</h3>
+                <p className="mt-2 text-sm text-black/80">{item.summary}</p>
               </div>
               <div className="flex items-center gap-3 sm:gap-4 md:flex-col md:items-end">
-                <span className={`text-xs font-semibold uppercase tracking-widest ${item.read ? "text-color-green" : "text-red-500/80"}`}>
+                <span className={`text-xs font-semibold uppercase tracking-widest ${item.read ? "text-green-700" : "text-red-500/80"}`}>
                   {item.read ? "Đã đọc" : "Chưa đọc"}
                 </span>
                 <button
                   onClick={() => toggleRead(item.id)}
                   className={`rounded-full px-4 py-2 text-sm  transition ${
-                    item.read ? "border border-slate-700 bg-gray-400 text-black hover:border-teal-300/80 hover:text-white" : "font-semibold bg-blue-600 text-white hover:bg-blue-500"
+                    item.read ? "border border-gray-400 bg-gray-400/20 text-gray-400 hover:border-teal-300/80 hover:text-white" : "font-semibold border border-black bg-blue-950 text-white hover:bg-blue-800"
                   }`}
                 >
                   {item.read ? "Đánh dấu chưa đọc" : "Đánh dấu đã đọc"}

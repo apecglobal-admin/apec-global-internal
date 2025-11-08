@@ -1,103 +1,287 @@
-"use client"
+"use client";
+
+import {
+    BookOpen,
+    Zap,
+    Lightbulb,
+    Newspaper,
+    Play,
+    FileText,
+    CheckCircle,
+    ExternalLink,
+} from "lucide-react";
 
 const trainingResources = [
-  { title: "Video hướng dẫn", detail: "30+ khóa kỹ năng và quy trình nội bộ" },
-  { title: "Tài liệu chuyên đề", detail: "PDF, checklist và template" },
-  { title: "Quiz đánh giá", detail: "Tự động chấm điểm và lưu kết quả" },
-]
+    {
+        title: "Video hướng dẫn",
+        detail: "30+ khóa kỹ năng và quy trình nội bộ",
+    },
+    { title: "Tài liệu chuyên đề", detail: "PDF, checklist và template" },
+    { title: "Quiz đánh giá", detail: "Tự động chấm điểm và lưu kết quả" },
+];
 
 const quickTools = [
-  { name: "MISA", description: "Kế toán & tài chính" },
-  { name: "Odoo", description: "ERP & vận hành" },
-  { name: "Sapo", description: "Quản lý bán hàng" },
-  { name: "ApecTech", description: "Hệ sinh thái số" },
-  { name: "GuardCam CMS", description: "Trung tâm giám sát" },
-]
+    { name: "MISA", description: "Kế toán & tài chính" },
+    { name: "Odoo", description: "ERP & vận hành" },
+    { name: "Sapo", description: "Quản lý bán hàng" },
+    { name: "ApecTech", description: "Hệ sinh thái số" },
+    { name: "GuardCam CMS", description: "Trung tâm giám sát" },
+];
 
 const innovationSteps = [
-  "Gửi sáng kiến qua form trực tuyến",
-  "Hội đồng sáng tạo thẩm định",
-  "Triển khai thử nghiệm và nhân rộng",
-]
+    "Gửi sáng kiến qua form trực tuyến",
+    "Hội đồng sáng tạo thẩm định",
+    "Triển khai thử nghiệm và nhân rộng",
+];
 
 const weeklyHighlights = [
-  { title: "Tin nhanh", detail: "Cập nhật hoạt động nổi bật toàn tập đoàn" },
-  { title: "Clip truyền thông", detail: "Video recap sự kiện và dự án" },
-  { title: "Phỏng vấn", detail: "Chia sẻ từ nhân sự tiêu biểu" },
-]
+    { title: "Tin nhanh", detail: "Cập nhật hoạt động nổi bật toàn tập đoàn" },
+    { title: "Clip truyền thông", detail: "Video recap sự kiện và dự án" },
+    { title: "Phỏng vấn", detail: "Chia sẻ từ nhân sự tiêu biểu" },
+];
+
+const ecosystemData = {
+    trainingHub: {
+        title: "Trung tâm đào tạo nội bộ",
+        subtitle: "E-learning Hub",
+        icon: BookOpen,
+        resources: [
+            {
+                title: "Video hướng dẫn",
+                detail: "30+ khóa kỹ năng và quy trình nội bộ",
+                icon: Play,
+            },
+            {
+                title: "Tài liệu chuyên đề",
+                detail: "PDF, checklist và template",
+                icon: FileText,
+            },
+            {
+                title: "Quiz đánh giá",
+                detail: "Tự động chấm điểm và lưu kết quả",
+                icon: CheckCircle,
+            },
+        ],
+        buttonText: "Truy cập E-learning",
+        gradient: "from-blue-500 to-cyan-500",
+    },
+    workTools: {
+        title: "Công cụ làm việc nhanh",
+        subtitle: "One-click Access",
+        icon: Zap,
+        tools: [
+            {
+                name: "MISA",
+                description: "Kế toán & tài chính",
+                color: "bg-purple-500",
+            },
+            {
+                name: "Odoo",
+                description: "ERP & vận hành",
+                color: "bg-pink-500",
+            },
+            {
+                name: "Sapo",
+                description: "Quản lý bán hàng",
+                color: "bg-orange-500",
+            },
+            {
+                name: "ApecTech",
+                description: "Hệ sinh thái số",
+                color: "bg-teal-500",
+            },
+            {
+                name: "GuardCam CMS",
+                description: "Trung tâm giám sát",
+                color: "bg-indigo-500",
+            },
+        ],
+        gradient: "from-purple-500 to-pink-500",
+    },
+    innovationHub: {
+        title: "Góc sáng tạo & đề xuất",
+        subtitle: "Innovation Hub",
+        icon: Lightbulb,
+        steps: [
+            "Gửi sáng kiến qua form trực tuyến",
+            "Hội đồng sáng tạo thẩm định",
+            "Triển khai thử nghiệm và nhân rộng",
+        ],
+        buttonText: "Gửi sáng kiến",
+        gradient: "from-amber-500 to-orange-500",
+    },
+    weeklyDigest: {
+        title: "Bản tin Apec Weekly",
+        subtitle: "360° Weekly Digest",
+        icon: Newspaper,
+        highlights: [
+            {
+                title: "Tin nhanh",
+                detail: "Cập nhật hoạt động nổi bật toàn tập đoàn",
+            },
+            {
+                title: "Clip truyền thông",
+                detail: "Video recap sự kiện và dự án",
+            },
+            { title: "Phỏng vấn", detail: "Chia sẻ từ nhân sự tiêu biểu" },
+        ],
+        buttonText: "Xem số mới nhất",
+        gradient: "from-emerald-500 to-teal-500",
+    },
+};
 
 export default function AdditionalSection() {
-  return (
-    <section className="rounded-2xl bg-gray-200/40 p-6 sm:p-7 lg:p-8">
-      <div className="text-xs font-semibold uppercase tracking-[0.4em] text-teal-400 sm:text-sm">Các mục bổ sung</div>
-      <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">Hệ sinh thái hỗ trợ nội bộ</h2>
-      <p className="mt-2 max-w-3xl text-sm text-white">
-        Tăng tốc học tập, cộng tác và đổi mới với các trung tâm dữ liệu nội bộ, công cụ làm việc nhanh và bản tin cập nhật hàng tuần.
-      </p>
+    return (
+        <section className="rounded-2xl bg-gray-200 p-6 sm:p-7 lg:p-8">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-950 sm:text-sm">
+                    Các mục bổ sung
+                    </div>
+                    <h2 className="mt-2 text-2xl font-extrabold text-blue-950 sm:text-3xl">
+                    Hệ sinh thái hỗ trợ nội bộ
+                    </h2>
+                    <p className="mt-2 text-sm text-black">
+                    Tăng tốc học tập, cộng tác và đổi mới với các trung tâm dữ
+                    liệu nội bộ, công cụ làm việc nhanh và bản tin cập nhật hàng
+                    tuần.
+                    </p>
+                </div>
+            </div>
+            <div className="mt-6 grid gap-5 sm:gap-6 xl:grid-cols-2">
+                {/* Trung tâm đào tạo */}
+                <div className="rounded-2xl border border-slate-800 bg-gray-300 p-5 sm:p-6">
+                    <div className="flex items-center">
+                        <div
+                            className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${ecosystemData.trainingHub.gradient} shadow-lg`}
+                        >
+                            <BookOpen className="h-7 w-7 text-white" />
+                        </div>
+                        <div className="ml-3">
+                            <div className="text-xs uppercase tracking-widest font-semibold text-black">
+                                {ecosystemData.trainingHub.title}
+                            </div>
+                            <h3 className="mt-2 text-xl font-extrabold text-blue-950">
+                                {ecosystemData.trainingHub.subtitle}
+                            </h3>
+                        </div>
+                    </div>
+                    <ul className="mt-4 space-y-2 text-sm text-slate-300">
+                        {ecosystemData.trainingHub.resources.map((item) => (
+                            <li
+                                key={item.title}
+                                className="flex flex-col gap-2 rounded-xl border border-slate-800 bg-white px-4 py-2 transition  hover:bg-gray-400/40 sm:flex-row sm:items-center sm:justify-between"
+                            >
+                                <span className="text-black">{item.title}</span>
+                                <span className="text-xs uppercase tracking-widest text-black">
+                                    {item.detail}
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                    <button className="mt-4 w-full rounded-full border border-slate-800 bg-blue-950 py-3 text-sm font-bold uppercase tracking-widest text-white transition hover:border-blue-800 hover:bg-blue-800 hover:text-white">
+                        {ecosystemData.trainingHub.buttonText}
+                    </button>
+                </div>
 
-      <div className="mt-6 grid gap-5 sm:gap-6 xl:grid-cols-2">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
-          <div className="text-xs uppercase tracking-widest text-teal-400">Trung tâm đào tạo nội bộ</div>
-          <h3 className="mt-2 text-xl font-semibold text-white">E-learning Hub</h3>
-          <ul className="mt-4 space-y-2 text-sm text-slate-300">
-            {trainingResources.map((item) => (
-              <li key={item.title} className="flex flex-col gap-2 rounded-xl border border-transparent bg-gray-500 px-4 py-2 transition hover:border-blue-500/40 hover:bg-slate-900/80 sm:flex-row sm:items-center sm:justify-between">
-                <span>{item.title}</span>
-                <span className="text-xs uppercase tracking-widest text-white">{item.detail}</span>
-              </li>
-            ))}
-          </ul>
-          <button className="bg-active-blue-metallic mt-4 w-full rounded-full border border-slate-800 bg-slate-900/70 py-3 text-sm font-semibold uppercase tracking-widest text-slate-200 transition hover:border-blue-500 hover:text-white">
-            Truy cập E-learning
-          </button>
-        </div>
+                {/* Công cụ làm việc */}
+                <div className="rounded-2xl border border-slate-800 bg-gray-300 p-5 sm:p-6">
+                    <div className="flex items-center">
+                        <div
+                            className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${ecosystemData.workTools.gradient} shadow-lg`}
+                        >
+                            <Zap className="h-7 w-7 text-white" />
+                        </div>
+                        <div className="ml-3">
+                            <div className="text-xs uppercase tracking-widest font-semibold text-black">
+                                {ecosystemData.workTools.title}
+                            </div>
+                            <h3 className="mt-2 text-xl font-extrabold text-blue-950">
+                                {ecosystemData.workTools.subtitle}
+                            </h3>
+                        </div>
+                    </div>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        {ecosystemData.workTools.tools.map((tool) => (
+                            <a
+                                key={tool.name}
+                                href="#"
+                                className="rounded-xl border border-slate-800 bg-white px-4 py-3 text-left text-sm text-slate-200 transition hover:border-blue-500/40 hover:bg-gray-400/50 hover:text-white"
+                            >
+                                <div className="font-semibold text-black">
+                                    {tool.name}
+                                </div>
+                                <div className="text-xs uppercase tracking-widest text-black">
+                                    {tool.description}
+                                </div>
+                            </a>
+                        ))}
+                    </div>
+                </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
-          <div className="text-xs uppercase tracking-widest text-teal-400">Công cụ làm việc nhanh</div>
-          <h3 className="mt-2 text-xl font-semibold text-white">One-click Access</h3>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {quickTools.map((tool) => (
-              <a
-                key={tool.name}
-                href="#"
-                className="rounded-xl border border-slate-800 bg-slate-950/70 px-4 py-3 text-left text-sm text-slate-200 transition hover:border-blue-500 hover:text-white"
-              >
-                <div className="font-semibold text-white">{tool.name}</div>
-                <div className="text-xs uppercase tracking-widest text-slate-500">{tool.description}</div>
-              </a>
-            ))}
-          </div>
-        </div>
+                {/* Góc sáng tạo */}
+                <div className="rounded-2xl border border-slate-800 bg-gray-300 p-5 sm:p-6">
+                    <div className="flex items-center">
+                        <div
+                            className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${ecosystemData.innovationHub.gradient} shadow-lg`}
+                        >
+                            <Lightbulb className="h-7 w-7 text-white" />
+                        </div>
+                        <div className="ml-3">
+                            <div className="text-xs uppercase tracking-widest font-semibold text-black">
+                                {ecosystemData.innovationHub.title}
+                            </div>
+                            <h3 className="mt-2 text-xl font-extrabold text-blue-950">
+                                {ecosystemData.innovationHub.subtitle}
+                            </h3>
+                        </div>
+                    </div>
+                    <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm text-black sm:pl-6">
+                        {ecosystemData.innovationHub.steps.map((step) => (
+                            <li key={step}>{step}</li>
+                        ))}
+                    </ol>
+                    <button className="mt-4 rounded-full border border-black bg-blue-950 px-5 py-2 text-sm font-semibold uppercase tracking-widest text-white transition hover:bg-blue-800 hover:border-blue-500 hover:text-white">
+                        {ecosystemData.innovationHub.buttonText}
+                    </button>
+                </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
-          <div className="text-xs uppercase tracking-widest text-teal-400">Góc sáng tạo & đề xuất</div>
-          <h3 className="mt-2 text-xl font-semibold text-white">Innovation Hub</h3>
-          <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm text-slate-300 sm:pl-6">
-            {innovationSteps.map((step) => (
-              <li key={step}>{step}</li>
-            ))}
-          </ol>
-          <button className="mt-4 rounded-full border border-slate-800 bg-slate-900/70 px-5 py-2 text-sm font-semibold uppercase tracking-widest text-blue-300 transition hover:border-blue-500 hover:text-white">
-            Gửi sáng kiến
-          </button>
-        </div>
+                {/* Bản tin tuần */}
+                <div className="rounded-2xl border border-slate-800 bg-gray-300 p-5 sm:p-6">
+                    <div className="flex items-center">
+                        <div
+                            className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${ecosystemData.weeklyDigest.gradient} shadow-lg`}
+                        >
+                            <Newspaper className="h-7 w-7 text-white" />
+                        </div>
+                        <div className="ml-3">
+                            <div className="text-xs uppercase tracking-widest font-semibold text-black">
+                                {ecosystemData.weeklyDigest.title}
+                            </div>
+                            <h3 className="mt-2 text-xl font-extrabold text-blue-950">
+                                {ecosystemData.weeklyDigest.subtitle}
+                            </h3>
+                        </div>
+                    </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
-          <div className="text-xs uppercase tracking-widest text-teal-400">Bản tin Apec Weekly</div>
-          <h3 className="mt-2 text-xl font-semibold text-white">360° Weekly Digest</h3>
-          <div className="mt-4 space-y-3 text-sm text-slate-300">
-            {weeklyHighlights.map((item) => (
-              <div key={item.title} className="rounded-xl border border-transparent bg-gray-500 px-4 py-3 transition hover:border-blue-500/40 hover:bg-slate-900/80 hover:text-white">
-                <div className="font-semibold text-white">{item.title}</div>
-                <div className="text-xs text-slate-700 ">{item.detail}</div>
-              </div>
-            ))}
-          </div>
-          <button className="mt-4 rounded-full border border-slate-800 bg-slate-900/70 px-5 py-2 text-sm font-semibold uppercase tracking-widest text-slate-200 transition hover:border-blue-500 hover:text-white">
-            Xem số mới nhất
-          </button>
-        </div>
-      </div>
-    </section>
-  )
+                    <div className="mt-4 space-y-3 text-sm text-slate-300">
+                        {ecosystemData.weeklyDigest.highlights.map((item) => (
+                            <div
+                                key={item.title}
+                                className="rounded-xl border border-slate-800 bg-white px-4 py-3 transition hover:bg-gray-400/50 hover:text-white"
+                            >
+                                <div className="font-semibold text-black">
+                                    {item.title}
+                                </div>
+                                <div className="text-xs text-black">{item.detail}</div>
+                            </div>
+                        ))}
+                    </div>
+                    <button className="mt-4 rounded-full border border-slate-800 bg-blue-950 px-5 py-2 text-sm font-semibold uppercase tracking-widest text-white transition hover:bg-blue-800 hover:border-blue-500 hover:text-white">
+                        {ecosystemData.weeklyDigest.buttonText}
+                    </button>
+                </div>
+            </div>
+        </section>
+    );
 }
