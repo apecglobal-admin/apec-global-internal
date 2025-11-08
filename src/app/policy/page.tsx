@@ -1,8 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, PenTool, Search, Download, AlertCircle, ArrowRight } from "lucide-react";
+import {
+    FileText,
+    PenTool,
+    Search,
+    Download,
+    AlertCircle,
+    ArrowRight,
+} from "lucide-react";
 import { colorClasses, colorMap } from "@/src/utils/color";
+import SearchBar from "@/components/searchBar";
 
 const policyStats = [
     { value: "128", label: "Chính sách", subLabel: "Đã cập nhật 2025" },
@@ -112,17 +120,16 @@ export default function PoliciesPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedGroup, setSelectedGroup] = useState(null);
 
-
     return (
-        <div className="min-h-screen bg-gray-200 p-4 sm:p-6 lg:p-8">
+        <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
             <div className="mx-auto max-w-7xl">
                 {/* Header */}
                 <div className="mb-8 space-y-4">
-                    <div className="text-xs font-semibold uppercase tracking-[0.35em] text-teal-400 sm:text-sm">
+                    <div className="text-xs font-semibold uppercase tracking-[0.35em] text-blue-950 sm:text-sm">
                         Chính sách nội bộ
                     </div>
                     <div className="space-y-3">
-                        <h1 className="text-3xl font-bold text-teal-400 sm:text-4xl lg:text-5xl">
+                        <h1 className="text-3xl font-bold text-blue-950 sm:text-4xl lg:text-5xl">
                             Chính sách tập trung
                         </h1>
                         <p className="max-w-3xl text-sm text-black sm:text-base">
@@ -136,8 +143,7 @@ export default function PoliciesPage() {
                             <a
                                 key={link.label}
                                 href={link.href}
-                                className="flex items-center gap-2 rounded-full  bg-gray-500/80 px-4 py-2 text-xs uppercase tracking-widest text-white transition hover:border-blue-500/40 hover:bg-slate-900 hover:text-white"
-                                style={{border: "1px solid rgb(92,197,199)"}}
+                                className="flex items-center gap-2 rounded-full border border-orange-500  bg-orange-400 px-4 py-2 text-xs uppercase tracking-widest text-white font-bold transition hover:border-gray-400 hover:bg-orange-500 hover:text-white"
                             >
                                 {link.label}
                                 <span aria-hidden>↗</span>
@@ -156,11 +162,9 @@ export default function PoliciesPage() {
                         return (
                             <div
                                 key={stat.label}
-                                className="group rounded-2xl border border-slate-700/80 border-l-6 bg-slate-900/60 p-5 shadow-inner shadow-black/10 transition"
+                                className="group rounded-2xl border border-gray-500 border-l-6 bg-gray-200 p-5 shadow-inner shadow-black/10 transition"
                                 style={{
                                     borderLeftColor: borderColor,
-                                    boxShadow:
-                                        "0 0 10px 2px rgba(0, 0, 0, 0.6)",
                                 }}
                                 onMouseEnter={(e) =>
                                     (e.currentTarget.style.boxShadow = `0 0 20px ${borderColor}80`)
@@ -176,10 +180,12 @@ export default function PoliciesPage() {
                                         >
                                             {stat.value}
                                         </div>
-                                        <div className="mt-1 text-lg uppercase tracking-widest text-white font-semibold">
+                                        <div
+                                            className={`mt-1 text-lg uppercase tracking-widest font-semibold ${colorClass}`}
+                                        >
                                             {stat.label}
                                         </div>
-                                        <div className="text-[11px] text-slate-300">
+                                        <div className="text-[11px] text-black">
                                             {stat.subLabel}
                                         </div>
                                     </div>
@@ -190,24 +196,16 @@ export default function PoliciesPage() {
                 </div>
 
                 {/* Search Section */}
-                <div className="mb-8 space-y-4 rounded-3xl border border-gray-500/60 bg-gray-400 p-5 shadow-lg shadow-blue-500/10 transition-all duration-300 hover:!border-blue-500/50">
-                    <div className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-white px-4 py-3">
-                        <Search size={18} className="text-black" />
-                        <input
-                            type="search"
-                            placeholder="Tìm kiếm chính sách, biểu mẫu..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-transparent text-sm text-black placeholder:text-black focus:outline-none"
-                        />
-                    </div>
+                <div className="mb-8 space-y-4 rounded-3xl border border-gray-500/60 bg-gray-200 p-5 shadow-lg shadow-blue-500/10 ">
+                    <SearchBar placeHoder="Tìm kiếm chính sách, biểu mẫu..." />
+
                     <button className="flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2.5 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-blue-500 sm:w-auto">
                         <Search size={16} />
                         Tra cứu nhanh
                     </button>
 
-                    <div className="space-y-3 rounded-2xl border border-slate-800 bg-slate-900/30 p-4">
-                        <div className="text-md font-semibold uppercase tracking-widest text-yellow-300">
+                    <div className="space-y-3 rounded-2xl border border-gray-500 bg-gray-300 p-4">
+                        <div className="text-md font-semibold uppercase tracking-widest text-blue-950">
                             Danh mục nổi bật
                         </div>
                         <div className="space-y-2">
@@ -215,7 +213,7 @@ export default function PoliciesPage() {
                                 <a
                                     key={link.label}
                                     href={link.href}
-                                    className="flex items-center justify-between rounded-xl border border-transparent bg-gray-600 px-3 py-2 text-sm text-slate-200 transition hover:border-blue-500/40 hover:bg-slate-950/80 hover:text-white"
+                                    className="flex items-center justify-between rounded-xl border border-gray-400 bg-white px-3 py-2 text-sm text-black transition hover:border-gray-600 hover:bg-gray-400/70 hover:text-white"
                                 >
                                     {link.label}
                                     <span aria-hidden>
@@ -232,32 +230,32 @@ export default function PoliciesPage() {
                     {policyGroups.map((group) => (
                         <article
                             key={group.title}
-                            className="relative flex flex-col gap-5 overflow-hidden rounded-3xl border border-gray-500/60 bg-gray-400 p-6 transition-all duration-300 hover:!border-blue-500/50"
+                            className="relative flex flex-col gap-5 overflow-hidden rounded-3xl border border-gray-400 bg-gray-200 p-6 transition-all duration-300  hover:shadow-lg hover:shadow-blue-500/10"
                         >
                             <div className="space-y-2">
                                 <div className="flex items-start justify-between gap-4">
-                                    <h2 className="text-xl font-semibold text-teal-300 sm:text-2xl">
+                                    <h2 className="text-xl font-extrabold text-blue-950 sm:text-2xl">
                                         {group.title}
                                     </h2>
-                                    <span className="rounded-full bg-red-800/80 border border-teal-800 px-3 py-1 text-xs font-semibold text-white">
+                                    <span className="rounded-full bg-orange-400 border border-orange-500 px-3 py-1 text-xs font-semibold text-white">
                                         {group.items.length} tài liệu
                                     </span>
                                 </div>
-                                <p className="text-sm text-white">
+                                <p className="text-sm text-black/80">
                                     {group.description}
                                 </p>
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-2">
-                                <button className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-blue-500 hover:bg-gray-500 hover:text-white">
+                            <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-widest text-blue-300">
+                                <button className="flex items-center gap-2 rounded-full border border-orange-500 bg-orange-400 px-3 py-1.5 text-xs font-semibold text-white transition hover:border-orange-600 hover:bg-orange-500 hover:text-white">
                                     <FileText size={14} />
                                     Tải PDF
                                 </button>
-                                <button className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-blue-500 hover:bg-gray-500 hover:text-white">
+                                <button className="flex items-center gap-2 rounded-full border border-orange-500 bg-orange-400 px-3 py-1.5 text-xs font-semibold text-white transition hover:border-orange-600 hover:bg-orange-500 hover:text-white">
                                     <PenTool size={14} />
                                     Ký xác nhận
                                 </button>
-                                <button className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-blue-500 hover:bg-gray-500 hover:text-white">
+                                <button className="flex items-center gap-2 rounded-full border border-orange-500 bg-orange-400 px-3 py-1.5 text-xs font-semibold text-white transition hover:border-orange-600 hover:bg-orange-500 hover:text-white">
                                     <Download size={14} />
                                     Tải tất cả
                                 </button>
@@ -265,12 +263,13 @@ export default function PoliciesPage() {
 
                             <ul className="space-y-2">
                                 {group.items.map((item, index) => (
-                                    <li
+                                    <a
+                                    href="#"
                                         key={item.name}
-                                        className="flex flex-col gap-3 rounded-2xl border border-transparent bg-slate-900/40 px-4 py-3 transition hover:border-blue-500/40 hover:bg-slate-900/70 sm:flex-row sm:items-center sm:justify-between"
+                                        className="flex flex-col gap-3 rounded-2xl border border-gray-400 bg-white px-4 py-3 transition hover:bg-gray-400/30 sm:flex-row sm:items-center sm:justify-between"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-teal-500/80 text-xs font-semibold text-white group-hover:text-blue-300 transition">
+                                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-600 text-xs font-semibold text-white transition">
                                                 {String(index + 1).padStart(
                                                     2,
                                                     "0"
@@ -278,30 +277,29 @@ export default function PoliciesPage() {
                                             </span>
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-medium text-slate-200">
+                                                    <span className="text-sm font-bold text-black">
                                                         {item.name}
                                                     </span>
                                                     {item.status === "new" && (
-                                                        <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-300">
+                                                        <span className="items-center rounded-full bg-orange-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white">
                                                             Mới
                                                         </span>
                                                     )}
                                                 </div>
-                                                <span className="text-xs text-slate-500">
+                                                <span className="text-xs text-black">
                                                     {item.updated}
                                                 </span>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <a
-                                                href="#"
-                                                className="flex items-center gap-1.5 rounded-lg bg-teal-500/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-white transition hover:bg-teal-500/30"
+                                        <div className="flex items-center gap-2 text-xs uppercase tracking-widest  transition">
+                                            <div
+                                                className="flex items-center gap-1.5 rounded-lg text-orange-600 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition hover:bg-orange-700"
                                             >
                                                 Xem chi tiết
                                                 <span aria-hidden>↗</span>
-                                            </a>
+                                            </div>
                                         </div>
-                                    </li>
+                                    </a>
                                 ))}
                             </ul>
                         </article>

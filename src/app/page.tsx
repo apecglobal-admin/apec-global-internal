@@ -48,11 +48,10 @@ export default function Home() {
                 <Tabs defaultValue="statistics" className="mt-10 w-full">
                     <TabsList 
                                 style={{
-                                    background: "rgba(213, 212, 212, 0.6)",
                                     border: "1px solid rgb(120, 116, 116) ",
                                     boxShadow: "0 0 10px 2px rgb(169, 169, 170)",
                                 }}
-                    className="inline-flex flex-wrap justify-start w-full gap-2 bg-slate-800/50 rounded-2xl backdrop-blur-sm mb-8 p-3 h-auto ">
+                    className="inline-flex flex-wrap justify-start w-full gap-2 bg-white rounded-2xl backdrop-blur-sm mb-8 p-3 h-auto ">
                         {nav.map((tab, index) => (
                             <TabsTrigger
   key={tab.value}
@@ -61,14 +60,14 @@ export default function Home() {
   className="
     inline-flex items-center justify-center whitespace-nowrap 
     min-w-[110px] sm:min-w-[140px] px-4 py-3 sm:px-5 sm:py-3.5 
-    rounded-full font-medium text-sm text-slate-400
+    rounded-full font-medium text-sm text-gray-500
     transition-all duration-200 
-    bg-slate-800/50
+    bg-gray-200
 
-    hover:bg-slate-700/50 hover:text-slate-200 hover:border-teal-300/80
-    border-[rgb(57,68,75)]
+    hover:bg-gray-200 hover:text-white hover:border-teal-300/80
+    border-gray-500
 
-    data-[state=active]:bg-white 
+    data-[state=active]:bg-white
     data-[state=active]:text-black
     data-[state=active]:border-[rgb(92,197,199)]
     data-[state=active]:shadow-[0_0_5px_1px_rgb(92,197,199)]
@@ -84,35 +83,35 @@ export default function Home() {
                     <div className="space-y-6">
                         <TabsContent
                             value="statistics"
-                            className="animate-in fade-in-50 duration-300 bg-gray-500 p-[2px] rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 bg-gray-400/50 p-[2px] rounded-2xl "
                         >
                             <StatisticsSection />
                         </TabsContent>
 
                         <TabsContent
                             value="policy"
-                            className="animate-in fade-in-50 duration-300 bg-gray-500 p-[2px] rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 bg-gray-400/50 p-[2px] rounded-2xl "
                         >
                             <PolicySection />
                         </TabsContent>
 
                         <TabsContent
                             value="event"
-                            className="animate-in fade-in-50 duration-300 bg-gray-500 p-[2px] rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 bg-gray-400/50 p-[2px] rounded-2xl "
                         >
                             <EventSection />
                         </TabsContent>
 
                         <TabsContent
                             value="projects"
-                            className="animate-in fade-in-50 duration-300 bg-gray-500 p-[2px] rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 bg-gray-400/50 p-[2px] rounded-2xl "
                         >
                             <ProjectsSection />
                         </TabsContent>
 
                         <TabsContent
                             value="additional"
-                            className="animate-in fade-in-50 duration-300 bg-gray-500 p-[2px] rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 bg-gray-400/50 p-[2px] rounded-2xl "
                         >
                             <AdditionalSection />
                         </TabsContent>
