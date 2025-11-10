@@ -68,6 +68,7 @@ export default function Header() {
         { label: "Trang chủ", href: "/" },
         { label: "Dự án", href: "/project" },
         { label: "Sự kiện", href: "/event" },
+        { label: "Hệ sinh thái", href: "/ecosystem" },
         { label: "Chính sách", href: "/policy" },
         { label: "Thống kê", href: "/analysis" },
         { label: "Thi đua", href: "/compet" },
@@ -89,7 +90,7 @@ export default function Header() {
                         className="w-16 h-12 sm:w-20 sm:h-16 lg:w-[100px] lg:h-[70px]"
                     />
                     <div>
-                        <div className="text-xl sm:text-2xl font-extrabold tracking-wide text-blue-600 text-shadow-lg/20">
+                        <div className="text-xl sm:text-2xl font-extrabold tracking-wide text-blue-950 ">
                             APEC GLOBAL
                         </div>
                         <div className="text-xs sm:text-sm uppercase tracking-[0.05em] font-semibold text-black">
@@ -124,7 +125,7 @@ export default function Header() {
             <div className="border-t border-black">
                 <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 max-w-7xl mx-auto flex items-center gap-2 flex-wrap">
                     {/* Search */}
-                    <SearchBar />
+                    <SearchBar placeHoder="tìm kiếm toàn hệ thống..."/>
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 ml-auto">
