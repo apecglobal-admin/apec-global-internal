@@ -134,7 +134,7 @@ export default function ContactPage() {
                 <div className="text-blue-600 mb-4 group-hover:scale-110 transition-transform">
                   {category.icon}
                 </div>
-                <h4 className="text-xl font-semibold mb-2 text-slate-900">
+                <h4 className="text-xl  mb-2 text-slate-900">
                   {category.title}
                 </h4>
                 <p className="text-slate-600 text-sm">{category.description}</p>
@@ -163,7 +163,7 @@ export default function ContactPage() {
                   onClick={() => toggleFaq(faq.id)}
                   className="w-full px-6 py-5 flex items-center justify-between hover:bg-slate-50 transition"
                 >
-                  <span className="font-semibold text-left text-slate-900">
+                  <span className=" text-left text-slate-900">
                     {faq.question}
                   </span>
                   {expandedFaq === faq.id ? (
@@ -194,7 +194,7 @@ export default function ContactPage() {
               <div className="w-16 h-16 bg-blue-600 bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Phone className="w-8 h-8" />
               </div>
-              <h4 className="text-xl font-semibold mb-2 text-slate-900">
+              <h4 className="text-xl  mb-2 text-slate-900">
                 Hotline
               </h4>
               <p className="text-slate-700 mb-2 font-medium">1900-xxxx</p>
@@ -205,7 +205,7 @@ export default function ContactPage() {
               <div className="w-16 h-16 bg-purple-600 bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Mail className="w-8 h-8 " />
               </div>
-              <h4 className="text-xl font-semibold mb-2 text-slate-900">
+              <h4 className="text-xl  mb-2 text-slate-900">
                 Email
               </h4>
               <p className="text-slate-700 mb-2 font-medium">
@@ -218,7 +218,7 @@ export default function ContactPage() {
               <div className="w-16 h-16 bg-green-600 bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Clock className="w-8 h-8" />
               </div>
-              <h4 className="text-xl font-semibold mb-2 text-slate-900">
+              <h4 className="text-xl  mb-2 text-slate-900">
                 Giờ Làm Việc
               </h4>
               <p className="text-slate-700 mb-2 font-medium">
@@ -333,7 +333,7 @@ export default function ContactPage() {
 
                 <button
                   onClick={handleSubmit}
-                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white  rounded-lg transition flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
                 >
                   <Send className="w-5 h-5" />
                   Gửi Tin Nhắn
@@ -363,26 +363,26 @@ export default function ContactPage() {
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                     <Clock className="w-5 h-5 text-blue-600" />
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-900">
+                  <h3 className="text-xl  text-slate-900">
                     Giờ Làm Việc
                   </h3>
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2 border-b-2 border-slate-100">
                     <span className="text-slate-700">Thứ Hai - Thứ Sáu</span>
-                    <span className="text-blue-600 font-semibold">
+                    <span className="text-blue-600 ">
                       8:00 - 18:00
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b-2 border-slate-100">
                     <span className="text-slate-700">Thứ Bảy</span>
-                    <span className="text-blue-600 font-semibold">
+                    <span className="text-blue-600 ">
                       9:00 - 17:00
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-2">
                     <span className="text-slate-700">Chủ Nhật</span>
-                    <span className="text-red-600 font-semibold">Nghỉ</span>
+                    <span className="text-red-600 ">Nghỉ</span>
                   </div>
                 </div>
               </div>
