@@ -30,6 +30,7 @@ import {
   fetchUserInfo,
   listDepartments,
   listPositions,
+  uploadAvatar,
 } from "@/src/services/api";
 
 function ProfilePage() {
@@ -54,7 +55,7 @@ function ProfilePage() {
   const name = departments.find(
     (item: any) => item.id === userInfo?.department_id
   )?.name;
-  
+
   useEffect(() => {
     dispatch(listPositions() as any);
     dispatch(listDepartments() as any);
@@ -111,21 +112,27 @@ function ProfilePage() {
     return date.toLocaleDateString("vi-VN");
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, avatarNum: number) => {
+  const handleFileSelect = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    avatarNum: number
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
-      const avatarKey = `avatar${avatarNum}` as 'avatar1' | 'avatar2' | 'avatar3';
-      
-      setSelectedFiles(prev => ({
+      const avatarKey = `avatar${avatarNum}` as
+        | "avatar1"
+        | "avatar2"
+        | "avatar3";
+
+      setSelectedFiles((prev) => ({
         ...prev,
-        [avatarKey]: file
+        [avatarKey]: file,
       }));
 
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviewUrls(prev => ({
+        setPreviewUrls((prev) => ({
           ...prev,
-          [avatarKey]: reader.result as string
+          [avatarKey]: reader.result as string,
         }));
       };
       reader.readAsDataURL(file);
@@ -133,25 +140,32 @@ function ProfilePage() {
   };
 
   const handleUpload = async () => {
-    if (Object.keys(selectedFiles).length === 0) return;
-    
-    // Thêm logic upload ảnh tại đây
-    console.log("Uploading files:", selectedFiles);
-    
-    // FormData để gửi multiple files
-    const formData = new FormData();
-    if (selectedFiles.avatar1) formData.append('avatar1', selectedFiles.avatar1);
-    if (selectedFiles.avatar2) formData.append('avatar2', selectedFiles.avatar2);
-    if (selectedFiles.avatar3) formData.append('avatar3', selectedFiles.avatar3);
-    
-    // TODO: Call API upload
-    // await uploadAvatars(formData);
-    
-    // Đóng modal sau khi upload
-    setShowUploadModal(false);
-    setSelectedFiles({});
-    setPreviewUrls({});
-  };
+  if (Object.keys(selectedFiles).length === 0) return;
+
+  console.log("Uploading files:", selectedFiles);
+
+  // ✅ Tạo FormData đúng key backend yêu cầu
+  const formData = new FormData();
+  if (selectedFiles.avatar1)
+    formData.append("avatar_url", selectedFiles.avatar1);
+  if (selectedFiles.avatar2)
+    formData.append("second_avatar_url", selectedFiles.avatar2);
+  if (selectedFiles.avatar3)
+    formData.append("third_avatar_url", selectedFiles.avatar3);
+
+  const token = localStorage.getItem("userToken");
+  if (token) {
+    const payload = { formData, token };
+    dispatch(uploadAvatar(payload) as any);
+  }
+
+  // Reset UI sau khi upload
+  setShowUploadModal(false);
+  setSelectedFiles({});
+  setPreviewUrls({});
+};
+
+
 
   const handleCancelUpload = () => {
     setShowUploadModal(false);
@@ -161,17 +175,17 @@ function ProfilePage() {
   };
 
   const removeImage = (avatarNum: number) => {
-    const avatarKey = `avatar${avatarNum}` as 'avatar1' | 'avatar2' | 'avatar3';
-    
+    const avatarKey = `avatar${avatarNum}` as "avatar1" | "avatar2" | "avatar3";
+
     // Xóa file đã chọn
-    setSelectedFiles(prev => {
+    setSelectedFiles((prev) => {
       const newFiles = { ...prev };
       delete newFiles[avatarKey];
       return newFiles;
     });
 
     // Xóa preview (cả ảnh mới và ảnh cũ)
-    setPreviewUrls(prev => {
+    setPreviewUrls((prev) => {
       const newUrls = { ...prev };
       delete newUrls[avatarKey];
       return newUrls;
@@ -217,7 +231,7 @@ function ProfilePage() {
                         {/* Upload Button - Mobile */}
                         <button
                           onClick={() => setShowUploadModal(true)}
-                          className="absolute top-2 right-2 bg-blue-500 hover:bg-blue-600 text-white p-1.5 rounded-lg border border-blue-400 hover:border-blue-300 transition-all duration-300 shadow-lg"
+                          className="absolute top-2 right-2 bg-gray-500 hover:bg-gray-600 text-white p-1.5 rounded-full border border-white-400 hover:border-white-300 transition-all duration-300 shadow-lg"
                         >
                           <Camera size={14} />
                         </button>
@@ -316,7 +330,7 @@ function ProfilePage() {
                     {/* Upload Button - Desktop */}
                     <button
                       onClick={() => setShowUploadModal(true)}
-                      className="absolute top-3 right-3 bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg border border-blue-400 hover:border-blue-300 transition-all duration-300 shadow-lg"
+                      className="absolute top-3 right-3 bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-full border border-white-400 hover:border-white-300 transition-all duration-300 shadow-lg cursor-pointer"
                     >
                       <Camera size={18} />
                     </button>
@@ -325,13 +339,13 @@ function ProfilePage() {
                       <>
                         <button
                           onClick={prevImage}
-                          className="absolute left-2 top-1/2 -translate-y-1/2 bg-slate-900/80 backdrop-blur-sm hover:bg-blue-500/20 text-white p-2 rounded-full border border-slate-700 hover:border-blue-400 transition-all duration-300"
+                          className="absolute left-2 top-1/2 -translate-y-1/2 bg-slate-900/80 backdrop-blur-sm hover:bg-blue-500/20 text-white p-2 rounded-full border border-slate-700 hover:border-blue-400 transition-all duration-300 cursor-pointer"
                         >
                           <ChevronLeft size={18} />
                         </button>
                         <button
                           onClick={nextImage}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-900/80 backdrop-blur-sm hover:bg-blue-500/20 text-white p-2 rounded-full border border-slate-700 hover:border-blue-400 transition-all duration-300"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-900/80 backdrop-blur-sm hover:bg-blue-500/20 text-white p-2 rounded-full border border-slate-700 hover:border-blue-400 transition-all duration-300 cursor-pointer"
                         >
                           <ChevronRight size={18} />
                         </button>
@@ -400,7 +414,11 @@ function ProfilePage() {
                         className="text-blue-400 flex-shrink-0"
                       />
                       <span className="text-xs">
-                        {departments.find((item: any) => item.id === userInfo?.department_id)?.name}
+                        {
+                          departments.find(
+                            (item: any) => item.id === userInfo?.department_id
+                          )?.name
+                        }
                       </span>
                     </div>
                     <div className="flex items-center gap-3 text-slate-300 hover:text-slate-100 transition-colors">
@@ -468,7 +486,9 @@ function ProfilePage() {
               {/* Avatar 1 */}
               <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-slate-200 font-semibold">Ảnh đại diện 1</h4>
+                  <h4 className="text-slate-200 font-semibold">
+                    Ảnh đại diện 1
+                  </h4>
                   {previewUrls.avatar1 && (
                     <button
                       onClick={() => removeImage(1)}
@@ -478,7 +498,7 @@ function ProfilePage() {
                     </button>
                   )}
                 </div>
-                
+
                 {previewUrls.avatar1 ? (
                   <div className="relative">
                     <img
@@ -501,7 +521,10 @@ function ProfilePage() {
                         onChange={(e) => handleFileSelect(e, 1)}
                         className="hidden"
                       />
-                      <Upload className="mx-auto mb-2 text-blue-400" size={24} />
+                      <Upload
+                        className="mx-auto mb-2 text-blue-400"
+                        size={24}
+                      />
                       <p className="text-slate-400 text-sm">Chọn ảnh 1</p>
                     </div>
                   </label>
@@ -511,7 +534,9 @@ function ProfilePage() {
               {/* Avatar 2 */}
               <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-slate-200 font-semibold">Ảnh đại diện 2</h4>
+                  <h4 className="text-slate-200 font-semibold">
+                    Ảnh đại diện 2
+                  </h4>
                   {previewUrls.avatar2 && (
                     <button
                       onClick={() => removeImage(2)}
@@ -521,7 +546,7 @@ function ProfilePage() {
                     </button>
                   )}
                 </div>
-                
+
                 {previewUrls.avatar2 ? (
                   <div className="relative">
                     <img
@@ -544,7 +569,10 @@ function ProfilePage() {
                         onChange={(e) => handleFileSelect(e, 2)}
                         className="hidden"
                       />
-                      <Upload className="mx-auto mb-2 text-blue-400" size={24} />
+                      <Upload
+                        className="mx-auto mb-2 text-blue-400"
+                        size={24}
+                      />
                       <p className="text-slate-400 text-sm">Chọn ảnh 2</p>
                     </div>
                   </label>
@@ -554,7 +582,9 @@ function ProfilePage() {
               {/* Avatar 3 */}
               <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-slate-200 font-semibold">Ảnh đại diện 3</h4>
+                  <h4 className="text-slate-200 font-semibold">
+                    Ảnh đại diện 3
+                  </h4>
                   {previewUrls.avatar3 && (
                     <button
                       onClick={() => removeImage(3)}
@@ -564,7 +594,7 @@ function ProfilePage() {
                     </button>
                   )}
                 </div>
-                
+
                 {previewUrls.avatar3 ? (
                   <div className="relative">
                     <img
@@ -587,7 +617,10 @@ function ProfilePage() {
                         onChange={(e) => handleFileSelect(e, 3)}
                         className="hidden"
                       />
-                      <Upload className="mx-auto mb-2 text-blue-400" size={24} />
+                      <Upload
+                        className="mx-auto mb-2 text-blue-400"
+                        size={24}
+                      />
                       <p className="text-slate-400 text-sm">Chọn ảnh 3</p>
                     </div>
                   </label>

@@ -5,6 +5,7 @@ import './globals.css'
 import { Providers } from '../lib/provider';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
+import FooterWrapper from './footerWrapper';
 
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -29,7 +30,7 @@ export default function RootLayout({
             <Header />
           
            {children}
-            <Footer/>
+            <FooterWrapper/>
           </>
         </Providers>
         <Analytics />

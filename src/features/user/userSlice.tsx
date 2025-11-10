@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchUserInfo, listAchievements, listCard, listDepartments, listLink, listPositions, listProjects, listTypePersonal, listTypeTask, loginWeb, personalRequest, personCareer, personTasks } from "../../services/api";
+import { fetchUserInfo, listAchievements, listCard, listDepartments, listLink, listPositions, listProjects, listTypePersonal, listTypeTask, loginWeb, personalRequest, personCareer, personTasks, uploadAvatar } from "../../services/api";
 
 const userSlice = createSlice({
   name: "user",
@@ -235,6 +235,17 @@ const userSlice = createSlice({
         state.status = "loading"
       })
       .addCase(listLink.rejected, (state, action: any) => {
+        state.status = "failed"
+        state.loading = false;
+        state.error = action.payload?.message
+      })
+
+      .addCase(uploadAvatar.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.status = "loading"
+      })
+      .addCase(uploadAvatar.rejected, (state, action: any) => {
         state.status = "failed"
         state.loading = false;
         state.error = action.payload?.message

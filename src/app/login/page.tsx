@@ -1,6 +1,6 @@
 "use client";
 
-import { loginWeb } from "@/src/services/api";
+import { fetchUserInfo, loginWeb } from "@/src/services/api";
 import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -16,6 +16,10 @@ export default function LoginPage() {
   
   useEffect(() => {
     if (status === "succeeded") {
+      const token = localStorage.getItem("userToken");
+      if(token) {
+        dispatch(fetchUserInfo(token as any) as any);
+      }
       router.push("/");
     } else if (status === "failed" && error) {
       alert(error);

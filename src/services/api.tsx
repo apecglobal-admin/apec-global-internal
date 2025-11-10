@@ -195,3 +195,28 @@ export const listLink = createAsyncThunk(
     }
   }
 );
+
+export const uploadAvatar = createAsyncThunk(
+  'user/uploadAvatar',
+  async (payload: any, thunkAPI) => {
+    try {
+      const { formData, token }: any = payload; 
+
+      const response = await apiAxiosInstance.post(
+        `/profile/avatar/uploads`,
+        formData, 
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
+
