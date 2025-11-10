@@ -173,7 +173,7 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
   // Sort by date
   const sortedRequests = [...filteredRequests].sort(
     (a, b) =>
-      new Date(b.date_request).getTime() - new Date(a.date_request).getTime()
+      new Date(a.date_request).getTime() - new Date(b.date_request).getTime()
   );
 
   const clearFilters = () => {

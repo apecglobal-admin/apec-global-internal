@@ -51,31 +51,31 @@ export default function AnalysisPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-gray-50 text-slate-900">
       {/* Achievements Grid */}
-      <section id="stats" className="py-20 px-4">
+      <section id="stats" className="py-20 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">Thành Tích Nổi Bật 2025</h2>
-            <p className="text-slate-400 text-lg">Con số ấn tượng minh chứng cho sự phát triển vượt bậc</p>
+            <h2 className="text-4xl font-bold mb-4 text-slate-900">Thành Tích Nổi Bật 2025</h2>
+            <p className="text-slate-600 text-lg">Con số ấn tượng minh chứng cho sự phát triển vượt bậc</p>
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {achievements.map((item, index) => (
               <div 
                 key={index} 
-                className="relative bg-slate-900 border border-slate-800 rounded-2xl p-8 hover:border-blue-500 transition group overflow-hidden"
+                className="relative bg-white border-2 border-slate-200 rounded-2xl p-8 hover:border-blue-500 hover:shadow-xl transition group overflow-hidden"
               >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600 opacity-10 rounded-full blur-3xl group-hover:opacity-20 transition"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-400 opacity-5 rounded-full blur-3xl group-hover:opacity-10 transition"></div>
                 <div className="relative">
-                  <div className="text-blue-400 mb-4">
+                  <div className="text-blue-600 mb-4">
                     {item.icon}
                   </div>
-                  <div className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                  <div className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                     {item.number}
                   </div>
-                  <div className="text-xl font-semibold mb-1">{item.label}</div>
-                  <div className="text-sm text-slate-400">{item.subtitle}</div>
+                  <div className="text-xl font-semibold mb-1 text-slate-900">{item.label}</div>
+                  <div className="text-sm text-slate-600">{item.subtitle}</div>
                 </div>
               </div>
             ))}
@@ -84,14 +84,14 @@ export default function AnalysisPage() {
       </section>
 
       {/* Growth Chart Section */}
-      <section className="py-20 px-4 bg-slate-900">
+      <section className="py-20 px-4 bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">Tăng Trưởng Doanh Thu</h2>
-            <p className="text-slate-400 text-lg">Biểu đồ doanh thu theo quý năm 2024 (Đơn vị: Triệu VNĐ)</p>
+            <h2 className="text-4xl font-bold mb-4 text-slate-900">Tăng Trưởng Doanh Thu</h2>
+            <p className="text-slate-600 text-lg">Biểu đồ doanh thu theo quý năm 2024 (Đơn vị: Triệu VNĐ)</p>
           </div>
 
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-8">
+          <div className="bg-white border-2 border-slate-200 rounded-2xl p-8 shadow-lg">
             <ResponsiveContainer width="100%" height={400}>
               <BarChart data={growthData}>
                 <defs>
@@ -100,17 +100,18 @@ export default function AnalysisPage() {
                     <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.3}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="quarter" stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="quarter" stroke="#64748b" />
+                <YAxis stroke="#64748b" />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#1e293b', 
-                    border: '1px solid #334155', 
+                    backgroundColor: '#ffffff', 
+                    border: '2px solid #e2e8f0', 
                     borderRadius: '12px',
-                    padding: '12px'
+                    padding: '12px',
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                   }}
-                  labelStyle={{ color: '#e2e8f0', fontWeight: 'bold' }}
+                  labelStyle={{ color: '#0f172a', fontWeight: 'bold' }}
                 />
                 <Bar dataKey="revenue" fill="url(#colorRevenue)" radius={[8, 8, 0, 0]} />
               </BarChart>
@@ -118,10 +119,10 @@ export default function AnalysisPage() {
 
             <div className="grid md:grid-cols-4 gap-4 mt-8">
               {growthData.map((item, index) => (
-                <div key={index} className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
-                  <div className="text-slate-400 text-sm mb-1">{item.quarter}</div>
-                  <div className="text-2xl font-bold mb-1">{item.revenue}M</div>
-                  <div className="text-green-400 text-sm font-semibold flex items-center justify-center gap-1">
+                <div key={index} className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-4 text-center">
+                  <div className="text-slate-600 text-sm mb-1">{item.quarter}</div>
+                  <div className="text-2xl font-bold mb-1 text-slate-900">{item.revenue}M</div>
+                  <div className="text-green-600 text-sm font-semibold flex items-center justify-center gap-1">
                     <ArrowUpRight className="w-4 h-4" />
                     +{item.growth}%
                   </div>
@@ -133,26 +134,26 @@ export default function AnalysisPage() {
       </section>
 
       {/* Featured Products */}
-      <section id="products" className="py-20 px-4">
+      <section id="products" className="py-20 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">Sản Phẩm Dẫn Đầu Thị Trường</h2>
-            <p className="text-slate-400 text-lg">Những giải pháp công nghệ được yêu thích nhất</p>
+            <h2 className="text-4xl font-bold mb-4 text-slate-900">Sản Phẩm Dẫn Đầu Thị Trường</h2>
+            <p className="text-slate-600 text-lg">Những giải pháp công nghệ được yêu thích nhất</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredProducts.map((product, index) => (
-              <div key={index} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:scale-105 transition duration-300">
-                <div className={`w-16 h-16 bg-gradient-to-br ${getColorClasses(product.color as ColorKey)} rounded-xl mb-4 flex items-center justify-center`}>
+              <div key={index} className="bg-white border-2 border-slate-200 rounded-2xl p-6 hover:scale-105 hover:shadow-xl transition duration-300">
+                <div className={`w-16 h-16 bg-gradient-to-br ${getColorClasses(product.color as ColorKey)} rounded-xl mb-4 flex items-center justify-center shadow-lg`}>
                   <Target className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">{product.name}</h3>
+                <h3 className="text-xl font-semibold mb-2 text-slate-900">{product.name}</h3>
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-2xl font-bold">{product.sales}</div>
-                    <div className="text-sm text-slate-400">Đã bán</div>
+                    <div className="text-2xl font-bold text-slate-900">{product.sales}</div>
+                    <div className="text-sm text-slate-600">Đã bán</div>
                   </div>
-                  <div className="px-3 py-1 bg-green-600 bg-opacity-20 text-green-400 rounded-full text-sm font-semibold">
+                  <div className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
                     {product.trend}
                   </div>
                 </div>
@@ -164,14 +165,14 @@ export default function AnalysisPage() {
 
 
       {/* CTA Section */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4 bg-gradient-to-b from-white to-slate-50">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12">
-            <h2 className="text-4xl font-bold mb-4">Sẵn Sàng Hợp Tác?</h2>
-            <p className="text-xl mb-8 opacity-90">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12 shadow-2xl">
+            <h2 className="text-4xl font-bold mb-4 text-white">Sẵn Sàng Hợp Tác?</h2>
+            <p className="text-xl mb-8 text-white opacity-90">
               Hãy để chúng tôi đồng hành cùng bạn trên con đường chuyển đổi số
             </p>
-            <button className="px-8 py-4 bg-white text-blue-600 font-bold rounded-xl hover:bg-slate-100 transition">
+            <button className="px-8 py-4 bg-white text-blue-600 font-bold rounded-xl hover:bg-slate-100 hover:shadow-lg transition transform hover:scale-105">
               Liên Hệ Ngay
             </button>
           </div>

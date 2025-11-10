@@ -54,18 +54,18 @@ const CompanyLeaderboard = () => {
     return projectsRanking;
   }, [activeTab]);
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-300 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 p-6">
 
-      <section className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-950/80 to-slate-900 p-6 sm:p-7 lg:p-8">
+      <section className="rounded-3xl border-2 border-slate-200 bg-white shadow-xl p-6 sm:p-7 lg:p-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.4em] text-amber-400 sm:text-sm">
+            <div className="text-xs font-semibold uppercase tracking-[0.4em] text-amber-600 sm:text-sm">
               Thi đua & khen thưởng
             </div>
-            <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">
+            <h2 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
               Bảng xếp hạng realtime
             </h2>
-            <p className="mt-2 text-sm text-slate-200">
+            <p className="mt-2 text-sm text-slate-700">
               Cập nhật tự động từ ERP, phản ánh KPI, điểm thưởng, huy hiệu và
               danh hiệu của từng phòng ban, cá nhân và dự án.
             </p>
@@ -73,30 +73,30 @@ const CompanyLeaderboard = () => {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setActiveTab("departments")}
-              className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition ${
+              className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition shadow-md ${
                 activeTab === "departments"
-                  ? "bg-amber-500 text-slate-950"
-                  : "border border-amber-500/60 text-amber-300 hover:bg-amber-500/20"
+                  ? "bg-amber-500 text-white shadow-amber-500/30"
+                  : "border-2 border-amber-400 text-amber-600 hover:bg-amber-50"
               }`}
             >
               Phòng ban
             </button>
             <button
               onClick={() => setActiveTab("individuals")}
-              className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition ${
+              className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition shadow-md ${
                 activeTab === "individuals"
-                  ? "bg-amber-500 text-slate-950"
-                  : "border border-amber-500/60 text-amber-300 hover:bg-amber-500/20"
+                  ? "bg-amber-500 text-white shadow-amber-500/30"
+                  : "border-2 border-amber-400 text-amber-600 hover:bg-amber-50"
               }`}
             >
               Cá nhân
             </button>
             <button
               onClick={() => setActiveTab("projects")}
-              className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition ${
+              className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition shadow-md ${
                 activeTab === "projects"
-                  ? "bg-amber-500 text-slate-950"
-                  : "border border-amber-500/60 text-amber-300 hover:bg-amber-500/20"
+                  ? "bg-amber-500 text-white shadow-amber-500/30"
+                  : "border-2 border-amber-400 text-amber-600 hover:bg-amber-50"
               }`}
             >
               Dự án
@@ -105,22 +105,22 @@ const CompanyLeaderboard = () => {
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
-          <div className="rounded-3xl border border-amber-500/20 bg-slate-950/80 p-5 sm:p-6">
-            <div className="text-xs uppercase tracking-widest text-amber-200">
+          <div className="rounded-3xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-5 sm:p-6 shadow-lg">
+            <div className="text-xs uppercase tracking-widest text-amber-700 font-semibold">
               Bảng xếp hạng
             </div>
             <ul className="mt-4 space-y-3">
               {rankingData.map((item, index) => (
                 <li
                   key={item.name}
-                  className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-4 sm:px-5"
+                  className="flex items-center justify-between rounded-2xl border-2 border-slate-200 bg-white px-4 py-4 sm:px-5 shadow-md hover:shadow-lg hover:border-amber-300 transition"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-amber-500/40 text-lg font-bold text-amber-300">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-amber-400 bg-gradient-to-br from-amber-100 to-amber-200 text-lg font-bold text-amber-700">
                       {index + 1}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
                         {item.name}
                         {"badge" in item && (
                           <span className="text-lg leading-none">
@@ -129,17 +129,17 @@ const CompanyLeaderboard = () => {
                         )}
                       </div>
                       {"dept" in item && (
-                        <div className="text-xs uppercase tracking-widest text-amber-200">
+                        <div className="text-xs uppercase tracking-widest text-amber-600">
                           {item.dept as any}
                         </div>
                       )}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold text-amber-300">
+                    <div className="text-lg font-bold text-amber-600">
                       {item.score}
                     </div>
-                    <div className="text-xs text-emerald-300">{item.trend}</div>
+                    <div className="text-xs text-emerald-600 font-semibold">{item.trend}</div>
                   </div>
                 </li>
               ))}
@@ -147,39 +147,39 @@ const CompanyLeaderboard = () => {
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-2xl border border-amber-500/30 bg-slate-950/80 p-5 sm:p-6">
-              <div className="text-xs uppercase tracking-widest text-amber-200">
+            <div className="rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-5 sm:p-6 shadow-lg">
+              <div className="text-xs uppercase tracking-widest text-blue-700 font-semibold">
                 Module
               </div>
               <div className="mt-4 grid gap-3">
                 {modules.map((module) => (
                   <div
                     key={module.title}
-                    className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-200"
+                    className="flex items-center justify-between rounded-xl border-2 border-slate-200 bg-white px-4 py-3 text-sm shadow-sm hover:shadow-md transition"
                   >
                     <div>
-                      <div className="font-semibold text-white">
+                      <div className="font-semibold text-slate-900">
                         {module.title}
                       </div>
-                      <div className="text-xs text-slate-400">
+                      <div className="text-xs text-slate-600">
                         {module.description}
                       </div>
                     </div>
-                    <span className="rounded-full border border-amber-500/40 px-3 py-1 text-xs uppercase tracking-widest text-amber-300">
+                    <span className="rounded-full border-2 border-amber-300 bg-amber-50 px-3 py-1 text-xs uppercase tracking-widest text-amber-700 font-semibold">
                       {module.status}
                     </span>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="rounded-2xl border border-amber-500/20 bg-slate-950/70 p-5 sm:p-6 text-center">
-              <div className="text-xs uppercase tracking-widest text-amber-200">
+            <div className="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 p-5 sm:p-6 text-center shadow-lg">
+              <div className="text-xs uppercase tracking-widest text-purple-700 font-semibold">
                 Vinh danh tập thể xuất sắc
               </div>
-              <div className="mt-3 text-2xl font-bold text-white">
+              <div className="mt-3 text-2xl font-bold text-slate-900">
                 GuardCam AI Hub
               </div>
-              <p className="mt-2 text-sm text-slate-300">
+              <p className="mt-2 text-sm text-slate-700">
                 Dẫn đầu quý III với 132% KPI, 08 sáng kiến đổi mới và chỉ số hài
                 lòng nhân sự đạt 4.8/5.
               </p>
