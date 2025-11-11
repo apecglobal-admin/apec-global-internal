@@ -6,6 +6,7 @@ import { Providers } from '../lib/provider';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import FooterWrapper from './footerWrapper';
+import ConditionalLayout from './conditionalLayout';
 
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -26,12 +27,14 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans antialiased`}>
         <Providers>
-          <>
+          {/* <>
             <Header />
 
            {children}
             <FooterWrapper/>
-          </>
+          </> */}
+
+          <ConditionalLayout>{children}</ConditionalLayout>
         </Providers>
         <Analytics />
       </body>

@@ -1,6 +1,9 @@
 "use client"
 
+import { getTypeAnnouncement } from "@/src/services/api"
+import { createAsyncReducer } from "@/src/utils/createAsyncReducer"
 import { useEffect, useMemo, useState } from "react"
+import { useDispatch, useSelector } from "react-redux"
 
 type AnnouncementCategory = "general" | "urgent" | "personal"
 
@@ -71,11 +74,22 @@ const categories: { key: AnnouncementCategory; label: string }[] = [
 const departments = ["Tất cả", "Ban Lãnh đạo", "Hành chính", "Nhân sự", "Công nghệ", "Tài chính"]
 
 export default function AnnouncementSection() {
-  const [activeCategory, setActiveCategory] = useState<AnnouncementCategory>("general")
+  const dispatch = useDispatch();
+  const { typeAnnouncements } = useSelector(
+    (state: any) => state.announcement
+  );
+
+  
+  const [activeCategory, setActiveCategory] = useState<number>(1)
   const [selectedDepartment, setSelectedDepartment] = useState<string>("Tất cả")
   const [data, setData] = useState<AnnouncementItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
+  useEffect(() => {
+    dispatch(getTypeAnnouncement() as any);
+  }, []);
+
+  
   useEffect(() => {
     let isActive = true
 
@@ -84,7 +98,7 @@ export default function AnnouncementSection() {
 
       try {
         const response = await fetch("/api/announcements", { cache: "no-store" })
-
+        
         if (!response.ok) {
           throw new Error("Failed to load announcements")
         }
@@ -117,13 +131,15 @@ export default function AnnouncementSection() {
     }
   }, [])
 
-  const filtered = useMemo(() => {
-    return data.filter((item) => {
-      const categoryMatch = item.category === activeCategory
-      const departmentMatch = selectedDepartment === "Tất cả" || item.department === selectedDepartment
-      return categoryMatch && departmentMatch
-    })
-  }, [data, activeCategory, selectedDepartment])
+  // const filtered = useMemo(() => {
+  //   return data.filter((item) => {
+  //     const categoryMatch = item.category === activeCategory
+  //     const departmentMatch = selectedDepartment === "Tất cả" || item.department === selectedDepartment
+  //     return categoryMatch && departmentMatch
+  //   })
+  // }, [data, activeCategory, selectedDepartment])
+
+  const filtered: any = [];
 
   const toggleRead = (id: number) => {
     setData((prev) => prev.map((item) => (item.id === id ? { ...item, read: !item.read } : item)))
@@ -133,7 +149,7 @@ export default function AnnouncementSection() {
   return (
     <section 
     style={{border: "1px solid rgb(101, 101, 101)"}} 
-    className="rounded-3xl bg-gray-200 p-6 sm:p-7 lg:p-8 inset-shadow-sm inset-shadow-black/30">
+    className="rounded-3xl bg-white p-6 sm:p-7 lg:p-8 inset-shadow-sm inset-shadow-black/30">
       <div className="flex flex-col gap-4">
         <div>
           <div className="text-xs font-extrabold uppercase tracking-[0.4em] text-blue-950 sm:text-lg">Thông báo</div>
@@ -159,15 +175,15 @@ export default function AnnouncementSection() {
       </div>
 
       <div className="mt-5 flex flex-wrap gap-2 sm:mt-6 sm:gap-3">
-        {categories.map((item) => (
+        {typeAnnouncements.map((item: any) => (
           <button
-            key={item.key}
-            onClick={() => setActiveCategory(item.key)}
+            key={item.id}
+            onClick={() => setActiveCategory(Number(item.id))}
             className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition sm:px-5 sm:text-sm ${
-              activeCategory === item.key ? "bg-active-blue-metallic" : "border border-gray-600/50 bg-gray-300 text-gray-600/50 hover:border-teal-300/80 hover:text-white"
+              activeCategory === Number(item.id) ? "bg-active-blue-metallic" : "border border-gray-600/50 bg-gray-300 text-gray-600/50 hover:border-teal-300/80 hover:text-white"
             }`}
           >
-            {item.label}
+            {item.name}
           </button>
         ))}
       </div>
@@ -186,7 +202,7 @@ export default function AnnouncementSection() {
         )}
 
         {!isLoading &&
-          filtered.map((item) => (
+          filtered.map((item: any) => (
             <div
               key={item.id}
               className="flex flex-col gap-4 rounded-2xl border border-slate-800 bg-gray-300 p-4 sm:p-4 md:flex-row md:items-center md:justify-between"

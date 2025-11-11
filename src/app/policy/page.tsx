@@ -204,7 +204,7 @@ export default function PoliciesPage() {
                         Tra cứu nhanh
                     </button>
 
-                    <div className="space-y-3 rounded-2xl border border-gray-500 bg-gray-300 p-4">
+                    <div className="space-y-3 rounded-2xl border border-gray-500 p-4">
                         <div className="text-md font-semibold uppercase tracking-widest text-blue-950">
                             Danh mục nổi bật
                         </div>
@@ -213,7 +213,7 @@ export default function PoliciesPage() {
                                 <a
                                     key={link.label}
                                     href={link.href}
-                                    className="flex items-center justify-between rounded-xl border border-gray-400 bg-white px-3 py-2 text-sm text-black transition hover:border-gray-600 hover:bg-gray-400/70 hover:text-white"
+                                    className="flex items-center justify-between rounded-xl border border-gray-400 bg-white px-3 py-2 text-sm text-black transition hover:border-gray-400 hover:bg-gray-300 hover:text-white"
                                 >
                                     {link.label}
                                     <span aria-hidden>

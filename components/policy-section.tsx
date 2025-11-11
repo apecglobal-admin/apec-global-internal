@@ -102,7 +102,7 @@ export default function PolicySection() {
                             return (
                                 <div
                                     key={stat.label}
-                                    className="group rounded-2xl border border-slate-700/80 border-l-6 bg-gray-300 p-5 shadow-inner shadow-black/10 transition"
+                                    className="group rounded-2xl border border-slate-700/80 border-l-6 bg-white p-5 shadow-inner shadow-black/10 transition"
                                     style={{
                                         borderLeftColor: borderColor
                                     }}
@@ -134,9 +134,9 @@ export default function PolicySection() {
                     </div>
                 </div>
 
-                <div className="space-y-4 rounded-3xl border border-slate-800 bg-gray-300 p-5 shadow-lg shadow-blue-500/10">
-                    <SearchBar placeHoder="tìm kiếm..."/>
-                    <button className="flex items-center justify-center gap-2 rounded-full bg-orange-400 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-orange-500">
+                <div className="space-y-4 rounded-3xl border border-slate-800 bg-white p-5 shadow-lg shadow-blue-500/10">
+                    <SearchBar placeHoder="Tìm kiếm chính sách, biểu mẫu..."/>
+                    <button className="flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-orange-500">
                         <Search size={16} />
                         Tra cứu nhanh
                     </button>
