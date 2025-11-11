@@ -156,12 +156,12 @@ export default function Header() {
                                 />
                             </button>
                             {isDropdownOpen && (
-                                <div className="absolute right-0 mt-2 w-72 rounded-lg border border-white bg-gray-400 shadow-xl z-50">
+                                <div className="absolute right-0 mt-2 w-72 rounded-lg border border-gray-300 bg-white inset-shadow-sm inset-shadow-black/40 z-50">
                                     <div className="p-2">
                                         {userInfo ? (
                                             <>
                                                 <button
-                                                    className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-slate-300 transition hover:bg-white hover:text-black cursor-pointer"
+                                                    className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-black transition hover:bg-white hover:text-black cursor-pointer"
                                                     onClick={() =>
                                                         router.push("/profile")
                                                     }
@@ -171,13 +171,13 @@ export default function Header() {
                                                         Thông tin cá nhân
                                                     </span>
                                                 </button>
-                                                <button className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-slate-300 transition hover:bg-white hover:text-black cursor-pointer">
+                                                <button className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-black transition hover:bg-white hover:text-black cursor-pointer">
                                                     <Settings size={18} />
                                                     <span>Cài đặt</span>
                                                 </button>
-                                                <div className="my-2 border-t border-white"></div>
+                                                <div className="my-2 border-t border-black"></div>
                                                 <button
-                                                    className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-red-400 transition hover:bg-white hover:text-red-600 cursor-pointer"
+                                                    className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-red-700 transition hover:bg-white hover:text-red-600 cursor-pointer"
                                                     onClick={handleLogout}
                                                 >
                                                     <LogOut size={18} />

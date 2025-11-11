@@ -12,7 +12,7 @@ import {
     ExternalLink,
 } from "lucide-react";
 import { colorClasses, colorMap } from "@/src/utils/color";
-import CalendarDefault from "@/components/calendarDefault";
+import CalendarDefault from "@/components/event/calendarDefault";
 
 const eventStats = [
     { value: "24", label: "Sự kiện 2025", subLabel: "Đã xác nhận lịch" },

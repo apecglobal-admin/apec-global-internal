@@ -6,13 +6,15 @@ import LoginSection from "@/components/login-section";
 import ProjectsSection from "@/components/projects-section";
 import StatisticsSection from "@/components/statistics-section";
 import PolicySection from "@/components/policy-section";
-import EventSection from "@/components/event-section";
+import EventSection from "@/components/event/event-section";
 import ProgramSection from "@/components/program-section";
 import AdditionalSection from "@/components/additional-section";
 import Footer from "@/components/footer";
+import 'react-toastify/dist/ReactToastify.css';
 
 // import Tabs UI
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ToastContainer } from "react-toastify";
 
 const nav = [
     { value: "statistics", label: "Thống kê báo cáo" },
@@ -28,6 +30,15 @@ export default function Home() {
         <div className="min-h-screen bg-white  text-white">
 
             <main className="mx-auto w-full max-w-7xl px-4 py-10 space-y-10 sm:px-6 sm:py-12 sm:space-y-12 md:px-8 md:py-14 lg:px-8 lg:py-16 lg:space-y-16">
+            <ToastContainer 
+                position="top-right"   // Vị trí hiển thị toast
+                autoClose={3000}       // 3 giây tự động ẩn
+                hideProgressBar={false}
+                newestOnTop={true}     // Toast mới ở trên cùng
+                closeOnClick
+                pauseOnHover
+                draggable
+            />
                 <Slider />
 
                 {/* Grid Announcement + Login */}

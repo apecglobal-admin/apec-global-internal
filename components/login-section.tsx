@@ -142,33 +142,33 @@ export default function LoginSection() {
             {userInfo && (
                 <div className="mt-6 space-y-4">
                     <div className="text-center space-y-2">
-                        <h2 className="text-2xl font-bold text-white sm:text-3xl">
+                        <h2 className="text-2xl font-bold text-blue-950 sm:text-3xl">
                             Chào mừng quay lại!
                         </h2>
-                        <p className="text-xl text-amber-400 font-semibold">
+                        <p className="text-xl text-orange-600 font-semibold">
                             {userInfo.name}
                         </p>
-                        <p className="text-sm text-slate-300">
+                        <p className="text-sm text-black">
                             {userInfo.email}
                         </p>
                     </div>
 
                     <div className="flex flex-col gap-3 pt-4">
-                        <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700">
+                        <div className="p-4 rounded-xl bg-white border border-slate-700">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm text-slate-400">
+                                    <p className="text-sm text-black">
                                         Phòng ban
                                     </p>
-                                    <p className="text-white font-medium">
+                                    <p className="text-black font-medium">
                                         {userInfo.department || "Chưa cập nhật"}
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-sm text-slate-400">
+                                    <p className="text-sm text-black">
                                         Chức vụ
                                     </p>
-                                    <p className="text-white font-medium">
+                                    <p className="text-black font-medium">
                                         {userInfo.position || "Nhân viên"}
                                     </p>
                                 </div>

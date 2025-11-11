@@ -66,8 +66,8 @@ export default function Slider({ slides = fallbackSlides }: SliderProps) {
 
     return (
         <div 
-        style={{boxShadow: "0 0 5px 2px rgb(216, 216, 216)"}}
-        className="relative flex flex-col sm:flex-row items-center justify-between rounded-3xl border border-slate-800 bg-gray-100 px-6 py-4 ">
+        style={{boxShadow: "inset 0 0 7px rgba(0, 0, 0, 0.5)"}}
+        className="relative flex flex-col sm:flex-row items-center justify-between rounded-3xl bg-white px-6 py-4 inset-shadow-sm inset-shadow-black/50">
             <div className="flex flex-col items-center sm:items-start text-center sm:text-left sm:w-2/3 md:mr-5">
                 <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start sm:flex-nowrap sm:gap-4">
                     <div 
