@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const WEEKDAYS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
@@ -38,6 +38,7 @@ const CalendarDefault = ({
 }: CalendarProps) => {
   const [currentDate, setCurrentDate] = useState(initialDate);
 
+  
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
 
@@ -158,11 +159,11 @@ const CalendarDefault = ({
               {hasReminderActive && (
                 <span className="absolute right-1 top-1 h-2 w-2 animate-pulse rounded-full bg-orange-400"></span>
               )}
-              {dayEvents.length > 1 && (
+              {/* {dayEvents.length > 1 && (
                 <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[10px] text-slate-300">
                   {dayEvents.length}
                 </span>
-              )}
+              )} */}
             </button>
           );
         })}
