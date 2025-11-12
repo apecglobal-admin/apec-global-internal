@@ -24,13 +24,15 @@ export const loginWeb = createAsyncThunk(
 export const fetchUserInfo = createAsyncThunk(
   "user/fetchUserInfo",
   async (token: string, thunkAPI) => {
+    console.log("Dispatching fetchUser");
     try {
       const response = await apiAxiosInstance.get("/profile", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      return response.data.data;
+      return  response.data.data
+   
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -40,21 +42,26 @@ export const fetchUserInfo = createAsyncThunk(
 export const listPositions = createAsyncThunk(
   "user/listPositions",
   async (_, thunkAPI) => {
+    console.log("Dispatching listPositions API");
     try {
       const response = await apiAxiosInstance.get("/positions");
-      return response.data.data.positions;
+      console.log("API response", response.data);
+      return  response.data.data.positions
     } catch (error: any) {
+      console.log("API error", error);
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
   }
 );
 
+
 export const listDepartments = createAsyncThunk(
   "user/listDepartments",
   async (_, thunkAPI) => {
+    console.log("Dispatching departmane");
     try {
       const response = await apiAxiosInstance.get("/departments");
-      return response.data.data;
+      return  response.data.data
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -70,7 +77,7 @@ export const personCareer = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
-      return response.data;
+      return  response.data
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -90,7 +97,10 @@ export const personTasks = createAsyncThunk(
           },
         }
       );
-      return response.data.data;
+      return {
+        data: response.data.data,
+        status: response.status
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -102,7 +112,10 @@ export const listTypeTask = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await apiAxiosInstance.get("/tasks/types");
-      return response.data;
+      return {
+        data: response.data,
+        status: response.status
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -114,7 +127,10 @@ export const listTypePersonal = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await apiAxiosInstance.get("/personal-requests/types");
-      return response.data;
+      return {
+        data: response.data,
+        status: response.status
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -134,7 +150,10 @@ export const personalRequest = createAsyncThunk(
           },
         }
       );
-      return response.data;
+      return {
+        data: response.data,
+        status: response.status
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -150,7 +169,10 @@ export const listAchievements = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
-      return response.data;
+      return {
+        data: response.data,
+        status: response.status
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -166,7 +188,10 @@ export const listProjects = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
-      return response.data;
+      return {
+        data: response.data,
+        status: response.status
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -182,7 +207,10 @@ export const listCard = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
-      return response.data;
+      return {
+        data: response.data,
+        status: response.status
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -194,7 +222,10 @@ export const listLink = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await apiAxiosInstance.get("/profile/links");
-      return response.data;
+      return {
+        data: response.data,
+        status: response.status
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }

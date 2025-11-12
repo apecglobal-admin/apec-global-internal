@@ -1,4 +1,5 @@
 import { toast } from "@/components/ui/use-toast";
+import { useProfileData } from "@/src/hooks/profileHook";
 import {
   createRequestUser,
   listTypePersonal,
@@ -55,7 +56,7 @@ interface PersonalTabProps {
 
 function PersonalTab({ userInfo }: PersonalTabProps) {
   const dispatch = useDispatch();
-  const { typePersonal, personals } = useSelector((state: any) => state.user);
+  const { typePersonal, personals } = useProfileData();
 
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);

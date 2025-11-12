@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, CreditCard, Star, Calendar, TrendingUp, DollarSign } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { listCard } from "@/src/services/api";
+import { useProfileData } from "@/src/hooks/profileHook";
 
 function CardTab({ userInfo }: any) {
   const dispatch = useDispatch();
-  const { cards } = useSelector((state: any) => state.user);
+  const { cards } = useProfileData();
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {

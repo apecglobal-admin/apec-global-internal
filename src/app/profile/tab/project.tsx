@@ -26,10 +26,11 @@ import {
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { listProjects } from "@/src/services/api";
+import { useProfileData } from "@/src/hooks/profileHook";
 
 function ProjectsTab({ userInfo }: any) {
   const dispatch = useDispatch();
-  const { projects } = useSelector((state: any) => state.user);
+  const { projects } = useProfileData();
 
   const [showRecentProjects, setShowRecentProjects] = useState(false);
 

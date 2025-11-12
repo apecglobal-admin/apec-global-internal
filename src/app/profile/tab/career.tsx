@@ -1,3 +1,4 @@
+import { useProfileData } from "@/src/hooks/profileHook";
 import { personCareer } from "@/src/services/api";
 import { Briefcase, CheckCircle2, Trophy } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -5,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 function CareerTab({ userInfo }: any) {
   const dispatch = useDispatch();
-  const { careers } = useSelector((state: any) => state.user);
+  const { careers } = useProfileData();
 
   useEffect(() => {
     const token = localStorage.getItem("userToken");

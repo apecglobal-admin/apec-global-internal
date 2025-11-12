@@ -35,7 +35,6 @@ export default function Header() {
             dispatch(fetchUserInfo(token) as any);
         }
     }, [dispatch]);
-    console.log("userinfo", userInfo)
 
     useEffect(() => {
         function handleClickOutside(event: any) {

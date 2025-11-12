@@ -85,9 +85,9 @@ export default function AnnouncementSection() {
   const [data, setData] = useState<AnnouncementItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    dispatch(getTypeAnnouncement() as any);
-  }, []);
+  // useEffect(() => {
+  //   dispatch(getTypeAnnouncement() as any);
+  // }, []);
 
   
   useEffect(() => {

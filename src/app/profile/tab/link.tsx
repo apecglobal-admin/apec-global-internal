@@ -1,10 +1,11 @@
+import { useProfileData } from "@/src/hooks/profileHook";
 import { listLink } from "@/src/services/api";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 function LinkTab({ userInfo }: any) {
   const dispatch = useDispatch();
-  const { links } = useSelector((state: any) => state.user);
+  const { links } = useProfileData();
 
   useEffect(() => {
     dispatch(listLink() as any);

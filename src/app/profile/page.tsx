@@ -32,12 +32,11 @@ import {
     listPositions,
     uploadAvatar,
 } from "@/src/services/api";
+import { useProfileData } from "@/src/hooks/profileHook";
 
 function ProfilePage() {
     const dispatch = useDispatch();
-    const { userInfo, departments, positions } = useSelector(
-        (state: any) => state.user
-    );
+    const { userInfo, departments, positions, isLoadingUser, isLoadingPositions, isLoadingDepartments} = useProfileData();
     const [currentImage, setCurrentImage] = useState(0);
     const [activeTab, setActiveTab] = useState("skills");
     const [showUploadModal, setShowUploadModal] = useState(false);
@@ -52,18 +51,19 @@ function ProfilePage() {
         avatar3?: string;
     }>({});
 
-    const name = departments.find(
-        (item: any) => item.id === userInfo?.department_id
-    )?.name;
 
     useEffect(() => {
-        dispatch(listPositions() as any);
-        dispatch(listDepartments() as any);
         const token = localStorage.getItem("userToken");
         if (token) {
             dispatch(fetchUserInfo(token as any) as any);
         }
+        dispatch(listPositions() as any);
+        dispatch(listDepartments() as any);
+        
     }, [dispatch]);
+
+    //console.log("isloading", isLoadingUser, isLoadingDepartments, isLoadingPositions)
+    //console.log("userInfo", !userInfo, !departments, !positions)
 
     // Khởi tạo preview URLs từ avatar hiện tại khi mở modal
     useEffect(() => {
@@ -77,7 +77,8 @@ function ProfilePage() {
     }, [showUploadModal, userInfo]);
 
     // Show loading state if userInfo is not available
-    if (!userInfo) {
+    //if (isLoadingUser == true || isLoadingDepartments == true || isLoadingPositions == true) {
+    if (!userInfo || !positions || !departments) {
         return (
             <div className="h-screen bg-slate-950 flex items-center justify-center">
                 <div className="text-slate-400">Đang tải thông tin...</div>

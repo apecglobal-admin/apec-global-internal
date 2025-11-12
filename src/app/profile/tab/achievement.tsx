@@ -1,3 +1,4 @@
+import { useProfileData } from "@/src/hooks/profileHook";
 import { listAchievements } from "@/src/services/api";
 import { Award, TrendingUp, FileText, Target, LucideIcon } from "lucide-react";
 import { useEffect } from "react";
@@ -21,7 +22,7 @@ const categoryColorMap: Record<string, string> = {
 
 function AchievementsTab({ userInfo }: any) {
   const dispatch = useDispatch();
-  const { achievements } = useSelector((state: any) => state.user);
+  const { achievements } = useProfileData();
 
   useEffect(() => {
     const token = localStorage.getItem("userToken");
