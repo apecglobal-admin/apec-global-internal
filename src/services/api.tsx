@@ -1,61 +1,73 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import apiAxiosInstance from "./axios";
+import { toast } from "react-toastify";
 
 export const loginWeb = createAsyncThunk(
-  'user/loginWeb', 
+  "user/loginWeb",
   async (payload: any, thunkAPI) => {
     try {
-      const { email, password }: any = payload; 
-      const response = await apiAxiosInstance.post(`/auth/login`,{      
+      const { email, password }: any = payload;
+      const response = await apiAxiosInstance.post(`/auth/login`, {
         email,
         password,
       });
       if (typeof window !== "undefined") {
         localStorage.setItem("userToken", response.data.token);
       }
-      
-      return response.data;
+
+      return {
+        data: response.data,
+        status: response.status
+      };
     } catch (error: any) {
+      console.log("errror",error?.response?.data.message)
+      toast.error(error?.response?.data.message)
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
   }
 );
 
 export const fetchUserInfo = createAsyncThunk(
-  'user/fetchUserInfo',
+  "user/fetchUserInfo",
   async (token: string, thunkAPI) => {
+    console.log("Dispatching fetchUser");
     try {
-      const response = await apiAxiosInstance.get('/profile', {
+      const response = await apiAxiosInstance.get("/profile", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      return response.data.data;
+      return  response.data.data
+   
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
   }
 );
-
 
 export const listPositions = createAsyncThunk(
-  'user/listPositions',
+  "user/listPositions",
   async (_, thunkAPI) => {
+    console.log("Dispatching listPositions API");
     try {
-      const response = await apiAxiosInstance.get('/positions');
-      return response.data.data.positions;
+      const response = await apiAxiosInstance.get("/positions");
+      console.log("API response", response.data);
+      return  response.data.data.positions
     } catch (error: any) {
+      console.log("API error", error);
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
   }
 );
 
+
 export const listDepartments = createAsyncThunk(
-  'user/listDepartments',
+  "user/listDepartments",
   async (_, thunkAPI) => {
+    console.log("Dispatching departmane");
     try {
-      const response = await apiAxiosInstance.get('/departments');
-      return response.data.data;
+      const response = await apiAxiosInstance.get("/departments");
+      return  response.data.data
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -63,15 +75,15 @@ export const listDepartments = createAsyncThunk(
 );
 
 export const personCareer = createAsyncThunk(
-  'user/personCareer',
+  "user/personCareer",
   async (token, thunkAPI) => {
     try {
-      const response = await apiAxiosInstance.get('/profile/careers', {
+      const response = await apiAxiosInstance.get("/profile/careers", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      return response.data;
+      return  response.data
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -79,16 +91,22 @@ export const personCareer = createAsyncThunk(
 );
 
 export const personTasks = createAsyncThunk(
-  'user/personTasks',
+  "user/personTasks",
   async (payload, thunkAPI) => {
     try {
-      const {page, limit, token}: any = payload
-      const response = await apiAxiosInstance.get(`/profile/tasks?page=${page}&limit=${limit}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      return response.data.data;
+      const { page, limit, token }: any = payload;
+      const response = await apiAxiosInstance.get(
+        `/profile/tasks?page=${page}&limit=${limit}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return {
+        data: response.data.data,
+        status: response.status
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -96,11 +114,14 @@ export const personTasks = createAsyncThunk(
 );
 
 export const listTypeTask = createAsyncThunk(
-  'user/listTypeTask',
+  "user/listTypeTask",
   async (_, thunkAPI) => {
     try {
-      const response = await apiAxiosInstance.get('/tasks/types');
-      return response.data;
+      const response = await apiAxiosInstance.get("/tasks/types");
+      return {
+        data: response.data,
+        status: response.status
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -108,11 +129,14 @@ export const listTypeTask = createAsyncThunk(
 );
 
 export const listTypePersonal = createAsyncThunk(
-  'user/listTypePersonal',
+  "user/listTypePersonal",
   async (_, thunkAPI) => {
     try {
-      const response = await apiAxiosInstance.get('/personal-requests/types');
-      return response.data;
+      const response = await apiAxiosInstance.get("/personal-requests/types");
+      return {
+        data: response.data,
+        status: response.status
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -120,16 +144,22 @@ export const listTypePersonal = createAsyncThunk(
 );
 
 export const personalRequest = createAsyncThunk(
-  'user/personalRequest',
+  "user/personalRequest",
   async (payload, thunkAPI) => {
     try {
-      const {page, limit, token}: any = payload
-      const response = await apiAxiosInstance.get(`/profile/personal-requests?page=${page}&limit=${limit}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      return response.data;
+      const { page, limit, token }: any = payload;
+      const response = await apiAxiosInstance.get(
+        `/profile/personal-requests?page=${page}&limit=${limit}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return {
+        data: response.data,
+        status: response.status
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -137,15 +167,18 @@ export const personalRequest = createAsyncThunk(
 );
 
 export const listAchievements = createAsyncThunk(
-  'user/listAchievements',
+  "user/listAchievements",
   async (token, thunkAPI) => {
     try {
-      const response = await apiAxiosInstance.get('/profile/achievements', {
+      const response = await apiAxiosInstance.get("/profile/achievements", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      return response.data;
+      return {
+        data: response.data,
+        status: response.status
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -153,15 +186,18 @@ export const listAchievements = createAsyncThunk(
 );
 
 export const listProjects = createAsyncThunk(
-  'user/listProjects',
+  "user/listProjects",
   async (token, thunkAPI) => {
     try {
-      const response = await apiAxiosInstance.get('/profile/projects', {
+      const response = await apiAxiosInstance.get("/profile/projects", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      return response.data;
+      return {
+        data: response.data,
+        status: response.status
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -169,15 +205,18 @@ export const listProjects = createAsyncThunk(
 );
 
 export const listCard = createAsyncThunk(
-  'user/listCard',
+  "user/listCard",
   async (token, thunkAPI) => {
     try {
-      const response = await apiAxiosInstance.get('/profile/apec-cards', {
+      const response = await apiAxiosInstance.get("/profile/apec-cards", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      return response.data;
+      return {
+        data: response.data,
+        status: response.status
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -185,11 +224,14 @@ export const listCard = createAsyncThunk(
 );
 
 export const listLink = createAsyncThunk(
-  'user/listLink',
+  "user/listLink",
   async (_, thunkAPI) => {
     try {
-      const response = await apiAxiosInstance.get('/profile/links');
-      return response.data;
+      const response = await apiAxiosInstance.get("/profile/links");
+      return {
+        data: response.data,
+        status: response.status
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -197,18 +239,18 @@ export const listLink = createAsyncThunk(
 );
 
 export const uploadAvatar = createAsyncThunk(
-  'user/uploadAvatar',
+  "user/uploadAvatar",
   async (payload: any, thunkAPI) => {
     try {
-      const { formData, token }: any = payload; 
+      const { formData, token }: any = payload;
 
       const response = await apiAxiosInstance.post(
         `/profile/avatar/uploads`,
-        formData, 
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
           },
         }
       );
@@ -220,8 +262,36 @@ export const uploadAvatar = createAsyncThunk(
   }
 );
 
+export const createRequestUser = createAsyncThunk(
+  "user/createRequestUser",
+  async (payload: any, thunkAPI) => {
+    try {
+      const { token, title, description, type_request_id }: any = payload;
+      const response = await apiAxiosInstance.post(
+        `/profile/personal-requests/create`,
+        {
+          title,
+          description,
+          type_request_id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return {
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
 export const getTypeAnnouncement = createAsyncThunk(
-  'announcement/getTypeAnnouncement',
+  "announcement/getTypeAnnouncement",
   async (_, thunkAPI) => {
     try {
       const response = await apiAxiosInstance.get('/notifications/types');
@@ -250,12 +320,11 @@ export const getListAnnouncement = createAsyncThunk(
   }
 );
 
-
 export const getTypeEvent = createAsyncThunk(
-  'event/getTypeEvent',
+  "event/getTypeEvent",
   async (_, thunkAPI) => {
     try {
-      const response = await apiAxiosInstance.get('/events/types');
+      const response = await apiAxiosInstance.get("/events/types");
       return {
         data: response.data,
         status: response.status,
@@ -283,14 +352,13 @@ export const getListEvent = createAsyncThunk(
             Authorization: `Bearer ${token}`,
           },
         });
-        
+
         return {
           data: response.data,
           status: response.status,
-        }
-          
-      }else{
-        const response = await apiAxiosInstance.get('/events/employees');
+        };
+      } else {
+        const response = await apiAxiosInstance.get("/events/employees");
         return response;
       }
     } catch (error: any) {
@@ -300,14 +368,13 @@ export const getListEvent = createAsyncThunk(
 );
 
 export const eventReminder = createAsyncThunk(
-  'event/eventReminder',
+  "event/eventReminder",
   async (payload: any, thunkAPI) => {
     try {
-      const { id, event_id, token }: any = payload; 
+      const { id, event_id, token }: any = payload;
 
       const params = Object.fromEntries(
-        Object.entries({ id, event_id })
-            .filter(([key, value]) => value != null) 
+        Object.entries({ id, event_id }).filter(([key, value]) => value != null)
       );
       
       const response = await apiAxiosInstance.put(
@@ -342,28 +409,23 @@ export const eventReminder = createAsyncThunk(
 );
 
 export const eventRegister = createAsyncThunk(
-  'event/eventRegister',
+  "event/eventRegister",
   async (payload: any, thunkAPI) => {
     try {
-      const { id, event_id, token }: any = payload; 
-      console.log("id, event_id",id, event_id, payload);
-      
+      const { id, event_id, token }: any = payload;
+      console.log("id, event_id", id, event_id, payload);
+
       const params = Object.fromEntries(
-        Object.entries({ id, event_id })
-            .filter(([key, value]) => value != null) 
+        Object.entries({ id, event_id }).filter(([key, value]) => value != null)
       );
 
-      const response = await apiAxiosInstance.post(
-        `/events/register`,
-        null,
-        {
-          params,
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
+      const response = await apiAxiosInstance.post(`/events/register`, null, {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       return {
         data: response.data,

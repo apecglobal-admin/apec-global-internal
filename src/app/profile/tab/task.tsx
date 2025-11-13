@@ -1,3 +1,4 @@
+import { useProfileData } from "@/src/hooks/profileHook";
 import { listTypeTask, personTasks } from "@/src/services/api";
 import {
   Calendar,
@@ -80,7 +81,7 @@ interface TypeTask {
 
 function TasksTab() {
   const dispatch = useDispatch();
-  const { tasks, typeTask } = useSelector((state: any) => state.user);
+  const { tasks, typeTask } = useProfileData();
   const [page] = useState(1);
   const [limit] = useState(100);
 

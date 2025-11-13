@@ -1,5 +1,24 @@
-import { listTypePersonal, personalRequest } from "@/src/services/api";
-import { AlertCircle, ArrowRightLeft, Calendar, CheckCircle2, Clock, DollarSign, FileText, Lightbulb, Plus, Target, XCircle, Filter } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
+import { useProfileData } from "@/src/hooks/profileHook";
+import {
+  createRequestUser,
+  listTypePersonal,
+  personalRequest,
+} from "@/src/services/api";
+import {
+  AlertCircle,
+  ArrowRightLeft,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  DollarSign,
+  FileText,
+  Lightbulb,
+  Plus,
+  Target,
+  XCircle,
+  Filter,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -37,12 +56,19 @@ interface PersonalTabProps {
 
 function PersonalTab({ userInfo }: PersonalTabProps) {
   const dispatch = useDispatch();
-  const { typePersonal, personals } = useSelector((state: any) => state.user);
+  const { typePersonal, personals } = useProfileData();
 
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
-  const [showNewRequestModal, setShowNewRequestModal] = useState<boolean>(false);
+  const [showNewRequestModal, setShowNewRequestModal] =
+    useState<boolean>(false);
   const [showFilters, setShowFilters] = useState<boolean>(false);
+  const [selectedType, setSelectedType] = useState<any>(null);
+  const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
+  const [newRequest, setNewRequest] = useState({
+    title: "",
+    description: "",
+  });
   const [page] = useState(1);
   const [limit] = useState(100);
 
@@ -112,17 +138,17 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
 
   // Toggle filter
   const toggleType = (typeId: string) => {
-    setSelectedTypes(prev =>
+    setSelectedTypes((prev) =>
       prev.includes(typeId)
-        ? prev.filter(id => id !== typeId)
+        ? prev.filter((id) => id !== typeId)
         : [...prev, typeId]
     );
   };
 
   const toggleStatus = (statusName: string) => {
-    setSelectedStatuses(prev =>
+    setSelectedStatuses((prev) =>
       prev.includes(statusName)
-        ? prev.filter(name => name !== statusName)
+        ? prev.filter((name) => name !== statusName)
         : [...prev, statusName]
     );
   };
@@ -132,7 +158,7 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
     ...(typePersonal || []).map((type: any) => ({
       id: `type-${type.id}`,
       label: type.name,
-      type: 'type',
+      type: "type",
       value: String(type.id),
       icon: getTypeIconLarge(type.name),
       count: (personals || []).filter(
@@ -144,7 +170,7 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
       return {
         id: `status-${statusName}`,
         label: statusName,
-        type: 'status',
+        type: "status",
         value: statusName,
         icon: config.icon,
         color: config.color,
@@ -173,12 +199,40 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
   // Sort by date
   const sortedRequests = [...filteredRequests].sort(
     (a, b) =>
-      new Date(a.date_request).getTime() - new Date(b.date_request).getTime()
+      new Date(b.date_request).getTime() - new Date(a.date_request).getTime()
   );
 
   const clearFilters = () => {
     setSelectedTypes([]);
     setSelectedStatuses([]);
+  };
+
+  const handleSubmitNewRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const payload = {
+      token: localStorage.getItem("userToken"),
+      title: newRequest.title,
+      description: newRequest.description,
+      type_request_id: selectedType.id,
+    };
+
+    try {
+      const res = await dispatch(createRequestUser(payload as any) as any);
+      console.log("res", res);
+
+      if (res.payload.status == 200 || res.payload.status == 201) {
+        toast(res.payload.data.message);
+        await dispatch(personalRequest(payload as any) as any);
+        console.log("thành công")
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    // Reset form và đóng modal
+    setNewRequest({ title: "", description: "" });
+    setShowCreateModal(false);
+    setSelectedType(null);
   };
 
   const activeFilterCount = selectedTypes.length + selectedStatuses.length;
@@ -224,25 +278,26 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
               className="md:hidden px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition text-xs font-medium flex items-center gap-1.5"
             >
               <Filter size={14} />
-              {showFilters ? 'Ẩn' : 'Hiện'}
+              {showFilters ? "Ẩn" : "Hiện"}
             </button>
           </div>
         </div>
 
         {/* Filters - Always show on desktop, toggle on mobile */}
-        <div className={`${showFilters ? 'block' : 'hidden'} md:block`}>
+        <div className={`${showFilters ? "block" : "hidden"} md:block`}>
           <div className="flex flex-wrap gap-2">
             {allFilters.map((filter: any) => {
               const Icon = filter.icon;
-              const isSelected = filter.type === 'type'
-                ? selectedTypes.includes(filter.value)
-                : selectedStatuses.includes(filter.value);
+              const isSelected =
+                filter.type === "type"
+                  ? selectedTypes.includes(filter.value)
+                  : selectedStatuses.includes(filter.value);
 
               return (
                 <button
                   key={filter.id}
                   onClick={() => {
-                    if (filter.type === 'type') {
+                    if (filter.type === "type") {
                       toggleType(filter.value);
                     } else {
                       toggleStatus(filter.value);
@@ -254,11 +309,13 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
                       : "bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-600 hover:text-white"
                   }`}
                 >
-                  <div className={`w-3 h-3 rounded border flex items-center justify-center ${
-                    isSelected
-                      ? "bg-white/20 border-current"
-                      : "border-slate-600"
-                  }`}>
+                  <div
+                    className={`w-3 h-3 rounded border flex items-center justify-center ${
+                      isSelected
+                        ? "bg-white/20 border-current"
+                        : "border-slate-600"
+                    }`}
+                  >
                     {isSelected && (
                       <svg className="w-2 h-2" viewBox="0 0 12 12" fill="none">
                         <path
@@ -273,14 +330,16 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
                   </div>
                   <Icon size={14} />
                   {filter.label}
-                  <span className={`${isSelected ? 'opacity-80' : 'opacity-60'}`}>
+                  <span
+                    className={`${isSelected ? "opacity-80" : "opacity-60"}`}
+                  >
                     ({filter.count})
                   </span>
                 </button>
               );
             })}
           </div>
-          
+
           {/* Mobile clear filters button */}
           {activeFilterCount > 0 && (
             <button
@@ -295,7 +354,9 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
 
       {/* Results count */}
       <div className="text-sm text-slate-400">
-        Hiển thị <span className="text-white font-medium">{sortedRequests.length}</span> / {(personals || []).length} yêu cầu
+        Hiển thị{" "}
+        <span className="text-white font-medium">{sortedRequests.length}</span>{" "}
+        / {(personals || []).length} yêu cầu
       </div>
 
       {/* List */}
@@ -314,7 +375,8 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
             )}
           </div>
         ) : (
-          sortedRequests.map((request: any) => {
+          sortedRequests
+          .map((request: any) => {
             const statusName = request.status_requests?.name || "Chờ xử lý";
             const status =
               statusConfig[statusName as keyof typeof statusConfig] ||
@@ -424,6 +486,11 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
                 return (
                   <button
                     key={type.id}
+                    onClick={() => {
+                      setSelectedType(type);
+                      setShowNewRequestModal(false);
+                      setShowCreateModal(true);
+                    }}
                     className="p-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-blue-500 rounded-lg transition text-left"
                   >
                     <Icon size={24} className="text-blue-400 mb-2" />
@@ -443,6 +510,64 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
             >
               Đóng
             </button>
+          </div>
+        </div>
+      )}
+      {showCreateModal && selectedType && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-white mb-4">
+              Tạo yêu cầu {selectedType.name}
+            </h3>
+
+            <form onSubmit={handleSubmitNewRequest} className="space-y-3">
+              <div>
+                <label className="text-sm text-slate-400">Tiêu đề</label>
+                <input
+                  type="text"
+                  value={newRequest.title}
+                  onChange={(e) =>
+                    setNewRequest({ ...newRequest, title: e.target.value })
+                  }
+                  className="w-full mt-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm focus:border-blue-500 outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-slate-400">Mô tả</label>
+                <textarea
+                  value={newRequest.description}
+                  onChange={(e) =>
+                    setNewRequest({
+                      ...newRequest,
+                      description: e.target.value,
+                    })
+                  }
+                  className="w-full mt-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm focus:border-blue-500 outline-none"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setSelectedType(null);
+                  }}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition text-sm font-medium"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm font-medium"
+                >
+                  Gửi yêu cầu
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

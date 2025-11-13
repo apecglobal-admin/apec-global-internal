@@ -5,26 +5,27 @@ import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
 
 export default function LoginPage() {
   const dispatch = useDispatch();
   const router = useRouter();
-  const {status, error} = useSelector((state: any) => state.user);
+  const { status, error } = useSelector((state: any) => state.user);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
-  // useEffect(() => {
-  //   if (status === "succeeded") {
-  //     const token = localStorage.getItem("userToken");
-  //     if(token) {
-  //       dispatch(fetchUserInfo(token as any) as any);
-  //     }
-  //     router.push("/");
-  //   } else if (status === "failed" && error) {
-  //     alert(error);
-  //   }
-  // }, [status]);
+
+  useEffect(() => {
+    if (status === "succeeded") {
+      const token = localStorage.getItem("userToken");
+      if (token) {
+        dispatch(fetchUserInfo(token as any) as any);
+      }
+      router.push("/");
+    } else if (status === "failed" && error) {
+      alert(error);
+    }
+  }, [status]);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -36,12 +37,13 @@ export default function LoginPage() {
       };
 
       const res = await dispatch(loginWeb(payload) as any);
-
-      console.log(res);
-      
-
-    } catch (error) {
-      console.error("Đăng nhập thất bại:", error);
+      if (res.payload.status == 200 || res.payload.status == 201) {
+        localStorage.setItem("userToken", res.payload.data.token);
+        router.push("/");
+        toast.success(res.payload.data.message);
+      }
+    } catch (error: any) {
+      console.error("error", error);
     }
   };
 
@@ -65,7 +67,9 @@ export default function LoginPage() {
 
         <div className="rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-xl p-8 shadow-2xl">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Đăng nhập</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">
+              Đăng nhập
+            </h2>
             <p className="text-sm text-slate-600">Chào mừng bạn quay trở lại</p>
           </div>
 

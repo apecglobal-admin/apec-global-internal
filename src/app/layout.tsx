@@ -5,8 +5,8 @@ import './globals.css'
 import { Providers } from '../lib/provider';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
-import FooterWrapper from './footerWrapper';
 import ConditionalLayout from './conditionalLayout';
+import { ToastContainer } from 'react-toastify';
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -25,6 +25,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans antialiased`}>
+        <ToastContainer
+          position="top-right"   // Vị trí hiển thị toast
+          autoClose={3000}       // 3 giây tự động ẩn
+          hideProgressBar={false}
+          newestOnTop={true}     // Toast mới ở trên cùng
+          closeOnClick
+          pauseOnHover
+          draggable
+          toastClassName="!text-lg !px-6 !py-4 !min-w-[400px] !rounded-lg"   // chỉnh kích thước toast
+          className="!text-base font-medium"  
+      />
         <Providers>
             <ConditionalLayout>{children}</ConditionalLayout>
         </Providers>
