@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
     BellRing,
     Calendar,
@@ -13,76 +13,22 @@ import {
 } from "lucide-react";
 import { colorClasses, colorMap } from "@/src/utils/color";
 import CalendarDefault from "@/components/event/calendarDefault";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import {
+    eventRegister,
+    eventReminder,
+    getListEvent,
+    getTypeEvent,
+} from "@/src/services/api";
+
+import { formatDate, formatMonthYearVN } from "@/src/utils/formatDate";
 
 const eventStats = [
     { value: "24", label: "Sự kiện 2025", subLabel: "Đã xác nhận lịch" },
     { value: "8", label: "Đang mở đăng ký", subLabel: "Nội bộ & đối ngoại" },
     { value: "640", label: "Người tham gia", subLabel: "Dự kiến cập nhật" },
     { value: "92%", label: "Tỷ lệ phản hồi", subLabel: "Sau sự kiện" },
-];
-
-const allEvents = [
-    {
-        id: 1,
-        name: "Đào tạo lãnh đạo trẻ",
-        date: "2025-11-05",
-        time: "08:30",
-        type: "internal",
-        location: "Phòng Innovation Lab",
-        description: "Chương trình coaching dành cho 40 quản lý tiềm năng",
-        reminder: true,
-    },
-    {
-        id: 2,
-        name: "ApecGlobal Innovation Summit",
-        date: "2025-11-15",
-        time: "13:00",
-        type: "external",
-        location: "Apec Tower",
-        description:
-            "Sự kiện ra mắt giải pháp công nghệ và ký kết đối tác chiến lược",
-        reminder: true,
-    },
-    {
-        id: 3,
-        name: "Team Building Khối Công nghệ",
-        date: "2025-11-22",
-        time: "07:30",
-        type: "internal",
-        location: "Khu du lịch Đại Lải",
-        description: "Hoạt động gắn kết và cập nhật chiến lược sản phẩm 2026",
-        reminder: false,
-    },
-    {
-        id: 4,
-        name: "Hội nghị Ban lãnh đạo Q4",
-        date: "2025-12-10",
-        time: "09:00",
-        type: "internal",
-        location: "Phòng họp Tầng 15",
-        description: "Tổng kết năm 2025 và định hướng chiến lược 2026",
-        reminder: true,
-    },
-    {
-        id: 5,
-        name: "Apec Year End Party",
-        date: "2025-12-28",
-        time: "18:00",
-        type: "internal",
-        location: "Grand Ballroom, JW Marriott",
-        description: "Tiệc tất niên và trao giải thưởng xuất sắc năm 2025",
-        reminder: true,
-    },
-    {
-        id: 6,
-        name: "Workshop AI & Automation",
-        date: "2025-10-18",
-        time: "14:00",
-        type: "internal",
-        location: "Online - Zoom",
-        description: "Chia sẻ kinh nghiệm triển khai AI trong doanh nghiệp",
-        reminder: false,
-    },
 ];
 
 const pastEvents = [
@@ -123,22 +69,6 @@ const timelineHighlights = [
     },
 ];
 
-const WEEKDAYS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
-const MONTHS = [
-    "Tháng 1",
-    "Tháng 2",
-    "Tháng 3",
-    "Tháng 4",
-    "Tháng 5",
-    "Tháng 6",
-    "Tháng 7",
-    "Tháng 8",
-    "Tháng 9",
-    "Tháng 10",
-    "Tháng 11",
-    "Tháng 12",
-];
-
 type EventType = "internal" | "external" | "all";
 
 const eventTypes: any = [
@@ -147,104 +77,125 @@ const eventTypes: any = [
     { key: "external", label: "Đối ngoại" },
 ];
 
+const navEvent = [
+    { label: "Tất cả", value: "all" },
+    { label: "Nội bộ", value: "internal" },
+    { label: "Đối ngoại", value: "external" },
+];
+
+const initialRemind: Record<string, boolean> = {};
+
 export default function EventsPage() {
-    const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 1)); // November 2025
+    const dispatch = useDispatch();
+    const { listEvent, typeEvent, reminder } = useSelector(
+        (state: any) => state.event
+    );
+
     const [activeType, setActiveType] = useState<EventType>("all");
+    const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+    const [currentDate, setCurrentDate] = useState(new Date()); // November 2025
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
-    const [reminders, setReminders] = useState<Record<number, boolean>>(() => {
-        // Khởi tạo trạng thái reminder từ dữ liệu ban đầu
-        const initial: Record<number, boolean> = {};
-        allEvents.forEach((event) => {
-            initial[event.id] = event.reminder;
-        });
-        return initial;
-    });
+    const [reminders, setReminders] = useState<Record<string, boolean>>({});
 
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
+    const [visibleMonth, setVisibleMonth] = useState<string | null>(
+        formatMonthYearVN(new Date())
+    );
 
-    // Toggle reminder cho một sự kiện
-    const toggleReminder = (eventId: number) => {
-        setReminders((prev) => ({
-            ...prev,
-            [eventId]: !prev[eventId],
-        }));
-    };
+    // Lấy dữ liệu sự kiện từ API
 
-    // Kiểm tra xem sự kiện có reminder không
-    const hasReminder = (eventId: number) => {
-        return reminders[eventId] || false;
-    };
-
-    const goToPreviousMonth = () => {
-        setCurrentDate(new Date(currentYear, currentMonth - 1, 1));
-        setSelectedDate(null);
-    };
-
-    const goToNextMonth = () => {
-        setCurrentDate(new Date(currentYear, currentMonth + 1, 1));
-        setSelectedDate(null);
-    };
-
-    const getCalendarDays = () => {
-        const firstDay = new Date(currentYear, currentMonth, 1);
-        const lastDay = new Date(currentYear, currentMonth + 1, 0);
-        const daysInMonth = lastDay.getDate();
-        const startingDayOfWeek = firstDay.getDay();
-
-        const days = [];
-
-        // Empty cells before month starts
-        for (let i = 0; i < startingDayOfWeek; i++) {
-            days.push(null);
-        }
-
-        // Days of the month
-        for (let day = 1; day <= daysInMonth; day++) {
-            days.push(day);
-        }
-
-        return days;
-    };
-
-    const eventsMap = useMemo(() => {
-        const map: Record<string, typeof allEvents> = {};
-        allEvents.forEach((event) => {
-            const dateKey = event.date;
-            if (!map[dateKey]) {
-                map[dateKey] = [];
-            }
-            map[dateKey].push(event);
-        });
-        return map;
+    useEffect(() => {
+        const fetchTypes = async () => {
+            await dispatch(getTypeEvent() as any);
+        };
+        fetchTypes();
     }, []);
+    useEffect(() => {
+        const fetchEvents = async () => {
+            const token = localStorage.getItem("userToken");
+            const payload = {
+                token,
+                date: visibleMonth
+            };
+            await dispatch(getListEvent(payload) as any);
+            // if (token) {
+            // }
+        };
 
-    const getEventsForDate = (day: number) => {
-        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(
-            2,
-            "0"
-        )}-${String(day).padStart(2, "0")}`;
-        return eventsMap[dateStr] || [];
-    };
+        fetchEvents();
+    }, [visibleMonth]);
 
+    useEffect(() => {
+        const events = listEvent.data.calendar_events || [];
+    
+        const mapped = events.map((item: any) => ({
+            ...item,
+            date: item.date ? formatDate(item.date) : "",
+            type: item.event_type?.name === "Nội bộ" ? "internal" :
+                  item.event_type?.name === "Đối ngoại" ? "external" : "all",
+            location: item.address || "",
+        }));
+    
+        const newRemind: Record<string, boolean> = {};
+        mapped.forEach((e: any) => { newRemind[e.id] = e.isRemind; });
+    
+        setReminders(newRemind);
+        setUpcomingEvents(mapped);
+    }, [listEvent]);
+
+
+    // Lọc sự kiện theo loại + ngày
     const filteredEvents = useMemo(() => {
-        const monthEvents = allEvents.filter((event) => {
-            const eventDate = new Date(event.date);
-            return (
-                eventDate.getMonth() === currentMonth &&
-                eventDate.getFullYear() === currentYear
-            );
-        });
+        let events = upcomingEvents;
+
+        if (activeType !== "all") {
+            events = events.filter((event) => event.type === activeType);
+        }
 
         if (selectedDate) {
-            return monthEvents.filter((e) => e.date === selectedDate);
+            events = events.filter((event) => event.date === selectedDate);
         }
 
-        if (activeType === "all") return monthEvents;
-        return monthEvents.filter((event) => event.type === activeType);
-    }, [currentMonth, currentYear, activeType, selectedDate]);
+        return events;
+    }, [activeType, upcomingEvents, selectedDate]);
 
-    const calendarDays = getCalendarDays();
+
+    const handleMonthChange = async (date: Date) => {
+        const format = formatMonthYearVN(date);
+        setVisibleMonth(format);
+        setSelectedDate(null);
+    };
+
+
+    const toggleEventReminder = async (eventId: number) => {
+        const token = localStorage.getItem("userToken");
+        if (!token) {
+            toast.warning("bạn cần đăng nhập để thực hiện");
+            return;
+        }
+
+        try {
+            const payload = { event_id: eventId, token };
+
+            const res = await dispatch(eventReminder(payload) as any);
+            if (res.payload.status === 200) {
+                dispatch(getListEvent(payload) as any);
+            } else {
+                toast.warning(res.payload.data.message);
+            }
+        } catch (error) {}
+    };
+
+    const handleEventRegister = async (id: number) => {
+        const token = localStorage.getItem("userToken");
+        if (!token) return;
+
+        const payload = { event_id: id, token };
+        const res = await dispatch(eventRegister(payload) as any);
+
+        if (res.payload.status === 201) {
+            dispatch(getListEvent(payload) as any);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
@@ -256,7 +207,7 @@ export default function EventsPage() {
                         Sự kiện
                     </div>
                     <div className="space-y-3">
-                        <h1 className="text-3xl font-bold text-blue-950 sm:text-4xl lg:text-5xl">
+                        <h1 className="text-3xl font-bold text-blue-main capitallize sm:text-4xl lg:text-5xl">
                             Lịch sự kiện nội bộ & đối ngoại
                         </h1>
                         <p className="max-w-3xl text-sm text-black sm:text-base">
@@ -277,15 +228,17 @@ export default function EventsPage() {
                         return (
                             <div
                                 key={stat.label}
-                                className="group rounded-2xl border border-slate-700/80 border-l-6 bg-gray-200 p-5 shadow-inner shadow-black/10 transition"
+                                className="group rounded-2xl bg-blue-gradiant-main border-l-6 bg-white p-5 shadow-inner shadow-black/10  transition"
                                 style={{
                                     borderLeftColor: borderColor,
+                                    boxShadow: "0 0 10px rgba(0, 0, 0, 0.3)",
+                                    
                                 }}
                                 onMouseEnter={(e) =>
                                     (e.currentTarget.style.boxShadow = `0 0 20px ${borderColor}80`)
                                 }
                                 onMouseLeave={(e) =>
-                                    (e.currentTarget.style.boxShadow = `inset 0 0 10px rgba(0,0,0,0.1)`)
+                                    (e.currentTarget.style.boxShadow = `0 0 10px rgba(0, 0, 0, 0.3)`)
                                 }
                             >
                                 <div className="flex items-start justify-between">
@@ -300,7 +253,7 @@ export default function EventsPage() {
                                         >
                                             {stat.label}
                                         </div>
-                                        <div className="text-sm text-black/70">
+                                        <div className="text-sm text-black">
                                             {stat.subLabel}
                                         </div>
                                     </div>
@@ -310,191 +263,57 @@ export default function EventsPage() {
                     })}
                 </div>
 
-                {/* Filters */}
-                <div className="mb-6 rounded-3xl border border-gray-400 bg-gray-200 p-5 shadow-lg shadow-blue-500/10 inset-shadow-sm inset-shadow-black/10">
+                {/* Bộ lọc */}
+                <div
+                    className="mt-8 rounded-3xl bg-blue-gradiant-main bg-box-shadow p-5 shadow-lg shadow-blue-500/10"
+                >
                     <div className="text-xs font-semibold uppercase tracking-widest text-black">
                         Lọc theo loại sự kiện
                     </div>
                     <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                        {/* ✅ Render tự động */}
-                        {eventTypes.map((type: any) => (
+                        {navEvent.map((btn) => (
                             <button
-                                key={type.key}
+                                key={btn.value}
                                 onClick={() => {
-                                    setActiveType(type.key);
+                                    setActiveType(btn.value as EventType);
                                     setSelectedDate(null);
                                 }}
-                                className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition ${
-                                    activeType === type.key
+                                className={`rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-widest transition ${
+                                    activeType === btn.value
                                         ? "bg-active-blue-metallic"
-                                        : "border border-gray-400 bg-gray-300 text-gray-400 hover:border-blue-500 hover:text-white"
+                                        : "border border-slate-400 bg-white text-slate-400 hover:border-teal-500"
                                 }`}
                             >
-                                {type.label}
+                                {btn.label}
                             </button>
                         ))}
                     </div>
                 </div>
 
-                <div className="grid gap-6 lg:grid-cols-[1fr_1.5fr]">
-                    {/* Calendar Section */}
-                    {/* <div className="space-y-4">
-                        <div className="rounded-3xl border border-slate-800 bg-gray-400 p-5 sm:p-6">
-                            <div className="flex items-center justify-between">
-                                <button
-                                    onClick={goToPreviousMonth}
-                                    className="rounded-lg p-2 text-black transition hover:bg-slate-800 hover:text-white"
-                                >
-                                    <ChevronLeft size={20} />
-                                </button>
-                                <div className="text-center">
-                                    <div className="text-lg font-semibold text-white">
-                                        {MONTHS[currentMonth]}
-                                    </div>
-                                    <div className="text-sm text-blue-600 font-bold">
-                                        {currentYear}
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={goToNextMonth}
-                                    className="rounded-lg p-2 text-black transition hover:bg-slate-800 hover:text-white"
-                                >
-                                    <ChevronRight size={20} />
-                                </button>
-                            </div>
-
-                            <div className="mt-4 grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-widest text-white">
-                                {WEEKDAYS.map((day) => (
-                                    <div key={day}>{day}</div>
-                                ))}
-                            </div>
-
-                            <div className="mt-2 grid grid-cols-7 gap-2">
-                                {calendarDays.map((day, index) => {
-                                    if (!day) {
-                                        return (
-                                            <div
-                                                key={`empty-${index}`}
-                                                className="aspect-square"
-                                            />
-                                        );
-                                    }
-
-                                    const events = getEventsForDate(day);
-                                    const hasInternal = events.some(
-                                        (e) => e.type === "internal"
-                                    );
-                                    const hasExternal = events.some(
-                                        (e) => e.type === "external"
-                                    );
-                                    const hasReminderActive = events.some((e) =>
-                                        hasReminder(e.id)
-                                    );
-                                    const dateStr = `${currentYear}-${String(
-                                        currentMonth + 1
-                                    ).padStart(2, "0")}-${String(day).padStart(
-                                        2,
-                                        "0"
-                                    )}`;
-                                    const isSelected = selectedDate === dateStr;
-
-                                    let bgClass =
-                                        "bg-gray-300 text-slate-400";
-                                    if (hasInternal && hasExternal) {
-                                        bgClass =
-                                            "bg-gradient-to-br from-blue-500/30 to-emerald-500/30 text-white border-blue-400";
-                                    } else if (hasInternal) {
-                                        bgClass =
-                                            "bg-blue-500 text-blue-100 border-blue-500";
-                                    } else if (hasExternal) {
-                                        bgClass =
-                                            "bg-emerald-500 text-emerald-100 border-emerald-500";
-                                    }
-
-                                    return (
-                                        <button
-                                            key={day}
-                                            onClick={() =>
-                                                setSelectedDate(dateStr)
-                                            }
-                                            className={`relative aspect-square rounded-lg border transition hover:scale-105 ${bgClass} ${
-                                                isSelected
-                                                    ? "ring-2 ring-blue-400 ring-offset-2 "
-                                                    : "border-transparent"
-                                            } ${
-                                                events.length > 0
-                                                    ? "cursor-pointer"
-                                                    : "cursor-default"
-                                            }`}
-                                        >
-                                            <span className="text-sm font-medium text-black">
-                                                {day}
-                                            </span>
-                                            {hasReminderActive && (
-                                                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-orange-400 animate-pulse"></span>
-                                            )}
-                                            {events.length > 1 && (
-                                                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[10px] text-slate-300">
-                                                    {events.length}
-                                                </span>
-                                            )}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            <div className="mt-4 space-y-2 text-xs text-white">
-                                <div className="flex items-center gap-2">
-                                    <span className="h-3 w-3 rounded-full bg-blue-500"></span>
-                                    <span>Sự kiện nội bộ</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="h-3 w-3 rounded-full bg-emerald-500"></span>
-                                    <span>Sự kiện đối ngoại</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="h-3 w-3 rounded-full bg-orange-400"></span>
-                                    <span>Có nhắc nhở tự động</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="rounded-3xl border border-slate-800 bg-slate-950/60 p-5 text-xs text-slate-400 shadow-lg shadow-blue-500/10">
-                            <div className="text-xs font-semibold uppercase tracking-widest text-blue-300">
-                                Gợi ý điều phối
-                            </div>
-                            <p className="mt-2 leading-relaxed">
-                                Kết hợp bộ lọc với calendar để kiểm tra công tác
-                                chuẩn bị, gửi thư mời và cập nhật media ngay sau
-                                sự kiện.
-                            </p>
-                            <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-blue-500/30 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-blue-200 transition hover:border-blue-500 hover:text-white">
-                                <BellRing size={14} />
-                                Tạo nhắc nhở mới
-                            </button>
-                        </div>
-                    </div> */}
-
-                    <div className="space-y-4">
+                <div className="grid gap-6 lg:grid-cols-[1fr_1.5fr] mt-7">
+                    {/* Calendar */}
+                    <div className="space-y-4 py-3">
                         <CalendarDefault
-                            events={allEvents}
+                            events={upcomingEvents}
                             selectedDate={selectedDate}
                             onDateSelect={setSelectedDate}
+                            onMonthChange={handleMonthChange}
                             allowNavigation={true}
-                            initialDate={currentDate}
+                            initialDate={new Date()}
                             showLegend={true}
                             reminders={reminders}
                         />
                     </div>
-                    {/* Events List Section */}
-                    <div className="space-y-4">
+
+                    {/* Danh sách sự kiện */}
+                    <div className="space-y-5">
                         {selectedDate && (
                             <div className="rounded-2xl border border-blue-500/50 bg-blue-500/10 p-4">
                                 <div className="flex items-center justify-between">
                                     <div className="text-sm font-semibold text-blue-500">
                                         Sự kiện ngày{" "}
                                         {new Date(selectedDate).getDate()}/
-                                        {currentMonth + 1}/{currentYear}
+                                        {visibleMonth}
                                     </div>
                                     <button
                                         onClick={() => setSelectedDate(null)}
@@ -506,26 +325,24 @@ export default function EventsPage() {
                             </div>
                         )}
 
-                        {filteredEvents.length === 0 ? (
-                            <div className="py-16 text-center">
-                                <Calendar
-                                    size={48}
-                                    className="mx-auto text-slate-600"
-                                />
-                                <p className="mt-4 text-black">
-                                    Không có sự kiện trong ngày này
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {filteredEvents.map((event) => (
+                        <div className="max-h-[600px] px-5 py-3 overflow-y-auto space-y-5">
+                            {filteredEvents.length === 0 ? (
+                                <div className="py-16 text-center">
+                                    <Calendar
+                                        size={48}
+                                        className="mx-auto text-slate-600"
+                                    />
+                                    <p className="mt-4 text-black">
+                                        Không có sự kiện trong ngày này
+                                    </p>
+                                </div>
+                            ) : (
+                                filteredEvents.map((event) => (
                                     <div
                                         key={event.id}
-                                        style={{
-                                            border: "2px solid rgb(168, 167, 167)",
-                                        }}
-                                        className="flex flex-col gap-6 rounded-3xl border border-slate-800 bg-gray-200 p-5 sm:p-6 transition hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/10"
+                                        className="flex flex-col gap-6 rounded-3xl  bg-box-shadow  sm:p-6 transition hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/10"
                                     >
+                                        {/* Nội dung event */}
                                         <div className="space-y-4">
                                             <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-widest">
                                                 <span className="flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-700/80 px-3 py-1 text-white">
@@ -558,34 +375,55 @@ export default function EventsPage() {
 
                                             <div className="space-y-3">
                                                 <h3 className="text-xl font-semibold text-black">
-                                                    {event.name}
+                                                    {event.title}
                                                 </h3>
                                                 <p className="text-sm text-black/70">
                                                     {event.description}
                                                 </p>
-                                                <p className="flex items-center gap-2 text-xs uppercase tracking-widest text-black/70">
-                                                    <MapPin
-                                                        size={14}
-                                                        className="text-blue-700"
-                                                    />{" "}
-                                                    Địa điểm: {event.location}
-                                                </p>
+                                                {event.location && (
+                                                    <p className="flex items-center gap-2 text-xs uppercase tracking-widest text-black/70">
+                                                        <MapPin
+                                                            size={14}
+                                                            className="text-blue-700"
+                                                        />{" "}
+                                                        Địa điểm:{" "}
+                                                        {event.location}
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
 
                                         {/* Hành động */}
                                         <div className="flex w-full flex-wrap gap-3 text-sm text-slate-300">
-                                            <button className="bg-active-blue-metallic flex-1 rounded-full bg-blue-600 px-5 py-2 font-semibold uppercase tracking-widest text-white transition hover:bg-blue-500">
-                                                Đăng ký tham gia
-                                            </button>
+                                            {!event.isSubmit && (
+                                                <button
+                                                    onClick={() =>
+                                                        handleEventRegister(
+                                                            event.id
+                                                        )
+                                                    }
+                                                    className="bg-active-blue-metallic flex-1 rounded-full bg-blue-600 px-5 py-2 font-semibold uppercase tracking-widest text-white transition hover:bg-blue-500"
+                                                >
+                                                    Đăng ký tham gia
+                                                </button>
+                                            )}
+
+                                            {event.isSubmit && (
+                                                <button className="flex-1 rounded-full bg-blue-600 px-5 py-2 font-semibold uppercase tracking-widest text-white transition hover:bg-blue-500">
+                                                    Bạn đã đăng ký
+                                                </button>
+                                            )}
+
                                             <button
                                                 onClick={() =>
-                                                    toggleReminder(event.id)
+                                                    toggleEventReminder(
+                                                        event.id
+                                                    )
                                                 }
                                                 className={`flex-1 rounded-full px-5 py-2 font-semibold uppercase tracking-widest transition ${
                                                     reminders[event.id]
                                                         ? "bg-orange-500/70  text-white hover:bg-orange-500/30"
-                                                        : "bg-gray-400/40 border border-gray-500 text-gray-500 hover:border-blue-500 hover:text-white"
+                                                        : "bg-gray-400/30 border border-gray-500 text-gray-500 hover:border-blue-500 hover:text-white"
                                                 }`}
                                             >
                                                 {reminders[event.id]
@@ -594,12 +432,12 @@ export default function EventsPage() {
                                             </button>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        )}
+                                ))
+                            )}
+                        </div>
 
-                        {/* Timeline Highlights */}
-                        <div className="rounded-3xl border border-slate-800 bg-gray-200 p-5 sm:p-6">
+                         {/* Timeline Highlights */}
+                         <div className="rounded-3xl bg-box-shadow bg-blue-gradiant-main p-5 sm:p-6">
                             <div className="text-xs font-extrabold uppercase tracking-[0.4em] text-blue-700 sm:text-sm">
                                 Điểm nhấn timeline
                             </div>
@@ -607,7 +445,7 @@ export default function EventsPage() {
                                 {timelineHighlights.map((item) => (
                                     <div
                                         key={item.title}
-                                        className="rounded-2xl border border-slate-800 bg-white p-4"
+                                        className="rounded-2xl bg-box-shadow-inset bg-white p-4"
                                     >
                                         <div className="flex items-center justify-between gap-2">
                                             <div>
@@ -630,7 +468,7 @@ export default function EventsPage() {
                         </div>
 
                         {/* Past Events */}
-                        <div className="rounded-3xl border border-slate-800 bg-gray-200 p-5 sm:p-6">
+                        {/* <div className="rounded-3xl border border-slate-500 bg-[#e5f8ff] p-5 sm:p-6">
                             <div className="text-xs font-extrabold uppercase tracking-[0.4em] text-blue-700 sm:text-sm">
                                 Thư viện sự kiện
                             </div>
@@ -656,7 +494,8 @@ export default function EventsPage() {
                                     </a>
                                 ))}
                             </div>
-                        </div>
+                        </div> */}
+
                     </div>
                 </div>
             </div>

@@ -132,13 +132,15 @@ const ecosystemData = {
 
 export default function AdditionalSection() {
     return (
-        <section className="rounded-2xl bg-gray-200 p-6 sm:p-7 lg:p-8">
+        <section 
+        style={{boxShadow: "inset 0 0 10px rgba(122, 122, 122, 0.5)"}}
+        className="relative overflow-hidden rounded-2xl bg-white p-6 sm:p-8">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                     <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-950 sm:text-sm">
                     Các mục bổ sung
                     </div>
-                    <h2 className="mt-2 text-2xl font-extrabold text-blue-950 sm:text-3xl">
+                    <h2 className="mt-2 text-2xl font-extrabold text-blue-main capitalize sm:text-3xl">
                     Hệ sinh thái hỗ trợ nội bộ
                     </h2>
                     <p className="mt-2 text-sm text-black">
@@ -150,7 +152,7 @@ export default function AdditionalSection() {
             </div>
             <div className="mt-6 grid gap-5 sm:gap-6 xl:grid-cols-2">
                 {/* Trung tâm đào tạo */}
-                <div className="rounded-2xl border border-slate-800 bg-gray-300 p-5 sm:p-6">
+                <div className="rounded-2xl bg-blue-gradiant-main bg-box-shadow p-5 sm:p-6">
                     <div className="flex items-center">
                         <div
                             className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${ecosystemData.trainingHub.gradient} shadow-lg`}
@@ -170,7 +172,7 @@ export default function AdditionalSection() {
                         {ecosystemData.trainingHub.resources.map((item) => (
                             <li
                                 key={item.title}
-                                className="flex flex-col gap-2 rounded-xl border border-slate-800 bg-white px-4 py-2 transition  hover:bg-gray-400/40 sm:flex-row sm:items-center sm:justify-between"
+                                className="flex flex-col gap-2 rounded-xl bg-box-shadow-inset bg-white px-4 py-2 transition  hover:bg-gray-400/40 sm:flex-row sm:items-center sm:justify-between"
                             >
                                 <span className="text-black">{item.title}</span>
                                 <span className="text-xs uppercase tracking-widest text-black">
@@ -179,13 +181,13 @@ export default function AdditionalSection() {
                             </li>
                         ))}
                     </ul>
-                    <button className="mt-4 w-full rounded-full border border-slate-800 bg-blue-950 py-3 text-sm font-bold uppercase tracking-widest text-white transition hover:border-blue-800 hover:bg-blue-800 hover:text-white">
+                    <button className="mt-4 w-full rounded-full bg-box-shadow bg-[#97cadb] py-3 text-sm font-bold uppercase tracking-widest text-white transition hover:border-blue-800 hover:bg-[#7dc0d6] hover:text-white">
                         {ecosystemData.trainingHub.buttonText}
                     </button>
                 </div>
 
                 {/* Công cụ làm việc */}
-                <div className="rounded-2xl border border-slate-800 bg-gray-300 p-5 sm:p-6">
+                <div className="rounded-2xl bg-blue-gradiant-main bg-box-shadow p-5 sm:p-6">
                     <div className="flex items-center">
                         <div
                             className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${ecosystemData.workTools.gradient} shadow-lg`}
@@ -206,7 +208,7 @@ export default function AdditionalSection() {
                             <a
                                 key={tool.name}
                                 href="#"
-                                className="rounded-xl border border-slate-800 bg-white px-4 py-3 text-left text-sm text-slate-200 transition hover:border-blue-500/40 hover:bg-gray-400/50 hover:text-white"
+                                className="rounded-xl bg-box-shadow-inset bg-white px-4 py-3 text-left text-sm text-slate-200 transition hover:border-blue-500/40 hover:bg-gray-400/50 hover:text-white"
                             >
                                 <div className="font-semibold text-black">
                                     {tool.name}
@@ -220,7 +222,7 @@ export default function AdditionalSection() {
                 </div>
 
                 {/* Góc sáng tạo */}
-                <div className="rounded-2xl border border-slate-800 bg-gray-300 p-5 sm:p-6">
+                <div className="rounded-2xl bg-blue-gradiant-main bg-box-shadow p-5 sm:p-6">
                     <div className="flex items-center">
                         <div
                             className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${ecosystemData.innovationHub.gradient} shadow-lg`}
@@ -241,13 +243,13 @@ export default function AdditionalSection() {
                             <li key={step}>{step}</li>
                         ))}
                     </ol>
-                    <button className="mt-4 rounded-full border border-black bg-blue-950 px-5 py-2 text-sm font-semibold uppercase tracking-widest text-white transition hover:bg-blue-800 hover:border-blue-500 hover:text-white">
+                    <button className="mt-4 rounded-full bg-box-shadow bg-[#97cadb] px-5 py-2 text-sm font-semibold uppercase tracking-widest text-white transition hover:bg-[#7dc0d6] hover:text-white">
                         {ecosystemData.innovationHub.buttonText}
                     </button>
                 </div>
 
                 {/* Bản tin tuần */}
-                <div className="rounded-2xl border border-slate-800 bg-gray-300 p-5 sm:p-6">
+                <div className="rounded-2xl bg-blue-gradiant-main bg-box-shadow p-5 sm:p-6">
                     <div className="flex items-center">
                         <div
                             className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${ecosystemData.weeklyDigest.gradient} shadow-lg`}
@@ -268,7 +270,7 @@ export default function AdditionalSection() {
                         {ecosystemData.weeklyDigest.highlights.map((item) => (
                             <div
                                 key={item.title}
-                                className="rounded-xl border border-slate-800 bg-white px-4 py-3 transition hover:bg-gray-400/50 hover:text-white"
+                                className="rounded-xl bg-box-shadow-inset bg-white px-4 py-3 transition hover:bg-gray-400/50 hover:text-white"
                             >
                                 <div className="font-semibold text-black">
                                     {item.title}
@@ -277,7 +279,7 @@ export default function AdditionalSection() {
                             </div>
                         ))}
                     </div>
-                    <button className="mt-4 rounded-full border border-slate-800 bg-blue-950 px-5 py-2 text-sm font-semibold uppercase tracking-widest text-white transition hover:bg-blue-800 hover:border-blue-500 hover:text-white">
+                    <button className="mt-4 rounded-full bg-box-shadow bg-[#97cadb] px-5 py-2 text-sm font-semibold uppercase tracking-widest text-white transition hover:bg-[#7dc0d6] hover:text-white">
                         {ecosystemData.weeklyDigest.buttonText}
                     </button>
                 </div>

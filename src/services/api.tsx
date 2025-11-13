@@ -294,8 +294,26 @@ export const getTypeAnnouncement = createAsyncThunk(
   "announcement/getTypeAnnouncement",
   async (_, thunkAPI) => {
     try {
-      const response = await apiAxiosInstance.get("/notifications/types");
-      return response.data;
+      const response = await apiAxiosInstance.get('/notifications/types');
+      return {
+        data: response.data
+      };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
+
+
+
+export const getListAnnouncement = createAsyncThunk(
+  'announcement/getListAnnouncement',
+  async (_, thunkAPI) => {
+    try {
+      const response = await apiAxiosInstance.get('/notifications/employees');
+      return {
+        data: response.data
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -317,11 +335,19 @@ export const getTypeEvent = createAsyncThunk(
   }
 );
 export const getListEvent = createAsyncThunk(
-  "event/getListEvent",
-  async (token: string, thunkAPI) => {
+  'event/getListEvent',
+  async (payload: any, thunkAPI) => {
     try {
-      if (token) {
-        const response = await apiAxiosInstance.get("/events/employees", {
+      const { date, token }: any = payload; 
+
+      const params = Object.fromEntries(
+        Object.entries({ date })
+            .filter(([key, value]) => value != null) 
+      );
+      if(token){
+        
+        const response = await apiAxiosInstance.get('/events/employees', {
+          params,
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -350,25 +376,34 @@ export const eventReminder = createAsyncThunk(
       const params = Object.fromEntries(
         Object.entries({ id, event_id }).filter(([key, value]) => value != null)
       );
-
-      const response = await apiAxiosInstance.put(`/events/remind`, null, {
-        params,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      
+      const response = await apiAxiosInstance.put(
+        `/events/remind`,
+        null,
+        {
+          params,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
 
       // console.log("response", response);
-
+      
+      
       return {
         data: response.data,
         status: response.status,
       };
     } catch (error: any) {
-      console.log("response", error);
 
-      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+      const data = {
+        data: error?.response?.data,
+        status: error?.response?.status
+      }
+
+      return thunkAPI.rejectWithValue(data || error?.message);
     }
   }
 );
@@ -401,3 +436,9 @@ export const eventRegister = createAsyncThunk(
     }
   }
 );
+
+
+
+
+
+

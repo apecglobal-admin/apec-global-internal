@@ -88,7 +88,7 @@ export default function Slider({ slides = fallbackSlides }: SliderProps) {
                     </div>
                 </div>
 
-                <div className="mt-5 text-2xl font-semibold text-black/80 sm:text-3xl md:text-4xl">
+                <div className="mt-5 text-2xl capitalize font-semibold text-blue-main sm:text-3xl md:text-4xl">
                     {slides[current].title}
                 </div>
                 <div className="mt-3 max-w-3xl text-base text-black/60 sm:text-lg font-bold ">
@@ -98,13 +98,13 @@ export default function Slider({ slides = fallbackSlides }: SliderProps) {
                 <div className="mt-6 flex flex-wrap justify-center sm:justify-start gap-3">
                     <button
                         onClick={prev}
-                        className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-700 bg-gray-300 text-black transition hover:border-blue-500"
+                        className="flex h-11 w-11 items-center justify-center rounded-full inset-shadow-sm inset-shadow-black/50 bg-blue-gradiant-main bg-gray-300 text-black transition hover:border-blue-500"
                     >
                         <ChevronLeft size={22} />
                     </button>
                     <button
                         onClick={next}
-                        className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-700 bg-gray-300 text-black transition hover:border-blue-500"
+                        className="flex h-11 w-11 items-center justify-center rounded-full inset-shadow-sm inset-shadow-black/50 bg-blue-gradiant-main bg-gray-300 text-black transition hover:border-blue-500"
                     >
                         <ChevronRight size={22} />
                     </button>

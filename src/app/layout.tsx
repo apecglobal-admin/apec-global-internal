@@ -8,7 +8,6 @@ import Footer from '@/components/footer';
 import ConditionalLayout from './conditionalLayout';
 import { ToastContainer } from 'react-toastify';
 
-
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
@@ -38,14 +37,7 @@ export default function RootLayout({
           className="!text-base font-medium"  
       />
         <Providers>
-          {/* <>
-            <Header />
-
-           {children}
-            <FooterWrapper/>
-          </> */}
-
-          <ConditionalLayout>{children}</ConditionalLayout>
+            <ConditionalLayout>{children}</ConditionalLayout>
         </Providers>
         <Analytics />
       </body>

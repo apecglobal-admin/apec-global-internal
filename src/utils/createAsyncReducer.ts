@@ -36,9 +36,7 @@ export const createAsyncReducer = (builder: any, asyncThunk: any, key?: string) 
           400;
   
         const errorMsg =
-          action.payload?.message ||
-          action.error?.message ||
-          "Unknown error";
+          action.payload?.data?.message || "Unknown error";
   
         if (key) {
           state[key].loading = false;
