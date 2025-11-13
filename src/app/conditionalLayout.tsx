@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import Header from '@/components/header'
-import FooterWrapper from './footerWrapper'
+import Footer from '@/components/footer'
 
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -12,7 +12,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
     <>
       {!hideLayout && <Header />}
       {children}
-      {!hideLayout && <FooterWrapper />}
+      {!hideLayout && <Footer />}
     </>
   )
 }

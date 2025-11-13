@@ -4,7 +4,7 @@ export const useProfileData = () => {
   const user = useSelector((state: any) => state.user);
 
   return {
-    // Data - truy cập trực tiếp không cần .data
+    // Data 
     userInfo: user.userInfo.data,
     positions: user.positions.data,
     departments: user.departments.data,

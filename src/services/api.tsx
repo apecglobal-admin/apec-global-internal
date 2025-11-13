@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import apiAxiosInstance from "./axios";
+import { toast } from "react-toastify";
 
 export const loginWeb = createAsyncThunk(
   "user/loginWeb",
@@ -14,8 +15,13 @@ export const loginWeb = createAsyncThunk(
         localStorage.setItem("userToken", response.data.token);
       }
 
-      return response.data;
+      return {
+        data: response.data,
+        status: response.status
+      };
     } catch (error: any) {
+      console.log("errror",error?.response?.data.message)
+      toast.error(error?.response?.data.message)
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
   }

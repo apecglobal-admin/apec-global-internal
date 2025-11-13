@@ -36,7 +36,7 @@ import { useProfileData } from "@/src/hooks/profileHook";
 
 function ProfilePage() {
     const dispatch = useDispatch();
-    const { userInfo, departments, positions, isLoadingUser, isLoadingPositions, isLoadingDepartments} = useProfileData();
+    const { userInfo, departments, positions} = useProfileData();
     const [currentImage, setCurrentImage] = useState(0);
     const [activeTab, setActiveTab] = useState("skills");
     const [showUploadModal, setShowUploadModal] = useState(false);
