@@ -69,13 +69,15 @@ const clusters = [
 
 export default function ProjectsSection() {
     return (
-        <section className="rounded-2xl bg-gray-200 p-6 sm:p-7 lg:p-8">
+        <section 
+        style={{boxShadow: "inset 0 0 10px rgba(122, 122, 122, 0.5)"}}
+        className="relative overflow-hidden rounded-2xl bg-white p-6 sm:p-8">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                     <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-950 sm:text-sm">
                         Danh mục dự án
                     </div>
-                    <h2 className="mt-2 text-2xl font-extrabold text-blue-950 sm:text-3xl">
+                    <h2 className="mt-2 text-2xl font-extrabold text-blue-main capitalize sm:text-3xl">
                         Các dự án trọng điểm tập đoàn
                     </h2>
                     <p className="mt-2 text-sm text-black">
@@ -96,7 +98,7 @@ export default function ProjectsSection() {
                 {clusters.map((item) => (
                     <div
                         key={item.title}
-                        className="rounded-2xl border border-slate-800 bg-gray-300 p-5 sm:p-6"
+                        className="rounded-2xl bg-box-shadow p-5 sm:p-6 bg-blue-gradiant-main"
                     >
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                             <div>
@@ -130,13 +132,13 @@ export default function ProjectsSection() {
                                     ></div>
                                 </div>
                                 <div className="mt-4 space-y-2 text-xs text-black font-semibold">
-                                    <div className="rounded-xl border border-slate-800 bg-white px-3 py-2">
+                                    <div className="rounded-xl bg-box-shadow-inset bg-white px-3 py-2 mb-6">
                                         Thành viên phụ trách:{" "}
                                         {item.members.join(", ")}
                                     </div>
                                     <a
                                         href={item.reportLink}
-                                        className="flex items-center justify-between rounded-xl border border-orange-500 bg-orange-400 px-3 py-2 text-white font-semibold hover:border-orange-500 hover:bg-orange-500 hover:text-white"
+                                        className="flex items-center justify-between rounded-xl bg-box-shadow bg-blue-gradiant-main px-3 py-2 text-black font-semibold hover:border-orange-500 hover:bg-orange-500 hover:text-black"
                                     >
                                         Báo cáo tiến độ tuần/tháng
                                         <span className="text-xs uppercase tracking-widest">
@@ -145,7 +147,7 @@ export default function ProjectsSection() {
                                     </a>
                                     <a
                                         href={item.profileLink}
-                                        className="flex items-center justify-between rounded-xl border border-orange-500 bg-orange-400 px-3 py-2 text-white font-semibold hover:border-orange-500 hover:bg-orange-500 hover:text-whitee"
+                                        className="flex items-center justify-between rounded-xl bg-box-shadow bg-blue-gradiant-main px-3 py-2 text-black font-semibold hover:border-orange-500 hover:bg-orange-500 hover:text-black"
                                     >
                                         Hồ sơ năng lực
                                     </a>
@@ -157,7 +159,7 @@ export default function ProjectsSection() {
                                 <a
                                     key={asset}
                                     href="#"
-                                    className="rounded-full border border-black bg-blue-950 px-3 py-1.5 text-xs text-white font-bold transition hover:bg-blue-700 hover:text-white"
+                                    className="rounded-full bg-blue-gradiant-main bg-box-shadow px-3 py-1.5 text-xs text-black font-bold transition hover:bg-[#7dc0d6] hover:text-white"
                                 >
                                     {asset}
                                 </a>

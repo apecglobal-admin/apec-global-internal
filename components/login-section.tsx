@@ -52,10 +52,8 @@ export default function LoginSection() {
 
     return (
         <section
-            className="rounded-3xl border  p-6 sm:p-7 lg:p-8"
+            className="rounded-3xl p-6 sm:p-7 lg:p-8 bg-white"
             style={{
-                background: "rgba(213, 212, 212, 0.6)",
-                border: "2px solid rgb(127, 127, 127) ",
                 boxShadow: "0 0 10px 2px rgb(169, 169, 170)",
             }}
         >
@@ -65,7 +63,7 @@ export default function LoginSection() {
 
             {!userInfo && (
                 <>
-                    <h2 className="mt-2 text-2xl font-extrabold text-blue-950 sm:text-3xl">
+                    <h2 className="mt-2 text-2xl font-extrabold capitalize text-blue-main sm:text-3xl">
                         Cổng đăng nhập nội bộ
                     </h2>
                     <p className="mt-2 text-sm  text-black ">
@@ -142,7 +140,7 @@ export default function LoginSection() {
             {userInfo && (
                 <div className="mt-6 space-y-4">
                     <div className="text-center space-y-2">
-                        <h2 className="text-2xl font-bold text-blue-950 sm:text-3xl">
+                        <h2 className="text-2xl font-bold capitalize text-blue-main sm:text-3xl">
                             Chào mừng quay lại!
                         </h2>
                         <p className="text-xl text-orange-600 font-semibold">
@@ -154,7 +152,7 @@ export default function LoginSection() {
                     </div>
 
                     <div className="flex flex-col gap-3 pt-4">
-                        <div className="p-4 rounded-xl bg-white border border-slate-700">
+                        <div className="p-4 rounded-xl bg-blue-gradiant-main bg-box-shadow">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-black">
@@ -186,7 +184,7 @@ export default function LoginSection() {
             )}
 
             <div
-                className="mt-6 grid gap-3 rounded-2xl border bg-gray-400/50  border-slate-800 p-5 text-sm text-white"
+                className="mt-6 grid gap-3 rounded-2xl  bg-blue-gradiant-main bg-box-shadow-inset  p-5 text-sm text-black"
             >
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <span>Quản lý hồ sơ cá nhân</span>

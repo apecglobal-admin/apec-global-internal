@@ -43,7 +43,7 @@ export const listPositions = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await apiAxiosInstance.get('/positions');
-      // return response.data.data.positions;
+      return response.data.data.positions;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -225,7 +225,25 @@ export const getTypeAnnouncement = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await apiAxiosInstance.get('/notifications/types');
-      return response.data;
+      return {
+        data: response.data
+      };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
+
+
+
+export const getListAnnouncement = createAsyncThunk(
+  'announcement/getListAnnouncement',
+  async (_, thunkAPI) => {
+    try {
+      const response = await apiAxiosInstance.get('/notifications/employees');
+      return {
+        data: response.data
+      };
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -249,10 +267,18 @@ export const getTypeEvent = createAsyncThunk(
 );
 export const getListEvent = createAsyncThunk(
   'event/getListEvent',
-  async (token: string, thunkAPI) => {
+  async (payload: any, thunkAPI) => {
     try {
+      const { date, token }: any = payload; 
+
+      const params = Object.fromEntries(
+        Object.entries({ date })
+            .filter(([key, value]) => value != null) 
+      );
       if(token){
+        
         const response = await apiAxiosInstance.get('/events/employees', {
+          params,
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -295,13 +321,22 @@ export const eventReminder = createAsyncThunk(
           },
         }
       );
+
+      // console.log("response", response);
+      
       
       return {
         data: response.data,
         status: response.status,
       };
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+
+      const data = {
+        data: error?.response?.data,
+        status: error?.response?.status
+      }
+
+      return thunkAPI.rejectWithValue(data || error?.message);
     }
   }
 );
@@ -339,4 +374,9 @@ export const eventRegister = createAsyncThunk(
     }
   }
 );
+
+
+
+
+
 

@@ -4,7 +4,7 @@ import {
     getListEvent,
     eventReminder
 } from "../../services/api";
-import { createAsyncReducer2 } from "@/src/utils/createAsyncReducer";
+import { createAsyncReducer } from "@/src/utils/createAsyncReducer";
 
 interface initState<T> {
     data: T;
@@ -45,9 +45,9 @@ const eventSlice = createSlice({
 
     },
     extraReducers: (builder) => {
-        createAsyncReducer2(builder, getTypeEvent, "typeEvent");
-        createAsyncReducer2(builder, getListEvent, "listEvent");
-        createAsyncReducer2(builder, eventReminder, "reminder");
+        createAsyncReducer(builder, getTypeEvent, "typeEvent");
+        createAsyncReducer(builder, getListEvent, "listEvent");
+        createAsyncReducer(builder, eventReminder, "reminder");
 
 
         // eventReminder

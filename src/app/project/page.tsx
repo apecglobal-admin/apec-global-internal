@@ -184,7 +184,7 @@ export default function ProjectsPage() {
                     </div>
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div className="flex-1">
-                            <h1 className="text-3xl font-bold text-blue-950 sm:text-4xl lg:text-5xl">
+                            <h1 className="text-3xl font-bold text-blue-main capitallize sm:text-4xl lg:text-5xl">
                                 Các dự án trọng điểm tập đoàn
                             </h1>
                             <p className="mt-3 max-w-3xl text-sm text-black sm:text-base">
@@ -211,15 +211,16 @@ export default function ProjectsPage() {
                         return (
                             <div
                                 key={stat.label}
-                                className="group rounded-2xl border border-slate-700/80 border-l-6 bg-gray-200 p-5 shadow-inner shadow-black/10 transition"
+                                className="group rounded-2xl bg-blue-gradiant-main border-l-6  p-5 shadow-inner shadow-black/10 transition"
                                 style={{
                                     borderLeftColor: borderColor,
+                                    boxShadow: "0 0 10px rgba(0, 0, 0, 0.3)",
                                 }}
                                 onMouseEnter={(e) =>
                                     (e.currentTarget.style.boxShadow = `0 0 20px ${borderColor}80`)
                                 }
                                 onMouseLeave={(e) =>
-                                    (e.currentTarget.style.boxShadow = `inset 0 0 10px rgba(0,0,0,0.1)`)
+                                    (e.currentTarget.style.boxShadow = `0 0 10px rgba(0, 0, 0, 0.3)`)
                                 }
                             >
                                 <div className="flex items-start justify-between">
@@ -247,7 +248,7 @@ export default function ProjectsPage() {
                 </div>
 
                 {/* Filters */}
-                <div className="mb-6 flex flex-wrap items-center gap-3 bg-gray-200 p-3 rounded-full  inset-shadow-sm inset-shadow-black/50">
+                <div className="mb-6 flex flex-wrap items-center gap-3 bg-blue-gradiant-main p-3 rounded-full  inset-shadow-sm inset-shadow-black/50">
                     <div className="text-xs font-bold uppercase tracking-widest text-black ml-4">
                         Lọc theo trạng thái:
                     </div>
@@ -256,7 +257,7 @@ export default function ProjectsPage() {
                         className={`rounded-full px-4 py-2 text-xs font-semibold uppercase transition ${
                             filterStatus === "all"
                                 ? "bg-blue-500 text-white border border-blue-500"
-                                : "bg-gray-300 text-gray-500 border border-gray-500 hover:text-slate-200"
+                                : "bg-white text-gray-500 bg-box-shadow hover:text-slate-200"
                         }`}
                     >
                         Tất cả ({clusters.length})
@@ -266,7 +267,7 @@ export default function ProjectsPage() {
                         className={`rounded-full px-4 py-2 text-xs font-semibold uppercase transition ${
                             filterStatus === "on-track"
                                 ? "bg-emerald-500 text-white border border-emerald-500/50"
-                                : "bg-gray-300 text-gray-500 border border-gray-500 hover:text-slate-200"
+                                : "bg-white text-gray-500 bg-box-shadow hover:text-slate-200"
                         }`}
                     >
                         Đúng tiến độ (
@@ -278,7 +279,7 @@ export default function ProjectsPage() {
                         className={`rounded-full px-4 py-2 text-xs font-semibold uppercase transition ${
                             filterStatus === "attention"
                                 ? "bg-amber-500 text-white border border-amber-500/50"
-                                : "bg-gray-300 text-gray-500 border border-gray-500 hover:text-slate-200"
+                                : "bg-white text-gray-500 bg-box-shadow hover:text-slate-200"
                         }`}
                     >
                         Cần quan tâm (
@@ -297,7 +298,7 @@ export default function ProjectsPage() {
                         return (
                             <article
                                 key={project.title}
-                                className="group rounded-2xl border border-black bg-gray-200 p-5 transition  sm:p-6"
+                                className="group rounded-2xl bg-blue-gradiant-main bg-box-shadow p-5 transition  sm:p-6"
                             >
                                 <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
                                     {/* Left Column */}
@@ -349,7 +350,7 @@ export default function ProjectsPage() {
                                                 <a
                                                     key={asset}
                                                     href="#"
-                                                    className="rounded-full border border-black bg-blue-950 px-3 py-1.5 text-xs text-white transition hover:border-blue-500 hover:bg-teal-500 hover:text-white"
+                                                    className="rounded-full bg-blue-gradiant-main bg-box-shadow-inset px-3 py-1.5 text-xs text-black transition hover:border-blue-500 hover:bg-[#7dc0d6] hover:text-white"
                                                 >
                                                     {asset}
                                                 </a>
@@ -401,7 +402,7 @@ export default function ProjectsPage() {
                                         <div className="space-y-2">
                                             <a
                                                 href={project.reportLink}
-                                                className="flex items-center justify-between rounded-xl border border-orange-500 bg-orange-400 px-4 py-2.5 text-sm text-white transition hover:bg-orange-500 hover:text-white"
+                                                className="flex items-center justify-between rounded-xl bg-box-shadow bg-blue-gradiant-main px-4 py-2.5 text-sm text-black transition hover:bg-orange-500 hover:text-white"
                                             >
                                                 <span className="flex items-center gap-2">
                                                     <BarChart3 size={16} />
@@ -413,7 +414,7 @@ export default function ProjectsPage() {
                                             </a>
                                             <a
                                                 href={project.profileLink}
-                                                className="flex items-center justify-between rounded-xl border border-orange-500 bg-orange-400 px-4 py-2.5 text-sm text-white transition hover:bg-orange-500 hover:text-white"
+                                                className="flex items-center justify-between rounded-xl bg-box-shadow bg-blue-gradiant-main px-4 py-2.5 text-sm text-black transition hover:bg-orange-500 hover:text-white"
                                             >
                                                 <span className="flex items-center gap-2">
                                                     <FileText size={16} />
@@ -465,8 +466,8 @@ export default function ProjectsPage() {
                 )}
 
                 {/* Timeline Overview */}
-                <div className="mt-8 rounded-2xl border border-slate-800 bg-gray-200 p-6">
-                    <h3 className="mb-4 text-xl font-bold text-blue-950">
+                <div className="mt-8 rounded-2xl bg-blue-gradiant-main bg-box-shadow p-6">
+                    <h3 className="mb-4 text-xl font-bold text-blue-main capitalize">
                         Tổng quan roadmap
                     </h3>
                     <div className="space-y-3">

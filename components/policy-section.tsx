@@ -7,7 +7,7 @@ import { colorClasses, colorMap } from "@/src/utils/color";
 const policyStats = [
     { value: "128", label: "Chính sách", subLabel: "Đã cập nhật 2025" },
     { value: "36", label: "Biểu mẫu", subLabel: "Chuẩn hóa PDF" },
-    { value: "18", label: "Quy trình", subLabel: "Ký nhận điện tử" },
+    { value: "18", label: "Quy trình", subLabel: "Quy trình vận hành" }, // Tên gọi mới
     { value: "12", label: "Phòng ban", subLabel: "Phụ trách rà soát" },
 ];
 
@@ -59,10 +59,11 @@ const quickLinks = [
     { label: "Biểu mẫu phổ biến", href: "#" },
     { label: "Hướng dẫn ký nhận điện tử", href: "#" },
 ];
-
 export default function PolicySection() {
     return (
-        <section className="relative overflow-hidden rounded-2xl bg-gray-200 p-6 sm:p-8">
+        <section 
+        style={{boxShadow: "inset 0 0 10px rgba(122, 122, 122, 0.5)"}}
+        className="relative overflow-hidden rounded-2xl bg-white p-6 sm:p-8">
             <div className="space-y-8">
                 <div className="space-y-6">
                     <div className="space-y-4">
@@ -70,7 +71,7 @@ export default function PolicySection() {
                             Chính sách nội bộ
                         </div>
                         <div className="space-y-3">
-                            <h2 className="text-2xl font-extrabold text-blue-950 sm:text-3xl">
+                            <h2 className="text-2xl font-extrabold text-blue-main capitalize sm:text-3xl">
                                 Kho chính sách tập trung
                             </h2>
                             <p className="text-sm text-black">
@@ -79,7 +80,7 @@ export default function PolicySection() {
                                 đồng nhất toàn hệ thống.
                             </p>
                         </div>
-                        <div className="flex flex-wrap gap-2 text-xs uppercase tracking-widest">
+                        {/* <div className="flex flex-wrap gap-2 text-xs uppercase tracking-widest">
                             {quickLinks.map((link) => (
                                 <a
                                     key={link.label}
@@ -90,7 +91,7 @@ export default function PolicySection() {
                                     <span aria-hidden>↗</span>
                                 </a>
                             ))}
-                        </div>
+                        </div> */}
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
                         {policyStats.map((stat, index) => {
@@ -102,15 +103,16 @@ export default function PolicySection() {
                             return (
                                 <div
                                     key={stat.label}
-                                    className="group rounded-2xl border border-slate-700/80 border-l-6 bg-white p-5 shadow-inner shadow-black/10 transition"
+                                    className={`group rounded-2xl border-l-6 bg-white p-5 shadow-inner shadow-black/10 transition bg-blue-gradiant-main`}
                                     style={{
-                                        borderLeftColor: borderColor
+                                        borderLeftColor: borderColor,
+                                        boxShadow: "0 0 10px rgba(0, 0, 0, 0.3)"
                                     }}
                                     onMouseEnter={(e) =>
                                         (e.currentTarget.style.boxShadow = `0 0 20px ${borderColor}80`)
                                     }
                                     onMouseLeave={(e) =>
-                                        (e.currentTarget.style.boxShadow = `inset 0 0 10px rgba(0,0,0,0.1)`)
+                                        (e.currentTarget.style.boxShadow = `0 0 10px rgba(0, 0, 0, 0.3)`)
                                     }
                                 >
                                     <div className="flex items-start justify-between">
@@ -134,13 +136,13 @@ export default function PolicySection() {
                     </div>
                 </div>
 
-                <div className="space-y-4 rounded-3xl border border-slate-800 bg-white p-5 shadow-lg shadow-blue-500/10">
                     <SearchBar placeHoder="Tìm kiếm chính sách, biểu mẫu..."/>
+                {/* <div className="space-y-4 rounded-3xl bg-box-shadow bg-white p-5 shadow-lg shadow-blue-500/10">
                     <button className="flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-orange-500">
                         <Search size={16} />
                         Tra cứu nhanh
                     </button>
-                    <div className="space-y-3 rounded-2xl border border-slate-800 bg-gray-200 p-4 text-xs text-slate-400">
+                    <div className="space-y-3 rounded-2xl border border-slate-800 bg-[#d6e8ee] p-4 text-xs text-slate-400">
                         <div className="text-xs font-semibold uppercase tracking-widest text-blue-700">
                             Danh mục nổi bật
                         </div>
@@ -157,23 +159,23 @@ export default function PolicySection() {
                             ))}
                         </div>
                     </div>
-                </div>
+                </div> */}
 
                 <div className="space-y-5">
                     {policyGroups.map((group) => (
                         <article
                             key={group.title}
-                            className="group relative flex h-full flex-col gap-5 overflow-hidden rounded-3xl border border-slate-800/70  p-6 transition hover:shadow-lg hover:shadow-blue-500/10"
+                            className="group relative flex h-full flex-col gap-5 overflow-hidden rounded-3xl bg-box-shadow-inset  p-6 transition hover:shadow-lg hover:shadow-blue-500/10"
                         >
                             <div className="space-y-2">
-                                <h3 className="text-lg font-extrabold text-blue-950 sm:text-xl">
+                                <h3 className="text-lg font-extrabold text-blue-main sm:text-xl">
                                     {group.title}
                                 </h3>
                                 <p className="text-sm text-black/80">
                                     {group.description}
                                 </p>
                             </div>
-                            <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-widest text-blue-300">
+                            {/* <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-widest text-blue-300">
                                 <button className="flex items-center gap-2 rounded-full border border-orange-500 bg-orange-400 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-orange-500 hover:text-white">
                                     <FileText size={14} />
                                     Tải PDF
@@ -182,13 +184,13 @@ export default function PolicySection() {
                                     <PenTool size={14} />
                                     Ký xác nhận
                                 </button>
-                            </div>
+                            </div> */}
                             <ul className="mt-2 space-y-2 text-sm">
                                 {group.items.map((item, index) => (
                                     <a
                                         href="#"
                                         key={item}
-                                        className="flex flex-col gap-3 rounded-2xl border border-gray-600 bg-white px-3 py-3 transition hover:bg-gray-400/30 sm:flex-row sm:items-center sm:justify-between"
+                                        className="flex flex-col gap-3 rounded-2xl bg-box-shadow bg-white px-3 py-3 transition hover:bg-gray-400/30 sm:flex-row sm:items-center sm:justify-between"
                                     >
                                         <div className="flex items-center gap-3">
                                             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-600 text-xs font-semibold text-white">

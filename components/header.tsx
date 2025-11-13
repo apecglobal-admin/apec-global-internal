@@ -35,7 +35,6 @@ export default function Header() {
             dispatch(fetchUserInfo(token) as any);
         }
     }, [dispatch]);
-    console.log("userinfo", userInfo)
 
     useEffect(() => {
         function handleClickOutside(event: any) {
@@ -90,8 +89,11 @@ export default function Header() {
                         className="w-16 h-12 sm:w-20 sm:h-16 lg:w-[100px] lg:h-[70px]"
                     />
                     <div>
-                        <div className="text-xl sm:text-2xl font-extrabold tracking-wide text-blue-950 ">
-                            APEC GLOBAL
+                        <div className="text-xl sm:text-2xl font-extrabold tracking-wide text-blue-main ">
+                                APEC 
+                            <span className="pl-2 text-[#272863]">
+                                GLOBAL
+                            </span> 
                         </div>
                         <div className="text-xs sm:text-sm uppercase tracking-[0.05em] font-semibold text-black">
                             Kiến tạo giá trị - Làm Chủ Tương Lai
@@ -105,7 +107,7 @@ export default function Header() {
                         <a
                             key={item.label}
                             href={item.href}
-                            className="hover:text-slate-400 transition whitespace-nowrap text-black font-bold"
+                            className="hover:text-slate-400 transition whitespace-nowrap text-blue-main font-extrabold"
                         >
                             {item.label}
                         </a>
@@ -115,7 +117,7 @@ export default function Header() {
                 {/* Mobile Hamburger */}
                 <button
                     onClick={() => setIsSidebarOpen(true)}
-                    className="xl:hidden flex h-10 w-10 items-center justify-center rounded-full border border-gray-800 bg-gray-500 text-slate-300 transition hover:border-blue-500 hover:text-white shadow-xl"
+                    className="xl:hidden flex h-10 w-10 items-center justify-center rounded-full bg-blue-gradiant-main bg-box-shadow text-slate-300 transition hover:border-blue-500 hover:text-white shadow-xl"
                 >
                     <Menu size={20} className="text-black font-bold" />
                 </button>
@@ -129,11 +131,11 @@ export default function Header() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 ml-auto">
-                        <button className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-white bg-gray-400 text-white transition hover:border-blue-500 hover:text-white">
-                            <Bell size={18} className="text-white"/>
+                        <button className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full inset-shadow-sm inset-shadow-black/50 bg-blue-gradiant-main text-white transition hover:border-blue-500 hover:text-white">
+                            <Bell size={18} className="text-black"/>
                         </button>
-                        <button className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-white bg-gray-400 text-white transition hover:border-blue-500 hover:text-white">
-                            <Mail size={18} className="text-white"/>
+                        <button className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full inset-shadow-sm inset-shadow-black/50 bg-blue-gradiant-main text-white transition hover:border-blue-500 hover:text-white">
+                            <Mail size={18} className="text-black"/>
                         </button>
 
                         {/* User Dropdown */}
@@ -142,9 +144,9 @@ export default function Header() {
                                 onClick={() =>
                                     setIsDropdownOpen(!isDropdownOpen)
                                 }
-                                className="flex items-center gap-2 rounded-full border border-white bg-gray-400 px-2 sm:px-3 py-2 text-sm font-semibold text-white transition hover:border-blue-500 hover:text-white"
+                                className="flex items-center gap-2 rounded-full inset-shadow-sm inset-shadow-black/50 bg-blue-gradiant-main px-2 sm:px-3 py-2 text-sm font-semibold text-black transition hover:border-blue-500 hover:text-black/60"
                             >
-                                <UserCircle2 size={20} className="text-white" />
+                                <UserCircle2 size={20} className="text-black" />
                                 <span className="hidden sm:inline">
                                     Tài khoản
                                 </span>
