@@ -30,15 +30,7 @@ export default function Home() {
         <div className="min-h-screen bg-white  text-white">
 
             <main className="mx-auto w-full max-w-7xl px-4 py-10 space-y-10 sm:px-6 sm:py-12 sm:space-y-12 md:px-8 md:py-14 lg:px-8 lg:py-16 lg:space-y-16">
-            <ToastContainer 
-                position="top-right"   // Vị trí hiển thị toast
-                autoClose={3000}       // 3 giây tự động ẩn
-                hideProgressBar={false}
-                newestOnTop={true}     // Toast mới ở trên cùng
-                closeOnClick
-                pauseOnHover
-                draggable
-            />
+
                 <Slider />
 
                 {/* Grid Announcement + Login */}
@@ -58,11 +50,10 @@ export default function Home() {
 
                 <Tabs defaultValue="statistics" className="mt-10 w-full">
                     <TabsList 
-                                style={{
-                                    border: "1px solid rgb(120, 116, 116) ",
-                                    boxShadow: "0 0 10px 2px rgb(169, 169, 170)",
-                                }}
-                    className="inline-flex flex-wrap justify-start w-full gap-2 bg-white rounded-2xl backdrop-blur-sm mb-8 p-3 h-auto ">
+                                // style={{
+                                //     boxShadow: "0 0 10px 2px rgb(169, 169, 170)",
+                                // }}
+                    className="inline-flex flex-wrap bg-box-shadow justify-start w-full gap-2  rounded-2xl backdrop-blur-sm mb-8 p-3 h-auto ">
                         {nav.map((tab, index) => (
                             <TabsTrigger
   key={tab.value}
@@ -74,9 +65,9 @@ export default function Home() {
     rounded-full font-medium text-sm text-gray-500
     transition-all duration-200 
     bg-gray-200
-
+    capitalize
     hover:bg-gray-200 hover:text-white hover:border-teal-300/80
-    border-gray-500
+    border-gray-300
 
     data-[state=active]:bg-white
     data-[state=active]:text-black
@@ -94,35 +85,35 @@ export default function Home() {
                     <div className="space-y-6">
                         <TabsContent
                             value="statistics"
-                            className="animate-in fade-in-50 duration-300 bg-gray-400/50 p-[2px] rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 p-[2px] rounded-2xl "
                         >
                             <StatisticsSection />
                         </TabsContent>
 
                         <TabsContent
                             value="policy"
-                            className="animate-in fade-in-50 duration-300 bg-gray-400/50 p-[2px] rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 p-[2px] rounded-2xl "
                         >
                             <PolicySection />
                         </TabsContent>
 
                         <TabsContent
                             value="event"
-                            className="animate-in fade-in-50 duration-300 bg-gray-400/50 p-[2px] rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 p-[2px] rounded-2xl "
                         >
                             <EventSection />
                         </TabsContent>
 
                         <TabsContent
                             value="projects"
-                            className="animate-in fade-in-50 duration-300 bg-gray-400/50 p-[2px] rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 p-[2px] rounded-2xl "
                         >
                             <ProjectsSection />
                         </TabsContent>
 
                         <TabsContent
                             value="additional"
-                            className="animate-in fade-in-50 duration-300 bg-gray-400/50 p-[2px] rounded-2xl "
+                            className="animate-in fade-in-50 duration-300 p-[2px] rounded-2xl "
                         >
                             <AdditionalSection />
                         </TabsContent>

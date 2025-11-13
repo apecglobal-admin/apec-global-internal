@@ -129,7 +129,7 @@ export default function PoliciesPage() {
                         Chính sách nội bộ
                     </div>
                     <div className="space-y-3">
-                        <h1 className="text-3xl font-bold text-blue-950 sm:text-4xl lg:text-5xl">
+                        <h1 className="text-3xl font-bold text-blue-main capitallize sm:text-4xl lg:text-5xl">
                             Chính sách tập trung
                         </h1>
                         <p className="max-w-3xl text-sm text-black sm:text-base">
@@ -162,15 +162,16 @@ export default function PoliciesPage() {
                         return (
                             <div
                                 key={stat.label}
-                                className="group rounded-2xl border border-gray-500 border-l-6 bg-gray-200 p-5 shadow-inner shadow-black/10 transition"
+                                className={`group rounded-2xl border-l-6 bg-white p-5 shadow-inner shadow-black/10 transition bg-blue-gradiant-main`}
                                 style={{
                                     borderLeftColor: borderColor,
+                                    boxShadow: "0 0 10px rgba(0, 0, 0, 0.3)",
                                 }}
                                 onMouseEnter={(e) =>
                                     (e.currentTarget.style.boxShadow = `0 0 20px ${borderColor}80`)
                                 }
                                 onMouseLeave={(e) =>
-                                    (e.currentTarget.style.boxShadow = `inset 0 0 10px rgba(0,0,0,0.1)`)
+                                    (e.currentTarget.style.boxShadow = `0 0 10px rgba(0, 0, 0, 0.3)`)
                                 }
                             >
                                 <div className="flex items-start justify-between">
@@ -181,7 +182,7 @@ export default function PoliciesPage() {
                                             {stat.value}
                                         </div>
                                         <div
-                                            className={`mt-1 text-lg uppercase tracking-widest font-semibold ${colorClass}`}
+                                            className={`mt-1 text-lg uppercase tracking-widest  font-semibold ${colorClass}`}
                                         >
                                             {stat.label}
                                         </div>
@@ -196,15 +197,15 @@ export default function PoliciesPage() {
                 </div>
 
                 {/* Search Section */}
-                <div className="mb-8 space-y-4 rounded-3xl border border-gray-500/60 bg-gray-200 p-5 shadow-lg shadow-blue-500/10 ">
+                <div className="mb-8 space-y-4 ">
                     <SearchBar placeHoder="Tìm kiếm chính sách, biểu mẫu..." />
 
-                    <button className="flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2.5 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-blue-500 sm:w-auto">
+                    {/* <button className="flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2.5 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-blue-500 sm:w-auto">
                         <Search size={16} />
                         Tra cứu nhanh
                     </button>
 
-                    <div className="space-y-3 rounded-2xl border border-gray-500 p-4">
+                    <div className="space-y-3 rounded-2xl border border-gray-500 bg-[#d6e8ee] p-4">
                         <div className="text-md font-semibold uppercase tracking-widest text-blue-950">
                             Danh mục nổi bật
                         </div>
@@ -222,7 +223,7 @@ export default function PoliciesPage() {
                                 </a>
                             ))}
                         </div>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Policy Groups */}
@@ -230,11 +231,11 @@ export default function PoliciesPage() {
                     {policyGroups.map((group) => (
                         <article
                             key={group.title}
-                            className="relative flex flex-col gap-5 overflow-hidden rounded-3xl border border-gray-400 bg-gray-200 p-6 transition-all duration-300  hover:shadow-lg hover:shadow-blue-500/10"
+                            className="relative flex flex-col gap-5 overflow-hidden rounded-3xl bg-box-shadow   p-6 transition-all duration-300  hover:shadow-lg hover:shadow-blue-500/10"
                         >
                             <div className="space-y-2">
                                 <div className="flex items-start justify-between gap-4">
-                                    <h2 className="text-xl font-extrabold text-blue-950 sm:text-2xl">
+                                    <h2 className="text-xl font-extrabold text-blue-main capitalize sm:text-2xl">
                                         {group.title}
                                     </h2>
                                     <span className="rounded-full bg-orange-400 border border-orange-500 px-3 py-1 text-xs font-semibold text-white">
@@ -247,15 +248,15 @@ export default function PoliciesPage() {
                             </div>
 
                             <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-widest text-blue-300">
-                                <button className="flex items-center gap-2 rounded-full border border-orange-500 bg-orange-400 px-3 py-1.5 text-xs font-semibold text-white transition hover:border-orange-600 hover:bg-orange-500 hover:text-white">
+                                <button className="flex items-center gap-2 rounded-full bg-blue-gradiant-main bg-box-shadow px-3 py-1.5 text-xs font-semibold text-black transition hover:border-orange-600 hover:bg-orange-500 hover:text-black/40">
                                     <FileText size={14} />
                                     Tải PDF
                                 </button>
-                                <button className="flex items-center gap-2 rounded-full border border-orange-500 bg-orange-400 px-3 py-1.5 text-xs font-semibold text-white transition hover:border-orange-600 hover:bg-orange-500 hover:text-white">
+                                <button className="flex items-center gap-2 rounded-full bg-blue-gradiant-main bg-box-shadow px-3 py-1.5 text-xs font-semibold text-black transition hover:border-orange-600 hover:bg-orange-500 hover:text-black/40">
                                     <PenTool size={14} />
                                     Ký xác nhận
                                 </button>
-                                <button className="flex items-center gap-2 rounded-full border border-orange-500 bg-orange-400 px-3 py-1.5 text-xs font-semibold text-white transition hover:border-orange-600 hover:bg-orange-500 hover:text-white">
+                                <button className="flex items-center gap-2 rounded-full bg-blue-gradiant-main bg-box-shadow px-3 py-1.5 text-xs font-semibold text-black transition hover:border-orange-600 hover:bg-orange-500 hover:text-black/40">
                                     <Download size={14} />
                                     Tải tất cả
                                 </button>
@@ -264,7 +265,7 @@ export default function PoliciesPage() {
                             <ul className="space-y-2">
                                 {group.items.map((item, index) => (
                                     <a
-                                    href="#"
+                                        href="#"
                                         key={item.name}
                                         className="flex flex-col gap-3 rounded-2xl border border-gray-400 bg-white px-4 py-3 transition hover:bg-gray-400/30 sm:flex-row sm:items-center sm:justify-between"
                                     >
@@ -292,9 +293,7 @@ export default function PoliciesPage() {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2 text-xs uppercase tracking-widest  transition">
-                                            <div
-                                                className="flex items-center gap-1.5 rounded-lg text-orange-600 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition hover:bg-orange-700"
-                                            >
+                                            <div className="flex items-center gap-1.5 rounded-lg text-orange-600 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition hover:bg-orange-700">
                                                 Xem chi tiết
                                                 <span aria-hidden>↗</span>
                                             </div>

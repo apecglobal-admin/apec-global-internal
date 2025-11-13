@@ -14,17 +14,17 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   
-  useEffect(() => {
-    if (status === "succeeded") {
-      const token = localStorage.getItem("userToken");
-      if(token) {
-        dispatch(fetchUserInfo(token as any) as any);
-      }
-      router.push("/");
-    } else if (status === "failed" && error) {
-      alert(error);
-    }
-  }, [status]);
+  // useEffect(() => {
+  //   if (status === "succeeded") {
+  //     const token = localStorage.getItem("userToken");
+  //     if(token) {
+  //       dispatch(fetchUserInfo(token as any) as any);
+  //     }
+  //     router.push("/");
+  //   } else if (status === "failed" && error) {
+  //     alert(error);
+  //   }
+  // }, [status]);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -35,7 +35,10 @@ export default function LoginPage() {
         password,
       };
 
-      await dispatch(loginWeb(payload) as any);
+      const res = await dispatch(loginWeb(payload) as any);
+
+      console.log(res);
+      
 
     } catch (error) {
       console.error("Đăng nhập thất bại:", error);

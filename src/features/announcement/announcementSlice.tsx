@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import {
+    getListAnnouncement,
     getTypeAnnouncement
 } from "../../services/api";
 import { createAsyncReducer } from "@/src/utils/createAsyncReducer";
@@ -7,10 +8,8 @@ import { createAsyncReducer } from "@/src/utils/createAsyncReducer";
 const announcementSlice = createSlice({
     name: "announcement",
     initialState: {
-        typeAnnouncements: [],
-        loading: false,
-        error: null,
-        status: "idle",
+        typeAnnouncements: { data: [], loading: false, error: null, status: null },
+        listAnnouncement: { data: [], loading: false, error: null, status: null }
     },
 
     reducers: {
@@ -18,6 +17,7 @@ const announcementSlice = createSlice({
     },
     extraReducers: (builder) => {
         createAsyncReducer(builder, getTypeAnnouncement, "typeAnnouncements");
+        createAsyncReducer(builder, getListAnnouncement, "listAnnouncement");
     },
 });
 
