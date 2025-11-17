@@ -10,6 +10,7 @@ import { ToastContainer } from 'react-toastify';
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
+console.log("_geist", _geist);
 
 export const metadata: Metadata = {
   title: 'v0 App',
@@ -24,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans antialiased`}>
+      <body className={``}>
         <ToastContainer
           position="top-right"   // Vị trí hiển thị toast
           autoClose={3000}       // 3 giây tự động ẩn

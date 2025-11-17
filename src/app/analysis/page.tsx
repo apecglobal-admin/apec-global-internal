@@ -64,7 +64,7 @@ export default function AnalysisPage() {
             {achievements.map((item, index) => (
               <div 
                 key={index} 
-                className="relative bg-white border-2 border-slate-200 rounded-2xl p-8 hover:border-blue-500 hover:shadow-xl transition group overflow-hidden"
+                className="relative bg-blue-gradiant-main  bg-box-shadow rounded-2xl p-8 hover:border-blue-500 hover:shadow-xl transition group overflow-hidden"
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-400 opacity-5 rounded-full blur-3xl group-hover:opacity-10 transition"></div>
                 <div className="relative">
@@ -143,7 +143,7 @@ export default function AnalysisPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredProducts.map((product, index) => (
-              <div key={index} className="bg-white border-2 border-slate-200 rounded-2xl p-6 hover:scale-105 hover:shadow-xl transition duration-300">
+              <div key={index} className="bg-white bg-box-shadow rounded-2xl p-6 hover:scale-105 hover:shadow-xl transition duration-300">
                 <div className={`w-16 h-16 bg-gradient-to-br ${getColorClasses(product.color as ColorKey)} rounded-xl mb-4 flex items-center justify-center shadow-lg`}>
                   <Target className="w-8 h-8 text-white" />
                 </div>
@@ -165,14 +165,14 @@ export default function AnalysisPage() {
 
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-b from-white to-slate-50">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12 shadow-2xl">
-            <h2 className="text-4xl font-bold mb-4 text-white">Sẵn Sàng Hợp Tác?</h2>
-            <p className="text-xl mb-8 text-white opacity-90">
+      <section className="py-20 px-4">
+        <div className="max-w-4xl mx-auto text-center ">
+          <div className="bg-blue-gradiant-main rounded-3xl p-12 bg-box-shadow">
+            <h2 className="text-4xl font-bold mb-4 text-blue-main">Sẵn Sàng Hợp Tác?</h2>
+            <p className="text-xl mb-8 text-black opacity-90">
               Hãy để chúng tôi đồng hành cùng bạn trên con đường chuyển đổi số
             </p>
-            <button className="px-8 py-4 bg-white text-blue-600 font-bold rounded-xl hover:bg-slate-100 hover:shadow-lg transition transform hover:scale-105">
+            <button className="px-8 py-4 bg-box-shadow bg-white text-blue-600 font-bold rounded-xl hover:bg-slate-100 hover:shadow-lg transition transform hover:scale-105">
               Liên Hệ Ngay
             </button>
           </div>

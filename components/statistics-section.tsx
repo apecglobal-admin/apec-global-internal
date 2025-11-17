@@ -25,7 +25,7 @@ export default function StatisticsSection() {
     className="rounded-2xl  bg-white p-6 sm:p-7 lg:p-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-950 sm:text-sm">Thống kê & báo cáo</div>
+          <div className="text-xs font-semibold uppercase  text-blue-950 sm:text-sm">Thống kê & báo cáo</div>
           <h2 className="mt-2 text-2xl font-extrabold text-blue-main capitalize sm:text-3xl ">Dashboard realtime</h2>
           <p className="mt-2 text-sm text-black">
             Dữ liệu đồng bộ từ ERP, CRM và ApecTech Dashboard giúp theo dõi hiệu suất, tài chính, nhân sự và tiến độ công nghệ.
@@ -44,11 +44,11 @@ export default function StatisticsSection() {
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         {coreMetrics.map((metric, id) => (
           <div key={metric.title} className={`rounded-2xl bg-blue-gradiant-main p-5 sm:p-6 bg-box-shadow`}>
-            <div className="text-xs uppercase tracking-widest text-black font-semibold">{metric.title}</div>
+            <div className="text-xs uppercase  text-black font-semibold">{metric.title}</div>
             <div className="mt-3 flex items-baseline gap-3">
               <span className="text-3xl font-bold text-blue-700">{metric.value}</span>
               <span
-                className={`text-xs font-semibold uppercase tracking-widest ${
+                className={`text-xs font-semibold uppercase  ${
                   metric.tone === "positive" ? "text-emerald-700" : metric.tone === "negative" ? "text-red-300" : "text-slate-300"
                 }`}
               >
@@ -66,13 +66,13 @@ export default function StatisticsSection() {
       <div className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_1fr]">
         <div className="rounded-2xl bg-[#d6e8ee] p-5 sm:p-6 bg-box-shadow bg-blue-gradiant-main">
           <div className="flex flex-wrap items-center justify-between gap-2 font-bold">
-            <div className="text-xs uppercase tracking-widest text-blue-700 font-extrabold">Tương tác nhân sự</div>
-            <span className="text-xs uppercase tracking-widest text-blue-700 font-extrabold">Realtime</span>
+            <div className="text-xs uppercase  text-blue-700 font-extrabold">Tương tác nhân sự</div>
+            <span className="text-xs uppercase  text-blue-700 font-extrabold">Realtime</span>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             {engagementMetrics.map((item) => (
               <div key={item.label} className="rounded-xl bg-white p-4 bg-box-shadow-inset">
-                <div className="text-xs uppercase tracking-widest text-black font-bold">{item.label}</div>
+                <div className="text-xs uppercase  text-black font-bold">{item.label}</div>
                 <div className="mt-2 text-xl font-semibold text-blue-800">{item.value}</div>
                 <div className="text-xs text-emerald-700 font-bold">{item.change}</div>
               </div>
@@ -81,12 +81,12 @@ export default function StatisticsSection() {
         </div>
 
         <div className="rounded-2xl bg-[#d6e8ee] p-5 sm:p-6 bg-box-shadow bg-blue-gradiant-main">
-          <div className="text-xs uppercase tracking-widest text-blue-800 font-extrabold ">Công nghệ & bảo trì</div>
+          <div className="text-xs uppercase  text-blue-800 font-extrabold ">Công nghệ & bảo trì</div>
           <div className="mt-4 space-y-3">
             {technologyMetrics.map((item) => (
               <div key={item.label} className="rounded-xl bg-white p-4 bg-box-shadow-inset">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs uppercase tracking-widest text-black font-bold">{item.label}</span>
+                  <span className="text-xs uppercase  text-black font-bold">{item.label}</span>
                   <span className="text-sm font-extrabold text-blue-800 ">{item.value}</span>
                 </div>
                 <div className="mt-2 text-xs text-black">{item.descriptor}</div>

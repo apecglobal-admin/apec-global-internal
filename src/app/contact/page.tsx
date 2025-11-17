@@ -129,7 +129,7 @@ export default function ContactPage() {
               <a
                 key={index}
                 href={category.link}
-                className="bg-white border-2 border-slate-200 rounded-xl p-6 hover:border-blue-500 hover:shadow-xl transition duration-300 group"
+                className="bg-white bg-box-shadow rounded-xl p-6 hover:border-blue-500 hover:shadow-xl transition duration-300 group"
               >
                 <div className="text-blue-600 mb-4 group-hover:scale-110 transition-transform">
                   {category.icon}
@@ -157,7 +157,7 @@ export default function ContactPage() {
             {faqs.map((faq) => (
               <div
                 key={faq.id}
-                className="bg-white border-2 border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition"
+                className="bg-white bg-box-shadow rounded-xl overflow-hidden shadow-sm hover:shadow-md transition"
               >
                 <button
                   onClick={() => toggleFaq(faq.id)}
@@ -190,7 +190,7 @@ export default function ContactPage() {
             Liên Hệ Với Chúng Tôi
           </h3>
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-8 text-center hover:shadow-xl hover:border-blue-400 transition">
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 bg-box-shadow rounded-xl p-8 text-center hover:shadow-xl hover:border-blue-400 transition">
               <div className="w-16 h-16 bg-blue-600 bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Phone className="w-8 h-8" />
               </div>
@@ -201,7 +201,7 @@ export default function ContactPage() {
               <p className="text-slate-600 text-sm">8:00 - 22:00 hàng ngày</p>
             </div>
 
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-8 text-center hover:shadow-xl hover:border-purple-400 transition">
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 bg-box-shadow rounded-xl p-8 text-center hover:shadow-xl hover:border-purple-400 transition">
               <div className="w-16 h-16 bg-purple-600 bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Mail className="w-8 h-8 " />
               </div>
@@ -214,7 +214,7 @@ export default function ContactPage() {
               <p className="text-slate-600 text-sm">Phản hồi trong 24h</p>
             </div>
 
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-8 text-center hover:shadow-xl hover:border-green-400 transition">
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 bg-box-shadow rounded-xl p-8 text-center hover:shadow-xl hover:border-green-400 transition">
               <div className="w-16 h-16 bg-green-600 bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Clock className="w-8 h-8" />
               </div>
@@ -235,7 +235,7 @@ export default function ContactPage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Contact Form */}
-            <div className="bg-white border-2 border-slate-200 rounded-xl p-8 shadow-lg">
+            <div className="bg-white bg-box-shadow rounded-xl p-8 shadow-lg">
               <h3 className="text-2xl font-bold mb-6 text-slate-900">
                 Gửi Tin Nhắn
               </h3>
@@ -358,7 +358,7 @@ export default function ContactPage() {
               </div>
 
               {/* Office Hours */}
-              <div className="bg-white border-2 border-slate-200 rounded-xl p-6 shadow-lg">
+              <div className="bg-white bg-box-shadow rounded-xl p-6 shadow-lg">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                     <Clock className="w-5 h-5 text-blue-600" />

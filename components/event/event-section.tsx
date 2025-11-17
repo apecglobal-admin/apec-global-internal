@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BellRing, Calendar, Clock, MapPin, Sparkles } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
@@ -10,39 +10,26 @@ import {
     getListEvent,
     eventRegister,
     eventReminder,
-} from "@/src/services/api";
-import { formatDate } from "@/src/utils/formatDate";
+    getStatEvent,
+} from "@/src/features/event/api/api";
+import { formatDate, formatMonthYearVN } from "@/src/utils/formatDate";
 import CalendarDefault from "./calendarDefault";
 import { colorClasses, colorMap } from "@/src/utils/color";
+import { useEventData } from "@/src/hooks/eventhook";
 
-type EventType = "internal" | "external" | "all";
 
-const eventStats = [
-    { value: "24", label: "Sự kiện 2025", subLabel: "Đã xác nhận lịch" },
-    { value: "8", label: "Đang mở đăng ký", subLabel: "Nội bộ & đối ngoại" },
-    { value: "640", label: "Người tham gia", subLabel: "Dự kiến cập nhật" },
-    { value: "92%", label: "Tỷ lệ phản hồi", subLabel: "Sau sự kiện" },
-];
-
-const navEvent = [
-    { label: "Tất cả", value: "all" },
-    { label: "Nội bộ", value: "internal" },
-    { label: "Đối ngoại", value: "external" },
-];
 const initialRemind: Record<string, boolean> = {};
 
 export default function EventSection() {
     const dispatch = useDispatch();
-    const { listEvent, typeEvent, reminder } = useSelector(
-        (state: any) => state.event
-    );
 
-    const [activeType, setActiveType] = useState<EventType>("all");
+    const { typeEvent, listEvent, stateEvent } = useEventData();
+    
+    
+    const [activeType, setActiveType] = useState<Number | "all">("all");
     const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
-    // const [eventCalendar, setEventCalendar] = useState<any[]>([]);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [reminders, setReminders] = useState<Record<string, boolean>>({});
-    console.log(listEvent);
     
     // Lấy dữ liệu sự kiện từ API
     useEffect(() => {
@@ -51,8 +38,10 @@ export default function EventSection() {
             const payload = {
                 token,
             };
-            await dispatch(getListEvent(payload) as any);
+            await dispatch(getStatEvent() as any);
             await dispatch(getTypeEvent() as any);
+            await dispatch(getListEvent(payload) as any);
+            
             // if (token) {
             // }
         };
@@ -62,10 +51,10 @@ export default function EventSection() {
 
     useEffect(() => {
         if (
-            listEvent.data.calendar_events &&
-            listEvent.data.calendar_events.length !== 0
+            listEvent.calendar_events &&
+            listEvent.calendar_events.length !== 0
         ) {
-            const mapped = listEvent.data.calendar_events.map((item: any) => ({
+            const mapped = listEvent.calendar_events.map((item: any) => ({
                 ...item,
                 date: item.date ? formatDate(item.date) : "",
                 type:
@@ -88,17 +77,16 @@ export default function EventSection() {
 
     // Khi API trả dữ liệu -> format lại cho component
 
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
+
 
     // Lọc sự kiện theo loại + ngày
     const filteredEvents = useMemo(() => {
         let events = upcomingEvents;
 
         if (activeType !== "all") {
-            events = events.filter((event) => event.type === activeType);
+            events = events.filter((event) => event.event_type.id === activeType);
         }
+
 
         if (selectedDate) {
             events = events.filter((event) => event.date === selectedDate);
@@ -106,6 +94,11 @@ export default function EventSection() {
 
         return events;
     }, [activeType, upcomingEvents, selectedDate]);
+
+    const handleSelectDate = (date: string) => {
+        setSelectedDate(date);
+        setActiveType("all");
+    }
 
     const toggleEventReminder = async (eventId: number) => {
         const token = localStorage.getItem("userToken");
@@ -118,7 +111,7 @@ export default function EventSection() {
             const payload = { event_id: eventId, token };
 
             const res = await dispatch(eventReminder(payload) as any);
-            if (res.payload.status === 200) {
+            if (res.payload.status === 200 || res.payload.status === 201) {
                 dispatch(getListEvent(payload) as any);
             } else {
                 toast.warning(res.payload.data.message);
@@ -128,16 +121,23 @@ export default function EventSection() {
 
     const handleEventRegister = async (id: number) => {
         const token = localStorage.getItem("userToken");
-        if (!token) return;
+        if (!token) {
+            toast.warning("bạn cần đăng nhập để thực hiện");
+            return;
+        };
 
         const payload = { event_id: id, token };
         const res = await dispatch(eventRegister(payload) as any);
 
-        if (res.payload.status === 201) {
+        if (res.payload.status === 201 || res.payload.status === 200) {
             dispatch(getListEvent(payload) as any);
+        } else {
+            console.log(res.payload);
+            
+            toast.warning(res.payload.message);
         }
     };
-
+    
     return (
         <section
             style={{ boxShadow: "inset 0 0 10px rgba(122, 122, 122, 0.5)" }}
@@ -146,7 +146,7 @@ export default function EventSection() {
             <div className="relative space-y-8">
                 {/* Header */}
                 <div className="space-y-6">
-                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.4em] text-blue-950 sm:text-sm">
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase  text-blue-950 sm:text-sm">
                         <Sparkles size={16} className="text-blue-950" /> Sự kiện
                     </div>
 
@@ -163,7 +163,7 @@ export default function EventSection() {
 
                     {/* Thống kê */}
                     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
-                        {eventStats.map((stat, index) => {
+                        {stateEvent.map((stat: any, index: number) => {
                             const colorClass =
                                 colorClasses[index % colorClasses.length];
                             const borderColor =
@@ -191,7 +191,7 @@ export default function EventSection() {
                                             >
                                                 {stat.value}
                                             </div>
-                                            <div className={`mt-1 text-lg uppercase tracking-widest  font-semibold ${colorClass}`}>
+                                            <div className={`mt-1 text-lg uppercase   font-semibold ${colorClass}`}>
                                                 {stat.label}
                                             </div>
                                             <div className="text-[11px] text-black">
@@ -210,24 +210,37 @@ export default function EventSection() {
         
                     className="mt-8 rounded-3xl bg-box-shadow p-5 shadow-lg shadow-blue-500/10"
                 >
-                    <div className="text-xs font-semibold uppercase tracking-widest text-black">
+                    <div className="text-xs font-semibold uppercase  text-black">
                         Lọc theo loại sự kiện
                     </div>
                     <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                        {navEvent.map((btn) => (
-                            <button
-                                key={btn.value}
+                        <button
                                 onClick={() => {
-                                    setActiveType(btn.value as EventType);
-                                    setSelectedDate(null);
+                                    setActiveType("all");
+                                    // setSelectedDate(null);
                                 }}
-                                className={`rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-widest transition ${
-                                    activeType === btn.value
+                                className={`rounded-full px-4 py-2 text-[11px] font-semibold uppercase  transition ${
+                                    activeType === "all"
                                         ? "bg-active-blue-metallic"
                                         : "border border-slate-400 bg-white text-slate-400 hover:border-teal-500 "
                                 }`}
                             >
-                                {btn.label}
+                                all
+                            </button>
+                        {typeEvent.map((btn: any) => (
+                            <button
+                                key={btn.id}
+                                onClick={() => {
+                                    setActiveType(Number(btn.id));
+                                    // setSelectedDate(null);
+                                }}
+                                className={`rounded-full px-4 py-2 text-[11px] font-semibold uppercase  transition ${
+                                    activeType === Number(btn.id)
+                                        ? "bg-active-blue-metallic"
+                                        : "border border-slate-400 bg-white text-slate-400 hover:border-teal-500 "
+                                }`}
+                            >
+                                {btn.name}
                             </button>
                         ))}
                     </div>
@@ -239,7 +252,7 @@ export default function EventSection() {
                         <CalendarDefault
                             events={upcomingEvents}
                             selectedDate={selectedDate}
-                            onDateSelect={setSelectedDate}
+                            onDateSelect={handleSelectDate}
                             allowNavigation={false}
                             initialDate={new Date()}
                             showLegend={true}
@@ -254,11 +267,14 @@ export default function EventSection() {
                                 <div className="flex items-center justify-between">
                                     <div className="text-sm font-semibold text-blue-500">
                                         Sự kiện ngày{" "}
-                                        {new Date(selectedDate).getDate()}/
-                                        {currentMonth + 1}/{currentYear}
+                                        {selectedDate}
+                                        {/* {now.current.month + 1}/{now.current.year} */}
                                     </div>
                                     <button
-                                        onClick={() => setSelectedDate(null)}
+                                        onClick={() => {
+                                            setSelectedDate(null)
+                                            setActiveType("all")
+                                        }}
                                         className="text-xs text-blue-500 hover:text-white"
                                     >
                                         Xem tất cả
@@ -286,7 +302,7 @@ export default function EventSection() {
                                     >
                                         {/* Nội dung event */}
                                         <div className="space-y-4">
-                                            <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-widest">
+                                            <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase ">
                                                 <span className="flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-700/80 px-3 py-1 text-white">
                                                     <Calendar size={14} />{" "}
                                                     {event.date}
@@ -323,7 +339,7 @@ export default function EventSection() {
                                                     {event.description}
                                                 </p>
                                                 {event.location && (
-                                                    <p className="flex items-center gap-2 text-xs uppercase tracking-widest text-black/70">
+                                                    <p className="flex items-center gap-2 text-xs uppercase  text-black/70">
                                                         <MapPin
                                                             size={14}
                                                             className="text-blue-700"
@@ -344,14 +360,14 @@ export default function EventSection() {
                                                             event.id
                                                         )
                                                     }
-                                                    className="bg-active-blue-metallic flex-1 rounded-full bg-blue-600 px-5 py-2 font-semibold uppercase tracking-widest text-white transition hover:bg-blue-500"
+                                                    className="bg-active-blue-metallic flex-1 rounded-full bg-blue-600 px-5 py-2 font-semibold uppercase  text-white transition hover:bg-blue-500"
                                                 >
                                                     Đăng ký tham gia
                                                 </button>
                                             )}
 
                                             {event.isSubmit && (
-                                                <button className="flex-1 rounded-full bg-blue-600 px-5 py-2 font-semibold uppercase tracking-widest text-white transition hover:bg-blue-500">
+                                                <button className="flex-1 rounded-full bg-blue-600 px-5 py-2 font-semibold uppercase  text-white transition hover:bg-blue-500">
                                                     Bạn đã đăng ký
                                                 </button>
                                             )}
@@ -362,7 +378,7 @@ export default function EventSection() {
                                                         event.id
                                                     )
                                                 }
-                                                className={`flex-1 rounded-full px-5 py-2 font-semibold uppercase tracking-widest transition ${
+                                                className={`flex-1 rounded-full px-5 py-2 font-semibold uppercase  transition ${
                                                     reminders[event.id]
                                                         ? "bg-orange-500/70  text-white hover:bg-orange-500/30"
                                                         : "bg-gray-400/30 border border-gray-500 text-gray-500 hover:border-blue-500 hover:text-white"

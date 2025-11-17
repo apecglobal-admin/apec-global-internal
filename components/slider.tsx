@@ -71,7 +71,7 @@ export default function Slider({ slides = fallbackSlides }: SliderProps) {
             <div className="flex flex-col items-center sm:items-start text-center sm:text-left sm:w-2/3 md:mr-5">
                 <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start sm:flex-nowrap sm:gap-4">
                     <div 
-                    className="rounded-full border border-black bg-blue-950 px-4 py-1 text-xs font-extrabold uppercase tracking-widest text-white">
+                    className="rounded-full border border-black bg-blue-950 px-4 py-1 text-xs font-extrabold uppercase  text-white">
                         {slides[current].highlight}
                     </div>
                     <div className="flex gap-1">
