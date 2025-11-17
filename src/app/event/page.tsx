@@ -19,79 +19,21 @@ import {
     eventRegister,
     eventReminder,
     getListEvent,
+    getListTimeLine,
+    getStatEvent,
     getTypeEvent,
-} from "@/src/services/api";
+} from "@/src/features/event/api/api";
 
 import { formatDate, formatMonthYearVN } from "@/src/utils/formatDate";
+import { useEventData } from "@/src/hooks/eventhook";
 
-const eventStats = [
-    { value: "24", label: "Sự kiện 2025", subLabel: "Đã xác nhận lịch" },
-    { value: "8", label: "Đang mở đăng ký", subLabel: "Nội bộ & đối ngoại" },
-    { value: "640", label: "Người tham gia", subLabel: "Dự kiến cập nhật" },
-    { value: "92%", label: "Tỷ lệ phản hồi", subLabel: "Sau sự kiện" },
-];
-
-const pastEvents = [
-    {
-        id: 101,
-        name: "Triển lãm GuardCam AI 5.0",
-        date: "2025-10-12",
-        type: "external",
-        mediaLink: "#",
-    },
-    {
-        id: 102,
-        name: "Apec Space Product Day",
-        date: "2025-09-28",
-        type: "internal",
-        mediaLink: "#",
-    },
-];
-
-const timelineHighlights = [
-    {
-        title: "Innovation Summit",
-        timeframe: "15-16/11",
-        status: "Đang chuẩn bị",
-        variant: "text-emerald-600",
-    },
-    {
-        title: "Chuỗi đào tạo lãnh đạo",
-        timeframe: "Tuần 1-3/11",
-        status: "Đang triển khai",
-        variant: "text-blue-700",
-    },
-    {
-        title: "Team Building Tech",
-        timeframe: "22/11",
-        status: "Sắp diễn ra",
-        variant: "text-orange-500",
-    },
-];
-
-type EventType = "internal" | "external" | "all";
-
-const eventTypes: any = [
-    { key: "all", label: "Tất cả" },
-    { key: "internal", label: "Nội bộ" },
-    { key: "external", label: "Đối ngoại" },
-];
-
-const navEvent = [
-    { label: "Tất cả", value: "all" },
-    { label: "Nội bộ", value: "internal" },
-    { label: "Đối ngoại", value: "external" },
-];
-
-const initialRemind: Record<string, boolean> = {};
 
 export default function EventsPage() {
     const dispatch = useDispatch();
-    const { listEvent, typeEvent, reminder } = useSelector(
-        (state: any) => state.event
-    );
 
-    const [activeType, setActiveType] = useState<EventType>("all");
+    const { typeEvent, listEvent, listTimeLine, stateEvent } = useEventData();
+    
+    const [activeType, setActiveType] = useState<Number | "all">("all");
     const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
     const [currentDate, setCurrentDate] = useState(new Date()); // November 2025
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -105,7 +47,9 @@ export default function EventsPage() {
 
     useEffect(() => {
         const fetchTypes = async () => {
+            await dispatch(getStatEvent() as any);
             await dispatch(getTypeEvent() as any);
+            await dispatch(getListTimeLine() as any);
         };
         fetchTypes();
     }, []);
@@ -114,7 +58,7 @@ export default function EventsPage() {
             const token = localStorage.getItem("userToken");
             const payload = {
                 token,
-                date: visibleMonth
+                date: visibleMonth,
             };
             await dispatch(getListEvent(payload) as any);
             // if (token) {
@@ -125,30 +69,35 @@ export default function EventsPage() {
     }, [visibleMonth]);
 
     useEffect(() => {
-        const events = listEvent.data.calendar_events || [];
-    
+        const events = listEvent.calendar_events || [];
+
         const mapped = events.map((item: any) => ({
             ...item,
             date: item.date ? formatDate(item.date) : "",
-            type: item.event_type?.name === "Nội bộ" ? "internal" :
-                  item.event_type?.name === "Đối ngoại" ? "external" : "all",
+            type:
+                item.event_type?.name === "Nội bộ"
+                    ? "internal"
+                    : item.event_type?.name === "Đối ngoại"
+                    ? "external"
+                    : "all",
             location: item.address || "",
         }));
-    
+
         const newRemind: Record<string, boolean> = {};
-        mapped.forEach((e: any) => { newRemind[e.id] = e.isRemind; });
-    
+        mapped.forEach((e: any) => {
+            newRemind[e.id] = e.isRemind;
+        });
+
         setReminders(newRemind);
         setUpcomingEvents(mapped);
     }, [listEvent]);
-
 
     // Lọc sự kiện theo loại + ngày
     const filteredEvents = useMemo(() => {
         let events = upcomingEvents;
 
         if (activeType !== "all") {
-            events = events.filter((event) => event.type === activeType);
+            events = events.filter((event) => event.event_type.id === activeType);
         }
 
         if (selectedDate) {
@@ -158,13 +107,18 @@ export default function EventsPage() {
         return events;
     }, [activeType, upcomingEvents, selectedDate]);
 
+    const handleSelectDate = (date: string) => {
+        setSelectedDate(date);
+        setActiveType("all");
+    }
 
     const handleMonthChange = async (date: Date) => {
         const format = formatMonthYearVN(date);
         setVisibleMonth(format);
         setSelectedDate(null);
-    };
+        setActiveType("all");
 
+    };
 
     const toggleEventReminder = async (eventId: number) => {
         const token = localStorage.getItem("userToken");
@@ -196,13 +150,13 @@ export default function EventsPage() {
             dispatch(getListEvent(payload) as any);
         }
     };
-
+    
     return (
         <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
             <div className="mx-auto max-w-7xl">
                 {/* Header */}
                 <div className="mb-8 space-y-4">
-                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.4em] text-blue-950 sm:text-sm">
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase  text-blue-950 sm:text-sm">
                         <Sparkles size={16} className="text-blue-950" />
                         Sự kiện
                     </div>
@@ -220,7 +174,7 @@ export default function EventsPage() {
 
                 {/* Stats */}
                 <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    {eventStats.map((stat, index) => {
+                    {stateEvent.map((stat: any, index: number) => {
                         const colorClass =
                             colorClasses[index % colorClasses.length];
                         const borderColor = colorMap[colorClass] || "#FACC15";
@@ -232,7 +186,6 @@ export default function EventsPage() {
                                 style={{
                                     borderLeftColor: borderColor,
                                     boxShadow: "0 0 10px rgba(0, 0, 0, 0.3)",
-                                    
                                 }}
                                 onMouseEnter={(e) =>
                                     (e.currentTarget.style.boxShadow = `0 0 20px ${borderColor}80`)
@@ -249,7 +202,7 @@ export default function EventsPage() {
                                             {stat.value}
                                         </div>
                                         <div
-                                            className={`mt-1 text-lg uppercase tracking-widest font-semibold ${colorClass}`}
+                                            className={`mt-1 text-lg uppercase  font-semibold ${colorClass}`}
                                         >
                                             {stat.label}
                                         </div>
@@ -264,27 +217,38 @@ export default function EventsPage() {
                 </div>
 
                 {/* Bộ lọc */}
-                <div
-                    className="mt-8 rounded-3xl bg-blue-gradiant-main bg-box-shadow p-5 shadow-lg shadow-blue-500/10"
-                >
-                    <div className="text-xs font-semibold uppercase tracking-widest text-black">
+                <div className="mt-8 rounded-3xl bg-blue-gradiant-main bg-box-shadow p-5 shadow-lg shadow-blue-500/10">
+                    <div className="text-xs font-semibold uppercase  text-black">
                         Lọc theo loại sự kiện
                     </div>
                     <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                        {navEvent.map((btn) => (
+                        <button
+                            onClick={() => {
+                                setActiveType("all");
+                                // setSelectedDate(null);
+                            }}
+                            className={`rounded-full px-4 py-2 text-[11px] font-semibold uppercase  transition ${
+                                activeType === "all"
+                                    ? "bg-active-blue-metallic"
+                                    : "border border-slate-400 bg-white text-slate-400 hover:border-teal-500 "
+                            }`}
+                        >
+                            all
+                        </button>
+                        {typeEvent.map((btn: any) => (
                             <button
-                                key={btn.value}
+                                key={btn.id}
                                 onClick={() => {
-                                    setActiveType(btn.value as EventType);
-                                    setSelectedDate(null);
+                                    setActiveType(Number(btn.id));
+                                    // setSelectedDate(null);
                                 }}
-                                className={`rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-widest transition ${
-                                    activeType === btn.value
+                                className={`rounded-full px-4 py-2 text-[11px] font-semibold uppercase  transition ${
+                                    activeType === Number(btn.id)
                                         ? "bg-active-blue-metallic"
-                                        : "border border-slate-400 bg-white text-slate-400 hover:border-teal-500"
+                                        : "border border-slate-400 bg-white text-slate-400 hover:border-teal-500 "
                                 }`}
                             >
-                                {btn.label}
+                                {btn.name}
                             </button>
                         ))}
                     </div>
@@ -296,7 +260,7 @@ export default function EventsPage() {
                         <CalendarDefault
                             events={upcomingEvents}
                             selectedDate={selectedDate}
-                            onDateSelect={setSelectedDate}
+                            onDateSelect={handleSelectDate}
                             onMonthChange={handleMonthChange}
                             allowNavigation={true}
                             initialDate={new Date()}
@@ -316,7 +280,10 @@ export default function EventsPage() {
                                         {visibleMonth}
                                     </div>
                                     <button
-                                        onClick={() => setSelectedDate(null)}
+                                        onClick={() => {
+                                            setSelectedDate(null)
+                                            setActiveType("all")
+                                        }}
                                         className="text-xs text-blue-500 hover:text-white"
                                     >
                                         Xem tất cả
@@ -325,7 +292,7 @@ export default function EventsPage() {
                             </div>
                         )}
 
-                        <div className="max-h-[600px] px-5 py-3 overflow-y-auto space-y-5">
+                        <div className="max-h-[600px] px-5 py-3 overflow-y-auto space-y-5 my-4">
                             {filteredEvents.length === 0 ? (
                                 <div className="py-16 text-center">
                                     <Calendar
@@ -344,7 +311,7 @@ export default function EventsPage() {
                                     >
                                         {/* Nội dung event */}
                                         <div className="space-y-4">
-                                            <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-widest">
+                                            <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase ">
                                                 <span className="flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-700/80 px-3 py-1 text-white">
                                                     <Calendar size={14} />{" "}
                                                     {event.date}
@@ -381,7 +348,7 @@ export default function EventsPage() {
                                                     {event.description}
                                                 </p>
                                                 {event.location && (
-                                                    <p className="flex items-center gap-2 text-xs uppercase tracking-widest text-black/70">
+                                                    <p className="flex items-center gap-2 text-xs uppercase  text-black/70">
                                                         <MapPin
                                                             size={14}
                                                             className="text-blue-700"
@@ -402,14 +369,14 @@ export default function EventsPage() {
                                                             event.id
                                                         )
                                                     }
-                                                    className="bg-active-blue-metallic flex-1 rounded-full bg-blue-600 px-5 py-2 font-semibold uppercase tracking-widest text-white transition hover:bg-blue-500"
+                                                    className="bg-active-blue-metallic flex-1 rounded-full bg-blue-600 px-5 py-2 font-semibold uppercase  text-white transition hover:bg-blue-500"
                                                 >
                                                     Đăng ký tham gia
                                                 </button>
                                             )}
 
                                             {event.isSubmit && (
-                                                <button className="flex-1 rounded-full bg-blue-600 px-5 py-2 font-semibold uppercase tracking-widest text-white transition hover:bg-blue-500">
+                                                <button className="flex-1 rounded-full bg-blue-600 px-5 py-2 font-semibold uppercase  text-white transition hover:bg-blue-500">
                                                     Bạn đã đăng ký
                                                 </button>
                                             )}
@@ -420,7 +387,7 @@ export default function EventsPage() {
                                                         event.id
                                                     )
                                                 }
-                                                className={`flex-1 rounded-full px-5 py-2 font-semibold uppercase tracking-widest transition ${
+                                                className={`flex-1 rounded-full px-5 py-2 font-semibold uppercase  transition ${
                                                     reminders[event.id]
                                                         ? "bg-orange-500/70  text-white hover:bg-orange-500/30"
                                                         : "bg-gray-400/30 border border-gray-500 text-gray-500 hover:border-blue-500 hover:text-white"
@@ -436,40 +403,86 @@ export default function EventsPage() {
                             )}
                         </div>
 
-                         {/* Timeline Highlights */}
-                         <div className="rounded-3xl bg-box-shadow bg-blue-gradiant-main p-5 sm:p-6">
-                            <div className="text-xs font-extrabold uppercase tracking-[0.4em] text-blue-700 sm:text-sm">
+                        {/* Timeline Highlights */}
+                        <div className="rounded-3xl bg-box-shadow bg-blue-gradiant-main p-5 sm:p-6">
+                            <div className="text-xs font-extrabold uppercase  text-blue-700 sm:text-sm">
                                 Điểm nhấn timeline
                             </div>
+
                             <div className="mt-4 space-y-3">
-                                {timelineHighlights.map((item) => (
-                                    <div
-                                        key={item.title}
-                                        className="rounded-2xl bg-box-shadow-inset bg-white p-4"
-                                    >
-                                        <div className="flex items-center justify-between gap-2">
-                                            <div>
-                                                <div className="text-sm font-semibold text-black">
-                                                    {item.title}
+                                {listTimeLine ? (
+                                    Object.entries(listTimeLine).map(
+                                        ([key, item]: any) => {                                            
+                                            if (!item) return null;
+                                            const statusMap: Record<
+                                                string,
+                                                {
+                                                    label: string;
+                                                    variant: string;
+                                                }
+                                            > = {
+                                                ongoing: {
+                                                    label: "Đang diễn ra",
+                                                    variant: "text-emerald-600",
+                                                },
+                                                upcoming_soon: {
+                                                    label: "Sắp diễn ra",
+                                                    variant: "text-orange-500",
+                                                },
+                                                upcoming: {
+                                                    label: "Sắp tới",
+                                                    variant: "text-blue-700",
+                                                },
+                                            };
+
+                                            const statusInfo = statusMap[
+                                                key
+                                            ] || {
+                                                label: key,
+                                                variant: "text-gray-500",
+                                            };
+
+                                            return (
+                                                <div
+                                                    key={item.id || key}
+                                                    className="rounded-2xl bg-box-shadow-inset bg-white py-5 px-4"
+                                                >
+                                                    <div className="flex items-center justify-between gap-">
+                                                        <div className="">
+                                                            <div className="text-lg font-semibold text-black">
+                                                                {item.title}
+                                                            </div>
+                                                            <div className="text-xs uppercase  text-black/80">
+                                                                {item.date} -{" "}
+                                                                {item.time}
+                                                            </div>
+                                                        </div>
+                                                        <span
+                                                            className={`text-xs font-semibold uppercase  ${statusInfo.variant}`}
+                                                        >
+                                                            {statusInfo.label}
+                                                        </span>
+                                                    </div>
+                                                    {/* {item.description && (
+                                                        <p className="mt-2 text-xs text-black/70">
+                                                            {item.description}
+                                                        </p>
+                                                    )} */}
                                                 </div>
-                                                <div className="text-xs uppercase tracking-widest text-black/80">
-                                                    {item.timeframe}
-                                                </div>
-                                            </div>
-                                            <span
-                                                className={`text-xs font-semibold uppercase tracking-widest ${item.variant}`}
-                                            >
-                                                {item.status}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
+                                            );
+                                        }
+                                    )
+                                ) : (
+                                    <p className="text-sm text-black/60">
+                                        Không có dữ liệu timeline
+                                    </p>
+                                )}
                             </div>
                         </div>
 
                         {/* Past Events */}
                         {/* <div className="rounded-3xl border border-slate-500 bg-[#e5f8ff] p-5 sm:p-6">
-                            <div className="text-xs font-extrabold uppercase tracking-[0.4em] text-blue-700 sm:text-sm">
+                            <div className="text-xs font-extrabold uppercase  text-blue-700 sm:text-sm">
                                 Thư viện sự kiện
                             </div>
                             <div className="mt-4 space-y-2">
@@ -483,7 +496,7 @@ export default function EventsPage() {
                                             {event.name}
                                         </span>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-xs uppercase tracking-widest text-black">
+                                            <span className="text-xs uppercase  text-black">
                                                 {event.date}
                                             </span>
                                             <ExternalLink
@@ -495,7 +508,6 @@ export default function EventsPage() {
                                 ))}
                             </div>
                         </div> */}
-
                     </div>
                 </div>
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     BarChart3,
     Users,
@@ -12,6 +12,9 @@ import {
     TrendingUp,
 } from "lucide-react";
 import { colorClasses, colorMap } from "@/src/utils/color";
+import { useDispatch } from "react-redux";
+import { useProjectData } from "@/src/hooks/projecthook";
+import { getListProject, getStatProject } from "@/src/features/project/api/api";
 
 const projectStats = [
     {
@@ -152,9 +155,31 @@ export default function ProjectsPage() {
     const [filterStatus, setFilterStatus] = useState("all");
     const [sortBy, setSortBy] = useState("progress");
 
+    const dispatch = useDispatch();
+    const { listProject, statProject } = useProjectData();
+
+    const [selectedAsset, setSelectedAsset] = useState<any>(null);
+
+    useEffect(() => {
+        dispatch(getStatProject() as any);
+        dispatch(getListProject() as any);
+    }, []);
+
+    // SHOW selected asset
+    useEffect(() => {
+        if (selectedAsset) {
+            console.log("FILE URL:", selectedAsset);
+            window.open(selectedAsset, "_blank");
+        }
+    }, [selectedAsset]);
+
+
+
     const filteredProjects = clusters.filter(
         (project) => filterStatus === "all" || project.status === filterStatus
     );
+
+    
 
     const getStatusBadge = (status: string) => {
         const badges: any = {
@@ -179,7 +204,7 @@ export default function ProjectsPage() {
             <div className="mx-auto max-w-7xl">
                 {/* Header */}
                 <div className="mb-8 space-y-4">
-                    <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-950 sm:text-sm">
+                    <div className="text-xs font-semibold uppercase  text-blue-950 sm:text-sm">
                         Danh mục dự án
                     </div>
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -193,7 +218,7 @@ export default function ProjectsPage() {
                                 và Google Sheet hàng tuần.
                             </p>
                         </div>
-                        <button className="flex items-center justify-center gap-2 rounded-full border border-orange-500 bg-orange-400 px-5 py-3 text-sm font-semibold uppercase tracking-widest text-white transition hover:border-orange-600 hover:bg-orange-500 hover:text-white">
+                        <button className="flex items-center justify-center gap-2 rounded-full border border-orange-500 bg-orange-400 px-5 py-3 text-sm font-semibold uppercase  text-white transition hover:border-orange-600 hover:bg-orange-500 hover:text-white">
                             <Download size={16} />
                             Tải báo cáo tổng hợp
                         </button>
@@ -202,7 +227,7 @@ export default function ProjectsPage() {
 
                 {/* Stats Grid */}
                 <div className="mb-8 grid gap-4 sm:grid-cols-1 lg:grid-cols-3">
-                    {projectStats.map((stat, index) => {
+                    {statProject.map((stat: any, index: number) => {
                         const colorClass =
                             colorClasses[index % colorClasses.length];
                         const borderColor = colorMap[colorClass] || "#FACC15";
@@ -230,7 +255,7 @@ export default function ProjectsPage() {
                                         >
                                             {stat.value}
                                         </div>
-                                        <div className={`mt-1 text-lg uppercase tracking-widest font-semibold ${colorClass}`}>
+                                        <div className={`mt-1 text-lg uppercase  font-semibold ${colorClass}`}>
                                             {stat.label}
                                         </div>
                                         <div className="text-[11px] text-black">
@@ -249,7 +274,7 @@ export default function ProjectsPage() {
 
                 {/* Filters */}
                 <div className="mb-6 flex flex-wrap items-center gap-3 bg-blue-gradiant-main p-3 rounded-full  inset-shadow-sm inset-shadow-black/50">
-                    <div className="text-xs font-bold uppercase tracking-widest text-black ml-4">
+                    <div className="text-xs font-bold uppercase  text-black ml-4">
                         Lọc theo trạng thái:
                     </div>
                     <button
@@ -314,7 +339,7 @@ export default function ProjectsPage() {
                                                     {statusBadge.label}
                                                 </span>
                                             </div>
-                                            <p className="mt-1 text-sm uppercase tracking-widest text-blue-950">
+                                            <p className="mt-1 text-sm uppercase  text-blue-950">
                                                 {project.subtitle}
                                             </p>
                                         </div>
@@ -362,7 +387,7 @@ export default function ProjectsPage() {
                                     <div className="w-full space-y-4 lg:w-80 font-bold">
                                         {/* Progress */}
                                         <div>
-                                            <div className="flex items-center justify-between text-xs uppercase tracking-widest font-bold text-orange-600">
+                                            <div className="flex items-center justify-between text-xs uppercase  font-bold text-orange-600">
                                                 <span>Tiến độ hoàn thành</span>
                                                 <span className="text-lg font-bold text-orange-600">
                                                     {project.progress}%
@@ -381,7 +406,7 @@ export default function ProjectsPage() {
 
                                         {/* Team Members */}
                                         <div className="rounded-xl border border-slate-800 bg-white p-3">
-                                            <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-black">
+                                            <div className="mb-2 text-xs font-semibold uppercase  text-black">
                                                 Thành viên phụ trách
                                             </div>
                                             <div className="space-y-1">
@@ -408,7 +433,7 @@ export default function ProjectsPage() {
                                                     <BarChart3 size={16} />
                                                     Báo cáo tiến độ
                                                 </span>
-                                                <span className="text-xs uppercase tracking-widest">
+                                                <span className="text-xs uppercase ">
                                                     {project.reportLabel}
                                                 </span>
                                             </a>
@@ -428,7 +453,7 @@ export default function ProjectsPage() {
                                         {project.issues &&
                                             project.issues.length > 0 && (
                                                 <div className="rounded-xl border border-amber-500/30 bg-amber-500/40 p-3">
-                                                    <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-orange-600">
+                                                    <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase  text-orange-600">
                                                         <span>⚠️</span>
                                                         <span>
                                                             Vấn đề cần xử lý

@@ -14,13 +14,16 @@ import {
     LogOut,
     Menu,
     X,
+    House,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import SearchBar from "./searchBar";
 
 export default function Header() {
+      const pathname = usePathname()
+      const profifle = pathname === "/profile"
     const router = useRouter();
     const dispatch = useDispatch();
     const { userInfo } = useSelector((state: any) => state.user);
@@ -28,7 +31,7 @@ export default function Header() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const sidebarRef = useRef<HTMLDivElement>(null);
- 
+
     useEffect(() => {
         const token = localStorage.getItem("userToken");
         if (token) {
@@ -64,7 +67,7 @@ export default function Header() {
     };
 
     const menuItems = [
-        { label: "Trang chủ", href: "/" },
+        { label: "Trang chủ", href: "/", icon: "House" },
         { label: "Dự án", href: "/project" },
         { label: "Sự kiện", href: "/event" },
         { label: "Hệ sinh thái", href: "/ecosystem" },
@@ -74,8 +77,12 @@ export default function Header() {
         { label: "Liên hệ", href: "/contact" },
     ];
 
+    const icons: any = {
+        House,
+    };
+
     return (
-        <header className="bg-white border-b border-slate-400  w-full">
+        <header className={`${profifle ? "bg-white  border-b border-slate-400" : "bg-white  border-b border-slate-400"}  w-full"`}>
             {/* Top Bar */}
             <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4 max-w-7xl mx-auto w-full">
                 {/* Logo */}
@@ -89,29 +96,38 @@ export default function Header() {
                         className="w-16 h-12 sm:w-20 sm:h-16 lg:w-[100px] lg:h-[70px]"
                     />
                     <div>
-                        <div className="text-xl sm:text-2xl font-extrabold tracking-wide text-blue-main ">
-                                APEC 
-                            <span className="pl-2 text-[#272863]">
-                                GLOBAL
-                            </span> 
+                        <div className="text-xl sm:text-2xl font-extrabold  text-blue-main ">
+                            APEC
+                            <span className="pl-2 text-[#272863]">GLOBAL</span>
                         </div>
-                        <div className="text-xs sm:text-sm uppercase tracking-[0.05em] font-semibold text-black">
+                        <div className="text-xs sm:text-sm uppercase  font-semibold text-black">
                             Kiến tạo giá trị - Làm Chủ Tương Lai
                         </div>
                     </div>
                 </a>
 
                 {/* Desktop Navigation */}
-                <nav className="hidden xl:flex items-center gap-4 lg:gap-3 text-md font-normal uppercase tracking-wide  flex-1 justify-center">
-                    {menuItems.map((item) => (
-                        <a
-                            key={item.label}
-                            href={item.href}
-                            className="hover:text-slate-400 transition whitespace-nowrap text-blue-main font-extrabold"
-                        >
-                            {item.label}
-                        </a>
-                    ))}
+                <nav className="hidden xl:flex items-center gap-4 lg:gap-3 text-md font-normal uppercase   flex-1 justify-center">
+                    {menuItems.map((item) => {
+                        const IconComponent = item.icon
+                            ? icons[item.icon]
+                            : null;
+                        return (
+                            <a
+                                key={item.label}
+                                href={item.href}
+                                className="hover:text-slate-400 transition whitespace-nowrap text-blue-main font-extrabold flex items-center justify-center"
+                            >
+                                {/* {IconComponent ? (
+              <IconComponent size={20} strokeWidth={2} />
+            ) : (
+              item.label
+            )} */}
+
+                                {item.label}
+                            </a>
+                        );
+                    })}
                 </nav>
 
                 {/* Mobile Hamburger */}
@@ -127,15 +143,15 @@ export default function Header() {
             <div className="border-t border-black">
                 <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 max-w-7xl mx-auto flex items-center gap-2 flex-wrap">
                     {/* Search */}
-                    <SearchBar placeHoder="tìm kiếm toàn hệ thống..."/>
+                    <SearchBar placeholder="tìm kiếm toàn hệ thống..." />
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 ml-auto">
                         <button className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full inset-shadow-sm inset-shadow-black/50 bg-blue-gradiant-main text-white transition hover:border-blue-500 hover:text-white">
-                            <Bell size={18} className="text-black"/>
+                            <Bell size={18} className="text-black" />
                         </button>
                         <button className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full inset-shadow-sm inset-shadow-black/50 bg-blue-gradiant-main text-white transition hover:border-blue-500 hover:text-white">
-                            <Mail size={18} className="text-black"/>
+                            <Mail size={18} className="text-black" />
                         </button>
 
                         {/* User Dropdown */}

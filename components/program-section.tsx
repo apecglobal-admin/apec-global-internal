@@ -46,7 +46,7 @@ export default function ProgramSection() {
     className="rounded-3xl border border-slate-400/50  bg-white p-6 sm:p-7 lg:p-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-950 sm:text-sm">Thi đua & khen thưởng</div>
+          <div className="text-xs font-semibold uppercase  text-blue-950 sm:text-sm">Thi đua & khen thưởng</div>
           <h2 className="mt-2 text-2xl font-extrabold text-blue-main capitalize sm:text-3xl">Bảng xếp hạng realtime</h2>
           <p className="mt-2 text-sm text-black/80">
             Cập nhật tự động từ ERP, phản ánh KPI, điểm thưởng, huy hiệu và danh hiệu của từng phòng ban, cá nhân và dự án.
@@ -55,7 +55,7 @@ export default function ProgramSection() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setActiveTab("departments")}
-            className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition ${
+            className={`rounded-full px-4 py-2 text-xs font-semibold uppercase  transition ${
               activeTab === "departments" ? "bg-amber-500 text-white" : "border border-black/50  text-black/50 hover:bg-amber-500"
             }`}
           >
@@ -63,7 +63,7 @@ export default function ProgramSection() {
           </button>
           <button
             onClick={() => setActiveTab("individuals")}
-            className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition ${
+            className={`rounded-full px-4 py-2 text-xs font-semibold uppercase  transition ${
               activeTab === "individuals" ? "bg-amber-500 text-white" : "border border-black/50  text-black/50 hover:bg-amber-500"
             }`}
           >
@@ -71,7 +71,7 @@ export default function ProgramSection() {
           </button>
           <button
             onClick={() => setActiveTab("projects")}
-            className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest transition ${
+            className={`rounded-full px-4 py-2 text-xs font-semibold uppercase  transition ${
               activeTab === "projects" ? "bg-amber-500 text-white" : "border border-black/50  text-black/50 hover:bg-amber-500"
             }`}
           >
@@ -82,7 +82,7 @@ export default function ProgramSection() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
         <div className="rounded-3xl bg-blue-gradiant-main bg-box-shadow-inset p-5 sm:p-6">
-          <div className="text-md uppercase tracking-widest font-extrabold text-orange-600">Bảng xếp hạng</div>
+          <div className="text-md uppercase  font-extrabold text-orange-600">Bảng xếp hạng</div>
           <ul className="mt-4 space-y-3">
             {rankingData.map((item, index) => (
               <li
@@ -98,7 +98,7 @@ export default function ProgramSection() {
                       {item.name}
                       {"badge" in item && <span className="text-lg leading-none">{item.badge as any}</span>}
                     </div>
-                    {"dept" in item && <div className="text-xs uppercase tracking-widest text-amber-200">{item.dept as any}</div>}
+                    {"dept" in item && <div className="text-xs uppercase  text-amber-200">{item.dept as any}</div>}
                   </div>
                 </div>
                 <div className="text-right">
@@ -112,7 +112,7 @@ export default function ProgramSection() {
 
         <div className="space-y-4">
           <div className="rounded-2xl bg-blue-gradiant-main bg-box-shadow-inset p-5 sm:p-6">
-            <div className="text-md uppercase tracking-widest font-extrabold text-orange-600">Module</div>
+            <div className="text-md uppercase  font-extrabold text-orange-600">Module</div>
             <div className="mt-4 grid gap-3">
               {modules.map((module) => (
                 <div key={module.title} className="flex items-center justify-between rounded-xl bg-box-shadow bg-white px-4 py-3 text-sm text-slate-200">
@@ -120,15 +120,15 @@ export default function ProgramSection() {
                     <div className="font-semibold text-black">{module.title}</div>
                     <div className="text-xs text-black">{module.description}</div>
                   </div>
-                  <span className="rounded-full border font-semibold border-orange-600 px-3 py-1 text-xs uppercase tracking-widest text-orange-600">
+                  <span className="rounded-full border font-semibold border-orange-600 px-3 py-1 text-xs uppercase  text-orange-600">
                     {module.status}
                   </span>
                 </div>
               ))}
             </div>
           </div>
-          <div className="rounded-2xl bg-box-shadow bg-amber-300/40 p-5 sm:p-6 text-center">
-            <div className="text-xs uppercase tracking-widest font-extrabold text-orange-600">Vinh danh tập thể xuất sắc</div>
+          <div className="rounded-2xl bg-box-shadow bg-[#ffd53ec4] p-5 sm:p-6 text-center ">
+            <div className="text-xs uppercase  font-extrabold text-orange-600">Vinh danh tập thể xuất sắc</div>
             <div className="mt-3 text-2xl font-extrabold text-white text-shadow-lg">GuardCam AI Hub</div>
             <p className="mt-2 text-sm text-black">
               Dẫn đầu quý III với 132% KPI, 08 sáng kiến đổi mới và chỉ số hài lòng nhân sự đạt 4.8/5.

@@ -81,6 +81,10 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+body {
+  font-family: 'Tahoma', sans-serif;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -102,6 +106,13 @@
   padding-inline: calc(var(--spacing) * 8);
 }
 
+.description-2-lines{
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
 
 
 .bg-custom-blue-gradient {
@@ -112,14 +123,20 @@
 }
 
 .bg-active-blue-metallic {
-  background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.1), #b4b4b4);
+  background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.1), rgb(211, 211, 211));
   border: 1px solid var(--color-green-main-bg); /* border-blue-600/50 */
   box-shadow: 0 0 10px var(--color-green-main-bg);
+  color: rgb(60, 115, 170);
+  font-weight: 800;
+
 }
 
 .bg-active-blue-metallic:hover{
   background-color: var(--color-green-main-bg);
+  color: rgb(60, 115, 170);
+  
 }
+
 
 .text-blue-main{
   color: rgb(60, 115, 170);
@@ -139,13 +156,9 @@
 }
 
 .bg-blue-gradiant-main{
-  background-image: linear-gradient(
-    -45deg,          /* góc gradient */
-    rgb(255, 255, 255) 0,
-    rgb(214, 245, 255) 40%, /* màu nhạt */
-    rgb(236, 250, 255) 60%, /* màu trung gian */
-    rgb(168, 229, 247) 90%  /* màu đậm */
-  );
+  background-image: url("https://res.cloudinary.com/digowtlf1/image/upload/v1763180574/0ae131a6f2657e3b2774_bz4fg3.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 
 

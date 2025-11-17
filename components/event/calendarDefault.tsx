@@ -142,7 +142,7 @@ const CalendarDefault = ({
             </div>
 
             {/* Weekday Headers */}
-            <div className="mt-4 grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-widest text-black">
+            <div className="mt-4 grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase  text-black">
                 {WEEKDAYS.map((day) => (
                     <div key={day}>{day}</div>
                 ))}

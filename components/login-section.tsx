@@ -15,7 +15,7 @@ export default function LoginSection() {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-
+    
     const clearForm = () => {
         setPassword("");
         setEmail("");
@@ -31,12 +31,13 @@ export default function LoginSection() {
             };
 
             const res = await dispatch(loginWeb(payload) as any);
-            if (status === "succeeded") {
+            
+            if (res.payload.status === 200) {
                 const token = localStorage.getItem("userToken");
                 if (token) {
                     dispatch(fetchUserInfo(token) as any);
                 }
-            } else if (status === "failed" && error) {
+            } else{
                 alert(error);
             }
         } catch (error) {
@@ -57,11 +58,11 @@ export default function LoginSection() {
                 boxShadow: "0 0 10px 2px rgb(169, 169, 170)",
             }}
         >
-            <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-950 sm:text-sm">
+            <div className="text-xs font-semibold uppercase  text-blue-950 sm:text-sm">
                 Apec ID
             </div>
 
-            {!userInfo && (
+            {!userInfo.data && (
                 <>
                     <h2 className="mt-2 text-2xl font-extrabold capitalize text-blue-main sm:text-3xl">
                         Cổng đăng nhập nội bộ
@@ -129,7 +130,7 @@ export default function LoginSection() {
                         )}
                         <button
                             onClick={handleLogin}
-                            className="w-full rounded-2xl py-3 text-sm font-semibold text-white uppercase tracking-wide transition bg-active-blue-metallic cursor-pointer"
+                            className="w-full rounded-2xl py-3 text-sm font-semibold text-white uppercase  transition bg-active-blue-metallic cursor-pointer"
                         >
                             Đăng nhập
                         </button>
@@ -137,17 +138,17 @@ export default function LoginSection() {
                 </>
             )}
 
-            {userInfo && (
+            {userInfo.data && (
                 <div className="mt-6 space-y-4">
                     <div className="text-center space-y-2">
                         <h2 className="text-2xl font-bold capitalize text-blue-main sm:text-3xl">
                             Chào mừng quay lại!
                         </h2>
                         <p className="text-xl text-orange-600 font-semibold">
-                            {userInfo.name}
+                            {userInfo.data.name}
                         </p>
                         <p className="text-sm text-black">
-                            {userInfo.email}
+                            {userInfo.data.email}
                         </p>
                     </div>
 
@@ -159,7 +160,7 @@ export default function LoginSection() {
                                         Phòng ban
                                     </p>
                                     <p className="text-black font-medium">
-                                        {userInfo.department || "Chưa cập nhật"}
+                                        {userInfo.data.department || "Chưa cập nhật"}
                                     </p>
                                 </div>
                                 <div className="text-right">
@@ -167,7 +168,7 @@ export default function LoginSection() {
                                         Chức vụ
                                     </p>
                                     <p className="text-black font-medium">
-                                        {userInfo.position || "Nhân viên"}
+                                        {userInfo.data.position || "Nhân viên"}
                                     </p>
                                 </div>
                             </div>
@@ -175,7 +176,7 @@ export default function LoginSection() {
 
                         <button
                             onClick={handleLogout}
-                            className="w-full rounded-2xl py-3 text-sm font-semibold uppercase tracking-wide transition bg-red-600 hover:bg-red-700 text-white cursor-pointer"
+                            className="w-full rounded-2xl py-3 text-sm font-semibold uppercase  transition bg-red-600 hover:bg-red-700 text-white cursor-pointer"
                         >
                             Đăng xuất
                         </button>

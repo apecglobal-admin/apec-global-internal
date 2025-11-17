@@ -137,7 +137,7 @@ export default function AdditionalSection() {
         className="relative overflow-hidden rounded-2xl bg-white p-6 sm:p-8">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.4em] text-blue-950 sm:text-sm">
+                    <div className="text-xs font-semibold uppercase  text-blue-950 sm:text-sm">
                     Các mục bổ sung
                     </div>
                     <h2 className="mt-2 text-2xl font-extrabold text-blue-main capitalize sm:text-3xl">
@@ -160,7 +160,7 @@ export default function AdditionalSection() {
                             <BookOpen className="h-7 w-7 text-white" />
                         </div>
                         <div className="ml-3">
-                            <div className="text-xs uppercase tracking-widest font-semibold text-black">
+                            <div className="text-xs uppercase  font-semibold text-black">
                                 {ecosystemData.trainingHub.title}
                             </div>
                             <h3 className="mt-2 text-xl font-extrabold text-blue-950">
@@ -175,13 +175,13 @@ export default function AdditionalSection() {
                                 className="flex flex-col gap-2 rounded-xl bg-box-shadow-inset bg-white px-4 py-2 transition  hover:bg-gray-400/40 sm:flex-row sm:items-center sm:justify-between"
                             >
                                 <span className="text-black">{item.title}</span>
-                                <span className="text-xs uppercase tracking-widest text-black">
+                                <span className="text-xs uppercase  text-black">
                                     {item.detail}
                                 </span>
                             </li>
                         ))}
                     </ul>
-                    <button className="mt-4 w-full rounded-full bg-box-shadow bg-[#97cadb] py-3 text-sm font-bold uppercase tracking-widest text-white transition hover:border-blue-800 hover:bg-[#7dc0d6] hover:text-white">
+                    <button className="mt-4 w-full rounded-full bg-box-shadow bg-[#97cadb] py-3 text-sm font-bold uppercase  text-white transition hover:border-blue-800 hover:bg-[#7dc0d6] hover:text-white">
                         {ecosystemData.trainingHub.buttonText}
                     </button>
                 </div>
@@ -195,7 +195,7 @@ export default function AdditionalSection() {
                             <Zap className="h-7 w-7 text-white" />
                         </div>
                         <div className="ml-3">
-                            <div className="text-xs uppercase tracking-widest font-semibold text-black">
+                            <div className="text-xs uppercase  font-semibold text-black">
                                 {ecosystemData.workTools.title}
                             </div>
                             <h3 className="mt-2 text-xl font-extrabold text-blue-950">
@@ -213,7 +213,7 @@ export default function AdditionalSection() {
                                 <div className="font-semibold text-black">
                                     {tool.name}
                                 </div>
-                                <div className="text-xs uppercase tracking-widest text-black">
+                                <div className="text-xs uppercase  text-black">
                                     {tool.description}
                                 </div>
                             </a>
@@ -230,7 +230,7 @@ export default function AdditionalSection() {
                             <Lightbulb className="h-7 w-7 text-white" />
                         </div>
                         <div className="ml-3">
-                            <div className="text-xs uppercase tracking-widest font-semibold text-black">
+                            <div className="text-xs uppercase  font-semibold text-black">
                                 {ecosystemData.innovationHub.title}
                             </div>
                             <h3 className="mt-2 text-xl font-extrabold text-blue-950">
@@ -243,7 +243,7 @@ export default function AdditionalSection() {
                             <li key={step}>{step}</li>
                         ))}
                     </ol>
-                    <button className="mt-4 rounded-full bg-box-shadow bg-[#97cadb] px-5 py-2 text-sm font-semibold uppercase tracking-widest text-white transition hover:bg-[#7dc0d6] hover:text-white">
+                    <button className="mt-4 rounded-full bg-box-shadow bg-[#97cadb] px-5 py-2 text-sm font-semibold uppercase  text-white transition hover:bg-[#7dc0d6] hover:text-white">
                         {ecosystemData.innovationHub.buttonText}
                     </button>
                 </div>
@@ -257,7 +257,7 @@ export default function AdditionalSection() {
                             <Newspaper className="h-7 w-7 text-white" />
                         </div>
                         <div className="ml-3">
-                            <div className="text-xs uppercase tracking-widest font-semibold text-black">
+                            <div className="text-xs uppercase  font-semibold text-black">
                                 {ecosystemData.weeklyDigest.title}
                             </div>
                             <h3 className="mt-2 text-xl font-extrabold text-blue-950">
@@ -279,7 +279,7 @@ export default function AdditionalSection() {
                             </div>
                         ))}
                     </div>
-                    <button className="mt-4 rounded-full bg-box-shadow bg-[#97cadb] px-5 py-2 text-sm font-semibold uppercase tracking-widest text-white transition hover:bg-[#7dc0d6] hover:text-white">
+                    <button className="mt-4 rounded-full bg-box-shadow bg-[#97cadb] px-5 py-2 text-sm font-semibold uppercase  text-white transition hover:bg-[#7dc0d6] hover:text-white">
                         {ecosystemData.weeklyDigest.buttonText}
                     </button>
                 </div>
