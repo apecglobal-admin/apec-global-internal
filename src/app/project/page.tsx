@@ -14,50 +14,19 @@ import {
 import { colorClasses, colorMap } from "@/src/utils/color";
 import { useDispatch } from "react-redux";
 import { useProjectData } from "@/src/hooks/projecthook";
-import { getListProject, getStatProject } from "@/src/features/project/api/api";
-
-const projectStats = [
-    {
-        value: "5",
-        label: "Dự án chính",
-        subLabel: "Trọng điểm tập đoàn",
-        icon: Target,
-    },
-    {
-        value: "52%",
-        label: "Tiến độ TB",
-        subLabel: "Cập nhật hàng tuần",
-        icon: TrendingUp,
-    },
-    {
-        value: "15",
-        label: "Phòng ban",
-        subLabel: "Tham gia triển khai",
-        icon: Users,
-    },
-];
-
-// Hàm tự động xác định trạng thái dự án
-const getProjectStatus = (
-    progress: number,
-    phase: any,
-    daysSinceUpdate: any
-) => {
-    const phaseNumber = parseInt(phase.match(/\d+/)[0]);
-    const totalPhases = parseInt(phase.match(/\/(\d+)/)[1]);
-    const expectedProgress = (phaseNumber / totalPhases) * 100;
-
-    // Tiêu chí "Cần quan tâm":
-    // 1. Tiến độ thực tế chậm hơn 15% so với giai đoạn dự kiến
-    // 2. Hoặc không cập nhật báo cáo quá 5 ngày
-    // 3. Hoặc tiến độ dưới 30% nhưng đã qua giai đoạn 2
-
-    if (daysSinceUpdate > 5) return "attention"; // Lâu không cập nhật
-    if (progress < expectedProgress - 15) return "attention"; // Chậm tiến độ
-    if (progress < 30 && phaseNumber >= 2) return "attention"; // Quá chậm so với giai đoạn
-    if (phaseNumber === 1 || progress < 35) return "planning"; // Đang lên kế hoạch
-    return "on-track"; // Đúng tiến độ
-};
+import {
+    getListProject,
+    getStatProject,
+    getStatusProject,
+} from "@/src/features/project/api/api";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 
 const clusters = [
     {
@@ -141,28 +110,47 @@ const clusters = [
         daysSinceUpdate: 7,
         issues: ["Đang chờ phê duyệt pháp lý"],
     },
-].map((project) => ({
-    ...project,
-    status: getProjectStatus(
-        project.progress,
-        project.phase,
-        project.daysSinceUpdate
-    ),
-}));
+];
+// Hàm tự động xác định trạng thái dự án
+// const getProjectStatus = (
+//     progress: number,
+//     phase: any,
+//     daysSinceUpdate: any
+// ) => {
+//     const phaseNumber = parseInt(phase.match(/\d+/)[0]);
+//     const totalPhases = parseInt(phase.match(/\/(\d+)/)[1]);
+//     const expectedProgress = (phaseNumber / totalPhases) * 100;
 
+//     // Tiêu chí "Cần quan tâm":
+//     // 1. Tiến độ thực tế chậm hơn 15% so với giai đoạn dự kiến
+//     // 2. Hoặc không cập nhật báo cáo quá 5 ngày
+//     // 3. Hoặc tiến độ dưới 30% nhưng đã qua giai đoạn 2
+
+//     if (daysSinceUpdate > 5) return "attention"; // Lâu không cập nhật
+//     if (progress < expectedProgress - 15) return "attention"; // Chậm tiến độ
+//     if (progress < 30 && phaseNumber >= 2) return "attention"; // Quá chậm so với giai đoạn
+//     if (phaseNumber === 1 || progress < 35) return "planning"; // Đang lên kế hoạch
+//     return "on-track"; // Đúng tiến độ
+// };
 
 export default function ProjectsPage() {
     const [filterStatus, setFilterStatus] = useState("all");
     const [sortBy, setSortBy] = useState("progress");
 
     const dispatch = useDispatch();
-    const { listProject, statProject } = useProjectData();
+    const { listProject, statProject, statusProject, isLoadingListProject, isLoadingStatProject, isLoadingStatusProject } = useProjectData();
 
+    const [filterProject, setFilterProject] = useState<any>();
     const [selectedAsset, setSelectedAsset] = useState<any>(null);
+    const [selectedStatus, setSelectedStatus] = useState<number | string>(
+        "all"
+    );
+
 
     useEffect(() => {
-        dispatch(getStatProject() as any);
         dispatch(getListProject() as any);
+        dispatch(getStatProject() as any);
+        dispatch(getStatusProject() as any);
     }, []);
 
     // SHOW selected asset
@@ -173,13 +161,19 @@ export default function ProjectsPage() {
         }
     }, [selectedAsset]);
 
+    useEffect(() => {
+        if (!listProject) return;
 
-
-    const filteredProjects = clusters.filter(
-        (project) => filterStatus === "all" || project.status === filterStatus
-    );
-
-    
+        if (selectedStatus === "all") {
+            setFilterProject(listProject);
+        } else {
+            const filtered = listProject.filter(
+                (project: any) =>
+                    Number(project.project_status.id) === Number(selectedStatus)
+            );
+            setFilterProject(filtered);
+        }
+    }, [selectedStatus, listProject]);
 
     const getStatusBadge = (status: string) => {
         const badges: any = {
@@ -198,6 +192,15 @@ export default function ProjectsPage() {
         };
         return badges[status] || badges["on-track"];
     };
+
+    if(!filterProject){
+        return(
+            <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
+                <Spinner text="đang tải trang..."/>
+            </div>
+        )
+    }
+
 
     return (
         <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
@@ -218,7 +221,7 @@ export default function ProjectsPage() {
                                 và Google Sheet hàng tuần.
                             </p>
                         </div>
-                        <button className="flex items-center justify-center gap-2 rounded-full border border-orange-500 bg-orange-400 px-5 py-3 text-sm font-semibold uppercase  text-white transition hover:border-orange-600 hover:bg-orange-500 hover:text-white">
+                        <button className="flex items-center justify-center gap-2 rounded-full border border-orange-500 bg-orange-400 px-5 py-3 text-sm font-semibold uppercase  text-white transition hover:border-orange-600 hover:bg-orange-500 hover:text-black/30">
                             <Download size={16} />
                             Tải báo cáo tổng hợp
                         </button>
@@ -227,12 +230,10 @@ export default function ProjectsPage() {
 
                 {/* Stats Grid */}
                 <div className="mb-8 grid gap-4 sm:grid-cols-1 lg:grid-cols-3">
-                    {statProject.map((stat: any, index: number) => {
+                    {statProject?.map((stat: any, index: number) => {
                         const colorClass =
                             colorClasses[index % colorClasses.length];
                         const borderColor = colorMap[colorClass] || "#FACC15";
-                        const Icon = stat.icon;
-
                         return (
                             <div
                                 key={stat.label}
@@ -255,17 +256,15 @@ export default function ProjectsPage() {
                                         >
                                             {stat.value}
                                         </div>
-                                        <div className={`mt-1 text-lg uppercase  font-semibold ${colorClass}`}>
+                                        <div
+                                            className={`mt-1 text-lg uppercase  font-semibold ${colorClass}`}
+                                        >
                                             {stat.label}
                                         </div>
                                         <div className="text-[11px] text-black">
                                             {stat.subLabel}
                                         </div>
                                     </div>
-                                    <Icon
-                                        size={24}
-                                        className={`${colorClass}`}
-                                    />
                                 </div>
                             </div>
                         );
@@ -277,256 +276,158 @@ export default function ProjectsPage() {
                     <div className="text-xs font-bold uppercase  text-black ml-4">
                         Lọc theo trạng thái:
                     </div>
-                    <button
-                        onClick={() => setFilterStatus("all")}
-                        className={`rounded-full px-4 py-2 text-xs font-semibold uppercase transition ${
-                            filterStatus === "all"
-                                ? "bg-blue-500 text-white border border-blue-500"
-                                : "bg-white text-gray-500 bg-box-shadow hover:text-slate-200"
-                        }`}
-                    >
-                        Tất cả ({clusters.length})
-                    </button>
-                    <button
-                        onClick={() => setFilterStatus("on-track")}
-                        className={`rounded-full px-4 py-2 text-xs font-semibold uppercase transition ${
-                            filterStatus === "on-track"
-                                ? "bg-emerald-500 text-white border border-emerald-500/50"
-                                : "bg-white text-gray-500 bg-box-shadow hover:text-slate-200"
-                        }`}
-                    >
-                        Đúng tiến độ (
-                        {clusters.filter((p) => p.status === "on-track").length}
-                        )
-                    </button>
-                    <button
-                        onClick={() => setFilterStatus("attention")}
-                        className={`rounded-full px-4 py-2 text-xs font-semibold uppercase transition ${
-                            filterStatus === "attention"
-                                ? "bg-amber-500 text-white border border-amber-500/50"
-                                : "bg-white text-gray-500 bg-box-shadow hover:text-slate-200"
-                        }`}
-                    >
-                        Cần quan tâm (
-                        {
-                            clusters.filter((p) => p.status === "attention")
-                                .length
+                    <Select
+                        value={String(selectedStatus)}
+                        onValueChange={(value) =>
+                            setSelectedStatus(
+                                value === "all" ? "all" : Number(value)
+                            )
                         }
-                        )
-                    </button>
+                    >
+                        <SelectTrigger className="bg-box-shadow text-black border-none ">
+                            <SelectValue placeholder="Tất cả trạng thái" />- ({filterProject?.length})
+                        </SelectTrigger>
+
+                        <SelectContent className="bg-white text-black border-none ">
+                            <SelectItem value="all">Tất cả</SelectItem>
+
+                            {statusProject?.map((item: any) => (
+                                <SelectItem
+                                    key={item.id}
+                                    value={String(item.id)}
+                                >
+                                    {item.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
 
                 {/* Projects List */}
-                <div className="space-y-4">
-                    {filteredProjects.map((project) => {
-                        const statusBadge = getStatusBadge(project.status);
-                        return (
-                            <article
-                                key={project.title}
-                                className="group rounded-2xl bg-blue-gradiant-main bg-box-shadow p-5 transition  sm:p-6"
+                <div className="mt-6 space-y-4 max-h-screen lg:max-h-[600px] p-2 overflow-y-auto scroll-smooth">
+                    {filterProject?.length !== 0 &&
+                        filterProject?.map((item: any) => (
+                            <div
+                                key={item.id}
+                                className="group rounded-2xl bg-blue-gradiant-main bg-box-shadow p-5 transition sm:p-6"
                             >
                                 <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-                                    {/* Left Column */}
-                                    <div className="flex-1 space-y-4 font-bold">
+                                    <div className="flex-1 space-y-5 space-x-5  font-bold">
                                         <div>
-                                            <div className="flex flex-wrap items-start gap-3">
-                                                <h3 className="text-xl font-extrabold text-blue-950 sm:text-2xl ">
-                                                    {project.title}
-                                                </h3>
-                                                <span
-                                                    className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase ${statusBadge.class}`}
-                                                >
-                                                    {statusBadge.label}
-                                                </span>
+                                            <div className="flex flex-wrap items-center gap-3">
+                                                <h3 className="text-xl font-extrabold text-blue-main sm:text-2xl">
+                                                    {item.name}
+                                                </h3> 
+                                                {item.project_status.name && 
+                                                    <span className="text-xs text-black bg-box-shadow-inset bg-tranparent px-2 py-1 rounded-2xl">
+                                                        {item.project_status.name}
+                                                    </span>
+                                                
+                                                }
                                             </div>
-                                            <p className="mt-1 text-sm uppercase  text-blue-950">
-                                                {project.subtitle}
+
+                                            <p className="mt-1 text-sm uppercase description-2-lines  text-blue-950">
+                                                {item.description}
                                             </p>
                                         </div>
 
-                                        <p className="text-sm text-black">
-                                            {project.objective}
-                                        </p>
-
                                         <div className="flex flex-wrap gap-3 text-xs">
                                             <span className="rounded-full border border-gray-500 bg-white px-3 py-1.5 text-black">
-                                                {project.phase}
-                                            </span>
-                                            <span className="rounded-full border border-gray-500 bg-white  px-3 py-1.5 text-black">
-                                                <Users
-                                                    size={12}
-                                                    className="mr-1 inline"
-                                                />
-                                                Thành viên:{" "}
-                                                {project.members.length}
-                                            </span>
-                                            <span className="rounded-full border border-gray-500 bg-white px-3 py-1.5 text-black">
-                                                <Calendar
-                                                    size={12}
-                                                    className="mr-1 inline"
-                                                />
-                                                {project.lastUpdate}
+                                                Thành viên: {item.team_size}
                                             </span>
                                         </div>
-
-                                        {/* Assets */}
-                                        <div className="flex flex-wrap gap-2 ">
-                                            {project.assets.map((asset) => (
-                                                <a
-                                                    key={asset}
-                                                    href="#"
-                                                    className="rounded-full bg-blue-gradiant-main bg-box-shadow-inset px-3 py-1.5 text-xs text-black transition hover:border-blue-500 hover:bg-[#7dc0d6] hover:text-white"
-                                                >
-                                                    {asset}
-                                                </a>
-                                            ))}
+                                        <div className="flex flex-wrap gap-2">
+                                            {item.documents?.map(
+                                                (asset: any, index: number) => (
+                                                    <button
+                                                        key={index}
+                                                        onClick={() =>
+                                                            setSelectedAsset(
+                                                                asset.file_url
+                                                            )
+                                                        }
+                                                        className="rounded-full bg-blue-gradiant-main bg-box-shadow-inset px-3 py-1.5 text-xs text-black transition hover:border-blue-500 hover:bg-[#7dc0d6] hover:text-black/50"
+                                                    >
+                                                        {asset.name}
+                                                    </button>
+                                                )
+                                            )}
                                         </div>
                                     </div>
-
-                                    {/* Right Column */}
                                     <div className="w-full space-y-4 lg:w-80 font-bold">
-                                        {/* Progress */}
                                         <div>
                                             <div className="flex items-center justify-between text-xs uppercase  font-bold text-orange-600">
                                                 <span>Tiến độ hoàn thành</span>
                                                 <span className="text-lg font-bold text-orange-600">
-                                                    {project.progress}%
+                                                    {item.progress}%
                                                 </span>
                                             </div>
+
                                             <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-slate-800 shadow-lg shadow-cyan-500/50">
                                                 <div
-                                                    className="h-full rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-400 transition-all "
+                                                    className="h-full rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-400 transition-all"
                                                     style={{
-                                                        width: `${project.progress}%`,
-                                                        
+                                                        width: `${item.progress}%`,
                                                     }}
                                                 ></div>
                                             </div>
                                         </div>
-
-                                        {/* Team Members */}
                                         <div className="rounded-xl border border-slate-800 bg-white p-3">
                                             <div className="mb-2 text-xs font-semibold uppercase  text-black">
-                                                Thành viên phụ trách
+                                                Phòng ban phụ trách
                                             </div>
                                             <div className="space-y-1">
-                                                {project.members.map(
-                                                    (member) => (
+                                                {item.departments?.map(
+                                                    (d: any) => (
                                                         <div
-                                                            key={member}
+                                                            key={d.id}
                                                             className="text-xs text-black"
                                                         >
-                                                            • {member}
+                                                            • {d.name}
                                                         </div>
                                                     )
                                                 )}
                                             </div>
                                         </div>
-
-                                        {/* Quick Actions */}
                                         <div className="space-y-2">
                                             <a
-                                                href={project.reportLink}
-                                                className="flex items-center justify-between rounded-xl bg-box-shadow bg-blue-gradiant-main px-4 py-2.5 text-sm text-black transition hover:bg-orange-500 hover:text-white"
+                                                href="#"
+                                                className="flex items-center justify-between rounded-xl bg-box-shadow bg-blue-gradiant-main px-4 py-2.5 text-sm text-black transition hover:bg-orange-500 hover:text-black/50"
                                             >
                                                 <span className="flex items-center gap-2">
-                                                    <BarChart3 size={16} />
-                                                    Báo cáo tiến độ
-                                                </span>
-                                                <span className="text-xs uppercase ">
-                                                    {project.reportLabel}
+                                                    Báo cáo tiến độ tuần/tháng
                                                 </span>
                                             </a>
+
                                             <a
-                                                href={project.profileLink}
-                                                className="flex items-center justify-between rounded-xl bg-box-shadow bg-blue-gradiant-main px-4 py-2.5 text-sm text-black transition hover:bg-orange-500 hover:text-white"
+                                                href="#"
+                                                className="flex items-center justify-between rounded-xl bg-box-shadow bg-blue-gradiant-main px-4 py-2.5 text-sm text-black transition hover:bg-orange-500 hover:text-black/50"
                                             >
                                                 <span className="flex items-center gap-2">
-                                                    <FileText size={16} />
                                                     Hồ sơ năng lực
                                                 </span>
-                                                <ExternalLink size={14} />
                                             </a>
                                         </div>
-
-                                        {/* Issues Alert - Chỉ hiển thị nếu có vấn đề */}
-                                        {project.issues &&
-                                            project.issues.length > 0 && (
-                                                <div className="rounded-xl border border-amber-500/30 bg-amber-500/40 p-3">
-                                                    <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase  text-orange-600">
-                                                        <span>⚠️</span>
-                                                        <span>
-                                                            Vấn đề cần xử lý
-                                                        </span>
-                                                    </div>
-                                                    <ul className="space-y-1">
-                                                        {project.issues.map(
-                                                            (issue, idx) => (
-                                                                <li
-                                                                    key={idx}
-                                                                    className="text-xs text-orange-600"
-                                                                >
-                                                                    • {issue}
-                                                                </li>
-                                                            )
-                                                        )}
-                                                    </ul>
-                                                </div>
-                                            )}
                                     </div>
                                 </div>
-                            </article>
-                        );
-                    })}
+                            </div>
+                        ))}
+
+                    {filterProject?.length === 0 && (
+                        <div className="rounded-2xl border border-dashed border-slate-700 bg-blue-gradiant-main px-5 py-10 text-center text-slate-400 sm:px-6 sm:py-12">
+                            Không có mục nào cho bộ lọc hiện tại.
+                        </div>
+                    )}
                 </div>
 
                 {/* Empty State */}
-                {filteredProjects.length === 0 && (
-                    <div className="py-16 text-center">
-                        <div className="text-5xl">📂</div>
-                        <p className="mt-4 text-slate-400">
-                            Không tìm thấy dự án phù hợp
-                        </p>
-                    </div>
-                )}
 
                 {/* Timeline Overview */}
                 <div className="mt-8 rounded-2xl bg-blue-gradiant-main bg-box-shadow p-6">
                     <h3 className="mb-4 text-xl font-bold text-blue-main capitalize">
                         Tổng quan roadmap
                     </h3>
-                    <div className="space-y-3">
-                        {clusters.map((project, index) => (
-                            <div
-                                key={project.title}
-                                className="flex items-center gap-4"
-                            >
-                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-orange-400 text-sm font-semibold text-white">
-                                    {index + 1}
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <div className="font-bold text-blue-950">
-                                                {project.title}
-                                            </div>
-                                            <div className="text-xs text-black/70">
-                                                {project.phase}
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-lg font-bold text-orange-400">
-                                                {project.progress}%
-                                            </div>
-                                            <div className="text-xs text-black">
-                                                {project.lastUpdate}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    <div className="space-y-3"></div>
                 </div>
             </div>
         </div>

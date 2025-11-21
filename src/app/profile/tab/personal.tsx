@@ -267,7 +267,7 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
             {activeFilterCount > 0 && (
               <button
                 onClick={clearFilters}
-                className="text-xs text-slate-400 hover:text-white transition hidden md:block"
+                className="text-xs text-slate-400 hover:text-black/30 transition hidden md:block"
               >
                 Xóa tất cả
               </button>
@@ -306,7 +306,7 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition flex items-center gap-1.5 border ${
                     isSelected
                       ? filter.color || "bg-blue-600 text-white border-blue-500"
-                      : "bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-600 hover:text-white"
+                      : "bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-600 hover:text-black/30"
                   }`}
                 >
                   <div
@@ -344,7 +344,7 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
           {activeFilterCount > 0 && (
             <button
               onClick={clearFilters}
-              className="md:hidden w-full mt-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg transition text-xs font-medium"
+              className="md:hidden w-full mt-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-black/30 rounded-lg transition text-xs font-medium"
             >
               Xóa tất cả bộ lọc
             </button>

@@ -133,7 +133,7 @@ export default function Header() {
                 {/* Mobile Hamburger */}
                 <button
                     onClick={() => setIsSidebarOpen(true)}
-                    className="xl:hidden flex h-10 w-10 items-center justify-center rounded-full bg-blue-gradiant-main bg-box-shadow text-slate-300 transition hover:border-blue-500 hover:text-white shadow-xl"
+                    className="xl:hidden flex h-10 w-10 items-center justify-center rounded-full bg-blue-gradiant-main bg-box-shadow text-slate-300 transition hover:border-blue-500 hover:text-black/30 shadow-xl"
                 >
                     <Menu size={20} className="text-black font-bold" />
                 </button>
@@ -147,10 +147,10 @@ export default function Header() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 ml-auto">
-                        <button className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full inset-shadow-sm inset-shadow-black/50 bg-blue-gradiant-main text-white transition hover:border-blue-500 hover:text-white">
+                        <button className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full inset-shadow-sm inset-shadow-black/50 bg-blue-gradiant-main text-white transition hover:border-blue-500 hover:text-black/30">
                             <Bell size={18} className="text-black" />
                         </button>
-                        <button className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full inset-shadow-sm inset-shadow-black/50 bg-blue-gradiant-main text-white transition hover:border-blue-500 hover:text-white">
+                        <button className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full inset-shadow-sm inset-shadow-black/50 bg-blue-gradiant-main text-white transition hover:border-blue-500 hover:text-black/30">
                             <Mail size={18} className="text-black" />
                         </button>
 
@@ -160,7 +160,7 @@ export default function Header() {
                                 onClick={() =>
                                     setIsDropdownOpen(!isDropdownOpen)
                                 }
-                                className="flex items-center gap-2 rounded-full inset-shadow-sm inset-shadow-black/50 bg-blue-gradiant-main px-2 sm:px-3 py-2 text-sm font-semibold text-black transition hover:border-blue-500 hover:text-black/60"
+                                className="flex items-center gap-2 rounded-full inset-shadow-sm inset-shadow-black/50 bg-blue-gradiant-main px-2 sm:px-3 py-2 text-sm font-semibold text-black transition hover:border-blue-500 hover:text-black/30"
                             >
                                 <UserCircle2 size={20} className="text-black" />
                                 <span className="hidden sm:inline">
@@ -233,7 +233,7 @@ export default function Header() {
                     <span className="text-black font-bold text-lg">Menu</span>
                     <button
                         onClick={() => setIsSidebarOpen(false)}
-                        className="text-black rounded-full border border-gray-800 p-1 bg-gray-400 hover:text-white hover:bg-black shadow-xl/20"
+                        className="text-black rounded-full border border-gray-800 p-1 bg-gray-400 hover:text-black/30 hover:bg-black hover:text-white shadow-xl/20"
                     >
                         <X size={20} />
                     </button>

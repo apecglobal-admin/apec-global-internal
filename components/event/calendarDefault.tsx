@@ -110,7 +110,7 @@ const CalendarDefault = ({
                     <>
                         <button
                             onClick={goToPreviousMonth}
-                            className="rounded-lg p-2 text-black transition hover:bg-slate-800 hover:text-white"
+                            className="rounded-lg p-2 text-black transition hover:bg-slate-800 hover:text-black/30"
                         >
                             <ChevronLeft size={20} />
                         </button>
@@ -124,7 +124,7 @@ const CalendarDefault = ({
                         </div>
                         <button
                             onClick={goToNextMonth}
-                            className="rounded-lg p-2 text-black transition hover:bg-slate-800 hover:text-white"
+                            className="rounded-lg p-2 text-black transition hover:bg-slate-800 hover:text-black/30"
                         >
                             <ChevronRight size={20} />
                         </button>

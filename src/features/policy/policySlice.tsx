@@ -4,22 +4,19 @@ import {
     getListPolicy
 } from "./api/api";
 import { createAsyncReducer } from "@/src/utils/createAsyncReducer";
+import { initState } from "@/src/services/interface";
 
-interface initState<T> {
-    data: T;
-    loading: boolean;
-    error: string | null;
-    status: number | null;
-}
 
 interface PolicyState {
     statPolicy: initState<any[]>;
     listPolicy: initState<any[]>
 }
+const createInitState = () => ({ data: [], loading: false, error: null, status: null });
+
 
 const initialState: PolicyState = {
-    listPolicy: { data: [], loading: false, error: null, status: null },
-    statPolicy: { data: [], loading: false, error: null, status: null },
+    listPolicy: createInitState(),
+    statPolicy: createInitState(),
 };
 
 const policySlice = createSlice({

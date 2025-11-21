@@ -1,6 +1,8 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import apiAxiosInstance from "./axios";
 import { toast } from "react-toastify";
+import { getStatEvent } from "../features/event/api/api";
+import type {RootState} from "../lib/store";
 
 export const loginWeb = createAsyncThunk(
   "user/loginWeb",
@@ -61,10 +63,22 @@ export const listPositions = createAsyncThunk(
 );
 
 
-export const listDepartments = createAsyncThunk(
+export const listDepartments = createAsyncThunk<
+any,   // kiểu trả về
+void,  // không có argument
+{ state: RootState } // kiểu state
+>(
   "user/listDepartments",
   async (_, thunkAPI) => {
-    console.log("Dispatching departmane");
+    const state = thunkAPI.getState();
+    const departments = state.user.departments;
+
+    if (departments?.data.length > 0) {
+      console.log("state da co");
+      
+      return thunkAPI.rejectWithValue("Already loaded");
+    }
+
     try {
       const response = await apiAxiosInstance.get("/departments");
       return  response.data.data

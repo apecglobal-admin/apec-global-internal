@@ -14,6 +14,7 @@ import SearchBar from "@/components/searchBar";
 import { useDispatch, useSelector } from "react-redux";
 import { getListPolicy, getStatPolicy } from "@/src/features/policy/api/api";
 import { usePolicyData } from "@/src/hooks/policyhook";
+import { Spinner } from "@/components/ui/spinner";
 
 const policyStats = [
     { value: "128", label: "Chính sách", subLabel: "Đã cập nhật 2025" },
@@ -66,7 +67,7 @@ export default function PoliciesPage() {
 
     const dispatch = useDispatch();
 
-    const { statPolicy, listPolicy } = usePolicyData();
+    const { statPolicy, listPolicy, isLoadingListPolicy } = usePolicyData();
 
     
     useEffect(() => {
@@ -86,6 +87,14 @@ export default function PoliciesPage() {
 
     const handleChange = (value: string) => {
         setSearchQuery(value)
+    }
+
+    if(statPolicy.length === 0 ){
+        return(
+            <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
+                <Spinner text="đang tải trang..."/>
+            </div>
+        )
     }
 
     return (
@@ -111,7 +120,7 @@ export default function PoliciesPage() {
                             <a
                                 key={link.label}
                                 href={link.href}
-                                className="flex items-center gap-2 rounded-full border border-orange-500  bg-orange-400 px-4 py-2 text-xs uppercase  text-white font-bold transition hover:border-gray-400 hover:bg-orange-500 hover:text-white"
+                                className="flex items-center gap-2 rounded-full border border-orange-500  bg-orange-400 px-4 py-2 text-xs uppercase  text-white font-bold transition hover:border-gray-400 hover:bg-orange-500 hover:text-black/30"
                             >
                                 {link.label}
                                 <span aria-hidden>↗</span>
@@ -185,7 +194,7 @@ export default function PoliciesPage() {
                                 <a
                                     key={link.label}
                                     href={link.href}
-                                    className="flex items-center justify-between rounded-xl border border-gray-400 bg-white px-3 py-2 text-sm text-black transition hover:border-gray-400 hover:bg-gray-300 hover:text-white"
+                                    className="flex items-center justify-between rounded-xl border border-gray-400 bg-white px-3 py-2 text-sm text-black transition hover:border-gray-400 hover:bg-gray-300 hover:text-black/30"
                                 >
                                     {link.label}
                                     <span aria-hidden>
@@ -196,110 +205,128 @@ export default function PoliciesPage() {
                         </div>
                     </div> */}
                 </div>
-
+                {isLoadingListPolicy && (
+                    <section
+                        style={{ boxShadow: "inset 0 0 10px rgba(122, 122, 122, 0.5)" }}
+                        className="relative overflow-hidden rounded-2xl bg-white p-6 sm:p-8"
+                    >
+                        <Spinner text="đang load dữ liệu"/>
+                    </section>
+                )}
+                
                 {/* Policy Groups Section */}
-                <div className="space-y-6">
-                    {listPolicy.map((group: any, groupIndex: number) => {
-                        const hasPolicies =
-                            Array.isArray(group.policies) &&
-                            group.policies.length > 0;
+                {!isLoadingListPolicy && (
+                    <div className="space-y-6">
 
-                        return (
-                            <article
-                                key={groupIndex}
-                                className="relative flex flex-col gap-5 overflow-hidden rounded-3xl bg-box-shadow p-6 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10"
-                            >
-                                {/* Group Header */}
-                                <div className="space-y-2">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <h2 className="text-xl font-extrabold text-blue-main capitalize sm:text-2xl">
-                                            {group.name}
-                                        </h2>
-                                        <span className="rounded-full bg-orange-400 border border-orange-500 px-3 py-1 text-xs font-semibold text-white">
-                                            {hasPolicies
-                                                ? `${group.policies.length} tài liệu`
-                                                : "0 tài liệu"}
-                                        </span>
+                        {listPolicy?.map((group: any, groupIndex: number) => {
+                            const hasPolicies =
+                                Array.isArray(group.policies) &&
+                                group.policies.length > 0;
+
+                            return (
+                                <article
+                                    key={groupIndex}
+                                    className="relative flex flex-col gap-5 overflow-hidden rounded-3xl bg-box-shadow p-6 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10"
+                                >
+                                    {/* Group Header */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <h2 className="text-xl font-extrabold text-blue-main capitalize sm:text-2xl">
+                                                {group.name}
+                                            </h2>
+                                            <span className="rounded-full bg-orange-400 border border-orange-500 px-3 py-1 text-xs font-semibold text-white">
+                                                {hasPolicies
+                                                    ? `${group.policies.length} tài liệu`
+                                                    : "0 tài liệu"}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-black/80">
+                                            {group.description}
+                                        </p>
                                     </div>
-                                    <p className="text-sm text-black/80">
-                                        {group.description}
-                                    </p>
-                                </div>
 
-                                {/* <div className="flex flex-wrap items-center gap-2 text-xs uppercase  text-blue-300">
-                                    <button className="flex items-center gap-2 rounded-full bg-blue-gradiant-main bg-box-shadow px-3 py-1.5 text-xs font-semibold text-black transition hover:border-orange-600 hover:bg-orange-500 hover:text-black/40">
-                                        <FileText size={14} />
-                                        Tải PDF
-                                    </button>
-                                    <button className="flex items-center gap-2 rounded-full bg-blue-gradiant-main bg-box-shadow px-3 py-1.5 text-xs font-semibold text-black transition hover:border-orange-600 hover:bg-orange-500 hover:text-black/40">
-                                        <PenTool size={14} />
-                                        Ký xác nhận
-                                    </button>
-                                    <button className="flex items-center gap-2 rounded-full bg-blue-gradiant-main bg-box-shadow px-3 py-1.5 text-xs font-semibold text-black transition hover:border-orange-600 hover:bg-orange-500 hover:text-black/40">
-                                        <Download size={14} />
-                                        Tải tất cả
-                                    </button>
-                                </div> */}
+                                    {/* <div className="flex flex-wrap items-center gap-2 text-xs uppercase  text-blue-300">
+                                        <button className="flex items-center gap-2 rounded-full bg-blue-gradiant-main bg-box-shadow px-3 py-1.5 text-xs font-semibold text-black transition hover:border-orange-600 hover:bg-orange-500 hover:text-black/40">
+                                            <FileText size={14} />
+                                            Tải PDF
+                                        </button>
+                                        <button className="flex items-center gap-2 rounded-full bg-blue-gradiant-main bg-box-shadow px-3 py-1.5 text-xs font-semibold text-black transition hover:border-orange-600 hover:bg-orange-500 hover:text-black/40">
+                                            <PenTool size={14} />
+                                            Ký xác nhận
+                                        </button>
+                                        <button className="flex items-center gap-2 rounded-full bg-blue-gradiant-main bg-box-shadow px-3 py-1.5 text-xs font-semibold text-black transition hover:border-orange-600 hover:bg-orange-500 hover:text-black/40">
+                                            <Download size={14} />
+                                            Tải tất cả
+                                        </button>
+                                    </div> */}
 
-                                {/* Policy List */}
-                                {hasPolicies ? (
-                                    <ul className="space-y-2">
-                                        {group.policies.map(
-                                            (policy: any, index: number) => (
-                                                <a
-                                                    href="#"
-                                                    key={`${groupIndex}-${index}`}
-                                                    className="flex flex-col gap-3 rounded-2xl bg-box-shadow bg-white px-4 py-3 transition hover:bg-gray-100 sm:flex-row sm:items-center sm:justify-between"
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-600 text-xs font-semibold text-white">
-                                                            {String(
-                                                                index + 1
-                                                            ).padStart(2, "0")}
-                                                        </span>
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-sm font-bold text-black">
+                                    {/* Policy List */}
+                                    {hasPolicies ? (
+                                        <ul className="space-y-2">
+                                            {group.policies.map(
+                                                (policy: any, index: number) => (
+                                                    <a
+                                                        href="#"
+                                                        key={`${groupIndex}-${index}`}
+                                                        className="flex flex-col gap-3 rounded-2xl bg-box-shadow bg-white px-4 py-3 transition hover:bg-gray-100 sm:flex-row sm:items-center sm:justify-between"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-600 text-xs font-semibold text-white">
+                                                                {String(
+                                                                    index + 1
+                                                                ).padStart(2, "0")}
+                                                            </span>
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-sm font-bold text-black">
+                                                                        {
+                                                                            policy.title
+                                                                        }
+                                                                    </span>
+                                                                    {policy.status ===
+                                                                        "new" && (
+                                                                        <span className="items-center rounded-full bg-orange-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white">
+                                                                            Mới
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-xs text-black">
                                                                     {
-                                                                        policy.title
+                                                                        policy.description
                                                                     }
                                                                 </span>
-                                                                {policy.status ===
-                                                                    "new" && (
-                                                                    <span className="items-center rounded-full bg-orange-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white">
-                                                                        Mới
-                                                                    </span>
-                                                                )}
                                                             </div>
-                                                            <span className="text-xs text-black">
-                                                                {
-                                                                    policy.description
-                                                                }
-                                                            </span>
                                                         </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 text-xs uppercase  transition text-orange-600">
-                                                        <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold hover:bg-orange-100">
-                                                            Xem chi tiết{" "}
-                                                            <span aria-hidden>
-                                                                ↗
-                                                            </span>
+                                                        <div className="flex items-center gap-2 text-xs uppercase  transition text-orange-600">
+                                                            <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold hover:bg-orange-100">
+                                                                Xem chi tiết{" "}
+                                                                <span aria-hidden>
+                                                                    ↗
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </a>
-                                            )
-                                        )}
-                                    </ul>
-                                ) : (
-                                    <div className="rounded-2xl border border-dashed border-gray-400 bg-gray-50 p-4 text-sm text-gray-600 italic">
-                                        Chưa có tài liệu nào được cập nhật cho
-                                        nhóm này.
-                                    </div>
-                                )}
-                            </article>
-                        );
-                    })}
-                </div>
+                                                    </a>
+                                                )
+                                            )}
+                                        </ul>
+                                    ) : (
+                                        <div className="rounded-2xl border border-dashed border-gray-400 bg-gray-50 p-4 text-sm text-gray-600 italic">
+                                            Chưa có tài liệu nào được cập nhật cho
+                                            nhóm này.
+                                        </div>
+                                    )}
+                                </article>
+                            );
+                        })}
+
+                        {listPolicy.length === 0 && (
+                            <div className="rounded-2xl border border-dashed border-slate-700 bg-blue-gradiant-main px-5 py-10 text-center text-slate-400 sm:px-6 sm:py-12">
+                                Không có chính sách nào cho bộ lọc hiện tại.
+                            </div>
+                        )}
+                    </div>
+
+                )}
 
                 {/* Notice Banner */}
                 <div className="mt-8 flex items-start gap-3 rounded-2xl border border-red-400 bg-red-500/30 p-5">

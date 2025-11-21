@@ -2,24 +2,23 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
     getListProject,
     getStatProject,
+    getStatusProject,
 } from "./api/api";
 import { createAsyncReducer } from "@/src/utils/createAsyncReducer";
-
-interface initState<T> {
-    data: T;
-    loading: boolean;
-    error: string | null;
-    status: number | null;
-}
+import { initState } from "@/src/services/interface";
 
 interface PolicyState {
     listProject: initState<any[]>;
     statProject: initState<any[]>;
+    statusProject: initState<any[]>;
 }
 
+const createInitState = () => ({ data: [], loading: false, error: null, status: null });
+
 const initialState: PolicyState = {
-    listProject: { data: [], loading: false, error: null, status: null },
-    statProject: { data: [], loading: false, error: null, status: null },
+    listProject: createInitState(),
+    statProject: createInitState(),
+    statusProject: createInitState(),
 };
 
 const projectSlice = createSlice({
@@ -31,7 +30,7 @@ const projectSlice = createSlice({
     extraReducers: (builder) => {
         createAsyncReducer(builder, getListProject, "listProject");
         createAsyncReducer(builder, getStatProject, "statProject");
-        
+        createAsyncReducer(builder, getStatusProject, "statusProject");
     },
 });
 

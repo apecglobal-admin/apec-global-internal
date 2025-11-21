@@ -34,3 +34,20 @@ export const getStatProject = createAsyncThunk(
         }
     }
 );
+
+export const getStatusProject = createAsyncThunk(
+    "project/getStatusProject",
+    async (_, thunkAPI) => {
+        try {
+            const response = await apiAxiosInstance.get("/projects/status");
+            return {
+                data: response.data.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);

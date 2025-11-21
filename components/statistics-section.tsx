@@ -1,9 +1,9 @@
 "use client"
 
 const coreMetrics = [
-  { title: "Hiệu suất phòng ban", value: "92%", delta: "+4.2%", caption: "Trung bình tuần qua", tone: "positive" },
+  { title: "Tài nguyên và nhân sự", value: "10", delta: "+4.2%", caption: "", tone: "positive" },
   { title: "Dự án đang triển khai", value: "37", delta: "+3", caption: "Bao gồm 5 dự án trọng điểm", tone: "positive" },
-  { title: "Doanh thu tháng", value: "182 tỷ", delta: "+12%", caption: "So với tháng trước", tone: "positive" },
+  { title: "Khách hàng", value: "1500", delta: "+12%", caption: "So với tháng trước", tone: "positive" },
   { title: "Chi phí vận hành", value: "68 tỷ", delta: "-5%", caption: "Tối ưu hơn kế hoạch", tone: "positive" },
 ]
 
@@ -26,19 +26,19 @@ export default function StatisticsSection() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <div className="text-xs font-semibold uppercase  text-blue-950 sm:text-sm">Thống kê & báo cáo</div>
-          <h2 className="mt-2 text-2xl font-extrabold text-blue-main capitalize sm:text-3xl ">Dashboard realtime</h2>
+          <h2 className="mt-2 text-2xl font-extrabold text-blue-main capitalize sm:text-3xl ">Dashboard</h2>
           <p className="mt-2 text-sm text-black">
             Dữ liệu đồng bộ từ ERP, CRM và ApecTech Dashboard giúp theo dõi hiệu suất, tài chính, nhân sự và tiến độ công nghệ.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+        {/* <div className="flex flex-wrap gap-2 sm:flex-nowrap">
           <button className="rounded-full border border-orange-500 bg-orange-400 px-4 py-2 text-xs font-semibold uppercase text-white transition hover:border-orange-700 hover:bg-orange-600">
             Xuất Excel
           </button>
           <button className="rounded-full border border-orange-500 bg-orange-400 px-4 py-2 text-xs font-semibold uppercase text-white transition hover:border-orange-700 hover:bg-orange-600">
             Xuất PDF
           </button>
-        </div>
+        </div> */}
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">

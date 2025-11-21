@@ -26,6 +26,7 @@ import {
 
 import { formatDate, formatMonthYearVN } from "@/src/utils/formatDate";
 import { useEventData } from "@/src/hooks/eventhook";
+import { Spinner } from "@/components/ui/spinner";
 
 
 export default function EventsPage() {
@@ -42,6 +43,9 @@ export default function EventsPage() {
     const [visibleMonth, setVisibleMonth] = useState<string | null>(
         formatMonthYearVN(new Date())
     );
+
+    console.log(upcomingEvents);
+    
 
     // Lấy dữ liệu sự kiện từ API
 
@@ -132,6 +136,10 @@ export default function EventsPage() {
 
             const res = await dispatch(eventReminder(payload) as any);
             if (res.payload.status === 200) {
+                const payload = {
+                    token,
+                    date: visibleMonth,
+                };
                 dispatch(getListEvent(payload) as any);
             } else {
                 toast.warning(res.payload.data.message);
@@ -147,9 +155,21 @@ export default function EventsPage() {
         const res = await dispatch(eventRegister(payload) as any);
 
         if (res.payload.status === 201) {
+            const payload = {
+                token,
+                date: visibleMonth,
+            };
             dispatch(getListEvent(payload) as any);
         }
     };
+    
+    if(typeEvent.length === 0 || listTimeLine.length === 0){
+        return(
+            <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
+                <Spinner text="đang tải trang..."/>
+            </div>
+        )
+    }
     
     return (
         <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
@@ -284,7 +304,7 @@ export default function EventsPage() {
                                             setSelectedDate(null)
                                             setActiveType("all")
                                         }}
-                                        className="text-xs text-blue-500 hover:text-white"
+                                        className="text-xs text-blue-500 hover:text-black/30"
                                     >
                                         Xem tất cả
                                     </button>
@@ -390,7 +410,7 @@ export default function EventsPage() {
                                                 className={`flex-1 rounded-full px-5 py-2 font-semibold uppercase  transition ${
                                                     reminders[event.id]
                                                         ? "bg-orange-500/70  text-white hover:bg-orange-500/30"
-                                                        : "bg-gray-400/30 border border-gray-500 text-gray-500 hover:border-blue-500 hover:text-white"
+                                                        : "bg-gray-400/30 border border-gray-500 text-gray-500 hover:border-blue-500 hover:text-black/30"
                                                 }`}
                                             >
                                                 {reminders[event.id]
@@ -490,7 +510,7 @@ export default function EventsPage() {
                                     <a
                                         key={event.id}
                                         href={event.mediaLink}
-                                        className="flex items-center justify-between gap-2 rounded-2xl font-semibold border border-gray-400 bg-white px-4 py-3 text-sm text-slate-300 transition hover:border-black hover:bg-gray-300 hover:text-white"
+                                        className="flex items-center justify-between gap-2 rounded-2xl font-semibold border border-gray-400 bg-white px-4 py-3 text-sm text-slate-300 transition hover:border-black hover:bg-gray-300 hover:text-black/30"
                                     >
                                         <span className="text-black">
                                             {event.name}

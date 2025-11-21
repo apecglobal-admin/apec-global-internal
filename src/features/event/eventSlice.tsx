@@ -7,13 +7,8 @@ import {
     getStatEvent
 } from "./api/api";
 import { createAsyncReducer } from "@/src/utils/createAsyncReducer";
+import { initState } from "@/src/services/interface";
 
-interface initState<T> {
-    data: T;
-    loading: boolean;
-    error: string | null;
-    status: number | null;
-}
 
 interface EventData {
     calendar_events: any[];
@@ -32,13 +27,14 @@ interface EventState {
     reminder: initState<EventMessage>;
 }
 
+const createInitState = () => ({ data: [], loading: false, error: null, status: null });
 
 
 const initialState: EventState = {
-    typeEvent: { data: [], loading: false, error: null, status: null },
+    typeEvent: createInitState(),
     listEvent: { data: { calendar_events: [], pagination_events: [] }, loading: false, error: null, status: null },
-    listTimeLine: { data: [], loading: false, error: null, status: null },
-    stateEvent: { data: [], loading: false, error: null, status: null },
+    listTimeLine: createInitState(),
+    stateEvent: createInitState(),
     reminder: { data: { message: null }, loading: false, error: null, status: null },
     
 };

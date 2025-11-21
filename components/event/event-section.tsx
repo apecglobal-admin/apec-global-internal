@@ -16,6 +16,7 @@ import { formatDate, formatMonthYearVN } from "@/src/utils/formatDate";
 import CalendarDefault from "./calendarDefault";
 import { colorClasses, colorMap } from "@/src/utils/color";
 import { useEventData } from "@/src/hooks/eventhook";
+import { Spinner } from "../ui/spinner";
 
 
 const initialRemind: Record<string, boolean> = {};
@@ -23,7 +24,10 @@ const initialRemind: Record<string, boolean> = {};
 export default function EventSection() {
     const dispatch = useDispatch();
 
-    const { typeEvent, listEvent, stateEvent } = useEventData();
+    const { typeEvent, listEvent, stateEvent, isLoadingTypeEvent,
+        isLoadingListEvent,
+        isLoadingListTimeLine,
+        isLoadingStateEvent, } = useEventData();
     
     
     const [activeType, setActiveType] = useState<Number | "all">("all");
@@ -137,6 +141,21 @@ export default function EventSection() {
             toast.warning(res.payload.message);
         }
     };
+
+    
+    if(
+        isLoadingStateEvent
+    ){
+        return (
+            <section
+                style={{ boxShadow: "inset 0 0 10px rgba(122, 122, 122, 0.5)" }}
+                className="relative overflow-hidden rounded-2xl bg-white p-6 sm:p-8"
+            >
+                <Spinner text="đang tải dữ liệu"/>
+            </section>
+
+        )
+    }
     
     return (
         <section
@@ -275,7 +294,7 @@ export default function EventSection() {
                                             setSelectedDate(null)
                                             setActiveType("all")
                                         }}
-                                        className="text-xs text-blue-500 hover:text-white"
+                                        className="text-xs text-blue-500 hover:text-black/30"
                                     >
                                         Xem tất cả
                                     </button>
@@ -381,7 +400,7 @@ export default function EventSection() {
                                                 className={`flex-1 rounded-full px-5 py-2 font-semibold uppercase  transition ${
                                                     reminders[event.id]
                                                         ? "bg-orange-500/70  text-white hover:bg-orange-500/30"
-                                                        : "bg-gray-400/30 border border-gray-500 text-gray-500 hover:border-blue-500 hover:text-white"
+                                                        : "bg-gray-400/30 border border-gray-500 text-gray-500 hover:border-blue-500 hover:text-black/30"
                                                 }`}
                                             >
                                                 {reminders[event.id]
