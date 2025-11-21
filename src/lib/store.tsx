@@ -4,7 +4,8 @@ import announcementReducer from "../features/announcement/announcementSlice";
 import eventReducer from "../features/event/eventSlice";
 import policyReducer from "../features/policy/policySlice";
 import projectReducer from "../features/project/projectSlice";
-
+import competReducer from "../features/compet/competSlice";
+import contactReducer from "../features/contact/contactSlice";
 
 const store = configureStore({
   reducer: {
@@ -12,8 +13,11 @@ const store = configureStore({
     announcement: announcementReducer,
     event: eventReducer,
     policy: policyReducer,
-    project: projectReducer
+    project: projectReducer,
+    compet: competReducer,
+    contact: contactReducer
   },
 });
 
+export type RootState = ReturnType<typeof store.getState>;;
 export default store;

@@ -8,6 +8,8 @@ export const usePolicyData = () => {
     statPolicy: policy.statPolicy.data,
     listPolicy: policy.listPolicy.data,
     // Loading states
+    isLoadingStatPolicy: policy.statPolicy.loading,
+    isLoadingListPolicy: policy.listPolicy.loading,
 
 
     // Error states

@@ -69,7 +69,7 @@ function TabNavigation({ activeTab, setActiveTab }: any) {
                   className={`flex flex-col items-center justify-center p-2 rounded-xl text-[11px] font-medium transition ${
                     activeTab === tab.id
                       ? "text-white"
-                      : "text-slate-300 hover:text-white"
+                      : "text-slate-300 hover:text-black/30"
                   }`}
                 >
                   <div className="mb-1">{tab.icon}</div>
@@ -89,7 +89,7 @@ function TabNavigation({ activeTab, setActiveTab }: any) {
                   className={`flex flex-col items-center justify-center p-2 rounded-xl text-[11px] font-medium transition ${
                     activeTab === tab.id
                       ? "text-white"
-                      : "text-slate-300 hover:text-white"
+                      : "text-slate-300 hover:text-black/30"
                   }`}
                 >
                   <div className="mb-1">{tab.icon}</div>

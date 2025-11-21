@@ -21,6 +21,7 @@ import { useProfileData } from "@/src/hooks/profileHook";
 import { listDepartments } from "@/src/services/api";
 import { toast } from "react-toastify";
 import { useAnnouncementData } from "@/src/hooks/annoucementhook";
+import { Spinner } from "./ui/spinner";
 
 type AnnouncementItem = {
     id: number;
@@ -36,18 +37,18 @@ type AnnouncementItem = {
 export default function AnnouncementSection() {
     const dispatch = useDispatch();
 
-    const { departments } = useProfileData();
-
-    const { typeAnnouncements, listAnnouncement } = useAnnouncementData();
-
+    const { departments, isLoadingDepartments } = useProfileData();
+    console.log("departments",departments);
+    
+    const { typeAnnouncements, listAnnouncement, isLoadingListAnnoucement } = useAnnouncementData();
+    
+    
     const [activeCategory, setActiveCategory] = useState<number>(1);
     const [selectedDepartment, setSelectedDepartment] = useState<
         number | "Tất cả"
     >("Tất cả");
 
     const [userToken, setUserToken] = useState<string | null>(null);
-
-    const [isLoading, setIsLoading] = useState(false);
 
     // 🟩 State để quản lý danh sách thông báo (cho phép cập nhật read)
     const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
@@ -69,7 +70,7 @@ export default function AnnouncementSection() {
     useEffect(() => {
         dispatch(getTypeAnnouncement() as any);
         dispatch(listDepartments() as any);
-    }, [dispatch]);
+    }, []);
 
     useEffect(() => {
         if (listAnnouncement.length === 0) return;
@@ -114,12 +115,25 @@ export default function AnnouncementSection() {
         }
     };
 
+    if(isLoadingListAnnoucement){
+        return(
+            <section
+            style={{ boxShadow: "inset 0 0 7px rgba(0, 0, 0, 0.5)" }}
+            className="rounded-3xl bg-white p-6 sm:p-7 lg:p-8"
+        >
+            <Spinner />
+            </section>
+        )
+    }
+
+
+
     return (
         <section
             style={{ boxShadow: "inset 0 0 7px rgba(0, 0, 0, 0.5)" }}
             className="rounded-3xl bg-white p-6 sm:p-7 lg:p-8"
         >
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 ">
                 <div>
                     <div className="text-xs font-extrabold uppercase text-blue-950 sm:text-lg">
                         Thông báo
@@ -176,7 +190,7 @@ export default function AnnouncementSection() {
                             className={`rounded-full px-4 py-2 text-xs font-semibold uppercase  transition sm:px-5 sm:text-sm ${
                                 activeCategory === Number(item.id)
                                     ? "bg-active-blue-metallic text-white"
-                                    : "border border-gray-300 bg-white text-gray-600/50 hover:border-teal-300/80 hover:text-black/60"
+                                    : "border border-gray-300 bg-white text-gray-600/50 hover:border-teal-300/80 hover:text-black/30"
                             }`}
                         >
                             {item.name}
@@ -189,20 +203,20 @@ export default function AnnouncementSection() {
                 className="mt-7 sm:mt-8 space-y-4 overflow-y-auto pr-4 py-3"
                 style={{ maxHeight: "500px" }}
             >
-                {isLoading && (
+                {/* {isLoading && (
                     <div className="rounded-2xl border border-dashed border-slate-700 bg-gray-300 px-5 py-10 text-center text-slate-400 sm:px-6 sm:py-12">
                         Đang tải dữ liệu...
                     </div>
-                )}
+                )} */}
 
-                {!isLoading && filtered.length === 0 && (
+                {filtered?.length === 0 && (
                     <div className="rounded-2xl border border-dashed border-slate-700 bg-blue-gradiant-main px-5 py-10 text-center text-slate-400 sm:px-6 sm:py-12">
                         Không có thông báo nào cho bộ lọc hiện tại.
                     </div>
                 )}
 
-                {!isLoading &&
-                    filtered.map((item: AnnouncementItem) => (
+                {
+                    filtered?.map((item: AnnouncementItem) => (
                         <div
                             onClick={() => handleShowDetail(item.id)}
                             key={item.id}

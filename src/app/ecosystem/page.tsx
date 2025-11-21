@@ -155,7 +155,7 @@ export default function Ecosystem() {
                                     )
                                 )}
                             </ul>
-                            <button className="mt-4 w-full rounded-full bg-box-shadow bg-[#97cadb] py-3 text-sm font-bold uppercase  text-white transition hover:border-blue-800 hover:bg-[#7dc0d6] hover:text-white">
+                            <button className="mt-4 w-full rounded-full bg-box-shadow bg-[#97cadb] py-3 text-sm font-bold uppercase  text-white transition hover:border-blue-800 hover:bg-[#7dc0d6] hover:text-black/30">
                                 {ecosystemData.trainingHub.buttonText}
                             </button>
                         </div>
@@ -182,7 +182,7 @@ export default function Ecosystem() {
                                     <a
                                         key={tool.name}
                                         href="#"
-                                        className="rounded-xl bg-box-shadow-inset bg-white px-4 py-3 text-left text-sm text-slate-200 transition hover:border-blue-500/40 hover:bg-gray-400/50 hover:text-white"
+                                        className="rounded-xl bg-box-shadow-inset bg-white px-4 py-3 text-left text-sm text-slate-200 transition hover:border-blue-500/40 hover:bg-gray-400/50 hover:text-black/30"
                                     >
                                         <div className="font-semibold text-black">
                                             {tool.name}
@@ -219,7 +219,7 @@ export default function Ecosystem() {
                                     )
                                 )}
                             </ol>
-                            <button className="mt-4 rounded-full bg-box-shadow bg-[#97cadb] px-5 py-2 text-sm font-semibold uppercase  text-white transition hover:bg-[#7dc0d6] hover:text-white">
+                            <button className="mt-4 rounded-full bg-box-shadow bg-[#97cadb] px-5 py-2 text-sm font-semibold uppercase  text-white transition hover:bg-[#7dc0d6] hover:text-black/30">
                                 {ecosystemData.innovationHub.buttonText}
                             </button>
                         </div>
@@ -247,7 +247,7 @@ export default function Ecosystem() {
                                     (item) => (
                                         <div
                                             key={item.title}
-                                            className="rounded-xl bg-box-shadow-inset bg-white px-4 py-3 transition hover:bg-gray-400/50 hover:text-white"
+                                            className="rounded-xl bg-box-shadow-inset bg-white px-4 py-3 transition hover:bg-gray-400/50 hover:text-black/30"
                                         >
                                             <div className="font-semibold text-black">
                                                 {item.title}
@@ -259,7 +259,7 @@ export default function Ecosystem() {
                                     )
                                 )}
                             </div>
-                            <button className="mt-4 rounded-full bg-box-shadow bg-[#97cadb] px-5 py-2 text-sm font-semibold uppercase  text-white transition hover:bg-[#7dc0d6] hover:text-white">
+                            <button className="mt-4 rounded-full bg-box-shadow bg-[#97cadb] px-5 py-2 text-sm font-semibold uppercase  text-white transition hover:bg-[#7dc0d6] hover:text-black/30">
                                 {ecosystemData.weeklyDigest.buttonText}
                             </button>
                         </div>

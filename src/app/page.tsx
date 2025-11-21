@@ -10,11 +10,15 @@ import EventSection from "@/components/event/event-section";
 import ProgramSection from "@/components/program-section";
 import AdditionalSection from "@/components/additional-section";
 import Footer from "@/components/footer";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
 
 // import Tabs UI
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ToastContainer } from "react-toastify";
+import { useAnnouncementData } from "../hooks/annoucementhook";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { getSlider } from "../features/announcement/api/api";
 
 const nav = [
     { value: "statistics", label: "Thống kê báo cáo" },
@@ -24,14 +28,24 @@ const nav = [
     { value: "additional", label: "Hệ sinh thái" },
 ];
 export default function Home() {
+    const dispatch = useDispatch();
 
+    const { slider } = useAnnouncementData();
+
+    useEffect(() => {
+        const getSlide = async () => {
+            const res = await dispatch(getSlider() as any);
+            console.log(res);
+        };
+        getSlide();
+    }, []);
+
+    console.log("ádasd", slider);
 
     return (
         <div className="min-h-screen bg-white  text-white">
-
             <main className="mx-auto w-full max-w-7xl px-4 py-10 space-y-10 sm:px-6 sm:py-12 sm:space-y-12 md:px-8 md:py-14 lg:px-8 lg:py-16 lg:space-y-16">
-
-                <Slider />
+                <Slider slides={slider} />
 
                 {/* Grid Announcement + Login */}
                 <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
@@ -49,35 +63,34 @@ export default function Home() {
                 {/* Tabs */}
 
                 <Tabs defaultValue="statistics" className="mt-10 w-full">
-                    <TabsList 
-                                // style={{
-                                //     boxShadow: "0 0 10px 2px rgb(169, 169, 170)",
-                                // }}
-                    className="inline-flex flex-wrap bg-box-shadow justify-start w-full gap-2  rounded-2xl backdrop-blur-sm mb-8 p-3 h-auto ">
+                    <TabsList
+                        // style={{
+                        //     boxShadow: "0 0 10px 2px rgb(169, 169, 170)",
+                        // }}
+                        className="inline-flex flex-wrap bg-box-shadow justify-start w-full gap-2  rounded-2xl backdrop-blur-sm mb-8 p-3 h-auto "
+                    >
                         {nav.map((tab, index) => (
                             <TabsTrigger
-  key={tab.value}
-  value={tab.value}
-//   style={{ border: "1.4px solid rgb(57,68,75)" }} // border mặc định
-  className="
-    inline-flex items-center justify-center whitespace-nowrap 
-    min-w-[110px] sm:min-w-[140px] px-4 py-3 sm:px-5 sm:py-3.5 
-    rounded-full font-medium text-sm text-gray-500
-    transition-all duration-200 
-    bg-gray-200
-    capitalize
-    hover:bg-gray-200 hover:text-white hover:border-teal-300/80
-    border-gray-300
+                                key={tab.value}
+                                value={tab.value}
+                                //   style={{ border: "1.4px solid rgb(57,68,75)" }} // border mặc định
+                                className="
+                                            inline-flex items-center justify-center whitespace-nowrap 
+                                            min-w-[110px] sm:min-w-[140px] px-4 py-3 sm:px-5 sm:py-3.5 
+                                            rounded-full font-medium text-sm text-gray-500
+                                            transition-all duration-200 
+                                            bg-gray-200
+                                            capitalize
+                                            hover:bg-gray-200 hover:text-black/30 hover:border-teal-300/80
+                                            border-gray-300
 
-    data-[state=active]:bg-white
-    data-[state=active]:text-black
-    data-[state=active]:border-[rgb(92,197,199)]
-    data-[state=active]:shadow-[0_0_5px_1px_rgb(92,197,199)]
-  "
->
-                                <span>
-                                    {tab.label}
-                                </span>
+                                            data-[state=active]:bg-white
+                                            data-[state=active]:text-black
+                                            data-[state=active]:border-[rgb(92,197,199)]
+                                            data-[state=active]:shadow-[0_0_5px_1px_rgb(92,197,199)]
+                                        "
+                            >
+                                <span>{tab.label}</span>
                             </TabsTrigger>
                         ))}
                     </TabsList>
@@ -123,7 +136,6 @@ export default function Home() {
                 {/* Thi đua & khen thưởng */}
                 <ProgramSection />
             </main>
-
         </div>
     );
 }

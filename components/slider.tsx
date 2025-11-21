@@ -3,43 +3,49 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
+import { useAnnouncementData } from "@/src/hooks/annoucementhook";
 
 export type Slide = {
+    id: string;
     title: string;
     description: string;
-    highlight: string;
+    highlight: string; 
     image: string;
 };
 
-const fallbackSlides: Slide[] = [
-    {
-        title: "Apec Group: Hành trình dẫn đầu",
-        description:
-            "Tập trung chiến lược 2025 với ba trụ cột: số hóa vận hành, nâng cao trải nghiệm khách hàng và phát triển nhân sự cốt lõi.",
-        highlight: "Chiến lược 2025",
-        image: "/tuyendungbaove/sliderHero.png",
-    },
-    {
-        title: "Nhịp điệu phát triển dự án",
-        description:
-            "Các dự án trọng điểm tại Huế, Quy Nhơn, Lạng Sơn và Bắc Ninh đang đạt 95% tiến độ, chuẩn bị nghiệm thu giai đoạn cuối.",
-        highlight: "Tiến độ dự án",
-        image: "/tuyendungbaove/BAOVECHUYENNGHIEP/1.png",
-    },
-    {
-        title: "Chăm sóc cộng đồng Apec",
-        description:
-            "Khởi động chương trình LifeCare và học bổng Shine For Future cho toàn bộ nhân sự và đội ngũ kế cận.",
-        highlight: "Phúc lợi nội bộ",
-        image: "/tuyendungbaove/BAOVECHUYENNGHIEP/2.png",
-    },
-];
+// const fallbackSlides: Slide[] = [
+//     {
+//         id: "1",
+//         title: "Apec Group: Hành trình dẫn đầu",
+//         description:
+//             "Tập trung chiến lược 2025 với ba trụ cột: số hóa vận hành, nâng cao trải nghiệm khách hàng và phát triển nhân sự cốt lõi.",
+//         highlight: "Chiến lược 2025",
+//         image: "https://res.cloudinary.com/digowtlf1/image/upload/v1763437136/7d0fe5c1b51939476008_sie9fw.jpg",
+//     },
+//     {
+//         id: "2",
+//         title: "Nhịp điệu phát triển dự án",
+//         description:
+//             "Các dự án trọng điểm tại Huế, Quy Nhơn, Lạng Sơn và Bắc Ninh đang đạt 95% tiến độ, chuẩn bị nghiệm thu giai đoạn cuối.",
+//         highlight: "Tiến độ dự án",
+//         image: "https://res.cloudinary.com/digowtlf1/image/upload/v1763437759/2_tvc8pu.jpg",
+//     },
+//     {
+//         id: "3",
+//         title: "Chăm sóc cộng đồng Apec",
+//         description:
+//             "Khởi động chương trình LifeCare và học bổng Shine For Future cho toàn bộ nhân sự và đội ngũ kế cận.",
+//         highlight: "Phúc lợi nội bộ",
+//         image: "https://res.cloudinary.com/digowtlf1/image/upload/v1763437733/1_gbuefy.jpg",
+//     },
+// ];
 
 type SliderProps = {
-    slides?: Slide[];
+    slides?: any[]; // nhận raw API (mảng từ server)
 };
 
-export default function Slider({ slides = fallbackSlides }: SliderProps) {
+export default function Slider({ slides = [] }: SliderProps) {
+    
     const [current, setCurrent] = useState(0);
 
     useEffect(() => {
@@ -47,18 +53,16 @@ export default function Slider({ slides = fallbackSlides }: SliderProps) {
     }, [slides.length]);
 
     useEffect(() => {
-        if (slides.length <= 1) {
-            return;
-        }
+        if (slides.length <= 1) return;
+
         const timer = setInterval(() => {
             setCurrent((prev) => (prev + 1) % slides.length);
         }, 5000);
+
         return () => clearInterval(timer);
     }, [slides.length]);
 
-    if (slides.length === 0) {
-        return null;
-    }
+    if (slides.length === 0) return null;
 
     const next = () => setCurrent((current + 1) % slides.length);
     const prev = () =>
@@ -68,10 +72,12 @@ export default function Slider({ slides = fallbackSlides }: SliderProps) {
         <div 
         style={{boxShadow: "inset 0 0 7px rgba(0, 0, 0, 0.5)"}}
         className="relative flex flex-col sm:flex-row items-center justify-between rounded-3xl bg-white px-6 py-4 inset-shadow-sm inset-shadow-black/50">
+
             <div className="flex flex-col items-center sm:items-start text-center sm:text-left sm:w-2/3 md:mr-5">
+
                 <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start sm:flex-nowrap sm:gap-4">
                     <div 
-                    className="rounded-full border border-black bg-blue-950 px-4 py-1 text-xs font-extrabold uppercase  text-white">
+                        className="rounded-full border border-black bg-blue-950 px-4 py-1 text-xs font-extrabold uppercase  text-white">
                         {slides[current].highlight}
                     </div>
                     <div className="flex gap-1">
@@ -110,6 +116,7 @@ export default function Slider({ slides = fallbackSlides }: SliderProps) {
                     </button>
                 </div>
             </div>
+
             <div className="md:w-1/3 sm:w-1/3 w-3/4 sm:mt-0  mt-8  w-full rounded-lg overflow-hidden" style={{ height: "280px" }}>
                 <Image
                     src={slides[current].image}
@@ -117,10 +124,8 @@ export default function Slider({ slides = fallbackSlides }: SliderProps) {
                     width={0}
                     height={0}
                     className="w-full h-full  rounded-md object-fix"
-
                 />
             </div>
         </div>
     );
 }
-// relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900/80 to-slate-950 p-6 sm:p-7 lg:p-8 flex flex-col sm:flex-row items-center gap-6

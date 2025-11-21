@@ -1,6 +1,24 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import apiAxiosInstance from "@/src/services/axios";
 
+
+
+export const getSlider = createAsyncThunk(
+    "announcement/getSlider",
+    async (_, thunkAPI) => {
+        try {
+            const response = await apiAxiosInstance.get("/images");
+            return {
+                data: response.data,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
 export const getTypeAnnouncement = createAsyncThunk(
     "announcement/getTypeAnnouncement",
     async (_, thunkAPI) => {
