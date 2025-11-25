@@ -27,6 +27,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import SearchBar from "@/components/searchBar";
 
 const clusters = [
     {
@@ -138,17 +139,23 @@ export default function ProjectsPage() {
     const [sortBy, setSortBy] = useState("progress");
 
     const dispatch = useDispatch();
-    const { listProject, statProject, statusProject, isLoadingListProject, isLoadingStatProject, isLoadingStatusProject } = useProjectData();
+    const {
+        listProject,
+        statProject,
+        statusProject,
+        isLoadingListProject,
+        isLoadingStatProject,
+        isLoadingStatusProject,
+    } = useProjectData();
 
-    const [filterProject, setFilterProject] = useState<any>();
     const [selectedAsset, setSelectedAsset] = useState<any>(null);
     const [selectedStatus, setSelectedStatus] = useState<number | string>(
         "all"
     );
-
+    const [searchQuery, setSearchQuery] = useState<string>("");
 
     useEffect(() => {
-        dispatch(getListProject() as any);
+        // dispatch(getListProject() as any);
         dispatch(getStatProject() as any);
         dispatch(getStatusProject() as any);
     }, []);
@@ -156,24 +163,19 @@ export default function ProjectsPage() {
     // SHOW selected asset
     useEffect(() => {
         if (selectedAsset) {
-            console.log("FILE URL:", selectedAsset);
             window.open(selectedAsset, "_blank");
         }
     }, [selectedAsset]);
 
     useEffect(() => {
-        if (!listProject) return;
-
-        if (selectedStatus === "all") {
-            setFilterProject(listProject);
-        } else {
-            const filtered = listProject.filter(
-                (project: any) =>
-                    Number(project.project_status.id) === Number(selectedStatus)
-            );
-            setFilterProject(filtered);
+        const project_status =  selectedStatus === "all" ? null : selectedStatus;
+        const payload = {
+            search: searchQuery,
+            project_status
         }
-    }, [selectedStatus, listProject]);
+        dispatch(getListProject(payload) as any);
+
+    }, [selectedStatus, searchQuery]);
 
     const getStatusBadge = (status: string) => {
         const badges: any = {
@@ -193,14 +195,17 @@ export default function ProjectsPage() {
         return badges[status] || badges["on-track"];
     };
 
-    if(!filterProject){
-        return(
+    if (!listProject) {
+        return (
             <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
-                <Spinner text="đang tải trang..."/>
+                <Spinner text="đang tải trang..." />
             </div>
-        )
+        );
     }
 
+    const handleChange = (value: string) => {
+        setSearchQuery(value);
+    };
 
     return (
         <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
@@ -272,41 +277,106 @@ export default function ProjectsPage() {
                 </div>
 
                 {/* Filters */}
-                <div className="mb-6 flex flex-wrap items-center gap-3 bg-blue-gradiant-main p-3 rounded-full  inset-shadow-sm inset-shadow-black/50">
-                    <div className="text-xs font-bold uppercase  text-black ml-4">
-                        Lọc theo trạng thái:
+                <div className="mb-6 w-full">
+                    <div className="mx-auto max-w-7xl rounded-2xl bg-box-shadow p-4 shadow-lg backdrop-blur-sm">
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-4">
+                            {/* Status Filter Section - Compact hơn */}
+                            <div className="flex items-center gap-3 lg:flex-shrink-0">
+                                <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-3 bg-box-shadow-inset transition-all hover:shadow-md">
+                                    {/* Filter Icon */}
+                                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-black">
+                                        <svg
+                                            className="h-4 w-4 text-white"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                                            />
+                                        </svg>
+                                    </div>
+
+                                    {/* Filter Label & Select */}
+                                    <div className="flex min-w-[140px] flex-col gap-0.5">
+                                        <label className="text-xs font-semibold uppercase text-gray-500">
+                                            Trạng thái
+                                        </label>
+                                        <Select
+                                            value={String(selectedStatus)}
+                                            onValueChange={(value) =>
+                                                setSelectedStatus(
+                                                    value === "all"
+                                                        ? "all"
+                                                        : Number(value)
+                                                )
+                                            }
+                                        >
+                                            <SelectTrigger className="h-auto border-none p-0 text-sm font-medium text-gray-800 hover:text-indigo-600">
+                                                <SelectValue placeholder="Chọn trạng thái" />
+                                            </SelectTrigger>
+
+                                            <SelectContent className="bg-white shadow-xl">
+                                                <SelectItem
+                                                    value="all"
+                                                    className="cursor-pointer text-black"
+                                                > 
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="h-2 w-2 rounded-full bg-indigo-500"></div>
+                                                        <span>
+                                                            Tất cả trạng thái
+                                                        </span>
+                                                    </div>
+                                                </SelectItem>
+
+                                                {statusProject?.map(
+                                                    (item: any) => (
+                                                        <SelectItem
+                                                            key={item.id}
+                                                            value={String(
+                                                                item.id
+                                                            )}
+                                                            className="cursor-pointer text-black"
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="h-2 w-2 rounded-full bg-indigo-500"></div>
+                                                                <span>
+                                                                    {item.name}
+                                                                </span>
+                                                            </div>
+                                                        </SelectItem>
+                                                    )
+                                                )}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* Count Badge */}
+                                    <div className="ml-2 flex h-7 min-w-[28px] flex-shrink-0 items-center justify-center rounded-full bg-black px-2 text-xs font-bold text-white bg-box-shadow">
+                                        {listProject?.length || 0}
+                                    </div>
+                                </div>
+                            </div>
+                            {/* Search Section - Chiếm phần lớn không gian */}
+                            <div className="flex-1">
+                                <div className="relative">
+                                    <SearchBar
+                                        placeholder="Tìm kiếm dự án..."
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <Select
-                        value={String(selectedStatus)}
-                        onValueChange={(value) =>
-                            setSelectedStatus(
-                                value === "all" ? "all" : Number(value)
-                            )
-                        }
-                    >
-                        <SelectTrigger className="bg-box-shadow text-black border-none ">
-                            <SelectValue placeholder="Tất cả trạng thái" />- ({filterProject?.length})
-                        </SelectTrigger>
-
-                        <SelectContent className="bg-white text-black border-none ">
-                            <SelectItem value="all">Tất cả</SelectItem>
-
-                            {statusProject?.map((item: any) => (
-                                <SelectItem
-                                    key={item.id}
-                                    value={String(item.id)}
-                                >
-                                    {item.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
                 </div>
 
                 {/* Projects List */}
                 <div className="mt-6 space-y-4 max-h-screen lg:max-h-[600px] p-2 overflow-y-auto scroll-smooth">
-                    {filterProject?.length !== 0 &&
-                        filterProject?.map((item: any) => (
+                    {listProject?.length !== 0 &&
+                        listProject?.map((item: any) => (
                             <div
                                 key={item.id}
                                 className="group rounded-2xl bg-blue-gradiant-main bg-box-shadow p-5 transition sm:p-6"
@@ -317,13 +387,15 @@ export default function ProjectsPage() {
                                             <div className="flex flex-wrap items-center gap-3">
                                                 <h3 className="text-xl font-extrabold text-blue-main sm:text-2xl">
                                                     {item.name}
-                                                </h3> 
-                                                {item.project_status.name && 
+                                                </h3>
+                                                {item.project_status.name && (
                                                     <span className="text-xs text-black bg-box-shadow-inset bg-tranparent px-2 py-1 rounded-2xl">
-                                                        {item.project_status.name}
+                                                        {
+                                                            item.project_status
+                                                                .name
+                                                        }
                                                     </span>
-                                                
-                                                }
+                                                )}
                                             </div>
 
                                             <p className="mt-1 text-sm uppercase description-2-lines  text-blue-950">
@@ -413,7 +485,7 @@ export default function ProjectsPage() {
                             </div>
                         ))}
 
-                    {filterProject?.length === 0 && (
+                    {listProject?.length === 0 && (
                         <div className="rounded-2xl border border-dashed border-slate-700 bg-blue-gradiant-main px-5 py-10 text-center text-slate-400 sm:px-6 sm:py-12">
                             Không có mục nào cho bộ lọc hiện tại.
                         </div>

@@ -61,3 +61,59 @@ export const createAsyncReducer = (
       });
     });
 };
+
+
+export const createAsyncReducerDynamic = (builder: any, asyncThunk: any) => {
+  builder
+    // pending
+    .addCase(asyncThunk.pending, (state: any, action: any) => {
+      const key = action.meta.arg.key;
+      if (!key) return;
+
+      state[key].loading = true;
+      state[key].error = null;
+      state[key].status = null;
+    })
+
+    // fulfilled
+    .addCase(asyncThunk.fulfilled, (state: any, action: any) => {
+      const key = action.meta.arg.key || action.payload.key;
+      if (!key) return;
+
+      const payload = action.payload || {};
+      const statusCode = payload.status ?? 200;
+
+      state[key].loading = false;
+      state[key].status = statusCode;
+      state[key].error = null;
+
+      state[key].data = payload.data ?? payload;
+
+      // merge các field khác (giống helper cũ)
+      Object.keys(payload).forEach((field) => {
+        if (["status", "data", "key"].includes(field)) return;
+        state[key][field] = payload[field];
+      });
+    })
+
+    // rejected
+    .addCase(asyncThunk.rejected, (state: any, action: any) => {
+      const key = action.meta.arg.key;
+      if (!key) return;
+
+      const statusCode =
+        action.payload?.status ??
+        action.error?.status ??
+        action.error?.response?.status ??
+        400;
+
+      const errorMsg =
+        action.payload?.message ||
+        action.error?.message ||
+        "Unknown error";
+
+      state[key].loading = false;
+      state[key].error = errorMsg;
+      state[key].status = statusCode;
+    });
+};

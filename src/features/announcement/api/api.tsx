@@ -5,9 +5,16 @@ import apiAxiosInstance from "@/src/services/axios";
 
 export const getSlider = createAsyncThunk(
     "announcement/getSlider",
-    async (_, thunkAPI) => {
+    async (payload: any, thunkAPI) => {
         try {
-            const response = await apiAxiosInstance.get("/images");
+            const { page }: any = payload;
+
+            const params = Object.fromEntries(
+                Object.entries({ page }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/images", {params});
             return {
                 data: response.data,
             };
@@ -37,12 +44,19 @@ export const getTypeAnnouncement = createAsyncThunk(
 
 export const getListAnnouncement = createAsyncThunk(
     "announcement/getListAnnouncement",
-    async (token: string | null, thunkAPI) => {
+    async (payload: any, thunkAPI) => {
         try {
+            const { token, search, type_id, department_id }: any = payload;
+            const params = Object.fromEntries(
+                Object.entries({ search, type_id, department_id }).filter(
+                    ([key, value]) => value != null
+                )
+            );
             if(token){
                 const response = await apiAxiosInstance.get(
                     "/notifications/employees",
                     {
+                        params,
                         headers: {
                             Authorization: `Bearer ${token}`,
                         },
@@ -53,7 +67,8 @@ export const getListAnnouncement = createAsyncThunk(
                 };
             }else{
                 const response = await apiAxiosInstance.get(
-                    "/notifications/employees"
+                    "/notifications/employees", 
+                    {params}
                 );
                 return {
                     data: response.data,

@@ -9,11 +9,7 @@ import { usePolicyData } from "@/src/hooks/policyhook";
 import { getListPolicy, getStatPolicy } from "@/src/features/policy/api/api";
 import { Spinner } from "./ui/spinner";
 
-const quickLinks = [
-    { label: "Chính sách mới cập nhật", href: "#" },
-    { label: "Biểu mẫu phổ biến", href: "#" },
-    { label: "Hướng dẫn ký nhận điện tử", href: "#" },
-];
+
 export default function PolicySection() {
     const [searchQuery, setSearchQuery] = useState<string>("");
     const dispatch = useDispatch();

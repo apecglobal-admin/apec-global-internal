@@ -196,3 +196,13 @@ body {
 }
 
 
+@media (max-width: 1199px) {
+  .hide-under-1200 {
+    display: none;
+  }
+  .show-over-1200 {
+    display: flex;
+  }
+}
+
+

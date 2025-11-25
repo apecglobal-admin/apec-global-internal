@@ -19,6 +19,7 @@ import { useAnnouncementData } from "../hooks/annoucementhook";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { getSlider } from "../features/announcement/api/api";
+import { useProfileData } from "../hooks/profileHook";
 
 const nav = [
     { value: "statistics", label: "Thống kê báo cáo" },
@@ -31,16 +32,18 @@ export default function Home() {
     const dispatch = useDispatch();
 
     const { slider } = useAnnouncementData();
+    const { userInfo } = useProfileData();
 
     useEffect(() => {
         const getSlide = async () => {
-            const res = await dispatch(getSlider() as any);
+            const payload = {
+                page: 1
+            }
+            const res = await dispatch(getSlider(payload) as any);
             console.log(res);
         };
         getSlide();
     }, []);
-
-    console.log("ádasd", slider);
 
     return (
         <div className="min-h-screen bg-white  text-white">
@@ -62,79 +65,93 @@ export default function Home() {
 
                 {/* Tabs */}
 
-                <Tabs defaultValue="statistics" className="mt-10 w-full">
-                    <TabsList
-                        // style={{
-                        //     boxShadow: "0 0 10px 2px rgb(169, 169, 170)",
-                        // }}
-                        className="inline-flex flex-wrap bg-box-shadow justify-start w-full gap-2  rounded-2xl backdrop-blur-sm mb-8 p-3 h-auto "
-                    >
-                        {nav.map((tab, index) => (
-                            <TabsTrigger
-                                key={tab.value}
-                                value={tab.value}
-                                //   style={{ border: "1.4px solid rgb(57,68,75)" }} // border mặc định
-                                className="
-                                            inline-flex items-center justify-center whitespace-nowrap 
-                                            min-w-[110px] sm:min-w-[140px] px-4 py-3 sm:px-5 sm:py-3.5 
-                                            rounded-full font-medium text-sm text-gray-500
-                                            transition-all duration-200 
-                                            bg-gray-200
-                                            capitalize
-                                            hover:bg-gray-200 hover:text-black/30 hover:border-teal-300/80
-                                            border-gray-300
-
-                                            data-[state=active]:bg-white
-                                            data-[state=active]:text-black
-                                            data-[state=active]:border-[rgb(92,197,199)]
-                                            data-[state=active]:shadow-[0_0_5px_1px_rgb(92,197,199)]
-                                        "
+                {userInfo && (
+                    <>
+                        <Tabs
+                            defaultValue="statistics"
+                            className="mt-10 w-full"
+                        >
+                            <TabsList
+                                // style={{
+                                //     boxShadow: "0 0 10px 2px rgb(169, 169, 170)",
+                                // }}
+                                className="inline-flex flex-wrap bg-box-shadow justify-start w-full gap-2  rounded-2xl backdrop-blur-sm mb-8 p-3 h-auto "
                             >
-                                <span>{tab.label}</span>
-                            </TabsTrigger>
-                        ))}
-                    </TabsList>
+                                {nav.map((tab, index) => (
+                                    <TabsTrigger
+                                        key={tab.value}
+                                        value={tab.value}
+                                        //   style={{ border: "1.4px solid rgb(57,68,75)" }} // border mặc định
+                                        className="
+                                                            inline-flex items-center justify-center whitespace-nowrap 
+                                                            min-w-[110px] sm:min-w-[140px] px-4 py-3 sm:px-5 sm:py-3.5 
+                                                            rounded-full font-medium text-sm text-gray-500
+                                                            transition-all duration-200 
+                                                            bg-gray-200
+                                                            capitalize
+                                                            hover:bg-gray-200 hover:text-black/30 hover:border-teal-300/80
+                                                            border-gray-300
+                
+                                                            data-[state=active]:bg-white
+                                                            data-[state=active]:text-black
+                                                            data-[state=active]:border-[rgb(92,197,199)]
+                                                            data-[state=active]:shadow-[0_0_5px_1px_rgb(92,197,199)]
+                                                        "
+                                    >
+                                        <span>{tab.label}</span>
+                                    </TabsTrigger>
+                                ))}
+                            </TabsList>
 
-                    <div className="space-y-6">
-                        <TabsContent
-                            value="statistics"
-                            className="animate-in fade-in-50 duration-300 p-[2px] rounded-2xl "
-                        >
-                            <StatisticsSection />
-                        </TabsContent>
+                            <div className="space-y-6">
+                                <TabsContent
+                                    value="statistics"
+                                    className="animate-in fade-in-50 duration-300 p-[2px] rounded-2xl "
+                                >
+                                    <StatisticsSection />
+                                </TabsContent>
 
-                        <TabsContent
-                            value="policy"
-                            className="animate-in fade-in-50 duration-300 p-[2px] rounded-2xl "
-                        >
-                            <PolicySection />
-                        </TabsContent>
+                                <TabsContent
+                                    value="policy"
+                                    className="animate-in fade-in-50 duration-300 p-[2px] rounded-2xl "
+                                >
+                                    <PolicySection />
+                                </TabsContent>
 
-                        <TabsContent
-                            value="event"
-                            className="animate-in fade-in-50 duration-300 p-[2px] rounded-2xl "
-                        >
-                            <EventSection />
-                        </TabsContent>
+                                <TabsContent
+                                    value="event"
+                                    className="animate-in fade-in-50 duration-300 p-[2px] rounded-2xl "
+                                >
+                                    <EventSection />
+                                </TabsContent>
 
-                        <TabsContent
-                            value="projects"
-                            className="animate-in fade-in-50 duration-300 p-[2px] rounded-2xl "
-                        >
-                            <ProjectsSection />
-                        </TabsContent>
+                                <TabsContent
+                                    value="projects"
+                                    className="animate-in fade-in-50 duration-300 p-[2px] rounded-2xl "
+                                >
+                                    <ProjectsSection />
+                                </TabsContent>
 
-                        <TabsContent
-                            value="additional"
-                            className="animate-in fade-in-50 duration-300 p-[2px] rounded-2xl "
-                        >
-                            <AdditionalSection />
-                        </TabsContent>
+                                <TabsContent
+                                    value="additional"
+                                    className="animate-in fade-in-50 duration-300 p-[2px] rounded-2xl "
+                                >
+                                    <AdditionalSection />
+                                </TabsContent>
+                            </div>
+                        </Tabs>
+
+                        <ProgramSection />
+                    </>
+                )}
+
+                {!userInfo && (
+                    <div className="rounded-2xl  bg-white ">
+                        <div className="rounded-2xl border border-dashed border-slate-700 bg-blue-gradiant-main text-center text-slate-400 sm:px-6 sm:py-12">
+                            Bạn cần đăng nhập để hiển thêm thông tin
+                        </div>
                     </div>
-                </Tabs>
-
-                {/* Thi đua & khen thưởng */}
-                <ProgramSection />
+                )}
             </main>
         </div>
     );

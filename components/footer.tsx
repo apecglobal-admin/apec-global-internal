@@ -1,6 +1,38 @@
 "use client";
 
+import { getContact } from "@/src/features/contact/api/api";
+import { useContactData } from "@/src/hooks/contacthook";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+
 export default function Footer() {
+    const dispatch = useDispatch();
+    const { listContact } = useContactData();
+
+    useEffect(() => {
+        if(listContact.length !== 0) return;
+        const payload = {}
+        dispatch(getContact(payload) as any);
+    }, []);
+
+    // Helper function để lấy thông tin contact theo title
+    const getContactInfo = (title: string) => {
+        return listContact?.find((item: any) => item.title === title);
+    };
+
+    const hotlineInfo = getContactInfo("Hotline");
+    const emailInfo = getContactInfo("Email");
+    const workTimeInfo = getContactInfo("Giờ Làm Việc");
+
+    // Helper function để format thời gian
+    const formatTime = (time: string) => {
+        if (!time) return "";
+        return time.substring(0, 5); // Lấy HH:MM từ HH:MM:SS
+    };
+    
+
+
+
     return (
         <footer className="border-t border-slate-800 bg-white">
             <div className="container mx-auto grid gap-8 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 max-w-7xl mx-auto lg:grid-cols-[2fr_1fr]">
@@ -32,7 +64,7 @@ export default function Footer() {
                     </h3>
                     <div className="mt-4 flex flex-wrap gap-3 text-sm font-bold text-black">
                         <a
-                            href="#"
+                            href="/policy"
                             className="rounded-full bg-white shadow-lg/10 bg-box-shadow px-4 py-2 hover:bg-black/10 hover:text-black/70"
                         >
                             Chính sách
@@ -76,10 +108,12 @@ export default function Footer() {
                         <div className="uppercase  font-bold text-blue-950">
                             Kênh hỗ trợ 24/7
                         </div>
-                        <p className="mt-2 text-black">
-                            Zalo: @ApecTechSupport • Email:
-                            support@apecglobal.internal • Hotline: 1900.555.886
-                        </p>
+                        <ul className="mt-2 text-black">
+                            <li>Hotline: <span>{hotlineInfo?.content}</span></li>
+                            <li>Email: <span>{emailInfo?.content}</span></li>
+
+                            
+                        </ul>
                     </div>
                 </div>
             </div>

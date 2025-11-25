@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const apiAxiosInstance= axios.create({
-  baseURL: 'https://apec-global-backend.vercel.app/', 
+  baseURL: 'https://apec-global-backend.vercel.app/api/v1', 
   headers: {
     'Content-Type': 'application/json',
   },

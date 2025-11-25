@@ -6,7 +6,7 @@ export const useCompetData = () => {
   return {
     // Data 
     listRankingCompet: compet.listRankingCompet.data,
-
+    topRank: compet.topRank.data,
     // Loading states
 
 

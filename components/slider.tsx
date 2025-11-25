@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useAnnouncementData } from "@/src/hooks/annoucementhook";
+import { usePathname, useRouter } from "next/navigation";
 
 export type Slide = {
     id: string;
@@ -45,7 +46,7 @@ type SliderProps = {
 };
 
 export default function Slider({ slides = [] }: SliderProps) {
-    
+    const router = useRouter();
     const [current, setCurrent] = useState(0);
 
     useEffect(() => {
@@ -68,10 +69,23 @@ export default function Slider({ slides = [] }: SliderProps) {
     const prev = () =>
         setCurrent((current - 1 + slides.length) % slides.length);
 
+    const handleClick = (direct: any) => {
+        if (!direct) {
+            router.push("/#");
+            window.location.href = "#"; 
+
+            return;
+            
+        }
+        window.open(direct, "_blank", "noopener,noreferrer");
+    }
+
     return (
         <div 
         style={{boxShadow: "inset 0 0 7px rgba(0, 0, 0, 0.5)"}}
-        className="relative flex flex-col sm:flex-row items-center justify-between rounded-3xl bg-white px-6 py-4 inset-shadow-sm inset-shadow-black/50">
+        className="relative flex flex-col sm:flex-row items-center justify-between rounded-3xl bg-white px-6 py-4 inset-shadow-sm inset-shadow-black/50"
+        onClick={() => handleClick(slides[current].redirect)}
+        >
 
             <div className="flex flex-col items-center sm:items-start text-center sm:text-left sm:w-2/3 md:mr-5">
 
@@ -103,13 +117,19 @@ export default function Slider({ slides = [] }: SliderProps) {
 
                 <div className="mt-6 flex flex-wrap justify-center sm:justify-start gap-3">
                     <button
-                        onClick={prev}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            prev();
+                        }}
                         className="flex h-11 w-11 items-center justify-center rounded-full inset-shadow-sm inset-shadow-black/50 bg-blue-gradiant-main bg-gray-300 text-black transition hover:border-blue-500"
                     >
                         <ChevronLeft size={22} />
                     </button>
                     <button
-                        onClick={next}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            next();
+                        }}
                         className="flex h-11 w-11 items-center justify-center rounded-full inset-shadow-sm inset-shadow-black/50 bg-blue-gradiant-main bg-gray-300 text-black transition hover:border-blue-500"
                     >
                         <ChevronRight size={22} />

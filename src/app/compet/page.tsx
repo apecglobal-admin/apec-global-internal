@@ -1,6 +1,6 @@
 "use client";
 
-import { getRankingCompet } from "@/src/features/compet/api/api";
+import { getRankingCompet, getTopRankingCompet } from "@/src/features/compet/api/api";
 import { useCompetData } from "@/src/hooks/compethook";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -50,16 +50,21 @@ type RankingTab = "department" | "employee" | "project";
 
 const CompanyLeaderboard = () => {
     const dispatch = useDispatch();
-    const { listRankingCompet } = useCompetData();
+    const { listRankingCompet, topRank } = useCompetData();
     const [activeTab, setActiveTab] = useState<RankingTab>("department");
-
-        useEffect(() => {
-            const payload = {
-                type: activeTab,
-            };
+    console.log(topRank);
     
-            dispatch(getRankingCompet(payload) as any);
-        }, [activeTab]);
+    useEffect(() => {
+        dispatch(getTopRankingCompet() as any);
+    }, []);
+
+    useEffect(() => {
+        const payload = {
+            type: activeTab,
+        };
+
+        dispatch(getRankingCompet(payload) as any);
+    }, [activeTab]);
 
 
     

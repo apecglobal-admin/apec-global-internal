@@ -1,7 +1,7 @@
 "use client";
 
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { fetchUserInfo, loginWeb } from "@/src/services/api";
 import { Eye, EyeOff, Lock } from "lucide-react";
@@ -15,15 +15,52 @@ export default function LoginSection() {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [emailError, setEmailError] = useState(false);
+    const [passwordError, setPasswordError] = useState(false);
+    
+    // Refs để focus vào input
+    const emailRef = useRef<HTMLInputElement>(null);
+    const passwordRef = useRef<HTMLInputElement>(null);
     
     const clearForm = () => {
         setPassword("");
         setEmail("");
+        setEmailError(false);
+        setPasswordError(false);
     };
 
     const handleLogin = async (e: any) => {
         e.preventDefault();
-        // console.log("Đăng nhập với:", { email, password });
+        
+        // Reset errors
+        setEmailError(false);
+        setPasswordError(false);
+        
+        // Validate inputs
+        let hasError = false;
+        
+        if (!email.trim()) {
+            setEmailError(true);
+            hasError = true;
+            emailRef.current?.focus();
+        }
+        
+        if (!password.trim()) {
+            setPasswordError(true);
+            hasError = true;
+            // Chỉ focus vào password nếu email không có lỗi
+            if (!emailError && !email.trim()) {
+                passwordRef.current?.focus();
+            } else if (email.trim()) {
+                passwordRef.current?.focus();
+            }
+        }
+        
+        // Nếu có lỗi thì không submit
+        if (hasError) {
+            return;
+        }
+        
         try {
             const payload = {
                 email,
@@ -38,7 +75,6 @@ export default function LoginSection() {
                     dispatch(fetchUserInfo(token) as any);
                 }
             } else{
-                alert(error);
             }
         } catch (error) {
             console.error("Đăng nhập thất bại:", error);
@@ -49,6 +85,21 @@ export default function LoginSection() {
         localStorage.removeItem("userToken");
         dispatch(logout());
         router.push("/login");
+    };
+
+    // Reset error khi user nhập lại
+    const handleEmailChange = (e: any) => {
+        setEmail(e.target.value);
+        if (emailError && e.target.value.trim()) {
+            setEmailError(false);
+        }
+    };
+    
+    const handlePasswordChange = (e: any) => {
+        setPassword(e.target.value);
+        if (passwordError && e.target.value.trim()) {
+            setPasswordError(false);
+        }
     };
 
     return (
@@ -73,37 +124,63 @@ export default function LoginSection() {
                         tiếp hồ sơ KPI, chấm công, lương thưởng.
                     </p>
                     <div className="mt-5 space-y-4 sm:mt-6">
-                        <input
-                            id="email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Email"
-                            className="w-full rounded-2xl border border-slate-400 px-4 py-3 text-sm text-black placeholder:text-black
-                focus:border-blue-500 focus:outline-none bg-white focus:bg-white transition-colors"
-                        />
-                        <div className="relative">
+                        <div>
                             <input
-                                id="password"
-                                type={showPassword ? "text" : "password"}
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Mật khẩu"
-                                className="w-full rounded-2xl border border-slate-400 px-4 py-3 text-sm text-black placeholder:text-black
-                  focus:border-blue-500 focus:outline-none bg-white focus:bg-white transition-colors"
+                                ref={emailRef}
+                                id="email"
+                                type="email"
+                                value={email}
+                                onChange={handleEmailChange}
+                                placeholder="Email"
+                                className={`w-full rounded-2xl border px-4 py-3 text-sm text-black placeholder:text-black
+                focus:outline-none bg-white focus:bg-white transition-colors ${
+                    emailError 
+                        ? 'border-red-500 focus:border-red-500' 
+                        : 'border-slate-400 focus:border-blue-500'
+                }`}
                             />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
-                            >
-                                {showPassword ? (
-                                    <EyeOff size={18} />
-                                ) : (
-                                    <Eye size={18} />
-                                )}
-                            </button>
+                            {emailError && (
+                                <p className="mt-1 text-xs text-red-500">
+                                    Vui lòng nhập email
+                                </p>
+                            )}
                         </div>
+                        
+                        <div>
+                            <div className="relative">
+                                <input
+                                    ref={passwordRef}
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={handlePasswordChange}
+                                    placeholder="Mật khẩu"
+                                    className={`w-full rounded-2xl border px-4 py-3 text-sm text-black placeholder:text-black
+                  focus:outline-none bg-white focus:bg-white transition-colors ${
+                      passwordError 
+                          ? 'border-red-500 focus:border-red-500' 
+                          : 'border-slate-400 focus:border-blue-500'
+                  }`}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
+                                >
+                                    {showPassword ? (
+                                        <EyeOff size={18} />
+                                    ) : (
+                                        <Eye size={18} />
+                                    )}
+                                </button>
+                            </div>
+                            {passwordError && (
+                                <p className="mt-1 text-xs text-red-500">
+                                    Vui lòng nhập mật khẩu
+                                </p>
+                            )}
+                        </div>
+                        
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             {/* <label className="flex items-center gap-2 text-sm text-slate-300">
                 <input
@@ -183,47 +260,49 @@ export default function LoginSection() {
                     </div>
                 </div>
             )}
+            {userInfo.data && (
+                <div
+                    className="mt-6 grid gap-3 rounded-2xl  bg-blue-gradiant-main bg-box-shadow-inset  p-5 text-sm text-black"
+                >
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                        <span>Quản lý hồ sơ cá nhân</span>
+                        <a
+                            href="/profile"
+                            className="transition hover:text-blue-300 text-blue-950 font-bold"
+                        >
+                            Cập nhật
+                        </a>
+                    </div>
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                        <span>Chấm công realtime</span>
+                        <a
+                            href="/profile"
+                            className="text-blue-400 transition hover:text-blue-300 text-blue-950 font-bold"
+                        >
+                            Mở bảng công
+                        </a>
+                    </div>
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                        <span>KPI và liên kết thi đua</span>
+                        <a
+                            href="/profile"
+                            className="text-blue-400 transition hover:text-blue-300 text-blue-950 font-bold"
+                        >
+                            Xem KPI
+                        </a>
+                    </div>
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                        <span>Bảng lương nội bộ</span>
+                        <a
+                            href="/profile"
+                            className="text-blue-400 transition hover:text-blue-300 text-blue-950 font-bold"
+                        >
+                            Tải bảng lương
+                        </a>
+                    </div>
+                </div>
+            )}
 
-            <div
-                className="mt-6 grid gap-3 rounded-2xl  bg-blue-gradiant-main bg-box-shadow-inset  p-5 text-sm text-black"
-            >
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                    <span>Quản lý hồ sơ cá nhân</span>
-                    <a
-                        href="#"
-                        className="transition hover:text-blue-300 text-blue-950 font-bold"
-                    >
-                        Cập nhật
-                    </a>
-                </div>
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                    <span>Chấm công realtime</span>
-                    <a
-                        href="#"
-                        className="text-blue-400 transition hover:text-blue-300 text-blue-950 font-bold"
-                    >
-                        Mở bảng công
-                    </a>
-                </div>
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                    <span>KPI và liên kết thi đua</span>
-                    <a
-                        href="#"
-                        className="text-blue-400 transition hover:text-blue-300 text-blue-950 font-bold"
-                    >
-                        Xem KPI
-                    </a>
-                </div>
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                    <span>Bảng lương nội bộ</span>
-                    <a
-                        href="#"
-                        className="text-blue-400 transition hover:text-blue-300 text-blue-950 font-bold"
-                    >
-                        Tải bảng lương
-                    </a>
-                </div>
-            </div>
         </section>
     );
 }

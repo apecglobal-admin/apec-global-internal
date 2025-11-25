@@ -27,25 +27,24 @@ import {
 import { formatDate, formatMonthYearVN } from "@/src/utils/formatDate";
 import { useEventData } from "@/src/hooks/eventhook";
 import { Spinner } from "@/components/ui/spinner";
-
+import SearchBar from "@/components/searchBar";
 
 export default function EventsPage() {
     const dispatch = useDispatch();
 
     const { typeEvent, listEvent, listTimeLine, stateEvent } = useEventData();
-    
+
     const [activeType, setActiveType] = useState<Number | "all">("all");
     const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
-    const [currentDate, setCurrentDate] = useState(new Date()); // November 2025
+    const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [reminders, setReminders] = useState<Record<string, boolean>>({});
 
     const [visibleMonth, setVisibleMonth] = useState<string | null>(
         formatMonthYearVN(new Date())
     );
+    const [searchQuery, setSearchQuery] = useState<string>("");
 
-    console.log(upcomingEvents);
-    
 
     // Lấy dữ liệu sự kiện từ API
 
@@ -58,19 +57,23 @@ export default function EventsPage() {
         fetchTypes();
     }, []);
     useEffect(() => {
+        const event_type_id = activeType === "all" ? null : activeType;
         const fetchEvents = async () => {
             const token = localStorage.getItem("userToken");
             const payload = {
                 token,
                 date: visibleMonth,
+                search: searchQuery,
+                event_type_id
             };
-            await dispatch(getListEvent(payload) as any);
-            // if (token) {
-            // }
+
+            dispatch(getListEvent(payload) as any);
         };
 
         fetchEvents();
-    }, [visibleMonth]);
+    }, [visibleMonth, searchQuery, activeType]);
+
+    
 
     useEffect(() => {
         const events = listEvent.calendar_events || [];
@@ -97,31 +100,32 @@ export default function EventsPage() {
     }, [listEvent]);
 
     // Lọc sự kiện theo loại + ngày
-    const filteredEvents = useMemo(() => {
-        let events = upcomingEvents;
+    // const filteredEvents = useMemo(() => {
+    //     let events = upcomingEvents;
 
-        if (activeType !== "all") {
-            events = events.filter((event) => event.event_type.id === activeType);
-        }
+    //     if (activeType !== "all") {
+    //         events = events.filter(
+    //             (event) => event.event_type.id === activeType
+    //         );
+    //     }
 
-        if (selectedDate) {
-            events = events.filter((event) => event.date === selectedDate);
-        }
+    //     if (selectedDate) {
+    //         events = events.filter((event) => event.date === selectedDate);
+    //     }
 
-        return events;
-    }, [activeType, upcomingEvents, selectedDate]);
+    //     return events;
+    // }, [activeType, upcomingEvents, selectedDate]);
 
     const handleSelectDate = (date: string) => {
         setSelectedDate(date);
         setActiveType("all");
-    }
+    };
 
     const handleMonthChange = async (date: Date) => {
         const format = formatMonthYearVN(date);
         setVisibleMonth(format);
         setSelectedDate(null);
         setActiveType("all");
-
     };
 
     const toggleEventReminder = async (eventId: number) => {
@@ -149,28 +153,39 @@ export default function EventsPage() {
 
     const handleEventRegister = async (id: number) => {
         const token = localStorage.getItem("userToken");
-        if (!token) return;
+        if (!token) {
+            toast.warning("bạn cần đăng nhập để thực hiện");
+            return;
+        }
 
         const payload = { event_id: id, token };
         const res = await dispatch(eventRegister(payload) as any);
 
-        if (res.payload.status === 201) {
+        if (res.payload.status === 201 || res.payload.status === 200) {
             const payload = {
                 token,
                 date: visibleMonth,
             };
             dispatch(getListEvent(payload) as any);
+            
+            toast.success(res.payload.data.message);
+        }else{
+            toast.error(res.payload.message);
         }
     };
-    
-    if(typeEvent.length === 0 || listTimeLine.length === 0){
-        return(
+
+    const handleChange = (value: string) => {
+        setSearchQuery(value);
+    };
+
+    if (typeEvent.length === 0 || listTimeLine.length === 0) {
+        return (
             <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
-                <Spinner text="đang tải trang..."/>
+                <Spinner text="đang tải trang..." />
             </div>
-        )
+        );
     }
-    
+
     return (
         <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
             <div className="mx-auto max-w-7xl">
@@ -241,6 +256,12 @@ export default function EventsPage() {
                     <div className="text-xs font-semibold uppercase  text-black">
                         Lọc theo loại sự kiện
                     </div>
+                    <div className="my-3">
+                        <SearchBar
+                            placeholder="Tìm kiếm theo sự kiện..."
+                            onChange={handleChange}
+                        />
+                    </div>
                     <div className="mt-3 grid gap-2 sm:grid-cols-3">
                         <button
                             onClick={() => {
@@ -292,8 +313,8 @@ export default function EventsPage() {
                     {/* Danh sách sự kiện */}
                     <div className="space-y-5">
                         {selectedDate && (
-                            <div className="rounded-2xl border border-blue-500/50 bg-blue-500/10 p-4">
-                                <div className="flex items-center justify-between">
+                            <div className="rounded-2xl border border-blue-500/50 bg-blue-500/10 p-3 sm:p-4">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                                     <div className="text-sm font-semibold text-blue-500">
                                         Sự kiện ngày{" "}
                                         {new Date(selectedDate).getDate()}/
@@ -301,10 +322,10 @@ export default function EventsPage() {
                                     </div>
                                     <button
                                         onClick={() => {
-                                            setSelectedDate(null)
-                                            setActiveType("all")
+                                            setSelectedDate(null);
+                                            setActiveType("all");
                                         }}
-                                        className="text-xs text-blue-500 hover:text-black/30"
+                                        className="text-xs text-blue-500 hover:text-black/30 whitespace-nowrap"
                                     >
                                         Xem tất cả
                                     </button>
@@ -312,40 +333,58 @@ export default function EventsPage() {
                             </div>
                         )}
 
-                        <div className="max-h-[600px] px-5 py-3 overflow-y-auto space-y-5 my-4">
-                            {filteredEvents.length === 0 ? (
-                                <div className="py-16 text-center">
+                        <div className="max-h-[600px] px-2 sm:px-5 py-3 overflow-y-auto space-y-4 sm:space-y-5 my-4">
+                            {upcomingEvents.length === 0 ? (
+                                <div className="py-12 sm:py-16 text-center">
                                     <Calendar
                                         size={48}
                                         className="mx-auto text-slate-600"
                                     />
-                                    <p className="mt-4 text-black">
+                                    <p className="mt-4 text-sm sm:text-base text-black">
                                         Không có sự kiện trong ngày này
                                     </p>
                                 </div>
                             ) : (
-                                filteredEvents.map((event) => (
+                                upcomingEvents.map((event) => (
                                     <div
                                         key={event.id}
-                                        className="flex flex-col gap-6 rounded-3xl  bg-box-shadow  sm:p-6 transition hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/10"
+                                        className="flex flex-col gap-4 sm:gap-6 rounded-3xl bg-box-shadow p-4 sm:p-6 transition hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/10"
                                     >
                                         {/* Nội dung event */}
-                                        <div className="space-y-4">
-                                            <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase ">
-                                                <span className="flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-700/80 px-3 py-1 text-white">
-                                                    <Calendar size={14} />{" "}
-                                                    {event.date}
+                                        <div className="space-y-3 sm:space-y-4">
+                                            {/* Tags - Responsive */}
+                                            <div className="flex flex-wrap items-center gap-2 text-[10px] sm:text-[11px] uppercase">
+                                                <span className="flex items-center gap-1 sm:gap-2 rounded-full border border-blue-500/30 bg-blue-700/80 px-2 sm:px-3 py-1 text-white">
+                                                    <Calendar
+                                                        size={12}
+                                                        className="sm:w-[14px] sm:h-[14px]"
+                                                    />
+                                                    <span className="hidden sm:inline">
+                                                        {event.date}
+                                                    </span>
+                                                    <span className="sm:hidden">
+                                                        {new Date(
+                                                            event.date
+                                                        ).getDate()}
+                                                        /
+                                                        {new Date(
+                                                            event.date
+                                                        ).getMonth() + 1}
+                                                    </span>
                                                 </span>
-                                                <span className="flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-700/80 px-3 py-1 text-white">
-                                                    <Clock size={14} />{" "}
+                                                <span className="flex items-center gap-1 sm:gap-2 rounded-full border border-blue-500/30 bg-blue-700/80 px-2 sm:px-3 py-1 text-white">
+                                                    <Clock
+                                                        size={12}
+                                                        className="sm:w-[14px] sm:h-[14px]"
+                                                    />
                                                     {event.time}
                                                 </span>
                                                 <span
                                                     className={
                                                         event.type ===
                                                         "internal"
-                                                            ? "flex items-center rounded-full border border-blue-400 bg-blue-700 px-3 py-1 gap-1 text-white"
-                                                            : "flex items-center rounded-full border border-emerald-400 bg-emerald-700 px-3 py-1 gap-1 text-white"
+                                                            ? "flex items-center rounded-full border border-blue-400 bg-blue-700 px-2 sm:px-3 py-1 gap-1 text-white"
+                                                            : "flex items-center rounded-full border border-emerald-400 bg-emerald-700 px-2 sm:px-3 py-1 gap-1 text-white"
                                                     }
                                                 >
                                                     {event.type === "internal"
@@ -353,35 +392,46 @@ export default function EventsPage() {
                                                         : "Đối ngoại"}
                                                 </span>
                                                 {reminders[event.id] && (
-                                                    <span className="flex items-center gap-1 rounded-full border border-orange-400/50 bg-orange-400 px-3 py-1 text-white">
-                                                        <BellRing size={14} />{" "}
-                                                        Tự động nhắc
+                                                    <span className="flex items-center gap-1 rounded-full border border-orange-400/50 bg-orange-400 px-2 sm:px-3 py-1 text-white">
+                                                        <BellRing
+                                                            size={12}
+                                                            className="sm:w-[14px] sm:h-[14px]"
+                                                        />
+                                                        <span className="hidden sm:inline">
+                                                            Tự động nhắc
+                                                        </span>
+                                                        <span className="sm:hidden">
+                                                            Nhắc
+                                                        </span>
                                                     </span>
                                                 )}
                                             </div>
 
-                                            <div className="space-y-3">
-                                                <h3 className="text-xl font-semibold text-black">
+                                            {/* Content */}
+                                            <div className="space-y-2 sm:space-y-3">
+                                                <h3 className="text-lg sm:text-xl font-semibold text-black line-clamp-2">
                                                     {event.title}
                                                 </h3>
-                                                <p className="text-sm text-black/70">
+                                                <p className="text-xs sm:text-sm text-black/70 line-clamp-3">
                                                     {event.description}
                                                 </p>
                                                 {event.location && (
-                                                    <p className="flex items-center gap-2 text-xs uppercase  text-black/70">
+                                                    <p className="flex items-start sm:items-center gap-2 text-xs uppercase text-black/70">
                                                         <MapPin
                                                             size={14}
-                                                            className="text-blue-700"
-                                                        />{" "}
-                                                        Địa điểm:{" "}
-                                                        {event.location}
+                                                            className="text-blue-700 flex-shrink-0 mt-0.5 sm:mt-0"
+                                                        />
+                                                        <span className="line-clamp-2">
+                                                            Địa điểm:{" "}
+                                                            {event.location}
+                                                        </span>
                                                     </p>
                                                 )}
                                             </div>
                                         </div>
 
-                                        {/* Hành động */}
-                                        <div className="flex w-full flex-wrap gap-3 text-sm text-slate-300">
+                                        {/* Hành động - Responsive */}
+                                        <div className="flex flex-col sm:flex-row w-full gap-2 sm:gap-3 text-xs sm:text-sm text-slate-300">
                                             {!event.isSubmit && (
                                                 <button
                                                     onClick={() =>
@@ -389,14 +439,14 @@ export default function EventsPage() {
                                                             event.id
                                                         )
                                                     }
-                                                    className="bg-active-blue-metallic flex-1 rounded-full bg-blue-600 px-5 py-2 font-semibold uppercase  text-white transition hover:bg-blue-500"
+                                                    className="bg-active-blue-metallic w-full sm:flex-1 rounded-full bg-blue-600 px-4 sm:px-5 py-2.5 sm:py-2 font-semibold uppercase text-white transition hover:bg-blue-500"
                                                 >
                                                     Đăng ký tham gia
                                                 </button>
                                             )}
 
                                             {event.isSubmit && (
-                                                <button className="flex-1 rounded-full bg-blue-600 px-5 py-2 font-semibold uppercase  text-white transition hover:bg-blue-500">
+                                                <button className="w-full sm:flex-1 rounded-full bg-blue-600 px-4 sm:px-5 py-2.5 sm:py-2 font-semibold uppercase text-white transition hover:bg-blue-500">
                                                     Bạn đã đăng ký
                                                 </button>
                                             )}
@@ -407,9 +457,9 @@ export default function EventsPage() {
                                                         event.id
                                                     )
                                                 }
-                                                className={`flex-1 rounded-full px-5 py-2 font-semibold uppercase  transition ${
+                                                className={`w-full sm:flex-1 rounded-full px-4 sm:px-5 py-2.5 sm:py-2 font-semibold uppercase transition ${
                                                     reminders[event.id]
-                                                        ? "bg-orange-500/70  text-white hover:bg-orange-500/30"
+                                                        ? "bg-orange-500/70 text-white hover:bg-orange-500/30"
                                                         : "bg-gray-400/30 border border-gray-500 text-gray-500 hover:border-blue-500 hover:text-black/30"
                                                 }`}
                                             >
@@ -423,16 +473,16 @@ export default function EventsPage() {
                             )}
                         </div>
 
-                        {/* Timeline Highlights */}
-                        <div className="rounded-3xl bg-box-shadow bg-blue-gradiant-main p-5 sm:p-6">
-                            <div className="text-xs font-extrabold uppercase  text-blue-700 sm:text-sm">
+                        {/* Timeline Highlights - Responsive */}
+                        <div className="rounded-3xl bg-box-shadow bg-blue-gradiant-main p-4 sm:p-5 lg:p-6">
+                            <div className="text-xs font-extrabold uppercase text-blue-700 sm:text-sm">
                                 Điểm nhấn timeline
                             </div>
 
-                            <div className="mt-4 space-y-3">
+                            <div className="mt-3 sm:mt-4 space-y-2 sm:space-y-3">
                                 {listTimeLine ? (
                                     Object.entries(listTimeLine).map(
-                                        ([key, item]: any) => {                                            
+                                        ([key, item]: any) => {
                                             if (!item) return null;
                                             const statusMap: Record<
                                                 string,
@@ -465,35 +515,35 @@ export default function EventsPage() {
                                             return (
                                                 <div
                                                     key={item.id || key}
-                                                    className="rounded-2xl bg-box-shadow-inset bg-white py-5 px-4"
+                                                    className="rounded-2xl bg-box-shadow-inset bg-white py-4 sm:py-5 px-3 sm:px-4"
                                                 >
-                                                    <div className="flex items-center justify-between gap-">
-                                                        <div className="">
-                                                            <div className="text-lg font-semibold text-black">
+                                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="text-base sm:text-lg font-semibold text-black truncate">
                                                                 {item.title}
                                                             </div>
-                                                            <div className="text-xs uppercase  text-black/80">
+                                                            <div className="text-[10px] sm:text-xs uppercase text-black/80 mt-1">
                                                                 {item.date} -{" "}
                                                                 {item.time}
                                                             </div>
                                                         </div>
                                                         <span
-                                                            className={`text-xs font-semibold uppercase  ${statusInfo.variant}`}
+                                                            className={`text-[10px] sm:text-xs font-semibold uppercase whitespace-nowrap ${statusInfo.variant}`}
                                                         >
                                                             {statusInfo.label}
                                                         </span>
                                                     </div>
                                                     {/* {item.description && (
-                                                        <p className="mt-2 text-xs text-black/70">
-                                                            {item.description}
-                                                        </p>
-                                                    )} */}
+                                <p className="mt-2 text-xs text-black/70">
+                                    {item.description}
+                                </p>
+                            )} */}
                                                 </div>
                                             );
                                         }
                                     )
                                 ) : (
-                                    <p className="text-sm text-black/60">
+                                    <p className="text-xs sm:text-sm text-black/60 text-center py-4">
                                         Không có dữ liệu timeline
                                     </p>
                                 )}
@@ -501,33 +551,33 @@ export default function EventsPage() {
                         </div>
 
                         {/* Past Events */}
-                        {/* <div className="rounded-3xl border border-slate-500 bg-[#e5f8ff] p-5 sm:p-6">
-                            <div className="text-xs font-extrabold uppercase  text-blue-700 sm:text-sm">
-                                Thư viện sự kiện
-                            </div>
-                            <div className="mt-4 space-y-2">
-                                {pastEvents.map((event) => (
-                                    <a
-                                        key={event.id}
-                                        href={event.mediaLink}
-                                        className="flex items-center justify-between gap-2 rounded-2xl font-semibold border border-gray-400 bg-white px-4 py-3 text-sm text-slate-300 transition hover:border-black hover:bg-gray-300 hover:text-black/30"
-                                    >
-                                        <span className="text-black">
-                                            {event.name}
-                                        </span>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs uppercase  text-black">
-                                                {event.date}
-                                            </span>
-                                            <ExternalLink
-                                                size={14}
-                                                className="text-black"
-                                            />
-                                        </div>
-                                    </a>
-                                ))}
-                            </div>
-                        </div> */}
+                        {/* <div className="rounded-3xl border border-slate-500 bg-[#e5f8ff] p-4 sm:p-5 lg:p-6">
+        <div className="text-xs font-extrabold uppercase text-blue-700 sm:text-sm">
+            Thư viện sự kiện
+        </div>
+        <div className="mt-3 sm:mt-4 space-y-2">
+            {pastEvents.map((event) => (
+                <a
+                    key={event.id}
+                    href={event.mediaLink}
+                    className="flex items-center justify-between gap-2 rounded-2xl font-semibold border border-gray-400 bg-white px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-slate-300 transition hover:border-black hover:bg-gray-300 hover:text-black/30"
+                >
+                    <span className="text-black truncate flex-1">
+                        {event.name}
+                    </span>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-[10px] sm:text-xs uppercase text-black whitespace-nowrap">
+                            {event.date}
+                        </span>
+                        <ExternalLink
+                            size={14}
+                            className="text-black"
+                        />
+                    </div>
+                </a>
+            ))}
+        </div>
+    </div> */}
                     </div>
                 </div>
             </div>

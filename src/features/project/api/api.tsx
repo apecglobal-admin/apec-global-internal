@@ -3,9 +3,15 @@ import apiAxiosInstance from "@/src/services/axios";
 
 export const getListProject = createAsyncThunk(
     "project/getListProject",
-    async (_, thunkAPI) => {
+    async (payload: any, thunkAPI) => {
         try {
-            const response = await apiAxiosInstance.get("/projects");
+            const { search, project_status }: any = payload;
+            const params = Object.fromEntries(
+                Object.entries({ search, project_status }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/projects", {params});
             return {
                 data: response.data,
                 status: response.status,
