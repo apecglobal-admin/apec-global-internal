@@ -71,7 +71,7 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
   });
   const [page] = useState(1);
   const [limit] = useState(100);
-
+  
   useEffect(() => {
     dispatch(listTypePersonal() as any);
     const token = localStorage.getItem("userToken");
@@ -216,6 +216,7 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
       description: newRequest.description,
       type_request_id: selectedType.id,
     };
+
 
     try {
       const res = await dispatch(createRequestUser(payload as any) as any);

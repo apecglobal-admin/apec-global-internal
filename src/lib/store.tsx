@@ -6,6 +6,8 @@ import policyReducer from "../features/policy/policySlice";
 import projectReducer from "../features/project/projectSlice";
 import competReducer from "../features/compet/competSlice";
 import contactReducer from "../features/contact/contactSlice";
+import dashboardReducer from "../features/dashboard/dashboardSlice";
+import econosystemReducer from "../features/ecosystem/ecosystemSlice";
 
 const store = configureStore({
   reducer: {
@@ -15,7 +17,9 @@ const store = configureStore({
     policy: policyReducer,
     project: projectReducer,
     compet: competReducer,
-    contact: contactReducer
+    contact: contactReducer,
+    dashboard: dashboardReducer,
+    econosystem: econosystemReducer
   },
 });
 

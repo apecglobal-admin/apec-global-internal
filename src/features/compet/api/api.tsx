@@ -22,3 +22,23 @@ export const getRankingCompet = createAsyncThunk(
         }
     }
 );
+
+export const getTopRankingCompet = createAsyncThunk(
+    "compet/getTopRankingCompet",
+    async (_, thunkAPI) => {
+        try {
+
+            const response = await apiAxiosInstance.get("/ranking/best/department");
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+

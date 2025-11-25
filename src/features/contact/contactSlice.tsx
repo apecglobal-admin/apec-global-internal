@@ -1,14 +1,21 @@
 
 import { createSlice } from "@reduxjs/toolkit";
 import {
+    getContact,
     postContact
 } from "./api/api";
 import { createAsyncReducer } from "@/src/utils/createAsyncReducer";
 import { initState } from "@/src/services/interface";
 
-interface ContactState {}
+interface ContactState {
+    listContact: initState<any[]>;
+}
+const createInitState = () => ({ data: [], loading: false, error: null, status: null });
 
-const initialState: ContactState = {};
+
+const initialState: ContactState = {
+    listContact: createInitState(),
+};
 
 
 const contactSlice = createSlice({
@@ -20,6 +27,8 @@ const contactSlice = createSlice({
     },
     extraReducers: (builder) => {
         createAsyncReducer(builder, postContact);
+        createAsyncReducer(builder, getContact, "listContact");
+
     },
 });
 

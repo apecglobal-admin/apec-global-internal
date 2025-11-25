@@ -21,10 +21,10 @@ export const getListEvent = createAsyncThunk(
     "event/getListEvent",
     async (payload: any, thunkAPI) => {
         try {
-            const { date, token }: any = payload;
+            const { search, date, event_type_id, token }: any = payload;
 
             const params = Object.fromEntries(
-                Object.entries({ date }).filter(([key, value]) => value != null)
+                Object.entries({ date, search, event_type_id }).filter(([key, value]) => value != null)
             );
             if (token) {
                 const response = await apiAxiosInstance.get(
@@ -43,9 +43,18 @@ export const getListEvent = createAsyncThunk(
                 };
             } else {
                 const response = await apiAxiosInstance.get(
-                    "/events/employees"
+                    "/events/employees",
+                    {
+                        params,
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
                 );
-                return response;
+                return {
+                    data: response.data,
+                    status: response.status,
+                };
             }
         } catch (error: any) {
             return thunkAPI.rejectWithValue(

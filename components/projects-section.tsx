@@ -33,7 +33,7 @@ export default function ProjectsSection() {
 
     useEffect(() => {
         dispatch(getStatProject() as any);
-        dispatch(getListProject() as any);
+        // dispatch(getListProject() as any);
     }, []);
 
     // SHOW selected asset
