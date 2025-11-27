@@ -280,6 +280,15 @@ export default function ProjectsPage() {
                 <div className="mb-6 w-full">
                     <div className="mx-auto max-w-7xl rounded-2xl bg-box-shadow p-4 shadow-lg backdrop-blur-sm">
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-4">
+                            {/* Search Section - Chiếm phần lớn không gian */}
+                            <div className="flex-1">
+                                <div className="relative">
+                                    <SearchBar
+                                        placeholder="Tìm kiếm dự án..."
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            </div>
                             {/* Status Filter Section - Compact hơn */}
                             <div className="flex items-center gap-3 lg:flex-shrink-0">
                                 <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-3 bg-box-shadow-inset transition-all hover:shadow-md">
@@ -360,15 +369,7 @@ export default function ProjectsPage() {
                                     </div>
                                 </div>
                             </div>
-                            {/* Search Section - Chiếm phần lớn không gian */}
-                            <div className="flex-1">
-                                <div className="relative">
-                                    <SearchBar
-                                        placeholder="Tìm kiếm dự án..."
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
