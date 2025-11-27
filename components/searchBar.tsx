@@ -57,7 +57,7 @@ export default function SearchBar({
       {value && (
         <button
           onClick={handleClear}
-          className="absolute right-3 bg-box-shadow rounded-2xl p-1 text-black/60 hover:text-black"
+          className="absolute right-3 bg-box-shadow bg-red-300 rounded-2xl p-1 text-black/60 hover:text-black"
         >
           <X size={16} />
         </button>
