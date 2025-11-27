@@ -9,6 +9,15 @@ import {
     AlertCircle,
     ArrowRight,
 } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+    DialogClose,
+} from "@/components/ui/dialog";
 import { colorClasses, colorMap } from "@/src/utils/color";
 import SearchBar from "@/components/searchBar";
 import { useDispatch, useSelector } from "react-redux";
@@ -68,7 +77,9 @@ export default function PoliciesPage() {
     const dispatch = useDispatch();
 
     const { statPolicy, listPolicy, isLoadingListPolicy } = usePolicyData();
-
+    const [selectedPolicy, setSelectedPolicy] =
+        useState<any | null>(null);
+    const [openDialog, setOpenDialog] = useState(false);
     
     useEffect(() => {
         dispatch(getStatPolicy() as any);
@@ -88,6 +99,20 @@ export default function PoliciesPage() {
     const handleChange = (value: string) => {
         setSearchQuery(value)
     }
+
+    const handleShowDetail = (item: any) => {    
+
+        setSelectedPolicy(item);
+        console.log(item);
+        
+        setOpenDialog(true);
+            
+        // const found = selectedPolicy.find((a: any) => Number(a.id) === id);
+
+        // if (found) {
+            
+        // }
+    };
 
     if(statPolicy.length === 0 ){
         return(
@@ -217,7 +242,6 @@ export default function PoliciesPage() {
                 {/* Policy Groups Section */}
                 {!isLoadingListPolicy && (
                     <div className="space-y-6">
-
                         {listPolicy?.map((group: any, groupIndex: number) => {
                             const hasPolicies =
                                 Array.isArray(group.policies) &&
@@ -265,8 +289,8 @@ export default function PoliciesPage() {
                                         <ul className="space-y-2">
                                             {group.policies.map(
                                                 (policy: any, index: number) => (
-                                                    <a
-                                                        href="#"
+                                                    <div
+                                                        onClick={() => handleShowDetail(policy)}
                                                         key={`${groupIndex}-${index}`}
                                                         className="flex flex-col gap-3 rounded-2xl bg-box-shadow bg-white px-4 py-3 transition hover:bg-gray-100 sm:flex-row sm:items-center sm:justify-between"
                                                     >
@@ -305,7 +329,7 @@ export default function PoliciesPage() {
                                                                 </span>
                                                             </div>
                                                         </div>
-                                                    </a>
+                                                    </div>
                                                 )
                                             )}
                                         </ul>
@@ -347,6 +371,109 @@ export default function PoliciesPage() {
                     </div>
                 </div>
             </div>
+
+            <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+                    <DialogContent className="bg-white ">
+                        {selectedPolicy && (
+                            <>
+                                <DialogHeader>
+                                    <DialogTitle className="text-xl font-semibold text-black">
+                                        {selectedPolicy.title}
+                                    </DialogTitle>
+                                
+                                </DialogHeader>
+
+                                <div className="mt-6 space-y-4">
+                                    <div className="text-sm text-gray-700 leading-relaxed">
+                                        <p>{selectedPolicy.description}</p>
+                                    </div>
+
+                                    {selectedPolicy.documents?.length >
+                                        0 && (
+                                        <div className="border-t pt-4 mt-4">
+                                            <h4 className="text-sm font-semibold text-gray-900 mb-3">
+                                                Tài liệu đính kèm (
+                                                {
+                                                    selectedPolicy
+                                                        .documents.length
+                                                }
+                                                )
+                                            </h4>
+                                            <div className="space-y-2">
+                                                {selectedPolicy.documents.map(
+                                                    (doc: any) => (
+                                                        <a
+                                                            key={doc.id}
+                                                            href={doc.file_url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors group"
+                                                        >
+                                                            <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                                                <svg
+                                                                    className="w-6 h-6 text-green-600"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={
+                                                                            2
+                                                                        }
+                                                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                                                    />
+                                                                </svg>
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600">
+                                                                    {doc.name}
+                                                                </p>
+                                                                <p className="text-xs text-gray-500">
+                                                                    {doc.name
+                                                                        .split(
+                                                                            "."
+                                                                        )
+                                                                        .pop()
+                                                                        ?.toUpperCase()}{" "}
+                                                                    file
+                                                                </p>
+                                                            </div>
+                                                            <svg
+                                                                className="w-5 h-5 text-gray-400 group-hover:text-blue-600"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                viewBox="0 0 24 24"
+                                                            >
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    strokeWidth={
+                                                                        2
+                                                                    }
+                                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                                                                />
+                                                            </svg>
+                                                        </a>
+                                                    )
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <DialogFooter className="mt-6">
+                                    <DialogClose asChild>
+                                        <button className="px-6 py-2 bg-black text-white rounded-lg hover:bg-black/80 transition-colors">
+                                            Đóng
+                                        </button>
+                                    </DialogClose>
+                                </DialogFooter>
+                            </>
+                        )}
+                    </DialogContent>
+                </Dialog>
         </div>
     );
 }

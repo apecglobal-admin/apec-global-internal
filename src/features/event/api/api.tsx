@@ -21,10 +21,10 @@ export const getListEvent = createAsyncThunk(
     "event/getListEvent",
     async (payload: any, thunkAPI) => {
         try {
-            const { search, date, event_type_id, token }: any = payload;
+            const { search, date, event_type_id, token, remind, submit }: any = payload;
 
             const params = Object.fromEntries(
-                Object.entries({ date, search, event_type_id }).filter(([key, value]) => value != null)
+                Object.entries({ date, search, event_type_id, remind, submit }).filter(([key, value]) => value != null)
             );
             if (token) {
                 const response = await apiAxiosInstance.get(

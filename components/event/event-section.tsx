@@ -12,6 +12,13 @@ import {
     eventReminder,
     getStatEvent,
 } from "@/src/features/event/api/api";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { formatDate, formatMonthYearVN } from "@/src/utils/formatDate";
 import CalendarDefault from "./calendarDefault";
 import { colorClasses, colorMap } from "@/src/utils/color";
@@ -35,10 +42,14 @@ export default function EventSection() {
     } = useEventData();
 
     const [activeType, setActiveType] = useState<Number | "all">("all");
+    const [activeActionType, setActiveActionType] = useState<
+        "all" | "reminder" | "submit" | "noReminder" | "noSubmit"
+    >("all");
     const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
-    const [reminders, setReminders] = useState<Record<string, boolean>>({});
     const [searchQuery, setSearchQuery] = useState<string>("");
+    const [openEventTypeSelect, setOpenEventTypeSelect] = useState(false);
+    const [openActionTypeSelect, setOpenActionTypeSelect] = useState(false);
 
 
     // Lấy dữ liệu sự kiện từ API
@@ -53,64 +64,73 @@ export default function EventSection() {
     }, []);
 
     useEffect(() => {
-            
         const token = localStorage.getItem("userToken");
         const event_type_id = activeType === "all" ? null : activeType;
-
-        const payload = {
+    
+        const payload: any = {
             token,
+            search: searchQuery,
             event_type_id,
-            search: searchQuery
         };
-        dispatch(getListEvent(payload) as any);
+
+        if (activeActionType !== "all") {
+            if (activeActionType === "reminder") {
+                payload.remind = true;
+            } else if (activeActionType === "submit") {
+                payload.submit = true;
+            }
+        }
+    
+        const fetchEvents = async () => {
+            dispatch(getListEvent(payload) as any);
+        };
+    
+        fetchEvents();
         
-    }, [searchQuery]);
+    }, [searchQuery, activeActionType, activeType]);
 
-    useEffect(() => {
+    // useEffect(() => {
 
-        const mapped = listEvent.calendar_events.map((item: any) => ({
-            ...item,
-            date: item.date ? formatDate(item.date) : "",
-            type:
-                item.event_type?.name === "Nội bộ"
-                    ? "internal"
-                    : item.event_type?.name === "Đối ngoại"
-                    ? "external"
-                    : "all",
-            location: item.address || "",
-        }));
+    //     const mapped = listEvent.calendar_events.map((item: any) => ({
+    //         ...item,
+    //         date: item.date ? formatDate(item.date) : "",
+    //         type:
+    //             item.event_type?.name === "Nội bộ"
+    //                 ? "internal"
+    //                 : item.event_type?.name === "Đối ngoại"
+    //                 ? "external"
+    //                 : "all",
+    //         location: item.address || "",
+    //     }));
 
-        mapped.forEach((e: any) => {
-            initialRemind[e.id] = e.isRemind;
-        });
+    //     mapped.forEach((e: any) => {
+    //         initialRemind[e.id] = e.isRemind;
+    //     });
 
-        setReminders(initialRemind);
-        setUpcomingEvents(mapped);
+    //     setReminders(initialRemind);
+    //     setUpcomingEvents(mapped);
         
-    }, [listEvent]);
+    // }, [listEvent]);
 
-    // Khi API trả dữ liệu -> format lại cho component
 
     // Lọc sự kiện theo loại + ngày
     const filteredEvents = useMemo(() => {
-        let events = upcomingEvents;
-
-        if (activeType !== "all") {
-            events = events.filter(
-                (event) => event.event_type.id === activeType
-            );
-        }
-
+        let events = listEvent.calendar_events || [];
+    
         if (selectedDate) {
-            events = events.filter((event) => event.date === selectedDate);
+            events = events.filter((event: any) => {
+                const start = event.date;
+                const end = event.end_date || event.date;
+    
+                return selectedDate >= start && selectedDate <= end;
+            });
         }
-
+    
         return events;
-    }, [activeType, upcomingEvents, selectedDate]);
+        }, [listEvent.calendar_events, selectedDate]);
 
     const handleSelectDate = (date: string) => {
         setSelectedDate(date);
-        setActiveType("all");
     };
 
     const toggleEventReminder = async (eventId: number) => {
@@ -164,7 +184,7 @@ export default function EventSection() {
     //         </section>
     //     );
     // }
-
+    
     return (
         <section
             style={{ boxShadow: "inset 0 0 10px rgba(122, 122, 122, 0.5)" }}
@@ -237,66 +257,215 @@ export default function EventSection() {
 
                 {/* Bộ lọc */}
                 <div className="mt-8 rounded-3xl bg-blue-gradiant-main bg-box-shadow p-5 shadow-lg shadow-blue-500/10">
-                    <div className="text-xs font-semibold uppercase  text-black">
+                    <div className="text-xs font-semibold uppercase text-black mb-3">
                         Lọc theo loại sự kiện
                     </div>
-                    <div className="my-3">
+
+                    {/* Search Bar - Hàng đầu tiên */}
+                    <div className="mb-3">
                         <SearchBar
                             placeholder="Tìm kiếm theo sự kiện..."
                             onChange={handleChange}
                         />
                     </div>
-                    <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                        <button
-                            onClick={() => {
-                                setActiveType("all");
-                                // setSelectedDate(null);
-                            }}
-                            className={`rounded-full px-4 py-2 text-[11px] font-semibold uppercase  transition ${
-                                activeType === "all"
-                                    ? "bg-active-blue-metallic"
-                                    : "border border-slate-400 bg-white text-slate-400 hover:border-teal-500 "
-                            }`}
-                        >
-                            all
-                        </button>
-                        {typeEvent.map((btn: any) => (
-                            <button
-                                key={btn.id}
-                                onClick={() => {
-                                    setActiveType(Number(btn.id));
-                                    // setSelectedDate(null);
-                                }}
-                                className={`rounded-full px-4 py-2 text-[11px] font-semibold uppercase  transition ${
-                                    activeType === Number(btn.id)
-                                        ? "bg-active-blue-metallic"
-                                        : "border border-slate-400 bg-white text-slate-400 hover:border-teal-500 "
-                                }`}
-                            >
-                                {btn.name}
-                            </button>
-                        ))}
-                    </div>
-                </div>
 
+                    {/* Các Select - Hàng thứ hai */}
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        {/* Select Loại sự kiện */}
+                        <div
+                            className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 bg-box-shadow-inset transition-all hover:shadow-md cursor-pointer w-full sm:w-72"
+                            onClick={() => setOpenEventTypeSelect(true)}
+                        >
+                            <svg
+                                className="h-5 w-5 text-indigo-500 flex-shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                            </svg>
+
+                            <div className="flex flex-1 flex-col gap-0.5 min-w-0">
+                                <label className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Loại sự kiện
+                                </label>
+                                <Select
+                                    value={
+                                        activeType === "all"
+                                            ? "all"
+                                            : String(activeType)
+                                    }
+                                    onValueChange={(value) => {
+                                        setActiveType(
+                                            value === "all"
+                                                ? "all"
+                                                : Number(value)
+                                        );
+                                        setOpenEventTypeSelect(false);
+                                    }}
+                                    open={openEventTypeSelect}
+                                    onOpenChange={setOpenEventTypeSelect}
+                                >
+                                    <SelectTrigger className="h-auto border-none p-0 text-sm font-medium text-gray-800 hover:text-indigo-600">
+                                        <SelectValue placeholder="Chọn loại sự kiện" />
+                                    </SelectTrigger>
+
+                                    <SelectContent className="bg-white shadow-xl">
+                                        <SelectItem
+                                            value="all"
+                                            className="cursor-pointer text-black"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-2 w-2 rounded-full bg-indigo-500"></div>
+                                                <span className="capitalize">
+                                                    Tất cả sự kiện
+                                                </span>
+                                            </div>
+                                        </SelectItem>
+
+                                        {typeEvent.map((item: any) => (
+                                            <SelectItem
+                                                key={item.id}
+                                                value={String(item.id)}
+                                                className="cursor-pointer text-black"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <div className="h-2 w-2 rounded-full bg-indigo-500"></div>
+                                                    <span>{item.name}</span>
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {/* Select Action Type */}
+                        <div
+                            className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 bg-box-shadow-inset transition-all hover:shadow-md cursor-pointer w-full sm:w-72"
+                            onClick={() => setOpenActionTypeSelect(true)}
+                        >
+                            <svg
+                                className="h-5 w-5 text-emerald-500 flex-shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+
+                            <div className="flex flex-1 flex-col gap-0.5 min-w-0">
+                                <label className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Trạng thái
+                                </label>
+                                <Select
+                                    value={activeActionType}
+                                    onValueChange={(
+                                        value:
+                                            | "all"
+                                            | "reminder"
+                                            | "submit"
+                                            | "noReminder"
+                                            | "noSubmit"
+                                    ) => {
+                                        setActiveActionType(value);
+                                        setOpenActionTypeSelect(false);
+                                    }}
+                                    open={openActionTypeSelect}
+                                    onOpenChange={setOpenActionTypeSelect}
+                                >
+                                    <SelectTrigger className="h-auto border-none p-0 text-sm font-medium text-gray-800 hover:text-emerald-600">
+                                        <SelectValue placeholder="Chọn trạng thái" />
+                                    </SelectTrigger>
+
+                                    <SelectContent className="bg-white shadow-xl">
+                                        <SelectItem
+                                            value="all"
+                                            className="cursor-pointer text-black"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-2 w-2 rounded-full bg-gray-500"></div>
+                                                <span>Tất cả</span>
+                                            </div>
+                                        </SelectItem>
+
+                                        <SelectItem
+                                            value="reminder"
+                                            className="cursor-pointer text-black"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-2 w-2 rounded-full bg-orange-500"></div>
+                                                <span>Có nhắc nhở</span>
+                                            </div>
+                                        </SelectItem>
+
+                                        <SelectItem
+                                            value="submit"
+                                            className="cursor-pointer text-black"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
+                                                <span>Có đăng ký</span>
+                                            </div>
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                {(activeType !== "all" || activeActionType !== "all")  && (
+                    <div 
+                    onClick={() => {
+                        setSelectedDate(null);
+                        setActiveType("all");
+                        setActiveActionType("all")
+                    }}
+                    className="mt-8 rounded-2xl border border-blue-500/50 bg-blue-500/10 p-3 sm:p-4">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                            <div className="text-xs sm:text-sm font-semibold text-blue-500">
+                                Đặt lại bộ lọc
+                            </div>
+                            <div
+                                className="text-xs text-blue-500 hover:text-black/30 whitespace-nowrap"
+                            >
+                                Xem tất cả
+                            </div>
+                        </div>
+                    </div>
+
+                )}
                 <div className="grid gap-6 lg:grid-cols-[1fr_1.5fr]">
                     {/* Calendar */}
                     <div className="space-y-4 py-3">
                         <CalendarDefault
-                            events={upcomingEvents}
+                            events={listEvent.calendar_events || []}
+                            eventTypes={typeEvent}
                             selectedDate={selectedDate}
                             onDateSelect={handleSelectDate}
                             allowNavigation={false}
                             initialDate={new Date()}
                             showLegend={true}
-                            reminders={reminders}
+                            // reminders={reminders}
                         />
                     </div>
 
                     {/* Danh sách sự kiện */}
-                    <div className="space-y-4 sm:space-y-5">
+                    <div className="space-y-5">
                         {selectedDate && (
-                            <div className="rounded-2xl border border-blue-500/50 bg-blue-500/10 p-3 sm:p-4">
+                            <div className="mt-4 rounded-2xl border border-blue-500/50 bg-blue-500/10 p-3 sm:p-4">
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                                     <div className="text-xs sm:text-sm font-semibold text-blue-500">
                                         Sự kiện ngày {selectedDate}
@@ -315,19 +484,19 @@ export default function EventSection() {
                             </div>
                         )}
 
-                        <div className="max-h-[500px] sm:max-h-[600px] px-3 sm:px-5 py-3 overflow-y-auto space-y-4 sm:space-y-5">
+                        <div className="max-h-[600px] px-2 sm:px-5 py-3 overflow-y-auto space-y-4 sm:space-y-5">
                             {filteredEvents.length === 0 ? (
                                 <div className="py-12 sm:py-16 text-center">
                                     <Calendar
-                                        size={40}
-                                        className="mx-auto text-slate-600 sm:w-12 sm:h-12"
+                                        size={48}
+                                        className="mx-auto text-slate-600"
                                     />
-                                    <p className="mt-3 sm:mt-4 text-sm sm:text-base text-black">
+                                    <p className="mt-4 text-sm sm:text-base text-black">
                                         Không có sự kiện trong ngày này
                                     </p>
                                 </div>
                             ) : (
-                                filteredEvents.map((event) => (
+                                filteredEvents.map((event: any) => (
                                     <div
                                         key={event.id}
                                         className="flex flex-col gap-4 sm:gap-6 rounded-3xl bg-box-shadow p-4 sm:p-6 transition hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/10"
@@ -335,14 +504,23 @@ export default function EventSection() {
                                         {/* Nội dung event */}
                                         <div className="space-y-3 sm:space-y-4">
                                             {/* Tags - Responsive */}
-                                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] uppercase">
+                                            <div className="flex flex-wrap items-center gap-2 text-[10px] sm:text-[11px] uppercase">
                                                 <span className="flex items-center gap-1 sm:gap-2 rounded-full border border-blue-500/30 bg-blue-700/80 px-2 sm:px-3 py-1 text-white">
                                                     <Calendar
                                                         size={12}
                                                         className="sm:w-[14px] sm:h-[14px]"
                                                     />
-                                                    <span className="truncate max-w-[100px] sm:max-w-none">
-                                                        {event.date}
+                                                    <span className="hidden sm:inline">
+                                                        {event.date}  {event.end_date && event.end_date !== event.date && ` - ${event.end_date}`}
+                                                    </span>
+                                                    <span className="sm:hidden">
+                                                        {new Date(
+                                                            event.date
+                                                        ).getDate()}
+                                                        /
+                                                        {new Date(
+                                                            event.date
+                                                        ).getMonth() + 1}
                                                     </span>
                                                 </span>
                                                 <span className="flex items-center gap-1 sm:gap-2 rounded-full border border-blue-500/30 bg-blue-700/80 px-2 sm:px-3 py-1 text-white">
@@ -350,30 +528,29 @@ export default function EventSection() {
                                                         size={12}
                                                         className="sm:w-[14px] sm:h-[14px]"
                                                     />
-                                                    {event.time}
+                                                    {event.time}  {event.end_time && ` - ${event.end_time}`}
                                                 </span>
                                                 <span
                                                     className={
-                                                        event.type ===
-                                                        "internal"
+                                                        event.event_type
+                                                            ?.name === "Nội bộ"
                                                             ? "flex items-center rounded-full border border-blue-400 bg-blue-700 px-2 sm:px-3 py-1 gap-1 text-white"
                                                             : "flex items-center rounded-full border border-emerald-400 bg-emerald-700 px-2 sm:px-3 py-1 gap-1 text-white"
                                                     }
                                                 >
-                                                    {event.type === "internal"
-                                                        ? "Nội bộ"
-                                                        : "Đối ngoại"}
+                                                    {event.event_type?.name ||
+                                                        "Khác"}
                                                 </span>
-                                                {reminders[event.id] && (
+                                                {event.isRemind && (
                                                     <span className="flex items-center gap-1 rounded-full border border-orange-400/50 bg-orange-400 px-2 sm:px-3 py-1 text-white">
                                                         <BellRing
                                                             size={12}
                                                             className="sm:w-[14px] sm:h-[14px]"
                                                         />
-                                                        <span className="hidden xs:inline">
+                                                        <span className="hidden sm:inline">
                                                             Tự động nhắc
                                                         </span>
-                                                        <span className="xs:hidden">
+                                                        <span className="sm:hidden">
                                                             Nhắc
                                                         </span>
                                                     </span>
@@ -382,21 +559,21 @@ export default function EventSection() {
 
                                             {/* Content */}
                                             <div className="space-y-2 sm:space-y-3">
-                                                <h3 className="text-base sm:text-xl font-semibold text-black line-clamp-2">
+                                                <h3 className="text-lg sm:text-xl font-semibold text-black line-clamp-2">
                                                     {event.title}
                                                 </h3>
-                                                <p className="text-xs sm:text-sm text-black/70 line-clamp-3 sm:line-clamp-none">
+                                                <p className="text-xs sm:text-sm text-black/70 line-clamp-3">
                                                     {event.description}
                                                 </p>
-                                                {event.location && (
-                                                    <p className="flex items-start gap-2 text-[10px] sm:text-xs uppercase text-black/70">
+                                                {event.address && (
+                                                    <p className="flex items-start sm:items-center gap-2 text-xs uppercase text-black/70">
                                                         <MapPin
-                                                            size={12}
-                                                            className="text-blue-700 flex-shrink-0 mt-0.5 sm:w-[14px] sm:h-[14px] sm:mt-0"
+                                                            size={14}
+                                                            className="text-blue-700 flex-shrink-0 mt-0.5 sm:mt-0"
                                                         />
                                                         <span className="line-clamp-2">
                                                             Địa điểm:{" "}
-                                                            {event.location}
+                                                            {event.address}
                                                         </span>
                                                     </p>
                                                 )}
@@ -414,23 +591,13 @@ export default function EventSection() {
                                                     }
                                                     className="bg-active-blue-metallic w-full sm:flex-1 rounded-full bg-blue-600 px-4 sm:px-5 py-2.5 sm:py-2 font-semibold uppercase text-white transition hover:bg-blue-500"
                                                 >
-                                                    <span className="hidden sm:inline">
-                                                        Đăng ký tham gia
-                                                    </span>
-                                                    <span className="sm:hidden">
-                                                        Đăng ký
-                                                    </span>
+                                                    Đăng ký tham gia
                                                 </button>
                                             )}
 
                                             {event.isSubmit && (
                                                 <button className="w-full sm:flex-1 rounded-full bg-blue-600 px-4 sm:px-5 py-2.5 sm:py-2 font-semibold uppercase text-white transition hover:bg-blue-500">
-                                                    <span className="hidden sm:inline">
-                                                        Bạn đã đăng ký
-                                                    </span>
-                                                    <span className="sm:hidden">
-                                                        Đã đăng ký
-                                                    </span>
+                                                    Bạn đã đăng ký
                                                 </button>
                                             )}
 
@@ -441,12 +608,12 @@ export default function EventSection() {
                                                     )
                                                 }
                                                 className={`w-full sm:flex-1 rounded-full px-4 sm:px-5 py-2.5 sm:py-2 font-semibold uppercase transition ${
-                                                    reminders[event.id]
+                                                    event.isRemind
                                                         ? "bg-orange-500/70 text-white hover:bg-orange-500/30"
                                                         : "bg-gray-400/30 border border-gray-500 text-gray-500 hover:border-blue-500 hover:text-black/30"
                                                 }`}
                                             >
-                                                {reminders[event.id]
+                                                {event.isRemind
                                                     ? "Hủy nhắc"
                                                     : "Nhắc nhở"}
                                             </button>

@@ -56,10 +56,6 @@ export default function AnnouncementSection() {
     >("all");
 
     const [userToken, setUserToken] = useState<string | null>(null);
-
-    // 🟩 State để quản lý danh sách thông báo (cho phép cập nhật read)
-    const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
-
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedAnnouncement, setSelectedAnnouncement] =
         useState<AnnouncementItem | null>(null);
@@ -118,6 +114,7 @@ export default function AnnouncementSection() {
             toast.warning("Bạn phải đăng nhập mới có thể xem thông báo");
             return;
         }
+
         const payload = {
             id,
             token: userToken,
@@ -126,19 +123,25 @@ export default function AnnouncementSection() {
         const res = await dispatch(readAnnoucement(payload) as any);
 
         if (res.payload.status === 200) {
+            const type_id = activeCategory === "all" ? null : activeCategory;
+            const department_id = selectedDepartment === "all" ? null : selectedDepartment;
             const payload = {
                 token: userToken,
-
-            }
+                search: searchQuery,
+                type_id,
+                department_id
+            };
             dispatch(getListAnnouncement(payload) as any);
         } else {
             toast.warning(res.payload.data);
         }
     };
 
-    const handleShowDetail = (id: number) => {
-        const found = announcements.find((a) => a.id === id);
+    const handleShowDetail = (id: number) => {        
+        const found = listAnnouncement.find((a: any) => Number(a.id) === id);
+
         if (found) {
+            
             setSelectedAnnouncement(found);
             setOpenDialog(true);
         }
@@ -372,7 +375,7 @@ export default function AnnouncementSection() {
             {/* Danh sách thông báo */}
             <div
                 className="mt-7 sm:mt-8 space-y-4 overflow-y-auto pr-4 py-3"
-                style={{ maxHeight: "500px" }}
+                style={{ maxHeight: "420px" }}
             >
                 {/* {isLoading && (
                     <div className="rounded-2xl border border-dashed border-slate-700 bg-gray-300 px-5 py-10 text-center text-slate-400 sm:px-6 sm:py-12">
