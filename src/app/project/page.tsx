@@ -168,13 +168,12 @@ export default function ProjectsPage() {
     }, [selectedAsset]);
 
     useEffect(() => {
-        const project_status =  selectedStatus === "all" ? null : selectedStatus;
+        const project_status = selectedStatus === "all" ? null : selectedStatus;
         const payload = {
             search: searchQuery,
-            project_status
-        }
+            project_status,
+        };
         dispatch(getListProject(payload) as any);
-
     }, [selectedStatus, searchQuery]);
 
     const getStatusBadge = (status: string) => {
@@ -332,7 +331,7 @@ export default function ProjectsPage() {
                                                 <SelectItem
                                                     value="all"
                                                     className="cursor-pointer text-black"
-                                                > 
+                                                >
                                                     <div className="flex items-center gap-2">
                                                         <div className="h-2 w-2 rounded-full bg-indigo-500"></div>
                                                         <span>
@@ -369,7 +368,6 @@ export default function ProjectsPage() {
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -383,7 +381,7 @@ export default function ProjectsPage() {
                                 className="group rounded-2xl bg-blue-gradiant-main bg-box-shadow p-5 transition sm:p-6"
                             >
                                 <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-                                    <div className="flex-1 space-y-5 space-x-5  font-bold">
+                                    <div className="flex-1 space-y-5 space-x-5 font-bold">
                                         <div>
                                             <div className="flex flex-wrap items-center gap-3">
                                                 <h3 className="text-xl font-extrabold text-blue-main sm:text-2xl">
@@ -399,7 +397,7 @@ export default function ProjectsPage() {
                                                 )}
                                             </div>
 
-                                            <p className="mt-1 text-sm uppercase description-2-lines  text-blue-950">
+                                            <p className="mt-1 text-sm uppercase description-2-lines text-blue-950">
                                                 {item.description}
                                             </p>
                                         </div>
@@ -429,7 +427,7 @@ export default function ProjectsPage() {
                                     </div>
                                     <div className="w-full space-y-4 lg:w-80 font-bold">
                                         <div>
-                                            <div className="flex items-center justify-between text-xs uppercase  font-bold text-orange-600">
+                                            <div className="flex items-center justify-between text-xs uppercase font-bold text-orange-600">
                                                 <span>Tiến độ hoàn thành</span>
                                                 <span className="text-lg font-bold text-orange-600">
                                                     {item.progress}%
@@ -446,7 +444,7 @@ export default function ProjectsPage() {
                                             </div>
                                         </div>
                                         <div className="rounded-xl border border-slate-800 bg-white p-3">
-                                            <div className="mb-2 text-xs font-semibold uppercase  text-black">
+                                            <div className="mb-2 text-xs font-semibold uppercase text-black">
                                                 Phòng ban phụ trách
                                             </div>
                                             <div className="space-y-1">
@@ -481,6 +479,58 @@ export default function ProjectsPage() {
                                                 </span>
                                             </a>
                                         </div>
+
+                                        {/* Issues Section */}
+                                        {item.issues &&
+                                            item.issues.length > 0 && (
+                                                <div className="rounded-xl border border-red-300 bg-red-50 p-3">
+                                                    <div className="mb-2 flex items-center gap-2">
+                                                        <svg
+                                                            className="h-4 w-4 text-red-600"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth={2}
+                                                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                                            />
+                                                        </svg>
+                                                        <h4 className="text-xs font-semibold uppercase text-red-600">
+                                                            Vấn đề (
+                                                            {item.issues.length}
+                                                            )
+                                                        </h4>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        {item.issues.map(
+                                                            (issue: any) => (
+                                                                <div
+                                                                    key={
+                                                                        issue.id
+                                                                    }
+                                                                    className="rounded-lg bg-white border border-red-100 p-2.5"
+                                                                >
+                                                                    <p className="text-xs font-semibold text-red-700">
+                                                                        {
+                                                                            issue.title
+                                                                        }
+                                                                    </p>
+                                                                    {issue.description && (
+                                                                        <p className="mt-1 text-xs text-gray-600 leading-relaxed">
+                                                                            {
+                                                                                issue.description
+                                                                            }
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            )
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
                                     </div>
                                 </div>
                             </div>
