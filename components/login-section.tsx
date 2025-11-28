@@ -32,7 +32,7 @@ export default function LoginSection() {
 
     const handleLogin = async (e: any) => {
         e.preventDefault();
-        
+
         // Reset errors
         setEmailError(false);
         setPasswordError(false);
@@ -75,10 +75,10 @@ export default function LoginSection() {
                 await dispatch(fetchUserInfo(res.payload.data.token) as any);
                 toast.success(res.payload.data.message);
             } else{
-                toast.success(res.payload.data.message);
+                toast.error(res.payload.message);
             }
         } catch (error) {
-            console.error("Đăng nhập thất bại:", error);
+            // console.error("Đăng nhập thất bại:", error);
         }
     };
 
