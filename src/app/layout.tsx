@@ -10,7 +10,6 @@ import { ToastContainer } from 'react-toastify';
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
-console.log("_geist", _geist);
 
 export const metadata: Metadata = {
   title: 'v0 App',

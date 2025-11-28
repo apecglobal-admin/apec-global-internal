@@ -40,7 +40,6 @@ export default function Home() {
                 page: 1
             }
             const res = await dispatch(getSlider(payload) as any);
-            console.log(res);
         };
         getSlide();
     }, []);

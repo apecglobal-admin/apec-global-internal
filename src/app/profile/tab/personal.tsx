@@ -220,15 +220,12 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
 
     try {
       const res = await dispatch(createRequestUser(payload as any) as any);
-      console.log("res", res);
 
       if (res.payload.status == 200 || res.payload.status == 201) {
         toast(res.payload.data.message);
         await dispatch(personalRequest(payload as any) as any);
-        console.log("thành công")
       }
     } catch (error) {
-      console.log(error);
     }
     // Reset form và đóng modal
     setNewRequest({ title: "", description: "" });

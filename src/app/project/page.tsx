@@ -496,12 +496,12 @@ export default function ProjectsPage() {
                 {/* Empty State */}
 
                 {/* Timeline Overview */}
-                <div className="mt-8 rounded-2xl bg-blue-gradiant-main bg-box-shadow p-6">
+                {/* <div className="mt-8 rounded-2xl bg-blue-gradiant-main bg-box-shadow p-6">
                     <h3 className="mb-4 text-xl font-bold text-blue-main capitalize">
                         Tổng quan roadmap
                     </h3>
                     <div className="space-y-3"></div>
-                </div>
+                </div> */}
             </div>
         </div>
     );

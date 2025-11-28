@@ -21,6 +21,7 @@ import { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import SearchBar from "./searchBar";
 import { useProfileData } from "@/src/hooks/profileHook";
+import Link from "next/link";
 
 function removeAllSlashes(path: string) {
     return path.replace(/\//g, "");
@@ -49,13 +50,13 @@ export default function Header() {
     const sidebarRef = useRef<HTMLDivElement>(null);
     const currentMenu = menuItems.find((item) => item.href === pathname);
     const [searchQuery, setSearchQuery] = useState<string>("");
-    console.log("userInfo", userInfo);
-
+    
     useEffect(() => {
         const token = localStorage.getItem("userToken");
         if (token) {
             dispatch(fetchUserInfo(token) as any);
         }
+
     }, [dispatch]);
 
     useEffect(() => {
@@ -90,14 +91,6 @@ export default function Header() {
         House,
     };
 
-    const handleChange = (value: string) => {
-        setSearchQuery(value);
-        const payload = {
-            path: removeAllSlashes(pathname),
-            search: searchQuery,
-        };
-        console.log(payload);
-    };
 
     return (
         <header
@@ -139,13 +132,13 @@ export default function Header() {
                                 ? icons[item.icon]
                                 : null;
                             return (
-                                <a
+                                <Link
                                     key={item.label}
                                     href={item.href}
                                     className="hover:text-slate-400 transition whitespace-nowrap text-blue-main font-extrabold flex items-center justify-center"
                                 >
                                     {item.label}
-                                </a>
+                                </Link>
                             );
                         })}
                     </nav>

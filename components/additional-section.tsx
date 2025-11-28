@@ -81,7 +81,6 @@ export default function AdditionalSection() {
                 await dispatch(personalRequest(payload as any) as any);
             }
         } catch (error) {
-            console.log(error);
         }
 
         setNewRequest({ title: "", description: "" });

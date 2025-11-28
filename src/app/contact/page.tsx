@@ -71,7 +71,6 @@ export default function ContactPage() {
         });
 
         const res = await dispatch(postContact(formData) as any);
-        console.log(res);
         
         if (res.payload.status === 201 || res.payload.status === 200) {
             toast.success(res.payload.data.message);

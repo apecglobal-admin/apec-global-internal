@@ -52,7 +52,7 @@ export default function Slider({ slides = [] }: SliderProps) {
     useEffect(() => {
         setCurrent(0);
     }, [slides.length]);
-
+    
     useEffect(() => {
         if (slides.length <= 1) return;
 
@@ -69,17 +69,34 @@ export default function Slider({ slides = [] }: SliderProps) {
     const prev = () =>
         setCurrent((current - 1 + slides.length) % slides.length);
 
-    const handleClick = (direct: any) => {
+    const handleClick = (direct: string) => {
         if (!direct) {
             router.push("/#");
-            window.location.href = "#"; 
-
+            window.location.href = "#";
             return;
-            
+        }        
+    
+        // Trim khoảng trắng
+        let url = direct.trim();
+    
+        // Nếu thiếu http/https thì tự thêm http://
+        if (!/^https?:\/\//i.test(url)) {
+            url = "http://" + url;
         }
-        window.open(direct, "_blank", "noopener,noreferrer");
-    }
-
+    
+        // Kiểm tra URL có hợp lệ không
+        try {
+            new URL(url);
+        } catch (e) {
+            router.push("/#");
+            window.location.href = "#";
+            return;
+        }
+    
+        // Mở tab mới
+        window.open(url, "_blank", "noopener,noreferrer");
+    };
+    
     return (
         <div 
         style={{boxShadow: "inset 0 0 7px rgba(0, 0, 0, 0.5)"}}

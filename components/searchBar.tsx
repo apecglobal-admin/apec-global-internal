@@ -52,7 +52,7 @@ export default function SearchBar({
         onChange={handleInputChange}
         type="text"
         placeholder={placeholder}
-        className="w-full bg-transparent text-sm text-black placeholder:text-black focus:outline-none capitalize"
+        className="w-full bg-transparent text-sm text-black placeholder:text-black/60 focus:outline-none capitalize"
       />
       {value && (
         <button

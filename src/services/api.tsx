@@ -22,7 +22,6 @@ export const loginWeb = createAsyncThunk(
         status: response.status
       };
     } catch (error: any) {
-      console.log("errror",error?.response?.data.message)
       toast.error(error?.response?.data.message)
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
@@ -32,7 +31,6 @@ export const loginWeb = createAsyncThunk(
 export const fetchUserInfo = createAsyncThunk(
   "user/fetchUserInfo",
   async (token: string, thunkAPI) => {
-    console.log("Dispatching fetchUser");
     try {
       const response = await apiAxiosInstance.get("/profile", {
         headers: {
@@ -50,13 +48,10 @@ export const fetchUserInfo = createAsyncThunk(
 export const listPositions = createAsyncThunk(
   "user/listPositions",
   async (_, thunkAPI) => {
-    console.log("Dispatching listPositions API");
     try {
       const response = await apiAxiosInstance.get("/positions");
-      console.log("API response", response.data);
       return  response.data.data.positions
     } catch (error: any) {
-      console.log("API error", error);
       return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
     }
   }
@@ -73,9 +68,7 @@ void,  // không có argument
     const state = thunkAPI.getState();
     const departments = state.user.departments;
 
-    if (departments?.data.length > 0) {
-      console.log("state da co");
-      
+    if (departments?.data.length > 0) {      
       return thunkAPI.rejectWithValue("Already loaded");
     }
 
