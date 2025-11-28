@@ -114,9 +114,7 @@ export default function EventsPage() {
     }, [listEvent.calendar_events, selectedDate]);
 
     const handleSelectDate = (date: string) => {
-        setSelectedDate(date);
-        console.log(date);
-        
+        setSelectedDate(date);        
     };
 
     const handleMonthChange = async (date: Date) => {

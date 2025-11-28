@@ -62,7 +62,6 @@ export default function ProjectsSection() {
     // SHOW selected asset
     useEffect(() => {
         if (selectedAsset) {
-            console.log("FILE URL:", selectedAsset);
             window.open(selectedAsset, "_blank");
         }
     }, [selectedAsset]);

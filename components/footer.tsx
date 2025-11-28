@@ -70,23 +70,24 @@ export default function Footer() {
                             Chính sách
                         </a>
                         <a
-                            href="#"
+                            href="/project"
                             className="rounded-full bg-white shadow-lg/10 bg-box-shadow px-4 py-2 hover:bg-black/10 hover:text-black/70"
                         >
-                            Quy chế
+                            Dự án
                         </a>
                         <a
-                            href="#"
+                            href="/ecosystem"
+                            className="rounded-full bg-white shadow-lg/10 bg-box-shadow px-4 py-2 hover:bg-black/10 hover:text-black/70"
+                        >
+                            Hệ sinh thái
+                        </a>
+                        <a
+                            href="/contact"
                             className="rounded-full bg-white shadow-lg/10 bg-box-shadow px-4 py-2 hover:bg-black/10 hover:text-black/70"
                         >
                             Trung tâm hỗ trợ
                         </a>
-                        <a
-                            href="#"
-                            className="rounded-full bg-white shadow-lg/10 bg-box-shadow px-4 py-2 hover:bg-black/10 hover:text-black/70"
-                        >
-                            Liên hệ kỹ thuật
-                        </a>
+
                     </div>
                 </div>
 

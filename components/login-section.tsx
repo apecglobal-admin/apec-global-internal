@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { fetchUserInfo, loginWeb } from "@/src/services/api";
 import { Eye, EyeOff, Lock } from "lucide-react";
 import { logout } from "@/src/features/user/userSlice";
+import { toast } from "react-toastify";
 
 export default function LoginSection() {
     const [enableOtp, setEnableOtp] = useState(false);
@@ -70,11 +71,11 @@ export default function LoginSection() {
             const res = await dispatch(loginWeb(payload) as any);
             
             if (res.payload.status === 200) {
-                const token = localStorage.getItem("userToken");
-                if (token) {
-                    dispatch(fetchUserInfo(token) as any);
-                }
+                localStorage.setItem("userToken", res.payload.data.token);
+                await dispatch(fetchUserInfo(res.payload.data.token) as any);
+                toast.success(res.payload.data.message);
             } else{
+                toast.success(res.payload.data.message);
             }
         } catch (error) {
             console.error("Đăng nhập thất bại:", error);
@@ -84,7 +85,6 @@ export default function LoginSection() {
     const handleLogout = () => {
         localStorage.removeItem("userToken");
         dispatch(logout());
-        router.push("/login");
     };
 
     // Reset error khi user nhập lại
@@ -182,15 +182,6 @@ export default function LoginSection() {
                         </div>
                         
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            {/* <label className="flex items-center gap-2 text-sm text-slate-300">
-                <input
-                  type="checkbox"
-                  checked={enableOtp}
-                  onChange={(event) => setEnableOtp(event.target.checked)}
-                  className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-blue-500 focus:ring-blue-500"
-                />
-                Kích hoạt đăng nhập 2 lớp (2FA)
-              </label> */}
                             <a
                                 href="#"
                                 className="text-sm text-red-600 transition hover:text-red-400"

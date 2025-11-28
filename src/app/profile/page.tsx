@@ -62,8 +62,6 @@ function ProfilePage() {
         
     }, [dispatch]);
 
-    //console.log("isloading", isLoadingUser, isLoadingDepartments, isLoadingPositions)
-    //console.log("userInfo", !userInfo, !departments, !positions)
 
     // Khởi tạo preview URLs từ avatar hiện tại khi mở modal
     useEffect(() => {
@@ -144,8 +142,6 @@ function ProfilePage() {
 
     const handleUpload = async () => {
         if (Object.keys(selectedFiles).length === 0) return;
-
-        console.log("Uploading files:", selectedFiles);
 
         // ✅ Tạo FormData đúng key backend yêu cầu
         const formData = new FormData();

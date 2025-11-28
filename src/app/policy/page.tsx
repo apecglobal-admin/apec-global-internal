@@ -102,9 +102,7 @@ export default function PoliciesPage() {
 
     const handleShowDetail = (item: any) => {    
 
-        setSelectedPolicy(item);
-        console.log(item);
-        
+        setSelectedPolicy(item);        
         setOpenDialog(true);
             
         // const found = selectedPolicy.find((a: any) => Number(a.id) === id);

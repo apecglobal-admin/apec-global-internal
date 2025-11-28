@@ -29,7 +29,6 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    // console.log("Đăng nhập với:", { email, password });
     try {
       const payload = {
         email,
@@ -41,6 +40,9 @@ export default function LoginPage() {
         localStorage.setItem("userToken", res.payload.data.token);
         router.push("/");
         toast.success(res.payload.data.message);
+      }else{
+        toast.success(res.payload.data.message);
+
       }
     } catch (error: any) {
       console.error("error", error);

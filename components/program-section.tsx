@@ -53,7 +53,6 @@ export default function ProgramSection() {
     const { listRankingCompet } = useCompetData();
     const [activeTab, setActiveTab] = useState<RankingTab>("department");
 
-    // console.log("statusListRankingCompet",);
 
     useEffect(() => {
         const payload = {

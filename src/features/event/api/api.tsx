@@ -142,7 +142,6 @@ export const eventRegister = createAsyncThunk(
     async (payload: any, thunkAPI) => {
         try {
             const { id, event_id, token }: any = payload;
-            console.log("id, event_id", id, event_id, payload);
 
             const params = Object.fromEntries(
                 Object.entries({ id, event_id }).filter(
