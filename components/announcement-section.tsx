@@ -54,6 +54,8 @@ export default function AnnouncementSection() {
     const [selectedDepartment, setSelectedDepartment] = useState<
         number | "all"
     >("all");
+    console.log("aa", userInfo);
+    
 
     const [userToken, setUserToken] = useState<string | null>(null);
     const [openDialog, setOpenDialog] = useState(false);
@@ -66,9 +68,10 @@ export default function AnnouncementSection() {
     useEffect(() => {
         const token = localStorage.getItem("userToken");
         setUserToken(token);
-    }, []);
+    }, [userInfo]);
 
     useEffect(() => {
+        
         // if(!searchQuery) return;
         const type_id = activeCategory === "all" ? null : activeCategory;
         const department_id = selectedDepartment === "all" ? null : selectedDepartment;
@@ -78,6 +81,8 @@ export default function AnnouncementSection() {
             type_id,
             department_id
         };
+        const token = localStorage.getItem("userToken");
+
         dispatch(getListAnnouncement(payload) as any);
     }, [userInfo, searchQuery, activeCategory, selectedDepartment]);
 

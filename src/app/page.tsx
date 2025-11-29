@@ -33,7 +33,7 @@ export default function Home() {
 
     const { slider } = useAnnouncementData();
     const { userInfo } = useProfileData();
-
+    
     useEffect(() => {
         const getSlide = async () => {
             const payload = {
