@@ -28,6 +28,7 @@ import Footer from "@/components/footer";
 import { useDispatch, useSelector } from "react-redux";
 import {
     fetchUserInfo,
+    fetchUserKPI,
     listDepartments,
     listPositions,
     uploadAvatar,
@@ -36,7 +37,7 @@ import { useProfileData } from "@/src/hooks/profileHook";
 
 function ProfilePage() {
     const dispatch = useDispatch();
-    const { userInfo, departments, positions} = useProfileData();
+    const { userInfo, departments, positions, userKPI} = useProfileData();
     const [currentImage, setCurrentImage] = useState(0);
     const [activeTab, setActiveTab] = useState("skills");
     const [showUploadModal, setShowUploadModal] = useState(false);
@@ -54,8 +55,9 @@ function ProfilePage() {
 
     useEffect(() => {
         const token = localStorage.getItem("userToken");
-        if (token) {
+        if (token && !userInfo) {
             dispatch(fetchUserInfo(token as any) as any);
+            dispatch(fetchUserKPI(token as any) as any);
         }
         dispatch(listPositions() as any);
         dispatch(listDepartments() as any);
@@ -191,6 +193,9 @@ function ProfilePage() {
             return newUrls;
         });
     };
+
+    console.log(userKPI, userInfo);
+    
 
     return (
         <div className="h-screen bg-slate-950 p-0 flex flex-col">
@@ -495,7 +500,7 @@ function ProfilePage() {
                                 />
 
                                 {activeTab === "skills" && (
-                                    <SkillsTab userInfo={userInfo} />
+                                    <SkillsTab userInfo={userKPI} />
                                 )}
                                 {activeTab === "projects" && (
                                     <ProjectsTab userInfo={userInfo} />

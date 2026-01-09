@@ -1,5 +1,6 @@
 "use client";
 
+import { setToken } from "@/src/features/user/userSlice";
 import { fetchUserInfo, loginWeb } from "@/src/services/api";
 import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -15,17 +16,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  useEffect(() => {
-    if (status === "succeeded") {
-      const token = localStorage.getItem("userToken");
-      if (token) {
-        dispatch(fetchUserInfo(token as any) as any);
-      }
-      router.push("/");
-    } else if (status === "failed" && error) {
-      alert(error);
-    }
-  }, [status]);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -37,11 +27,12 @@ export default function LoginPage() {
 
       const res = await dispatch(loginWeb(payload) as any);
       if (res.payload.status == 200 || res.payload.status == 201) {
-        localStorage.setItem("userToken", res.payload.data.token);
+        const token = res.payload.data.token
+        dispatch(setToken(token));
         router.push("/");
         toast.success(res.payload.data.message);
       }else{
-        toast.success(res.payload.data.message);
+        toast.error(res.payload.message);
 
       }
     } catch (error: any) {
@@ -50,7 +41,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen  bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex justify-center p-4 relative overflow-hidden">
       {/* Decorative background elements */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
       <div className="absolute top-0 right-0 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>

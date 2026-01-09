@@ -12,9 +12,11 @@ import {
   LayoutGrid,
   ChevronLeft,
   ChevronRight,
+  Plus,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import AssignTask from "./AssignTask"; // Import component giao nhiệm vụ
 
 // Types
 type TaskStatus = "completed" | "in-progress" | "pending";
@@ -84,6 +86,13 @@ function TasksTab() {
   const { tasks, typeTask } = useProfileData();
   const [page] = useState(1);
   const [limit] = useState(100);
+
+  // State để kiểm soát hiển thị component nào
+  const [showAssignTask, setShowAssignTask] = useState(false);
+
+  // Giả sử user hiện tại có role = 2 (Trưởng phòng)
+  // Trong thực tế, lấy từ Redux store hoặc context
+  const [currentUserRole] = useState(2);
 
   useEffect(() => {
     dispatch(listTypeTask() as any);
@@ -263,11 +272,51 @@ function TasksTab() {
       .length;
   };
 
+  // Callback khi giao nhiệm vụ thành công
+  const handleAssignSuccess = (newTasks: any[]) => {
+    // TODO: Dispatch action để thêm tasks mới vào Redux store
+    // dispatch(addTasks(newTasks));
+    
+    alert(`Đã giao thành công ${newTasks.length} nhiệm vụ!`);
+    setShowAssignTask(false);
+  };
+
+  // Nếu đang ở chế độ giao nhiệm vụ, hiển thị component AssignTask
+  if (showAssignTask) {
+    return (
+      <AssignTask
+        onBack={() => setShowAssignTask(false)}
+        onAssignSuccess={handleAssignSuccess}
+      />
+    );
+  }
+
+  // Ngược lại, hiển thị danh sách tasks như cũ
   return (
     <div className="min-h-screen bg-slate-900 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {selectedTask === null ? (
           <>
+            {/* Header với nút giao nhiệm vụ */}
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <h2 className="text-2xl font-bold text-white">
+                  Quản lý Nhiệm vụ
+                </h2>
+              </div>
+
+              {/* Hiển thị nút "Giao nhiệm vụ" chỉ khi role = 2 */}
+              {currentUserRole === 2 && (
+                <button
+                  onClick={() => setShowAssignTask(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition shadow-lg shadow-blue-500/30"
+                >
+                  <Plus size={18} />
+                  Giao nhiệm vụ
+                </button>
+              )}
+            </div>
+
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {typeTask &&

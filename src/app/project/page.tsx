@@ -28,90 +28,8 @@ import {
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import SearchBar from "@/components/searchBar";
+import LoadingBlur from "@/components/loading";
 
-const clusters = [
-    {
-        title: "Apec BCI",
-        subtitle: "Cộng đồng & đầu tư",
-        objective:
-            "Xây dựng cộng đồng nhà đầu tư 50.000 thành viên và quỹ đầu tư tác động",
-        phase: "Giai đoạn 3/5",
-        progress: 60,
-        members: ["Ban Đầu tư", "Apec Capital", "Khối Pháp chế"],
-        reportLink: "#",
-        profileLink: "#",
-        reportLabel: "PowerBI",
-        assets: ["Hồ sơ dự án", "Pitch deck", "Video overview"],
-        color: "blue",
-        lastUpdate: "Cập nhật 2 ngày trước",
-        daysSinceUpdate: 2,
-    },
-    {
-        title: "Apec Space",
-        subtitle: "Super App công nghệ",
-        objective:
-            "Phát triển siêu ứng dụng tích hợp dịch vụ tài chính, thương mại và chăm sóc sức khỏe",
-        phase: "Giai đoạn 4/5",
-        progress: 78,
-        members: ["Khối Công nghệ", "Sản phẩm", "Marketing"],
-        reportLink: "#",
-        profileLink: "#",
-        reportLabel: "PowerBI",
-        assets: ["Roadmap phát triển", "Tài liệu API", "Demo sản phẩm"],
-        color: "emerald",
-        lastUpdate: "Cập nhật 1 ngày trước",
-        daysSinceUpdate: 1,
-    },
-    {
-        title: "GuardCam / Nam Thiên Long",
-        subtitle: "An ninh công nghệ 5.0",
-        objective:
-            "Triển khai 10.000 điểm camera AI và trung tâm điều hành thông minh",
-        phase: "Giai đoạn 2/5",
-        progress: 42,
-        members: ["GuardCam Team", "Khối An ninh", "Đối tác kỹ thuật"],
-        reportLink: "#",
-        profileLink: "#",
-        reportLabel: "Google Sheet",
-        assets: ["Catalogue thiết bị", "Video demo", "Checklist triển khai"],
-        color: "amber",
-        lastUpdate: "Cập nhật 6 ngày trước",
-        daysSinceUpdate: 6,
-        issues: ["Chậm báo cáo 1 tuần", "Cần đẩy nhanh triển khai"],
-    },
-    {
-        title: "LifeCare",
-        subtitle: "Chăm sóc sức khỏe",
-        objective:
-            "Vận hành hệ sinh thái y tế thông minh, kết nối 120 bệnh viện đối tác",
-        phase: "Giai đoạn 3/5",
-        progress: 55,
-        members: ["LifeCare HQ", "Khối Vận hành", "Đối tác y tế"],
-        reportLink: "#",
-        profileLink: "#",
-        reportLabel: "PowerBI",
-        assets: ["Quy trình dịch vụ", "Brochure đối tác", "Video trải nghiệm"],
-        color: "purple",
-        lastUpdate: "Cập nhật hôm qua",
-        daysSinceUpdate: 1,
-    },
-    {
-        title: "Ecoop",
-        subtitle: "Thương mại & chuỗi cung ứng",
-        objective: "Thiết lập 30 hub logistics và 1.000 cửa hàng nhượng quyền",
-        phase: "Giai đoạn 1/5",
-        progress: 25,
-        members: ["Ecoop Team", "Chuỗi cung ứng", "Khối Pháp chế"],
-        reportLink: "#",
-        profileLink: "#",
-        reportLabel: "Google Sheet",
-        assets: ["SOP vận hành", "Tài liệu hợp tác", "Video giới thiệu"],
-        color: "cyan",
-        lastUpdate: "Cập nhật 1 tuần trước",
-        daysSinceUpdate: 7,
-        issues: ["Đang chờ phê duyệt pháp lý"],
-    },
-];
 // Hàm tự động xác định trạng thái dự án
 // const getProjectStatus = (
 //     progress: number,
@@ -197,7 +115,7 @@ export default function ProjectsPage() {
     if (!listProject) {
         return (
             <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
-                <Spinner text="đang tải trang..." />
+                <LoadingBlur />
             </div>
         );
     }
@@ -205,6 +123,14 @@ export default function ProjectsPage() {
     const handleChange = (value: string) => {
         setSearchQuery(value);
     };
+
+    if (statProject?.length === 0 || listProject?.length === 0) {
+        return (
+            <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
+                <LoadingBlur />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">

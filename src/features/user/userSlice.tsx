@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import {
   fetchUserInfo,
+  fetchUserKPI,
   listAchievements,
   listCard,
   listDepartments,
@@ -25,6 +26,7 @@ interface InitState<T> {
 }
 
 interface UserState {
+  token: string | null;
   userInfo: InitState<any | null>;
   departments: InitState<any[]>;
   positions: InitState<any[]>;
@@ -37,11 +39,13 @@ interface UserState {
   projects: InitState<any | null>;
   cards: InitState<any[]>;
   links: InitState<any[]>;
-
+  userKpi: InitState<any | null>;
 }
 
 const initialState: UserState = {
+  token: null,
   userInfo: { data: null, loading: false, error: null, status: null },
+  userKpi: { data: null, loading: false, error: null, status: null },
   departments: { data: [], loading: false, error: null, status: null },
   positions: { data: [], loading: false, error: null, status: null },
   careers: { data: [], loading: false, error: null, status: null },
@@ -59,7 +63,30 @@ const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    logout: () => initialState,
+    logout: (state) => {
+      // Clear localStorage khi logout
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("userToken");
+      }
+      return initialState;
+    },
+    loadTokenFromStorage: (state) => {
+      if (typeof window !== "undefined") {
+        const token = localStorage.getItem("userToken");
+        if (token) {
+          state.token = token;
+        }
+      }
+    },
+    // Reducer để set token (khi login)
+    setToken: (state, action) => {
+      state.token = action.payload;
+      // Đồng bộ với localStorage
+      if (typeof window !== "undefined") {
+        
+        localStorage.setItem("userToken", action.payload);
+      }
+    },
   },
   extraReducers: (builder) => {
     // API call chỉ quan tâm status/loading, không cần lưu payload
@@ -68,6 +95,7 @@ const userSlice = createSlice({
 
     // API call cần lưu dữ liệu
     createAsyncReducer(builder, fetchUserInfo, "userInfo");
+    createAsyncReducer(builder, fetchUserKPI, "userKpi");
     createAsyncReducer(builder, listPositions, "positions");
     createAsyncReducer(builder, listDepartments, "departments");
     createAsyncReducer(builder, personCareer, "careers");
@@ -82,5 +110,5 @@ const userSlice = createSlice({
   },
 });
 
-export const { logout } = userSlice.actions;
+export const { logout, loadTokenFromStorage, setToken } = userSlice.actions;
 export default userSlice.reducer;

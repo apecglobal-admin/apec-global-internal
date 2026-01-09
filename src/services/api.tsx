@@ -45,6 +45,25 @@ export const fetchUserInfo = createAsyncThunk(
   }
 );
 
+
+export const fetchUserKPI = createAsyncThunk(
+  "user/fetchUserKPI",
+  async (token: string, thunkAPI) => {
+    try {
+      const response = await apiAxiosInstance.get("/profile/kpi", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return  response.data.data
+   
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
+
+
 export const listPositions = createAsyncThunk(
   "user/listPositions",
   async (_, thunkAPI) => {

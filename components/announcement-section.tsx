@@ -54,6 +54,8 @@ export default function AnnouncementSection() {
     const [selectedDepartment, setSelectedDepartment] = useState<
         number | "all"
     >("all");
+
+    
     
 
     const [userToken, setUserToken] = useState<string | null>(null);
@@ -66,10 +68,10 @@ export default function AnnouncementSection() {
 
     useEffect(() => {
         const token = localStorage.getItem("userToken");
-
-        
         setUserToken(token);
     }, [userInfo]);
+
+    
     
     useEffect(() => {
         // if(!searchQuery) return;

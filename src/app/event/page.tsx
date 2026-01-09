@@ -35,6 +35,7 @@ import { formatDate, formatMonthYearVN } from "@/src/utils/formatDate";
 import { useEventData } from "@/src/hooks/eventhook";
 import { Spinner } from "@/components/ui/spinner";
 import SearchBar from "@/components/searchBar";
+import LoadingBlur from "@/components/loading";
 
 export default function EventsPage() {
     const dispatch = useDispatch();
@@ -177,7 +178,7 @@ export default function EventsPage() {
     if (typeEvent.length === 0 || listTimeLine.length === 0) {
         return (
             <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
-                <Spinner text="đang tải trang..." />
+                <LoadingBlur />
             </div>
         );
     }
