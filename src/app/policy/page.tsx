@@ -24,6 +24,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getListPolicy, getStatPolicy } from "@/src/features/policy/api/api";
 import { usePolicyData } from "@/src/hooks/policyhook";
 import { Spinner } from "@/components/ui/spinner";
+import LoadingBlur from "@/components/loading";
 
 const policyStats = [
     { value: "128", label: "Chính sách", subLabel: "Đã cập nhật 2025" },
@@ -115,7 +116,7 @@ export default function PoliciesPage() {
     if(statPolicy.length === 0 ){
         return(
             <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
-                <Spinner text="đang tải trang..."/>
+                <LoadingBlur />
             </div>
         )
     }

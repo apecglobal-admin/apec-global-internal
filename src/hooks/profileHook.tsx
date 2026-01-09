@@ -6,6 +6,7 @@ export const useProfileData = () => {
   return {
     // Data 
     userInfo: user.userInfo.data,
+    userKPI: user.userKpi.data,
     positions: user.positions.data,
     departments: user.departments.data,
     careers: user.careers.data,

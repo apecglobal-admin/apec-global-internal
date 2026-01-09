@@ -50,10 +50,12 @@ export default function Header() {
     const sidebarRef = useRef<HTMLDivElement>(null);
     const currentMenu = menuItems.find((item) => item.href === pathname);
     const [searchQuery, setSearchQuery] = useState<string>("");
+
     
     useEffect(() => {
         const token = localStorage.getItem("userToken");
         if (token) {
+            
             dispatch(fetchUserInfo(token) as any);
         }
 

@@ -20,6 +20,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { getSlider } from "../features/announcement/api/api";
 import { useProfileData } from "../hooks/profileHook";
+import LoadingBlur from "@/components/loading";
 
 const nav = [
     { value: "statistics", label: "Thống kê báo cáo" },
@@ -32,7 +33,7 @@ export default function Home() {
     const dispatch = useDispatch();
 
     const { slider } = useAnnouncementData();
-    const { userInfo } = useProfileData();
+    const { userInfo, isLoadingUser } = useProfileData();
     
     useEffect(() => {
         const getSlide = async () => {
@@ -43,6 +44,20 @@ export default function Home() {
         };
         getSlide();
     }, []);
+
+
+    if(isLoadingUser){
+        return(
+            <div className="min-h-screen bg-white  text-white">
+                <main className="mx-auto w-full max-w-7xl px-4 py-10 space-y-10 sm:px-6 sm:py-12 sm:space-y-12 md:px-8 md:py-14 lg:px-8 lg:py-16 lg:space-y-16">
+
+                    <LoadingBlur />
+                </main>
+
+            </div>
+        )
+    }
+    
 
     return (
         <div className="min-h-screen bg-white  text-white">

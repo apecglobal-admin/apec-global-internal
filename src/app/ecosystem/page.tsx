@@ -1,4 +1,7 @@
 "use client";
+import EmptyState from "@/components/emptyState";
+import ErrorScreen from "@/components/errorState";
+import LoadingBlur from "@/components/loading";
 import { getDashboardEconosystem } from "@/src/features/ecosystem/api/api";
 import { useEconosystemData } from "@/src/hooks/econosystemhook";
 import { createRequestUser, personalRequest } from "@/src/services/api";
@@ -109,8 +112,27 @@ const ecosystemData = {
 // Component Hệ Sinh Thái
 export default function Ecosystem() {
     const dispatch = useDispatch();
-    const { listELearning, listTools, listCreative, listNews } =
-        useEconosystemData();
+    const {
+        // Data 
+        listELearning,
+        listTools,
+        listCreative,
+        listNews,
+        // Loading states
+        loadingListELearning,
+        loadingListTools,
+        loadingListCreative,
+        loadingListNews,
+        isLoadingAll: isLoading,
+        // Error states
+        errorListELearning,
+        errorListTools,
+        errorListCreative,
+        errorListNews,
+        hasErrorAll: hasError,
+        hasEmptyData
+    } = useEconosystemData();
+
 
     const [newRequest, setNewRequest] = useState({
         title: "",
@@ -176,6 +198,27 @@ export default function Ecosystem() {
         setShowNewRequestModal(false);
     };
 
+
+    // Hiển thị loading
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
+                <LoadingBlur />
+            </div>
+        );
+    }
+
+    if (hasEmptyData) {
+        return (
+            <EmptyState
+                title="Hệ sinh thái đang cập nhật"
+                description="Các thông tin về hệ sinh thái đang được cập nhật. Vui lòng quay lại sau."
+                showAction={true}
+                actionText="Tải lại trang"
+                onAction={() => window.location.reload()}
+            />
+        );
+    }
     return (
         <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
             <div className="mx-auto max-w-7xl">
@@ -389,7 +432,7 @@ export default function Ecosystem() {
                             </div>
                         ))}
                         {/* Bản tin tuần */}
-                        {listNews.map((item: any) => (
+                        {listNews?.map((item: any) => (
                             <div
                                 key={item.id}
                                 className="rounded-2xl bg-blue-gradiant-main bg-box-shadow p-5 sm:p-6"

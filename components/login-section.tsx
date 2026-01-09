@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { fetchUserInfo, loginWeb } from "@/src/services/api";
 import { Eye, EyeOff, Lock } from "lucide-react";
-import { logout } from "@/src/features/user/userSlice";
+import { logout, setToken } from "@/src/features/user/userSlice";
 import { toast } from "react-toastify";
 
 export default function LoginSection() {
@@ -22,6 +22,7 @@ export default function LoginSection() {
     // Refs để focus vào input
     const emailRef = useRef<HTMLInputElement>(null);
     const passwordRef = useRef<HTMLInputElement>(null);
+
     
     const clearForm = () => {
         setPassword("");
@@ -71,7 +72,8 @@ export default function LoginSection() {
             const res = await dispatch(loginWeb(payload) as any);
             
             if (res.payload.status === 200) {
-                localStorage.setItem("userToken", res.payload.data.token);
+                const token = res.payload.data.token;
+                dispatch(setToken(token));
                 await dispatch(fetchUserInfo(res.payload.data.token) as any);
                 toast.success(res.payload.data.message);
             } else{
@@ -104,7 +106,7 @@ export default function LoginSection() {
 
     return (
         <section
-            className="rounded-3xl p-6 sm:p-7 lg:p-8 bg-white"
+            className="rounded-3xl  p-6 sm:p-7 lg:p-8 bg-white"
             style={{
                 boxShadow: "0 0 10px 2px rgb(169, 169, 170)",
             }}
