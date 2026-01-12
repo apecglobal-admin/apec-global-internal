@@ -37,7 +37,7 @@ import { useProfileData } from "@/src/hooks/profileHook";
 
 function ProfilePage() {
     const dispatch = useDispatch();
-    const { userInfo, departments, positions, userKPI} = useProfileData();
+    const { userInfo, departments, positions, userKPI } = useProfileData();
     const [currentImage, setCurrentImage] = useState(0);
     const [activeTab, setActiveTab] = useState("skills");
     const [showUploadModal, setShowUploadModal] = useState(false);
@@ -55,14 +55,20 @@ function ProfilePage() {
 
     useEffect(() => {
         const token = localStorage.getItem("userToken");
-        if (token && !userInfo) {
+     
+        if(!token) return;
+
+        if (!userInfo) {
             dispatch(fetchUserInfo(token as any) as any);
+        }
+        
+        if(!userKPI){
             dispatch(fetchUserKPI(token as any) as any);
         }
         dispatch(listPositions() as any);
         dispatch(listDepartments() as any);
         
-    }, [dispatch]);
+    }, []);
 
 
     // Khởi tạo preview URLs từ avatar hiện tại khi mở modal
@@ -194,7 +200,7 @@ function ProfilePage() {
         });
     };
 
-    console.log(userKPI, userInfo);
+    console.log(!userKPI, userInfo);
     
 
     return (
@@ -500,7 +506,9 @@ function ProfilePage() {
                                 />
 
                                 {activeTab === "skills" && (
-                                    <SkillsTab userInfo={userKPI} />
+                                    userKPI && (
+                                        <SkillsTab userInfo={userKPI.kpis} />
+                                    )
                                 )}
                                 {activeTab === "projects" && (
                                     <ProjectsTab userInfo={userInfo} />
