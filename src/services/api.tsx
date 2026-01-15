@@ -120,17 +120,24 @@ export const personTasks = createAsyncThunk(
   "user/personTasks",
   async (payload, thunkAPI) => {
     try {
-      const { page, limit, token }: any = payload;
+      const { page, limit, token, filter }: any = payload;
+
+      const params = Object.fromEntries(
+        Object.entries({ page, limit, filter }).filter(
+            ([key, value]) => value != null
+        )
+    );
       const response = await apiAxiosInstance.get(
-        `/profile/tasks?page=${page}&limit=${limit}`,
+        `/profile/tasks`,
         {
+          params,
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
       return {
-        data: response.data.data,
+        data: response.data,
         status: response.status
       };
     } catch (error: any) {
@@ -144,8 +151,9 @@ export const listTypeTask = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await apiAxiosInstance.get("/tasks/types");
+      
       return {
-        data: response.data,
+        data: response.data.data,
         status: response.status
       };
     } catch (error: any) {

@@ -9,6 +9,8 @@ import contactReducer from "../features/contact/contactSlice";
 import dashboardReducer from "../features/dashboard/dashboardSlice";
 import econosystemReducer from "../features/ecosystem/ecosystemSlice";
 
+import tastReducer from "../features/task/taskSlice";
+
 const store = configureStore({
   reducer: {
     user: userReducer, // Kết nối reducer của user với store
@@ -19,7 +21,9 @@ const store = configureStore({
     compet: competReducer,
     contact: contactReducer,
     dashboard: dashboardReducer,
-    econosystem: econosystemReducer
+    econosystem: econosystemReducer,
+    task: tastReducer,
+
   },
 });
 

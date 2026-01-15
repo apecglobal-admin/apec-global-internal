@@ -200,7 +200,6 @@ function ProfilePage() {
         });
     };
 
-    console.log(!userKPI, userInfo);
     
 
     return (
