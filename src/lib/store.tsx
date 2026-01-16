@@ -10,7 +10,7 @@ import dashboardReducer from "../features/dashboard/dashboardSlice";
 import econosystemReducer from "../features/ecosystem/ecosystemSlice";
 
 import tastReducer from "../features/task/taskSlice";
-
+import cautionReducer from "../features/caution/cautionSlice";
 const store = configureStore({
   reducer: {
     user: userReducer, // Kết nối reducer của user với store
@@ -23,7 +23,7 @@ const store = configureStore({
     dashboard: dashboardReducer,
     econosystem: econosystemReducer,
     task: tastReducer,
-
+    caution: cautionReducer
   },
 });
 

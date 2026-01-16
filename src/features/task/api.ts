@@ -168,7 +168,7 @@ export const getChildKpi = createAsyncThunk(
     async (_, thunkAPI) => {
         try {
 
-            const response = await apiAxiosInstance.get("/cms/select/options/kpi_items");
+            const response = await apiAxiosInstance.get("/kpi/items/tasks/select");
             return {
                 data: response.data,
             };
@@ -372,5 +372,71 @@ export const updateProgressSubTask = createAsyncThunk(
         }
     }
 );
+
+
+export const getListTaskAssign = createAsyncThunk(
+    "task/getListTaskAssign",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {limit, page, id, token} = payload;
+            const params = Object.fromEntries(
+                Object.entries({ limit,page,id }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/tasks/assign",
+                {
+                    params,
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                }
+            );
+            return {
+                data: response.data,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+
+export const checkedTask = createAsyncThunk(
+    "task/checkedTask",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {id, task_id, token} = payload;
+
+            const response = await apiAxiosInstance.put("/tasks/checked",
+                {
+                    id, 
+                    task_id
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`
+                  },
+                }
+            );
+            return {
+                data: response.data,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+
+
+
+
+
+
 
 

@@ -2,6 +2,8 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
   fetchUserInfo,
   fetchUserKPI,
+  getListEmployeeDepartment,
+  getTotalKpiSkill,
   listAchievements,
   listCard,
   listDepartments,
@@ -40,6 +42,8 @@ interface UserState {
   cards: InitState<any[]>;
   links: InitState<any[]>;
   userKpi: InitState<any | null>;
+  listEmployeeDepartment: InitState<any[]>;
+  totalKpiSkill: InitState<any[]>;
 }
 
 const initialState: UserState = {
@@ -57,6 +61,8 @@ const initialState: UserState = {
   projects: { data: null, loading: false, error: null, status: null },
   cards: { data: [], loading: false, error: null, status: null },
   links: { data: [], loading: false, error: null, status: null },
+  listEmployeeDepartment: { data: [], loading: false, error: null, status: null },
+  totalKpiSkill: { data: [], loading: false, error: null, status: null },
 };
 
 const userSlice = createSlice({
@@ -107,6 +113,13 @@ const userSlice = createSlice({
     createAsyncReducer(builder, listProjects, "projects");
     createAsyncReducer(builder, listCard, "cards");
     createAsyncReducer(builder, listLink, "links");
+    createAsyncReducer(builder, getListEmployeeDepartment, "listEmployeeDepartment");
+    createAsyncReducer(builder, getTotalKpiSkill, "totalKpiSkill");
+
+    
+
+
+    
   },
 });
 

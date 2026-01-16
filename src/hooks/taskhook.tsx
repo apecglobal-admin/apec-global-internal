@@ -15,7 +15,8 @@ export const useTaskData = () => {
     listPosition: task.listPosition.data.data,
     imageTask: task.imageTask.data.url,
     fileTask: task.fileTask.data.url,
-    listSubTask: task.listSubTask.data.data 
+    listSubTask: task.listSubTask.data.data, 
+    listTaskAssign: task.listTaskAssign.data.data,
     // Loading states
 
 

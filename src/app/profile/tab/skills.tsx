@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     RadarChart,
     Radar,
@@ -9,13 +9,24 @@ import {
     Tooltip,
 } from "recharts";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { useProfileData } from "@/src/hooks/profileHook";
+import { getTotalKpiSkill } from "@/src/services/api";
+import { useDispatch } from "react-redux";
 
 function SkillsTab({ userInfo }: any) {
+    const dispatch = useDispatch();
+    const { totalKpiSkill } = useProfileData();
     const [expandedSkills, setExpandedSkills] = useState<Set<number>>(
         new Set()
     );
 
-    // Kỹ năng cứng từ props với sub-skills
+    useEffect(() => {
+        if (!userInfo) return;
+        const token = localStorage.getItem("userToken");
+        dispatch(getTotalKpiSkill(token) as any);
+    }, [userInfo]);
+
+    // Kỹ năng cứng từ props
     const hardSkills = userInfo.map((skill: any) => ({
         icon: skill.icon || "💼",
         name: skill.kpi.name,
@@ -27,38 +38,17 @@ function SkillsTab({ userInfo }: any) {
         ],
     }));
 
-    // Tính toán thống kê
-    const getRating = (value: number) => {
-        if (value >= 90) return "S";
-        if (value >= 80) return "A";
-        if (value >= 70) return "B";
-        return "C";
-    };
-
-    const getRatingColor = (rating: string) => {
-        const colors = {
-            S: "border-yellow-400 text-yellow-400",
-            A: "border-green-400 text-green-400",
-            B: "border-blue-400 text-blue-400",
-            C: "border-slate-400 text-slate-400",
+    // Lấy thông tin từ API
+    const getRankColor = (rankName: string) => {
+        const colors: Record<string, string> = {
+            S: "border-yellow-400 text-yellow-400 bg-yellow-400/10",
+            A: "border-green-400 text-green-400 bg-green-400/10",
+            B: "border-blue-400 text-blue-400 bg-blue-400/10",
+            C: "border-slate-400 text-slate-400 bg-slate-400/10",
+            D: "border-red-400 text-red-400 bg-red-400/10",
         };
-        return colors[rating as keyof typeof colors] || colors.C;
+        return colors[rankName] || colors.C;
     };
-
-    const ratingStats = hardSkills.reduce(
-        (acc: any, skill: any) => {
-            const rating = getRating(skill.value);
-            acc[rating as keyof typeof acc] =
-                (acc[rating as keyof typeof acc] || 0) + 1;
-            return acc;
-        },
-        { S: 0, A: 0, B: 0, C: 0 }
-    );
-
-    const averageScore =
-        hardSkills.reduce((sum: any, skill: any) => sum + skill.value, 0) /
-        hardSkills.length;
-    const overallRating = getRating(averageScore);
 
     // Dữ liệu cho biểu đồ radar
     const skillsData = hardSkills.map((skill: any) => ({
@@ -169,7 +159,6 @@ function SkillsTab({ userInfo }: any) {
                                     fill: "#cbd5e1",
                                     fontSize: 14,
                                     fontWeight: 500,
-
                                 }}
                                 tickSize={20}
                             />
@@ -235,79 +224,55 @@ function SkillsTab({ userInfo }: any) {
                         📊 Đánh giá tổng hợp
                     </h3>
 
-                    {/* Overall Rating */}
-                    <div className="mb-6 p-4 bg-slate-800/50 rounded-lg border-2 border-slate-600">
-                        <div className="text-center">
-                            <p className="text-xs text-slate-400 mb-2">
-                                Tổng quan
-                            </p>
-                            <div
-                                className={`inline-flex items-center justify-center w-16 h-16 rounded-full border-4 ${getRatingColor(
-                                    overallRating
-                                )}`}
-                            >
-                                <span className="text-2xl font-bold">
-                                    {overallRating}
-                                </span>
-                            </div>
-                            <p className="text-lg font-semibold text-slate-200 mt-2">
-                                {averageScore.toFixed(1)}%
-                            </p>
-                            <p className="text-xs text-slate-400 mt-1">
-                                {hardSkills.length} kỹ năng
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Rating Distribution */}
-                    <div className="space-y-2">
-                        <p className="text-xs font-medium text-slate-400 mb-3">
-                            Phân bố đánh giá
-                        </p>
-                        {["S", "A", "B", "C"].map((rating) => {
-                            const count =
-                                ratingStats[rating as keyof typeof ratingStats];
-                            const percentage =
-                                (count / hardSkills.length) * 100;
-                            return (
-                                <div key={rating} className="space-y-1">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <span
-                                                className={`px-2 py-0.5 text-xs font-bold rounded border ${getRatingColor(
-                                                    rating
-                                                )}`}
-                                            >
-                                                {rating}
-                                            </span>
-                                            <span className="text-xs text-slate-400">
-                                                {count} kỹ năng
-                                            </span>
-                                        </div>
-                                        <span className="text-xs text-slate-400">
-                                            {percentage.toFixed(0)}%
+                    {/* Overall Rating từ API */}
+                    {totalKpiSkill ? (
+                        <div className="p-4 bg-slate-800/50 rounded-lg border-2 border-slate-600">
+                            <div className="text-center">
+                                <p className="text-xs text-slate-400 mb-2">
+                                    Tổng quan
+                                </p>
+                                <div
+                                    className={`inline-flex items-center justify-center w-20 h-20 rounded-full border-4 ${getRankColor(
+                                        totalKpiSkill.rank?.name || "C"
+                                    )}`}
+                                >
+                                    <span className="text-3xl font-bold">
+                                        {totalKpiSkill.rank?.name || "-"}
+                                    </span>
+                                </div>
+                                <p className="text-xl font-semibold text-slate-200 mt-3">
+                                    {parseFloat(totalKpiSkill.total_score).toFixed(1)}
+                                </p>
+                                <p className="text-xs text-slate-400 mt-1">
+                                    Điểm tổng
+                                </p>
+                                <div className="mt-4 pt-4 border-t border-slate-700">
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="text-slate-500">
+                                            Tháng/Năm:
+                                        </span>
+                                        <span className="text-slate-300 font-medium">
+                                            {totalKpiSkill.month}/{totalKpiSkill.year}
                                         </span>
                                     </div>
-                                    <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full rounded-full transition-all duration-500"
-                                            style={{
-                                                width: `${percentage}%`,
-                                                backgroundColor:
-                                                    rating === "S"
-                                                        ? "#facc15"
-                                                        : rating === "A"
-                                                        ? "#4ade80"
-                                                        : rating === "B"
-                                                        ? "#60a5fa"
-                                                        : "#94a3b8",
-                                            }}
-                                        />
-                                    </div>
                                 </div>
-                            );
-                        })}
-                    </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="p-4 bg-slate-800/50 rounded-lg border-2 border-slate-600">
+                            <div className="text-center">
+                                <p className="text-xs text-slate-400 mb-2">
+                                    Tổng quan
+                                </p>
+                                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full border-4 border-slate-400 text-slate-400">
+                                    <span className="text-3xl font-bold">-</span>
+                                </div>
+                                <p className="text-lg text-slate-400 mt-3">
+                                    Chưa có dữ liệu
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -329,11 +294,6 @@ function SkillsTab({ userInfo }: any) {
                                         <span className="text-xs lg:text-sm font-medium text-slate-300 group-hover:text-slate-100 transition-colors">
                                             {skill.name}
                                         </span>
-                                        {isExpanded ? (
-                                            <ChevronUp className="w-3 h-3 lg:w-4 lg:h-4 text-slate-400" />
-                                        ) : (
-                                            <ChevronDown className="w-3 h-3 lg:w-4 lg:h-4 text-slate-400" />
-                                        )}
                                     </div>
                                     <span className="text-xs lg:text-sm font-bold text-blue-400 group-hover:text-blue-300 transition-colors">
                                         {skill.value}%
@@ -346,37 +306,6 @@ function SkillsTab({ userInfo }: any) {
                                     />
                                 </div>
                             </div>
-
-                            {/* Sub-skills */}
-                            {isExpanded && skill.subSkills && (
-                                <div className="mt-2 mb-3 space-y-2 pl-4 lg:pl-6">
-                                    {skill.subSkills.map(
-                                        (subSkill: any, subIndex: number) => (
-                                            <div
-                                                key={subIndex}
-                                                className="flex items-center justify-between py-1.5 px-2 bg-slate-800/40 rounded-lg"
-                                            >
-                                                <span className="text-xs text-slate-400">
-                                                    {subSkill.name}
-                                                </span>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="h-1 w-12 lg:w-16 bg-slate-700 rounded-full overflow-hidden">
-                                                        <div
-                                                            className="h-full rounded-full bg-blue-400"
-                                                            style={{
-                                                                width: `${subSkill.value}%`,
-                                                            }}
-                                                        />
-                                                    </div>
-                                                    <span className="text-xs text-slate-400 w-8 text-right">
-                                                        {subSkill.value}%
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        )
-                                    )}
-                                </div>
-                            )}
                         </div>
                     );
                 })}
