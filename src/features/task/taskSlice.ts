@@ -15,6 +15,8 @@ import {
     createSubTask,
     getSubTask,
     updateProgressSubTask,
+    getListTaskAssign,
+
 } from "./api";
 import { createAsyncReducer } from "@/src/utils/createAsyncReducer";
 import { initState } from "@/src/services/interface";
@@ -35,6 +37,7 @@ interface TaskState {
     imageTask: initState<any[]>;
     fileTask: initState<any[]>;
     listSubTask: initState<any[]>;
+    listTaskAssign: initState<any[]>;
 }
 
 const createInitState = () => ({ data: [], loading: false, error: null, status: null });
@@ -53,6 +56,7 @@ const initialState: TaskState = {
     imageTask: createInitState(),
     fileTask: createInitState(),
     listSubTask: createInitState(),
+    listTaskAssign: createInitState(),
 };
 
 const taskSlice = createSlice({
@@ -79,6 +83,7 @@ const taskSlice = createSlice({
         createAsyncReducer(builder, updateProgressTask);
         createAsyncReducer(builder, getSubTask, "listSubTask");
         createAsyncReducer(builder, updateProgressSubTask);
+        createAsyncReducer(builder, getListTaskAssign, "listTaskAssign");
     },
 });
 

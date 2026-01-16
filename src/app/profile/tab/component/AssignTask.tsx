@@ -57,7 +57,6 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
   } = useTaskData();
 
   const { tasks } = useProfileData();
-  console.log(tasks);
   
   const [assignForm, setAssignForm] = useState<AssignFormData>({
     name: "",

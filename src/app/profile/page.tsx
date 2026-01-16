@@ -34,6 +34,7 @@ import {
     uploadAvatar,
 } from "@/src/services/api";
 import { useProfileData } from "@/src/hooks/profileHook";
+import Cautions from "./tab/Cautions";
 
 function ProfilePage() {
     const dispatch = useDispatch();
@@ -519,6 +520,8 @@ function ProfilePage() {
                                     <CareerTab userInfo={userInfo} />
                                 )}
                                 {activeTab === "tasks" && <TasksTab />}
+                                {activeTab === "caution" && <Cautions />}
+
                                 {activeTab === "personal" && (
                                     <PersonalTab userInfo={userInfo} />
                                 )}

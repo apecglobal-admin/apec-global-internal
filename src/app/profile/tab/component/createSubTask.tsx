@@ -79,7 +79,7 @@ function CreateSubTask({ task, statusTask, onClose, onSuccess }: CreateSubTaskPr
                 onSuccess?.();
                 onClose();
             } else {
-                toast.error("Có lỗi xảy ra khi tạo nhiệm vụ con")
+                toast.error(result?.payload?.data?.message || "Tạo thất bại")
             }
             
         } catch (error) {

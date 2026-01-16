@@ -18,7 +18,10 @@ export const useProfileData = () => {
     projects: user.projects.data,
     cards: user.cards.data,
     links: user.links.data,
+    listEmployeeDepartment: user.listEmployeeDepartment.data.data,
+    totalKpiSkill: user.totalKpiSkill.data.data,
 
+    
     // Loading states
     isLoadingUser: user.userInfo.loading,
     isLoadingPositions: user.positions.loading,

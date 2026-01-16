@@ -30,6 +30,7 @@ import {
 import TaskDetail from "./component/taskDetail";
 import { getPriorityTask, getStatusTask } from "@/src/features/task/api";
 import { useTaskData } from "@/src/hooks/taskhook";
+import CheckedTask from "./component/CheckedTask";
 
 interface Task {
   id: string;
@@ -319,7 +320,7 @@ function TasksTab() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
               <div>
                 <h2 className="text-xl sm:text-2xl font-bold text-white">
-                  Quản lý Nhiệm vụ
+                  Quản lý nhiệm vụ cá nhân
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-400 mt-1">
                   Tổng số {totalItems} nhiệm vụ
@@ -555,6 +556,10 @@ function TasksTab() {
           </>
         )}
       </div>
+
+      <CheckedTask />
+
+
     </div>
   );
 }

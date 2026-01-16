@@ -325,6 +325,54 @@ export const createRequestUser = createAsyncThunk(
   }
 );
 
+export const getListEmployeeDepartment = createAsyncThunk(
+  "user/getListEmployeeDepartment",
+  async (token: string | null, thunkAPI) => {
+    try {
+      const response = await apiAxiosInstance.get(
+        `/employees/departments`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return {
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
+
+export const getTotalKpiSkill = createAsyncThunk(
+  "user/getTotalKpiSkill",
+  async (token: string | null, thunkAPI) => {
+    try {
+      const response = await apiAxiosInstance.get(
+        `/profile/kpi/period`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return {
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
+
+
+
 
 
 

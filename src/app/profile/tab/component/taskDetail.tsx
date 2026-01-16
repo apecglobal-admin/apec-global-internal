@@ -15,13 +15,14 @@ import {
     uploadImageTask,
     uploadFileTask,
     updateProgressTask,
-    getSubTask
+    getSubTask,
 } from "@/src/features/task/api";
 import { useEffect, useState } from "react";
 import { useTaskData } from "@/src/hooks/taskhook";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import CreateSubTask from "./createSubTask";
+import UpdateSubTask from "./updateSubTask";
 
 interface Task {
     id: string;
@@ -99,7 +100,6 @@ function TaskDetail({
 }: TaskDetailProps) {
     const dispatch = useDispatch();
     const { imageTask, fileTask, listSubTask } = useTaskData();
-    console.log("listSubTask",statusTask);
     
     const progress = calculateProgress(task);
     const [isEditing, setIsEditing] = useState(false);
@@ -115,17 +115,52 @@ function TaskDetail({
     const [isSaving, setIsSaving] = useState(false);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [showCreateSubTask, setShowCreateSubTask] = useState(false);
+    const [showUpdateSubTask, setShowUpdateSubTask] = useState(false);
+    const [subTaskOffset, setSubTaskOffset] = useState(0);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [hasMoreSubTasks, setHasMoreSubTasks] = useState(true);
+    const [allSubTasks, setAllSubTasks] = useState<SubTask[]>([]);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
     
     useEffect(() => {
         if(!task) return;
 
+        // Reset khi task thay đổi
+        setSubTaskOffset(0);
+        setHasMoreSubTasks(true);
+        setAllSubTasks([]);
+        setIsInitialLoad(true);
+        
         const token = localStorage.getItem("userToken");
-        const paylaod = {
+        const payload = {
             token,
-            task_assignment_id: task.id
+            task_assignment_id: task.id,
+            limit: 5,
+            offset: 0
         }
-        dispatch(getSubTask(paylaod) as any);
+        dispatch(getSubTask(payload) as any);
     }, [task]);
+
+    // Cập nhật allSubTasks khi listSubTask thay đổi
+    useEffect(() => {
+        if (!listSubTask) return;
+
+        if (isInitialLoad) {
+            // Lần đầu load hoặc sau khi refresh
+            setAllSubTasks(listSubTask);
+            setIsInitialLoad(false);
+        } else {
+            // Load more - nối thêm vào cuối
+            setAllSubTasks(prev => {
+                // Lọc ra các item mới chưa có trong danh sách
+                const existingIds = new Set(prev.map(st => st.id));
+                const newItems = listSubTask.filter((st: SubTask) => !existingIds.has(st.id));
+                
+                // Nối vào cuối
+                return [...prev, ...newItems];
+            });
+        }
+    }, [listSubTask]);
     
     const handleUpload = async () => {
         if (!selectedFile) {
@@ -135,11 +170,9 @@ function TaskDetail({
 
         setIsUploading(true);
         try {
-            // Tạo FormData
             const formData = new FormData();
             formData.append('file', selectedFile);
             const token = localStorage.getItem("userToken");
-            // Tạo payload theo yêu cầu
             const payload = {
                 formData,
                 token
@@ -152,7 +185,6 @@ function TaskDetail({
                 result = await dispatch(uploadFileTask(payload) as any);
             }
             
-            // Kiểm tra kết quả
             if (result?.payload.data.success && !result?.error) {
                 setIsUploaded(true);
             } else {
@@ -174,7 +206,6 @@ function TaskDetail({
 
         setIsSaving(true);
         try {
-            // Tạo payload cho update progress
             const token = localStorage.getItem("userToken");
             const updatePayload = {
                 id: parseInt(task.id),
@@ -187,7 +218,6 @@ function TaskDetail({
             };
             const result = await dispatch(updateProgressTask(updatePayload) as any);
 
-            // Kiểm tra kết quả
             if (result?.payload.data.success && !result?.error) {
                 setIsEditing(false);
                 resetForm();
@@ -229,12 +259,10 @@ function TaskDetail({
         const newStatus = parseInt(e.target.value);
         setSelectedStatus(newStatus);
 
-        // Reset file upload when status changes away from 4
         if (newStatus !== 4) {
             resetForm();
         }
 
-        // Auto set progress to 100% when status is 4 (Hoàn thành)
         if (newStatus === 4) {
             setProgressValue(100);
         }
@@ -246,7 +274,6 @@ function TaskDetail({
             setSelectedFile(file);
             setIsUploaded(false);
 
-            // Create preview for images
             if (uploadType === "image" && file.type.startsWith("image/")) {
                 const reader = new FileReader();
                 reader.onloadend = () => {
@@ -261,7 +288,6 @@ function TaskDetail({
 
     const handleUploadTypeChange = (type: "image" | "document") => {
         if (uploadType === type) {
-            // Deselect if clicking the same type
             setUploadType(null);
             setSelectedFile(null);
             setFilePreview(null);
@@ -281,6 +307,60 @@ function TaskDetail({
             return ".pdf,.doc,.docx,.xls,.xlsx,.txt";
         }
         return "";
+    };
+
+    const refreshSubTasks = () => {
+        setSubTaskOffset(0);
+        setHasMoreSubTasks(true);
+        setAllSubTasks([]);
+        setIsInitialLoad(true);
+        const token = localStorage.getItem("userToken");
+        const payload = { 
+            token, 
+            task_assignment_id: task.id,
+            limit: 5,
+            offset: 0
+        };
+        dispatch(getSubTask(payload) as any);
+    };
+
+    const loadMoreSubTasks = async () => {
+        if (isLoadingMore || !hasMoreSubTasks) return;
+
+        setIsLoadingMore(true);
+        try {
+            const token = localStorage.getItem("userToken");
+            const newOffset = subTaskOffset + 5;
+            const payload = {
+                token,
+                task_assignment_id: task.id,
+                limit: 5,
+                offset: newOffset
+            };
+            
+            const result = await dispatch(getSubTask(payload) as any);
+            
+            // Kiểm tra nếu không còn dữ liệu
+            if (result?.payload?.data?.data?.length === 0 || result?.payload?.data?.data?.length < 5) {
+                setHasMoreSubTasks(false);
+            }
+            
+            // Cập nhật offset sau khi load thành công
+            setSubTaskOffset(newOffset);
+        } catch (error) {
+            console.error("Error loading more subtasks:", error);
+        } finally {
+            setIsLoadingMore(false);
+        }
+    };
+
+    const handleSubTaskScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+        
+        // Khi cuộn gần đến cuối (còn 50px)
+        if (scrollHeight - scrollTop <= clientHeight + 50) {
+            loadMoreSubTasks();
+        }
     };
 
     return (
@@ -331,15 +411,26 @@ function TaskDetail({
             <div className="flex items-center justify-between mb-2">
                 <h5 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
                     <ClipboardList size={16} className="text-slate-400" />
-                    Nhiệm vụ con ({listSubTask?.length || 0})
+                    Nhiệm vụ con ({allSubTasks?.length || 0})
                 </h5>
-                <button
-                    onClick={() => setShowCreateSubTask(true)}
-                    className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded flex items-center gap-1"
-                >
-                    <Plus size={14} />
-                    Tạo
-                </button>
+                <div className="flex gap-2">
+                    {allSubTasks && allSubTasks.length > 0 && (
+                        <button
+                            onClick={() => setShowUpdateSubTask(true)}
+                            className="px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded flex items-center gap-1"
+                        >
+                            <Edit3 size={14} />
+                            Cập nhật
+                        </button>
+                    )}
+                    <button
+                        onClick={() => setShowCreateSubTask(true)}
+                        className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded flex items-center gap-1"
+                    >
+                        <Plus size={14} />
+                        Tạo
+                    </button>
+                </div>
             </div>
 
             {showCreateSubTask && (
@@ -347,20 +438,27 @@ function TaskDetail({
                     task={task}
                     statusTask={statusTask}
                     onClose={() => setShowCreateSubTask(false)}
-                    onSuccess={() => {
-                        // Refresh subtask list
-                        const token = localStorage.getItem("userToken");
-                        const payload = { token, task_assignment_id: task.id };
-                        dispatch(getSubTask(payload) as any);
-                    }}
+                    onSuccess={refreshSubTasks}
                 />
             )}
-            {listSubTask && listSubTask.length > 0 && (
+
+            {showUpdateSubTask && allSubTasks && allSubTasks.length > 0 && (
+                <UpdateSubTask
+                    subtasks={allSubTasks}
+                    taskAssignmentId={task.id}
+                    statusTask={statusTask}
+                    onClose={() => setShowUpdateSubTask(false)}
+                    onSuccess={refreshSubTasks}
+                />
+            )}
+
+            {allSubTasks && allSubTasks.length > 0 && (
               <div className="mt-4 space-y-2">
-
-
-                <div className="space-y-2 max-h-60 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
-                  {listSubTask.map((subtask: SubTask) => (
+                <div 
+                  className="space-y-2 max-h-60 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900"
+                  onScroll={handleSubTaskScroll}
+                >
+                  {allSubTasks.map((subtask: SubTask) => (
                     <div
                       key={subtask.id}
                       className="flex items-start justify-between gap-3 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-lg px-3 py-2.5 transition"
@@ -397,6 +495,25 @@ function TaskDetail({
                       </div>
                     </div>
                   ))}
+                  
+                  {/* Loading indicator */}
+                  {isLoadingMore && (
+                    <div className="flex items-center justify-center py-3">
+                      <div className="flex items-center gap-2 text-xs text-slate-400">
+                        <div className="w-4 h-4 border-2 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div>
+                        <span>Đang tải thêm...</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* End of list indicator */}
+                  {!hasMoreSubTasks && allSubTasks.length >= 5 && (
+                    <div className="py-3 text-center">
+                      <p className="text-xs text-slate-500">
+                        Đã hiển thị tất cả nhiệm vụ con
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -769,6 +886,7 @@ function TaskDetail({
                 />
                 </div>
             )}
+
         </div>
     );
 }
