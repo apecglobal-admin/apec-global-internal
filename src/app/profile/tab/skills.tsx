@@ -8,15 +8,20 @@ import {
     ResponsiveContainer,
     Tooltip,
 } from "recharts";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, HelpCircle, X } from "lucide-react";
 import { useProfileData } from "@/src/hooks/profileHook";
 import { getTotalKpiSkill } from "@/src/services/api";
 import { useDispatch } from "react-redux";
 
 function SkillsTab({ userInfo }: any) {
+
+    
     const dispatch = useDispatch();
     const { totalKpiSkill } = useProfileData();
     const [expandedSkills, setExpandedSkills] = useState<Set<number>>(
+        new Set()
+    );
+    const [showDescriptions, setShowDescriptions] = useState<Set<number>>(
         new Set()
     );
 
@@ -28,15 +33,14 @@ function SkillsTab({ userInfo }: any) {
 
     // Kỹ năng cứng từ props
     const hardSkills = userInfo.map((skill: any) => ({
+        id: skill.id,
         icon: skill.icon || "💼",
         name: skill.kpi.name,
+        description: skill.kpi.description,
         value: parseFloat(skill.score),
-        subSkills: [
-            { name: "Thực hành", value: parseFloat(skill.value) - 5 },
-            { name: "Lý thuyết", value: parseFloat(skill.value) + 5 },
-            { name: "Ứng dụng", value: parseFloat(skill.value) },
-        ],
+        kpiItems: skill.kpi_items || [],
     }));
+    
 
     // Lấy thông tin từ API
     const getRankColor = (rankName: string) => {
@@ -65,6 +69,17 @@ function SkillsTab({ userInfo }: any) {
             newExpanded.add(index);
         }
         setExpandedSkills(newExpanded);
+    };
+
+    const toggleDescription = (index: number, e: React.MouseEvent) => {
+        e.stopPropagation();
+        const newShowDescriptions = new Set(showDescriptions);
+        if (newShowDescriptions.has(index)) {
+            newShowDescriptions.delete(index);
+        } else {
+            newShowDescriptions.add(index);
+        }
+        setShowDescriptions(newShowDescriptions);
     };
 
     return (
@@ -280,12 +295,10 @@ function SkillsTab({ userInfo }: any) {
             <div className="grid grid-cols-2 gap-3 lg:gap-4">
                 {hardSkills.map((skill: any, index: number) => {
                     const isExpanded = expandedSkills.has(index);
+                    const showDescription = showDescriptions.has(index);
                     return (
                         <div key={index} className="flex flex-col">
-                            <div
-                                className="group pb-3 lg:pb-4 border-b border-slate-800 transition-all duration-300 cursor-pointer"
-                                onClick={() => toggleSkill(index)}
-                            >
+                            <div className="group pb-3 lg:pb-4 border-b border-slate-800 transition-all duration-300">
                                 <div className="flex items-center justify-between mb-2 lg:mb-3">
                                     <div className="flex items-center gap-1.5 lg:gap-2">
                                         <span className="text-base lg:text-xl">
@@ -294,17 +307,88 @@ function SkillsTab({ userInfo }: any) {
                                         <span className="text-xs lg:text-sm font-medium text-slate-300 group-hover:text-slate-100 transition-colors">
                                             {skill.name}
                                         </span>
+                                        <div className="relative">
+                                            <button
+                                                onClick={(e) => toggleDescription(index, e)}
+                                                className="text-slate-400 hover:text-blue-400 transition-colors"
+                                            >
+                                                <HelpCircle className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+                                            </button>
+                                            {/* Description Tooltip */}
+                                            {showDescription && (
+                                                <div className="absolute left-0 top-full mt-2 z-10 w-64 p-3 bg-slate-700 rounded-lg border border-slate-600 shadow-xl">
+                                                    <button
+                                                        onClick={(e) => toggleDescription(index, e)}
+                                                        className="absolute top-2 right-2 text-slate-400 hover:text-slate-200 transition-colors"
+                                                    >
+                                                        <X className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <p className="text-xs lg:text-sm text-slate-300 pr-6">
+                                                        {skill.description || "Chưa có mô tả"}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                    <span className="text-xs lg:text-sm font-bold text-blue-400 group-hover:text-blue-300 transition-colors">
-                                        {skill.value}%
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs lg:text-sm font-bold text-blue-400 group-hover:text-blue-300 transition-colors">
+                                            {skill.value}%
+                                        </span>
+                                        <button
+                                            onClick={() => toggleSkill(index)}
+                                            className="text-slate-400 hover:text-blue-400 transition-colors"
+                                        >
+                                            {isExpanded ? (
+                                                <ChevronUp className="w-4 h-4 lg:w-5 lg:h-5" />
+                                            ) : (
+                                                <ChevronDown className="w-4 h-4 lg:w-5 lg:h-5" />
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
+
                                 <div className="h-1 lg:h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700 group-hover:border-blue-500/30 transition-colors">
                                     <div
                                         className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full shadow-lg shadow-blue-500/50 transition-all duration-300"
                                         style={{ width: `${skill.value}%` }}
                                     />
                                 </div>
+
+                                {/* KPI Items List */}
+                                {isExpanded && (
+                                    <div className="mt-3 max-h-40 overflow-y-auto">
+                                        {skill.kpiItems && skill.kpiItems.length > 0 ? (
+                                            <div className="space-y-2">
+                                                {skill.kpiItems.map((item: any, itemIndex: number) => (
+                                                    <div
+                                                        key={itemIndex}
+                                                        className="p-2 lg:p-2.5 bg-slate-800/50 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors"
+                                                    >
+                                                        <div className="flex items-start gap-2">
+                                                            <span className="text-blue-400 text-xs mt-0.5">•</span>
+                                                            <div className="flex-1">
+                                                                <p className="text-xs lg:text-sm text-slate-300 font-medium">
+                                                                    {item.name}
+                                                                </p>
+                                                                {item.description && (
+                                                                    <p className="text-xs text-slate-500 mt-1">
+                                                                        {item.description}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700 text-center">
+                                                <p className="text-xs lg:text-sm text-slate-400">
+                                                    Chưa có dữ liệu KPI items
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     );

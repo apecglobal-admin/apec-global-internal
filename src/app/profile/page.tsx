@@ -35,6 +35,7 @@ import {
 } from "@/src/services/api";
 import { useProfileData } from "@/src/hooks/profileHook";
 import Cautions from "./tab/Cautions";
+import TaskManager from "./tab/TaskManager";
 
 function ProfilePage() {
     const dispatch = useDispatch();
@@ -53,7 +54,7 @@ function ProfilePage() {
         avatar3?: string;
     }>({});
 
-
+    
     useEffect(() => {
         const token = localStorage.getItem("userToken");
      
@@ -520,6 +521,9 @@ function ProfilePage() {
                                     <CareerTab userInfo={userInfo} />
                                 )}
                                 {activeTab === "tasks" && <TasksTab />}
+                                {activeTab === "tasksManager" && <TaskManager />}
+
+                                
                                 {activeTab === "caution" && <Cautions />}
 
                                 {activeTab === "personal" && (

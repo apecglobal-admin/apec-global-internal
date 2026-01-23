@@ -16,9 +16,13 @@ import {
     getSubTask,
     updateProgressSubTask,
     getListTaskAssign,
+    rejectTask,
+    getDetailListTaskAssign,
+    deleteTaskAssign,
+    updateTaskAssign,
 
 } from "./api";
-import { createAsyncReducer } from "@/src/utils/createAsyncReducer";
+import { createAsyncReducer, createAsyncReducerDynamic } from "@/src/utils/createAsyncReducer";
 import { initState } from "@/src/services/interface";
 
 interface EventMessage{
@@ -38,6 +42,8 @@ interface TaskState {
     fileTask: initState<any[]>;
     listSubTask: initState<any[]>;
     listTaskAssign: initState<any[]>;
+    listDetailTaskAssign: initState<any[]>;
+    detailTaskAssign: initState<any[]>;
 }
 
 const createInitState = () => ({ data: [], loading: false, error: null, status: null });
@@ -57,6 +63,8 @@ const initialState: TaskState = {
     fileTask: createInitState(),
     listSubTask: createInitState(),
     listTaskAssign: createInitState(),
+    listDetailTaskAssign: createInitState(),
+    detailTaskAssign: createInitState(),
 };
 
 const taskSlice = createSlice({
@@ -64,11 +72,16 @@ const taskSlice = createSlice({
     initialState: initialState,
 
     reducers: {
-
+        
     },
     extraReducers: (builder) => {
         createAsyncReducer(builder, createTask);
         createAsyncReducer(builder, createSubTask);
+        createAsyncReducer(builder, rejectTask);
+        createAsyncReducer(builder, updateProgressTask);
+        createAsyncReducer(builder, updateProgressSubTask);
+        createAsyncReducer(builder, deleteTaskAssign);
+        createAsyncReducer(builder, updateTaskAssign);
 
         createAsyncReducer(builder, getTypeTask, "typeTask");
         createAsyncReducer(builder, getPriorityTask, "priorityTask");
@@ -80,12 +93,17 @@ const taskSlice = createSlice({
         createAsyncReducer(builder, getListPosition, "listPosition");
         createAsyncReducer(builder, uploadImageTask, "imageTask");
         createAsyncReducer(builder, uploadFileTask, "fileTask");
-        createAsyncReducer(builder, updateProgressTask);
         createAsyncReducer(builder, getSubTask, "listSubTask");
-        createAsyncReducer(builder, updateProgressSubTask);
         createAsyncReducer(builder, getListTaskAssign, "listTaskAssign");
+        createAsyncReducerDynamic(builder, getDetailListTaskAssign);
+
+        
+
+        
     },
 });
 
 export const {  } = taskSlice.actions;
 export default taskSlice.reducer;
+
+
