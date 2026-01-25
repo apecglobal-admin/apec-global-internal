@@ -15,6 +15,13 @@ export const useEventData = () => {
     listEvent: event.listEvent.data,
     listTimeLine: event.listTimeLine.data,
     stateEvent: event.stateEvent.data,
+
+    internalTypeEvent: event.internalTypeEvent.data.data,
+    listInternalEvent: event.listInternalEvent.data.data,
+    detailListInternalEvent: event.detailListInternalEvent.data.data,
+    listInternalEventEmployee: event.listInternalEventEmployee.data.data,
+    levels: event.levels.data.data,
+    
     // Loading states
     isLoadingTypeEvent,
     isLoadingListEvent,

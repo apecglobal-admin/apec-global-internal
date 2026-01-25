@@ -11,14 +11,17 @@ import {
   listPositions,
   listProjects,
   listTypePersonal,
+  getListStatusPersonal,
   listTypeTask,
   loginWeb,
   personalRequest,
   personCareer,
   personTasks,
   uploadAvatar,
+  personalRequestAssign,
+  personalRequestHonor
 } from "../../services/api";
-import { createAsyncReducer } from "@/src/utils/createAsyncReducer";
+import { createAsyncReducer, createAsyncReducerDynamic } from "@/src/utils/createAsyncReducer";
 
 interface InitState<T> {
   data: T;
@@ -44,6 +47,9 @@ interface UserState {
   userKpi: InitState<any | null>;
   listEmployeeDepartment: InitState<any[]>;
   totalKpiSkill: InitState<any[]>;
+  listPersonalRequestAssign: InitState<any[]>;
+  detailPersonalRequestAssign: InitState<any[]>;
+  listStatusPersonal: InitState<any[]>;
 }
 
 const initialState: UserState = {
@@ -63,6 +69,9 @@ const initialState: UserState = {
   links: { data: [], loading: false, error: null, status: null },
   listEmployeeDepartment: { data: [], loading: false, error: null, status: null },
   totalKpiSkill: { data: [], loading: false, error: null, status: null },
+  listPersonalRequestAssign: { data: [], loading: false, error: null, status: null },
+  detailPersonalRequestAssign: { data: [], loading: false, error: null, status: null },
+  listStatusPersonal: { data: [], loading: false, error: null, status: null },
 };
 
 const userSlice = createSlice({
@@ -98,6 +107,8 @@ const userSlice = createSlice({
     // API call chỉ quan tâm status/loading, không cần lưu payload
     createAsyncReducer(builder, loginWeb);
     createAsyncReducer(builder, uploadAvatar);
+    createAsyncReducer(builder, personalRequestHonor);
+
 
     // API call cần lưu dữ liệu
     createAsyncReducer(builder, fetchUserInfo, "userInfo");
@@ -109,17 +120,16 @@ const userSlice = createSlice({
     createAsyncReducer(builder, listTypeTask, "typeTask");
     createAsyncReducer(builder, personalRequest, "personals");
     createAsyncReducer(builder, listTypePersonal, "typePersonal");
+    createAsyncReducer(builder, getListStatusPersonal, "listStatusPersonal");
+
+    
     createAsyncReducer(builder, listAchievements, "achievements");
     createAsyncReducer(builder, listProjects, "projects");
     createAsyncReducer(builder, listCard, "cards");
     createAsyncReducer(builder, listLink, "links");
     createAsyncReducer(builder, getListEmployeeDepartment, "listEmployeeDepartment");
     createAsyncReducer(builder, getTotalKpiSkill, "totalKpiSkill");
-
-    
-
-
-    
+    createAsyncReducerDynamic(builder, personalRequestAssign);
   },
 });
 

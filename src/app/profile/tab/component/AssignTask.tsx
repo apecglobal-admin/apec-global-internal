@@ -1,19 +1,11 @@
 import { useState, useEffect } from "react";
 import {
     Calendar,
-    CheckCircle2,
-    Users,
     ArrowLeft,
     Send,
-    Briefcase,
-    Target,
     FileText,
     AlertCircle,
-    Building,
-    UserCheck,
-    Search,
-    Filter,
-    X,
+    Target,
 } from "lucide-react";
 import {
     createTask,
@@ -30,6 +22,7 @@ import { useDispatch } from "react-redux";
 import { useTaskData } from "@/src/hooks/taskhook";
 import { toast } from "react-toastify";
 import { useProfileData } from "@/src/hooks/profileHook";
+import TaskTargetSelector from "@/components/TaskTargetSelector";
 
 interface AssignFormData {
     name: string;
@@ -45,7 +38,6 @@ interface AssignFormData {
     employees: number[] | number | string;
     min_reject: number;
     max_reject: number;
-
 }
 
 interface ValidationErrors {
@@ -97,14 +89,6 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedProject, setSelectedProject] = useState<any>(null);
 
-    // Employee filter states
-    const [searchText, setSearchText] = useState("");
-    const [filterPosition, setFilterPosition] = useState<number | null>(null);
-    const [filterDepartment, setFilterDepartment] = useState<number | null>(
-        null
-    );
-    const [selectAllEmployees, setSelectAllEmployees] = useState(false);
-
     useEffect(() => {
         if (!statusTask) {
             dispatch(getStatusTask() as any);
@@ -116,7 +100,6 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
         dispatch(getListPosition() as any);
         dispatch(getListDepartment() as any);
 
-        // Load employees with initial filters
         dispatch(
             getListEmployee({
                 position_id: null,
@@ -149,99 +132,20 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
         }
     }, [childKpi]);
 
-    // Fetch employees when filters change
-    useEffect(() => {
-        if (assignForm.target_type === 3) {
-            const timer = setTimeout(() => {
-                dispatch(
-                    getListEmployee({
-                        position_id: filterPosition,
-                        department_id: filterDepartment,
-                        filter: searchText || null,
-                    }) as any
-                );
-            }, 300);
-
-            return () => clearTimeout(timer);
-        }
-    }, [
-        searchText,
-        filterPosition,
-        filterDepartment,
-        assignForm.target_type,
-        dispatch,
-    ]);
-
-    // Handle select all employees
-    useEffect(() => {
-        if (
-            selectAllEmployees &&
-            listEmployee &&
-            assignForm.target_type === 3
-        ) {
-            const allEmployeeIds = listEmployee.map((emp: any) => emp.id);
-            setAssignForm((prev) => ({ ...prev, employees: allEmployeeIds }));
-        } else if (!selectAllEmployees && assignForm.target_type === 3) {
-            setAssignForm((prev) => ({ ...prev, employees: [] }));
-        }
-    }, [selectAllEmployees, listEmployee]);
-
     const handleProjectChange = (projectId: number) => {
-      
-      const project = listProject?.find((p: any) => p.id === projectId);
-      setSelectedProject(project || null);
-      
-      setAssignForm((prev) => ({
-          ...prev,
-          project_id: projectId,
-          date_start: project?.date_start || "",
-          date_end: project?.date_end || "",
-      }));
+        const project = listProject?.find((p: any) => p.id === projectId);
+        setSelectedProject(project || null);
 
-      if (errors.project_id) {
-          setErrors((prev) => ({ ...prev, project_id: undefined }));
-      }
-    };
+        setAssignForm((prev) => ({
+            ...prev,
+            project_id: projectId,
+            date_start: project?.date_start || "",
+            date_end: project?.date_end || "",
+        }));
 
-    const toggleEmployeeSelection = (employeeId: number) => {
-        if (assignForm.target_type !== 3 || selectAllEmployees) return;
-
-        setAssignForm((prev) => {
-            const currentEmployees = Array.isArray(prev.employees)
-                ? prev.employees
-                : [];
-            const isSelected = currentEmployees.includes(employeeId);
-            return {
-                ...prev,
-                employees: isSelected
-                    ? currentEmployees.filter((id) => id !== employeeId)
-                    : [...currentEmployees, employeeId],
-            };
-        });
-
-        if (errors.employees) {
-            setErrors((prev) => ({ ...prev, employees: undefined }));
+        if (errors.project_id) {
+            setErrors((prev) => ({ ...prev, project_id: undefined }));
         }
-    };
-
-    const selectPosition = (positionId: number) => {
-        setAssignForm({ ...assignForm, employees: positionId });
-        if (errors.employees) {
-            setErrors((prev) => ({ ...prev, employees: undefined }));
-        }
-    };
-
-    const selectDepartment = (departmentId: number) => {
-        setAssignForm({ ...assignForm, employees: departmentId });
-        if (errors.employees) {
-            setErrors((prev) => ({ ...prev, employees: undefined }));
-        }
-    };
-
-    const clearFilters = () => {
-        setSearchText("");
-        setFilterPosition(null);
-        setFilterDepartment(null);
     };
 
     const validateForm = (): boolean => {
@@ -267,7 +171,6 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
             newErrors.date_end = "Ngày kết thúc phải sau ngày bắt đầu";
         }
 
-        // Validate dates against project dates
         if (selectedProject && assignForm.project_id !== 0) {
             if (assignForm.date_start < selectedProject.date_start) {
                 newErrors.date_start = `Ngày bắt đầu phải sau ngày bắt đầu dự án (${new Date(
@@ -285,15 +188,14 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
             newErrors.project_id = "Vui lòng chọn dự án";
         }
 
-        if(assignForm.min_reject > assignForm.max_reject){
-            newErrors.reject = "số lần (min) không được lớn hơn (max)"
+        if (assignForm.min_reject > assignForm.max_reject) {
+            newErrors.reject = "số lần (min) không được lớn hơn (max)";
         }
 
         if (assignForm.target_type === 3) {
             if (
-                !selectAllEmployees &&
-                (!Array.isArray(assignForm.employees) ||
-                    assignForm.employees.length === 0)
+                !Array.isArray(assignForm.employees) ||
+                assignForm.employees.length === 0
             ) {
                 newErrors.employees =
                     "Vui lòng chọn ít nhất 1 nhân viên hoặc chọn tất cả";
@@ -339,32 +241,19 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                 max_count_reject: parseInt(assignForm.max_reject.toString()),
             };
 
-            // Logic: 1 task chỉ cho 1 phòng ban HOẶC 1 vị trí HOẶC nhiều nhân viên
             if (assignForm.target_type === 3) {
-                // Nhân viên
-                if (selectAllEmployees) {
-                    // Chọn tất cả nhân viên
-                    taskData.employees =
-                        listEmployee?.map((emp: any) => emp.id) || [];
-                    taskData.position_id = null;
-                    taskData.department_id = null;
-                } else {
-                    taskData.employees = assignForm.employees;
-                    taskData.position_id = null;
-                    taskData.department_id = null;
-                }
+                taskData.employees = assignForm.employees;
+                taskData.position_id = null;
+                taskData.department_id = null;
             } else if (assignForm.target_type === 2) {
-                // Vị trí - chỉ 1 vị trí
                 taskData.position_id = assignForm.employees;
                 taskData.employees = null;
                 taskData.department_id = null;
             } else if (assignForm.target_type === 1) {
-                // Phòng ban - chỉ 1 phòng ban
                 taskData.department_id = assignForm.employees;
                 taskData.employees = null;
                 taskData.position_id = null;
             }
-
 
             const result = await dispatch(createTask(taskData) as any);
 
@@ -388,16 +277,13 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                     max_reject: 3,
                 });
                 setErrors({});
-                setSelectAllEmployees(false);
-                clearFilters();
-
                 onBack();
             } else {
                 toast.error(result.payload.data.message);
             }
         } catch (error) {
             console.error("Error creating task:", error);
-            toast.error("Có lỗi xảy ra khi tạo nhiệm vụ. Vui lòng thử lại.",);
+            toast.error("Có lỗi xảy ra khi tạo nhiệm vụ. Vui lòng thử lại.");
         } finally {
             setIsSubmitting(false);
         }
@@ -405,9 +291,6 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
 
     const getSelectedCount = () => {
         if (assignForm.target_type === 3) {
-            if (selectAllEmployees) {
-                return listEmployee?.length || 0;
-            }
             return Array.isArray(assignForm.employees)
                 ? assignForm.employees.length
                 : 0;
@@ -420,7 +303,14 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
         }
         return 0;
     };
-    
+
+    const getTargetLabel = () => {
+        if (assignForm.target_type === 3) return "nhân viên";
+        if (assignForm.target_type === 2) return "vị trí";
+        if (assignForm.target_type === 1) return "phòng ban";
+        return "";
+    };
+
     return (
         <div className="min-h-screen bg-slate-900 p-3 sm:p-4 md:p-6">
             <div className="max-w-4xl mx-auto">
@@ -594,20 +484,27 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                             />
                                             <span>Thời gian dự án:</span>
                                             <span className="font-semibold text-white">
-                                                {selectedProject.date_start && new Date(
-                                                    selectedProject.date_start
-                                                ).toLocaleDateString("vi-VN")}
-                                                {!selectedProject.date_start && ("Chưa có ngày bắt đầu")}
+                                                {selectedProject.date_start &&
+                                                    new Date(
+                                                        selectedProject.date_start
+                                                    ).toLocaleDateString(
+                                                        "vi-VN"
+                                                    )}
+                                                {!selectedProject.date_start &&
+                                                    "Chưa có ngày bắt đầu"}
                                             </span>
                                             <span className="text-slate-500">
                                                 →
                                             </span>
                                             <span className="font-semibold text-white">
-                                                {selectedProject.date_end && new Date(
-                                                    selectedProject.date_end
-                                                ).toLocaleDateString("vi-VN")}
-                                                {!selectedProject.date_end && ("Chưa có ngày kết thúc")}
-
+                                                {selectedProject.date_end &&
+                                                    new Date(
+                                                        selectedProject.date_end
+                                                    ).toLocaleDateString(
+                                                        "vi-VN"
+                                                    )}
+                                                {!selectedProject.date_end &&
+                                                    "Chưa có ngày kết thúc"}
                                             </span>
                                         </div>
                                     </div>
@@ -793,8 +690,7 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                             })
                                         }
                                         className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border border-slate-700 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-500 transition"
-                                        />
-
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
@@ -814,519 +710,58 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                             })
                                         }
                                         className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border border-slate-700 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-500 transition"
-                                        />
-
+                                    />
                                 </div>
-                                {errors.reject && (
-                                        <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
-                                            <AlertCircle size={12} />
-                                            {errors.reject}
-                                        </p>
-                                )}
                             </div>
+                            {errors.reject && (
+                                <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                                    <AlertCircle size={12} />
+                                    {errors.reject}
+                                </p>
+                            )}
                         </div>
 
                         <div className="pt-4 sm:pt-6 border-t border-slate-800">
-                            <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2 mb-4">
-                                <Users
-                                    size={18}
-                                    className="text-blue-400 sm:w-5 sm:h-5"
-                                />
-                                <span>Đối tượng nhận nhiệm vụ</span>
-                            </h3>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setAssignForm({
-                                            ...assignForm,
-                                            target_type: 3,
-                                            employees: [],
-                                        });
-                                        setSelectAllEmployees(false);
-                                        clearFilters();
-                                    }}
-                                    className={`p-4 rounded-lg border-2 transition flex flex-col items-center gap-2 ${
-                                        assignForm.target_type === 3
-                                            ? "border-blue-500 bg-blue-500/10"
-                                            : "border-slate-700 bg-slate-900 hover:border-slate-600"
-                                    }`}
-                                >
-                                    <UserCheck
-                                        size={24}
-                                        className={
-                                            assignForm.target_type === 3
-                                                ? "text-blue-400"
-                                                : "text-slate-400"
-                                        }
-                                    />
-                                    <span
-                                        className={`text-sm font-semibold ${
-                                            assignForm.target_type === 3
-                                                ? "text-white"
-                                                : "text-slate-400"
-                                        }`}
-                                    >
-                                        Nhân viên
-                                    </span>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        setAssignForm({
-                                            ...assignForm,
-                                            target_type: 2,
-                                            employees: "",
-                                        })
-                                    }
-                                    className={`p-4 rounded-lg border-2 transition flex flex-col items-center gap-2 ${
-                                        assignForm.target_type === 2
-                                            ? "border-blue-500 bg-blue-500/10"
-                                            : "border-slate-700 bg-slate-900 hover:border-slate-600"
-                                    }`}
-                                >
-                                    <Briefcase
-                                        size={24}
-                                        className={
-                                            assignForm.target_type === 2
-                                                ? "text-blue-400"
-                                                : "text-slate-400"
-                                        }
-                                    />
-                                    <span
-                                        className={`text-sm font-semibold ${
-                                            assignForm.target_type === 2
-                                                ? "text-white"
-                                                : "text-slate-400"
-                                        }`}
-                                    >
-                                        Vị trí
-                                    </span>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        setAssignForm({
-                                            ...assignForm,
-                                            target_type: 1,
-                                            employees: "",
-                                        })
-                                    }
-                                    className={`p-4 rounded-lg border-2 transition flex flex-col items-center gap-2 ${
-                                        assignForm.target_type === 1
-                                            ? "border-blue-500 bg-blue-500/10"
-                                            : "border-slate-700 bg-slate-900 hover:border-slate-600"
-                                    }`}
-                                >
-                                    <Building
-                                        size={24}
-                                        className={
-                                            assignForm.target_type === 1
-                                                ? "text-blue-400"
-                                                : "text-slate-400"
-                                        }
-                                    />
-                                    <span
-                                        className={`text-sm font-semibold ${
-                                            assignForm.target_type === 1
-                                                ? "text-white"
-                                                : "text-slate-400"
-                                        }`}
-                                    >
-                                        Phòng ban
-                                    </span>
-                                </button>
-                            </div>
-
-                            {errors.employees && (
-                                <div className="mb-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                                    <p className="text-red-400 text-xs sm:text-sm flex items-center gap-2">
-                                        <AlertCircle
-                                            size={14}
-                                            className="sm:w-4 sm:h-4"
-                                        />
-                                        {errors.employees}
-                                    </p>
-                                </div>
-                            )}
-
-                            {assignForm.target_type === 3 && (
-                                <>
-                                    <div className="mb-4 space-y-3">
-                                        <div className="flex items-center gap-2 p-3 bg-slate-900 border border-slate-700 rounded-lg">
-                                            <input
-                                                type="checkbox"
-                                                id="selectAll"
-                                                checked={selectAllEmployees}
-                                                onChange={(e) =>
-                                                    setSelectAllEmployees(
-                                                        e.target.checked
-                                                    )
-                                                }
-                                                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900"
-                                            />
-                                            <label
-                                                htmlFor="selectAll"
-                                                className="text-sm font-semibold text-white cursor-pointer"
-                                            >
-                                                Chọn tất cả nhân viên (
-                                                {listEmployee?.length || 0})
-                                            </label>
-                                        </div>
-
-                                        {!selectAllEmployees && (
-                                            <>
-                                                <div className="relative">
-                                                    <Search
-                                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
-                                                        size={16}
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        value={searchText}
-                                                        onChange={(e) =>
-                                                            setSearchText(
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        placeholder="Tìm theo tên, email, số điện thoại..."
-                                                        className="w-full pl-10 pr-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
-                                                    />
-                                                </div>
-
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                    <div>
-                                                        <label className="block text-xs font-semibold text-slate-400 mb-2 flex items-center gap-1">
-                                                            <Filter size={12} />
-                                                            Lọc theo vị trí
-                                                        </label>
-                                                        <select
-                                                            value={
-                                                                filterPosition ||
-                                                                ""
-                                                            }
-                                                            onChange={(e) =>
-                                                                setFilterPosition(
-                                                                    e.target
-                                                                        .value
-                                                                        ? parseInt(
-                                                                              e
-                                                                                  .target
-                                                                                  .value
-                                                                          )
-                                                                        : null
-                                                                )
-                                                            }
-                                                            className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500 transition"
-                                                        >
-                                                            <option value="">
-                                                                -- Tất cả vị trí
-                                                                --
-                                                            </option>
-                                                            {listPosition?.map(
-                                                                (
-                                                                    position: any
-                                                                ) => (
-                                                                    <option
-                                                                        key={
-                                                                            position.id
-                                                                        }
-                                                                        value={
-                                                                            position.id
-                                                                        }
-                                                                    >
-                                                                        {
-                                                                            position.title
-                                                                        }
-                                                                    </option>
-                                                                )
-                                                            )}
-                                                        </select>
-                                                    </div>
-
-                                                    <div>
-                                                        <label className="block text-xs font-semibold text-slate-400 mb-2 flex items-center gap-1">
-                                                            <Filter size={12} />
-                                                            Lọc theo phòng ban
-                                                        </label>
-                                                        <select
-                                                            value={
-                                                                filterDepartment ||
-                                                                ""
-                                                            }
-                                                            onChange={(e) =>
-                                                                setFilterDepartment(
-                                                                    e.target
-                                                                        .value
-                                                                        ? parseInt(
-                                                                              e
-                                                                                  .target
-                                                                                  .value
-                                                                          )
-                                                                        : null
-                                                                )
-                                                            }
-                                                            className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500 transition"
-                                                        >
-                                                            <option value="">
-                                                                -- Tất cả phòng
-                                                                ban --
-                                                            </option>
-                                                            {listDepartment?.map(
-                                                                (
-                                                                    department: any
-                                                                ) => (
-                                                                    <option
-                                                                        key={
-                                                                            department.id
-                                                                        }
-                                                                        value={
-                                                                            department.id
-                                                                        }
-                                                                    >
-                                                                        {
-                                                                            department.name
-                                                                        }
-                                                                    </option>
-                                                                )
-                                                            )}
-                                                        </select>
-                                                    </div>
-                                                </div>
-
-                                                {(searchText ||
-                                                    filterPosition ||
-                                                    filterDepartment) && (
-                                                    <button
-                                                        onClick={clearFilters}
-                                                        className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition"
-                                                    >
-                                                        <X size={12} />
-                                                        Xóa bộ lọc
-                                                    </button>
-                                                )}
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {!selectAllEmployees && (
-                                        <div className="space-y-2 max-h-72 sm:max-h-96 overflow-y-auto pr-1 sm:pr-2">
-                                            {listEmployee &&
-                                            listEmployee.length > 0 ? (
-                                                listEmployee.map(
-                                                    (employee: any) => {
-                                                        const isSelected =
-                                                            Array.isArray(
-                                                                assignForm.employees
-                                                            ) &&
-                                                            assignForm.employees.includes(
-                                                                employee.id
-                                                            );
-                                                        return (
-                                                            <div
-                                                                key={
-                                                                    employee.id
-                                                                }
-                                                                onClick={() =>
-                                                                    toggleEmployeeSelection(
-                                                                        employee.id
-                                                                    )
-                                                                }
-                                                                className={`flex items-center gap-3 p-3 sm:p-4 rounded-lg border cursor-pointer transition-all ${
-                                                                    isSelected
-                                                                        ? "border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20"
-                                                                        : "border-slate-700 bg-slate-900 hover:border-slate-600 hover:bg-slate-800"
-                                                                }`}
-                                                            >
-                                                                <div
-                                                                    className={`w-5 h-5 sm:w-6 sm:h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition ${
-                                                                        isSelected
-                                                                            ? "border-blue-500 bg-blue-500"
-                                                                            : "border-slate-600"
-                                                                    }`}
-                                                                >
-                                                                    {isSelected && (
-                                                                        <CheckCircle2
-                                                                            size={
-                                                                                14
-                                                                            }
-                                                                            className="text-white sm:w-4 sm:h-4"
-                                                                        />
-                                                                    )}
-                                                                </div>
-                                                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0">
-                                                                    {employee.name.charAt(
-                                                                        0
-                                                                    )}
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <span className="text-sm sm:text-base font-semibold text-white truncate block">
-                                                                        {
-                                                                            employee.name
-                                                                        }
-                                                                    </span>
-                                                                    <div className="flex flex-col gap-0.5 text-xs text-slate-400">
-                                                                        {employee.email && (
-                                                                            <span className="truncate">
-                                                                                Email:{" "}
-                                                                                {
-                                                                                    employee.email
-                                                                                }
-                                                                            </span>
-                                                                        )}
-                                                                        {employee.phone && (
-                                                                            <span>
-                                                                                SĐT:{" "}
-                                                                                {
-                                                                                    employee.phone
-                                                                                }
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex flex-col gap-1 text-right text-xs flex-shrink-0">
-                                                                    {employee.department && (
-                                                                        <span className="px-2 py-1 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                                                                            {
-                                                                                employee
-                                                                                    .department
-                                                                                    .name
-                                                                            }
-                                                                        </span>
-                                                                    )}
-                                                                    {employee.position && (
-                                                                        <span className="px-2 py-1 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                                                                            {
-                                                                                employee
-                                                                                    .position
-                                                                                    .name
-                                                                            }
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    }
-                                                )
-                                            ) : (
-                                                <div className="text-center py-8 text-slate-400">
-                                                    <Users
-                                                        size={32}
-                                                        className="mx-auto mb-2 opacity-50"
-                                                    />
-                                                    <p className="text-sm">
-                                                        Không tìm thấy nhân viên
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </>
-                            )}
-
-                            {assignForm.target_type === 2 && (
-                                <div className="space-y-2 max-h-72 sm:max-h-96 overflow-y-auto pr-1 sm:pr-2">
-                                    {listPosition?.map((position: any) => {
-                                        const isSelected =
-                                            assignForm.employees ===
-                                            position.id;
-                                        return (
-                                            <div
-                                                key={position.id}
-                                                onClick={() =>
-                                                    selectPosition(position.id)
-                                                }
-                                                className={`flex items-center gap-3 p-3 sm:p-4 rounded-lg border cursor-pointer transition-all ${
-                                                    isSelected
-                                                        ? "border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20"
-                                                        : "border-slate-700 bg-slate-900 hover:border-slate-600 hover:bg-slate-800"
-                                                }`}
-                                            >
-                                                <div
-                                                    className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition ${
-                                                        isSelected
-                                                            ? "border-blue-500 bg-blue-500"
-                                                            : "border-slate-600"
-                                                    }`}
-                                                >
-                                                    {isSelected && (
-                                                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white rounded-full" />
-                                                    )}
-                                                </div>
-                                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                                                    <Briefcase
-                                                        className="text-white"
-                                                        size={20}
-                                                    />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <span className="text-sm sm:text-base font-semibold text-white truncate block">
-                                                        {position.title}
-                                                    </span>
-                                                    <span className="text-xs text-slate-400">
-                                                        Vị trí ID: {position.id}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-
-                            {assignForm.target_type === 1 && (
-                                <div className="space-y-2 max-h-72 sm:max-h-96 overflow-y-auto pr-1 sm:pr-2">
-                                    {listDepartment?.map((department: any) => {
-                                        const isSelected =
-                                            assignForm.employees ===
-                                            department.id;
-                                        return (
-                                            <div
-                                                key={department.id}
-                                                onClick={() =>
-                                                    selectDepartment(
-                                                        department.id
-                                                    )
-                                                }
-                                                className={`flex items-center gap-3 p-3 sm:p-4 rounded-lg border cursor-pointer transition-all ${
-                                                    isSelected
-                                                        ? "border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20"
-                                                        : "border-slate-700 bg-slate-900 hover:border-slate-600 hover:bg-slate-800"
-                                                }`}
-                                            >
-                                                <div
-                                                    className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition ${
-                                                        isSelected
-                                                            ? "border-blue-500 bg-blue-500"
-                                                            : "border-slate-600"
-                                                    }`}
-                                                >
-                                                    {isSelected && (
-                                                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white rounded-full" />
-                                                    )}
-                                                </div>
-                                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center flex-shrink-0">
-                                                    <Building
-                                                        className="text-white"
-                                                        size={20}
-                                                    />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <span className="text-sm sm:text-base font-semibold text-white truncate block">
-                                                        {department.name}
-                                                    </span>
-                                                    <span className="text-xs text-slate-400">
-                                                        Phòng ban ID:{" "}
-                                                        {department.id}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
+                            <TaskTargetSelector
+                                enabledTargets={["employee", "position", "department"]}
+                                employees={listEmployee}
+                                positions={listPosition}
+                                departments={listDepartment}
+                                selectedTargetType={assignForm.target_type}
+                                selectedValues={assignForm.employees}
+                                onTargetTypeChange={(type) => {
+                                    setAssignForm({
+                                        ...assignForm,
+                                        target_type: type,
+                                        employees: type === 3 ? [] : "",
+                                    });
+                                }}
+                                onSelectionChange={(values) => {
+                                    setAssignForm({
+                                        ...assignForm,
+                                        employees: values,
+                                    });
+                                }}
+                                onFilterChange={(filters) => {
+                                    dispatch(
+                                        getListEmployee({
+                                            position_id: filters.position,
+                                            department_id: filters.department,
+                                            filter: filters.search || null,
+                                        }) as any
+                                    );
+                                }}
+                                error={errors.employees}
+                                onErrorClear={() =>
+                                    setErrors((prev) => ({
+                                        ...prev,
+                                        employees: undefined,
+                                    }))
+                                }
+                                showSelectAll={true}
+                                showFilters={true}
+                                maxHeight="24rem"
+                            />
                         </div>
 
                         <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-slate-800">
@@ -1372,33 +807,9 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                             "{assignForm.name || "..."}"
                                         </span>{" "}
                                         cho{" "}
-                                        {assignForm.target_type === 3 && (
-                                            <>
-                                                {selectAllEmployees ? (
-                                                    <span className="font-semibold text-white">
-                                                        tất cả nhân viên (
-                                                        {getSelectedCount()})
-                                                    </span>
-                                                ) : (
-                                                    <>
-                                                        <span className="font-semibold text-white">
-                                                            {getSelectedCount()}
-                                                        </span>{" "}
-                                                        nhân viên
-                                                    </>
-                                                )}
-                                            </>
-                                        )}
-                                        {assignForm.target_type === 2 && (
-                                            <span className="font-semibold text-white">
-                                                1 vị trí
-                                            </span>
-                                        )}
-                                        {assignForm.target_type === 1 && (
-                                            <span className="font-semibold text-white">
-                                                1 phòng ban
-                                            </span>
-                                        )}
+                                        <span className="font-semibold text-white">
+                                            {getSelectedCount()} {getTargetLabel()}
+                                        </span>
                                         .
                                         {assignForm.date_start &&
                                             assignForm.date_end && (

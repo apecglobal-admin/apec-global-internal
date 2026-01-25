@@ -172,3 +172,263 @@ export const eventRegister = createAsyncThunk(
         }
     }
 );
+
+export const getInternalTypeEvent = createAsyncThunk(
+    "event/getInternalTypeEvent",
+    async (_, thunkAPI) => {
+        try {
+            const response = await apiAxiosInstance.get("/events/internal/types");
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+export const getListInternalEvent = createAsyncThunk(
+    "event/getListInternalEvent",
+    async (payload: any, thunkAPI) => {
+        try {
+
+            const { limit, page, id, token }: any = payload;
+
+            const params = Object.fromEntries(
+                Object.entries({ limit, page, id }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/events/internal", {
+                params,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+export const getListInternalEventEmployee = createAsyncThunk(
+    "event/getListInternalEventEmployee",
+    async (payload: any, thunkAPI) => {
+        try {
+
+            const { limit, page, id, token }: any = payload;
+
+            const params = Object.fromEntries(
+                Object.entries({ limit, page, id }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/events/internal/employees", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+export const getlevels = createAsyncThunk(
+    "event/getlevels",
+    async (_, thunkAPI) => {
+        try {
+            const response = await apiAxiosInstance.get("/levels");
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+export const eventInternalRegister = createAsyncThunk(
+    "event/eventInternalRegister",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {
+                name,
+                description,
+                internal_event_type_id,
+                start_date,
+                end_date,
+                start_time,
+                end_time,
+                location,
+                position_id,
+                department_id,
+                level_id,
+                employees,
+                token
+            }: any = payload;
+
+            const response = await apiAxiosInstance.post(
+                `/events/internal/create`,
+                {
+                    name,
+                    description,
+                    internal_event_type_id,
+                    start_date,
+                    end_date,
+                    start_time,
+                    end_time,
+                    location,
+                    position_id,
+                    department_id,
+                    level_id,
+                    employees,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+export const updateEventInternal = createAsyncThunk(
+    "event/updateEventInternal",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {
+                id,
+                name,
+                description,
+                internal_event_type_id,
+                start_date,
+                end_date,
+                start_time,
+                end_time,
+                location,
+                position_id,
+                department_id,
+                level_id,
+                employees,
+                token
+            }: any = payload;
+
+            const response = await apiAxiosInstance.put(
+                `/events/internal/update`,
+                {
+                    id,
+                    name,
+                    description,
+                    internal_event_type_id,
+                    start_date,
+                    end_date,
+                    start_time,
+                    end_time,
+                    location,
+                    position_id,
+                    department_id,
+                    level_id,
+                    employees,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+export const deleteEventInternal = createAsyncThunk(
+    "event/deleteEventInternal",
+    async (payload: any, thunkAPI) => {
+        try {
+
+            const { id, token }: any = payload;
+
+            const response = await apiAxiosInstance.delete("/events/internal/delete",  {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                data: {
+                    id: id,
+                },
+            });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+export const attendanceEventInternal = createAsyncThunk(
+    "event/attendanceEventInternal",
+    async (payload: any, thunkAPI) => {
+        try {
+
+            const { id, employee_id, token }: any = payload;
+
+            const response = await apiAxiosInstance.put("/events/internal/attendance", {id, employee_id}, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+
+
+
+

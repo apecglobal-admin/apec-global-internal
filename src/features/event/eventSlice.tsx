@@ -4,9 +4,13 @@ import {
     getListEvent,
     eventReminder,
     getListTimeLine,
-    getStatEvent
+    getStatEvent,
+    getInternalTypeEvent,
+    getListInternalEvent,
+    getListInternalEventEmployee,
+    getlevels
 } from "./api/api";
-import { createAsyncReducer } from "@/src/utils/createAsyncReducer";
+import { createAsyncReducer, createAsyncReducerDynamic } from "@/src/utils/createAsyncReducer";
 import { initState } from "@/src/services/interface";
 
 
@@ -25,6 +29,12 @@ interface EventState {
     listTimeLine: initState<any[]>;
     stateEvent: initState<any[]>;
     reminder: initState<EventMessage>;
+    internalTypeEvent: initState<any[]>;
+    listInternalEvent: initState<any[]>;
+    listInternalEventEmployee: initState<any[]>;
+    detailListInternalEvent: initState<any[]>;
+
+    levels: initState<any[]>;
 }
 
 const createInitState = () => ({ data: [], loading: false, error: null, status: null });
@@ -36,7 +46,13 @@ const initialState: EventState = {
     listTimeLine: createInitState(),
     stateEvent: createInitState(),
     reminder: { data: { message: null }, loading: false, error: null, status: null },
-    
+    internalTypeEvent: createInitState(),
+    listInternalEvent: createInitState(),
+    listInternalEventEmployee: createInitState(),
+    detailListInternalEvent: createInitState(),
+    levels: createInitState(),
+
+
 };
 
 const eventSlice = createSlice({
@@ -52,6 +68,13 @@ const eventSlice = createSlice({
         createAsyncReducer(builder, getListTimeLine, "listTimeLine");
         createAsyncReducer(builder, getStatEvent, "stateEvent");
 
+        createAsyncReducer(builder, getInternalTypeEvent, "internalTypeEvent");
+        createAsyncReducerDynamic(builder, getListInternalEvent);
+        createAsyncReducer(builder, getListInternalEventEmployee, "listInternalEventEmployee");
+        createAsyncReducer(builder, getlevels, "levels");
+
+         
+        
         
     },
 });

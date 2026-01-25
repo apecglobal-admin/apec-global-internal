@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
 import CheckedTask from './component/CheckedTask'
 import TaskListAssign from './component/TaskList';
+import Request from './component/Request';
+import EventManager from './component/EventManager';
 
-function TaskManager() {
-  const [activeTab, setActiveTab] = useState<'list' | 'check'>('list');
+function TaskManager() { 
+  const [activeTab, setActiveTab] = useState<'list' | 'check' | 'request' | 'event'>('list');
 
   return (
     <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6">
@@ -41,14 +43,57 @@ function TaskManager() {
               <span>Duyệt nhiệm vụ</span>
             </div>
           </button>
+          <button
+            onClick={() => setActiveTab('request')}
+            className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all duration-200 ${
+              activeTab === 'request'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Duyệt sáng kiến</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('event')}
+            className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all duration-200 ${
+              activeTab === 'event'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Hỗ trợ & phối hợp</span>
+            </div>
+          </button>
         </div>
 
         {/* Tab Content */}
         <div className=" rounded-lg">
-          {activeTab === 'list' ? (
+          {activeTab === 'list' && (
             <TaskListAssign />
-          ) : (
+          )}  
+          {(
+            activeTab === 'check' && 
             <CheckedTask />
+          )}
+
+          {(
+            activeTab === 'request' && 
+            <Request />
+          )}
+
+          {(
+            activeTab === 'event' && 
+            <EventManager />
           )}
         </div>
       </div>

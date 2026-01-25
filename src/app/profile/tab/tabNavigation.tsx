@@ -23,6 +23,8 @@ function TabNavigation({ activeTab, setActiveTab }: any) {
     { id: "tasksManager", label: "Quản lý", icon: <ListTodo size={18} /> },
     { id: "caution", label: "Vi phạm", icon: <ListTodo size={18} /> },
     { id: "personal", label: "Cá nhân", icon: <User size={18} /> },
+    { id: "event", label: "Sự kiện", icon: <User size={18} /> },
+
     { id: "achievements", label: "Thành tích", icon: <Award size={18} /> },
     { id: "card", label: "Thẻ Apec", icon: <Home size={18} /> },
     { id: "link", label: "Liên kết", icon: <Link2 size={18} /> },

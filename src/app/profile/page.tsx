@@ -36,6 +36,7 @@ import {
 import { useProfileData } from "@/src/hooks/profileHook";
 import Cautions from "./tab/Cautions";
 import TaskManager from "./tab/TaskManager";
+import Event from "./tab/Event";
 
 function ProfilePage() {
     const dispatch = useDispatch();
@@ -522,6 +523,7 @@ function ProfilePage() {
                                 )}
                                 {activeTab === "tasks" && <TasksTab />}
                                 {activeTab === "tasksManager" && <TaskManager />}
+                                {activeTab === "event" && <Event />}
 
                                 
                                 {activeTab === "caution" && <Cautions />}
