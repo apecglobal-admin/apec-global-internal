@@ -17,12 +17,15 @@ export const useTaskData = () => {
     fileTask: task.fileTask.data.url,
     listSubTask: task.listSubTask.data.data, 
     listTaskAssign: task.listTaskAssign.data.data,
+    listDetailTaskAssign: task.listDetailTaskAssign.data.data,
+    detailTaskAssign: task.detailTaskAssign.data.data,
     // Loading states
 
-
+    loadingListDetailTaskAssign: task.listDetailTaskAssign.loading,
+    
 
     // Error states
-
+    errorListDetailTaskAssign: task.listDetailTaskAssign.error
 
     // Status codes
 

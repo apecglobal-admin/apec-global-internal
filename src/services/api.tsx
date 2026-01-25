@@ -177,6 +177,21 @@ export const listTypePersonal = createAsyncThunk(
   }
 );
 
+export const getListStatusPersonal = createAsyncThunk(
+  "user/listStatusPersonal",
+  async (_, thunkAPI) => {
+    try {
+      const response = await apiAxiosInstance.get("/personal-requests/status");
+      return {
+        data: response.data,
+        status: response.status
+      };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
+
 export const personalRequest = createAsyncThunk(
   "user/personalRequest",
   async (payload, thunkAPI) => {
@@ -199,6 +214,70 @@ export const personalRequest = createAsyncThunk(
     }
   }
 );
+
+export const personalRequestAssign = createAsyncThunk(
+  "user/personalRequestAssign",
+  async (payload: any, thunkAPI) => {
+    try {
+      const { page, limit, id, token }: any = payload;
+
+      const params = Object.fromEntries(
+        Object.entries({ limit,page,id }).filter(
+            ([key, value]) => value != null
+        )
+    );
+      const response = await apiAxiosInstance.get(
+        `/profile/personal-requests/employees`,
+        {
+          params,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return {
+        data: response.data,
+        status: response.status
+      };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
+
+export const personalRequestHonor = createAsyncThunk(
+  "user/personalRequestHonor",
+  async (payload: any, thunkAPI) => {
+    try {
+      const {  id, reason, token }: any = payload;
+
+
+      const response = await apiAxiosInstance.put(
+        `/profile/personal-requests/honor`,
+        {
+          id, 
+          reason
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return {
+        data: response.data,
+        status: response.status
+      };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
+
+
+
+
+
 
 export const listAchievements = createAsyncThunk(
   "user/listAchievements",
@@ -370,6 +449,7 @@ export const getTotalKpiSkill = createAsyncThunk(
     }
   }
 );
+
 
 
 

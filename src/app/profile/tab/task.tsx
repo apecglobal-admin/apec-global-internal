@@ -556,10 +556,6 @@ function TasksTab() {
           </>
         )}
       </div>
-
-      <CheckedTask />
-
-
     </div>
   );
 }

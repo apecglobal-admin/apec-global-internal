@@ -4,6 +4,7 @@ import {
   createRequestUser,
   listTypePersonal,
   personalRequest,
+  getListStatusPersonal
 } from "@/src/services/api";
 import {
   AlertCircle,
@@ -19,35 +20,56 @@ import {
   XCircle,
   Filter,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useState, useMemo } from "react";
+import { useDispatch } from "react-redux";
 
-const statusConfig = {
-  "Chờ xử lý": {
-    label: "Chờ xử lý",
-    color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-    icon: Clock,
-  },
-  "Đang xem xét": {
-    label: "Đang xem xét",
-    color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-    icon: Clock,
-  },
-  "Đã duyệt": {
-    label: "Đã duyệt",
-    color: "bg-green-500/20 text-green-400 border-green-500/30",
-    icon: CheckCircle2,
-  },
-  "Hoàn thành": {
-    label: "Hoàn thành",
-    color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-    icon: CheckCircle2,
-  },
-  "Từ chối": {
-    label: "Từ chối",
-    color: "bg-red-500/20 text-red-400 border-red-500/30",
-    icon: XCircle,
-  },
+// Color map cho status
+const colorMap: Record<string, string> = {
+  "yellow": "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  "blue": "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  "green": "bg-green-500/20 text-green-400 border-green-500/30",
+  "red": "bg-red-500/20 text-red-400 border-red-500/30",
+  "emerald": "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+};
+
+// Helper function để lấy màu theo tên status
+const getStatusColor = (statusName: string): string => {
+  const lowerName = statusName.toLowerCase();
+  
+  if (lowerName.includes("chờ") || lowerName.includes("pending")) {
+    return colorMap["blue"];
+  }
+  if (lowerName.includes("xem xét") || lowerName.includes("đang")) {
+    return colorMap["blue"];
+  }
+  if (lowerName.includes("duyệt") || lowerName.includes("approved")) {
+    return colorMap["green"];
+  }
+  if (lowerName.includes("hoàn thành") || lowerName.includes("completed")) {
+    return colorMap["emerald"];
+  }
+  if (lowerName.includes("từ chối") || lowerName.includes("rejected")) {
+    return colorMap["red"];
+  }
+  
+  return colorMap["yellow"]; // Default
+};
+
+// Helper function để lấy icon theo tên status
+const getStatusIcon = (statusName: string) => {
+  const lowerName = statusName.toLowerCase();
+  
+  if (lowerName.includes("chờ") || lowerName.includes("đang")) {
+    return Clock;
+  }
+  if (lowerName.includes("duyệt") || lowerName.includes("hoàn thành")) {
+    return CheckCircle2;
+  }
+  if (lowerName.includes("từ chối")) {
+    return XCircle;
+  }
+  
+  return Clock; // Default
 };
 
 interface PersonalTabProps {
@@ -56,12 +78,12 @@ interface PersonalTabProps {
 
 function PersonalTab({ userInfo }: PersonalTabProps) {
   const dispatch = useDispatch();
-  const { typePersonal, personals } = useProfileData();
-
+  const { typePersonal, personals, listStatusPersonal } = useProfileData();
+  console.log(listStatusPersonal);
+  
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
-  const [showNewRequestModal, setShowNewRequestModal] =
-    useState<boolean>(false);
+  const [showNewRequestModal, setShowNewRequestModal] = useState<boolean>(false);
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [selectedType, setSelectedType] = useState<any>(null);
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
@@ -74,6 +96,7 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
   
   useEffect(() => {
     dispatch(listTypePersonal() as any);
+    dispatch(getListStatusPersonal() as any);
     const token = localStorage.getItem("userToken");
     if (token) {
       const payload = {
@@ -153,33 +176,37 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
     );
   };
 
-  // Combined filters
-  const allFilters = [
-    ...(typePersonal || []).map((type: any) => ({
-      id: `type-${type.id}`,
-      label: type.name,
-      type: "type",
-      value: String(type.id),
-      icon: getTypeIconLarge(type.name),
-      count: (personals || []).filter(
-        (p: any) => String(p.type_requests?.id) === String(type.id)
-      ).length,
-    })),
-    ...Object.keys(statusConfig).map((statusName) => {
-      const config = statusConfig[statusName as keyof typeof statusConfig];
-      return {
-        id: `status-${statusName}`,
-        label: statusName,
-        type: "status",
-        value: statusName,
-        icon: config.icon,
-        color: config.color,
+  // Combined filters - Sử dụng data từ API
+  const allFilters = useMemo(() => {
+    return [
+      ...(typePersonal || []).map((type: any) => ({
+        id: `type-${type.id}`,
+        label: type.name,
+        type: "type",
+        value: String(type.id),
+        icon: getTypeIconLarge(type.name),
         count: (personals || []).filter(
-          (p: any) => (p.status_requests?.name || "Chờ xử lý") === statusName
+          (p: any) => String(p.type_requests?.id) === String(type.id)
         ).length,
-      };
-    }),
-  ];
+      })),
+      ...(listStatusPersonal || []).map((status: any) => {
+        const Icon = getStatusIcon(status.name);
+        const color = getStatusColor(status.name);
+        
+        return {
+          id: `status-${status.id}`,
+          label: status.name,
+          type: "status",
+          value: status.name,
+          icon: Icon,
+          color: color,
+          count: (personals || []).filter(
+            (p: any) => p.status_requests?.name === status.name
+          ).length,
+        };
+      }),
+    ];
+  }, [typePersonal, listStatusPersonal, personals]);
 
   // Filter personals
   let filteredRequests = personals || [];
@@ -192,7 +219,7 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
 
   if (selectedStatuses.length > 0) {
     filteredRequests = filteredRequests.filter((p: any) =>
-      selectedStatuses.includes(p.status_requests?.name || "Chờ xử lý")
+      selectedStatuses.includes(p.status_requests?.name)
     );
   }
 
@@ -216,7 +243,6 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
       description: newRequest.description,
       type_request_id: selectedType.id,
     };
-
 
     try {
       const res = await dispatch(createRequestUser(payload as any) as any);
@@ -265,7 +291,7 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
             {activeFilterCount > 0 && (
               <button
                 onClick={clearFilters}
-                className="text-xs text-slate-400 hover:text-black/30 transition hidden md:block"
+                className="text-xs text-slate-400 hover:text-white transition hidden md:block"
               >
                 Xóa tất cả
               </button>
@@ -304,7 +330,7 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition flex items-center gap-1.5 border ${
                     isSelected
                       ? filter.color || "bg-blue-600 text-white border-blue-500"
-                      : "bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-600 hover:text-black/30"
+                      : "bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-600 hover:text-white"
                   }`}
                 >
                   <div
@@ -342,7 +368,7 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
           {activeFilterCount > 0 && (
             <button
               onClick={clearFilters}
-              className="md:hidden w-full mt-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-black/30 rounded-lg transition text-xs font-medium"
+              className="md:hidden w-full mt-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg transition text-xs font-medium"
             >
               Xóa tất cả bộ lọc
             </button>
@@ -373,13 +399,12 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
             )}
           </div>
         ) : (
-          sortedRequests
-          .map((request: any) => {
-            const statusName = request.status_requests?.name || "Chờ xử lý";
-            const status =
-              statusConfig[statusName as keyof typeof statusConfig] ||
-              statusConfig["Chờ xử lý"];
-            const StatusIcon = status.icon;
+          sortedRequests.map((request: any) => {
+            const statusName = request.status_requests?.name;
+            
+            // Lấy màu và icon từ helper functions
+            const statusColor = statusName ? getStatusColor(statusName) : colorMap["blue"];
+            const StatusIcon = statusName ? getStatusIcon(statusName) : Clock;
 
             return (
               <div
@@ -459,10 +484,10 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
                     </div>
                   </div>
                   <div
-                    className={`px-3 py-1.5 rounded-full border text-xs font-medium flex items-center gap-1.5 whitespace-nowrap ${status.color}`}
+                    className={`px-3 py-1.5 rounded-full border text-xs font-medium flex items-center gap-1.5 whitespace-nowrap ${statusColor}`}
                   >
                     <StatusIcon size={14} />
-                    {status.label}
+                    {statusName || "Không xác định"}
                   </div>
                 </div>
               </div>
@@ -471,7 +496,7 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Modal - Tạo yêu cầu mới */}
       {showNewRequestModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-lg w-full">
@@ -511,6 +536,8 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
           </div>
         </div>
       )}
+
+      {/* Modal - Form tạo yêu cầu */}
       {showCreateModal && selectedType && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-md w-full">

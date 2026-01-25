@@ -1,0 +1,547 @@
+import { useState, useEffect } from "react";
+import {
+    Users,
+    CheckCircle2,
+    Search,
+    Filter,
+    X,
+    UserCheck,
+    Briefcase,
+    Building,
+    AlertCircle,
+    Award,
+} from "lucide-react";
+
+interface TargetOption {
+    id: number;
+    type: "employee" | "position" | "department" | "level" | "custom";
+    label: string;
+    icon: React.ComponentType<any>;
+    color: string;
+}
+
+interface Employee {
+    id: number;
+    name: string;
+    email?: string;
+    phone?: string;
+    department?: { name: string };
+    position?: { name: string };
+}
+
+interface Item {
+    id: number;
+    name?: string;
+    title?: string;
+}
+
+interface TaskTargetSelectorProps {
+    enabledTargets?: ("employee" | "position" | "department" | "level")[];
+    customTargets?: TargetOption[];
+    employees?: Employee[];
+    positions?: Item[];
+    departments?: Item[];
+    levels?: Item[];
+    customData?: { [key: string]: Item[] };
+    selectedTargetType: number;
+    selectedValues: number[] | number | string;
+    onTargetTypeChange: (type: number) => void;
+    onSelectionChange: (values: number[] | number | string) => void;
+    onFilterChange?: (filters: {
+        search?: string;
+        position?: number | null;
+        department?: number | null;
+    }) => void;
+    error?: string;
+    onErrorClear?: () => void;
+    showSelectAll?: boolean;
+    showFilters?: boolean;
+    maxHeight?: string;
+    placeholder?: string;
+}
+
+const defaultTargetOptions: TargetOption[] = [
+    {
+        id: 3,
+        type: "employee",
+        label: "Nhân viên",
+        icon: UserCheck,
+        color: "blue",
+    },
+    {
+        id: 2,
+        type: "position",
+        label: "Vị trí",
+        icon: Briefcase,
+        color: "purple",
+    },
+    {
+        id: 1,
+        type: "department",
+        label: "Phòng ban",
+        icon: Building,
+        color: "green",
+    },
+    {
+        id: 4,
+        type: "level",
+        label: "Cấp bậc",
+        icon: Award,
+        color: "orange",
+    },
+];
+
+function TaskTargetSelector({
+    enabledTargets = ["employee", "position", "department", "level"],
+    customTargets = [],
+    employees = [],
+    positions = [],
+    departments = [],
+    levels = [],
+    customData = {},
+    selectedTargetType,
+    selectedValues,
+    onTargetTypeChange,
+    onSelectionChange,
+    onFilterChange,
+    error,
+    onErrorClear,
+    showSelectAll = true,
+    showFilters = true,
+    maxHeight = "24rem",
+    placeholder = "Chọn đối tượng...",
+}: TaskTargetSelectorProps) {
+    const [searchText, setSearchText] = useState("");
+    const [filterPosition, setFilterPosition] = useState<number | null>(null);
+    const [filterDepartment, setFilterDepartment] = useState<number | null>(null);
+    const [selectAllEmployees, setSelectAllEmployees] = useState(false);
+
+    const availableTargets = [
+        ...defaultTargetOptions.filter((opt) =>
+            enabledTargets.includes(opt.type as any)
+        ),
+        ...customTargets,
+    ];
+
+    const currentTarget = availableTargets.find(
+        (t) => t.id === selectedTargetType
+    );
+
+    useEffect(() => {
+        if (
+            currentTarget?.type === "employee" &&
+            onFilterChange &&
+            !selectAllEmployees
+        ) {
+            const timer = setTimeout(() => {
+                onFilterChange({
+                    search: searchText || undefined,
+                    position: filterPosition,
+                    department: filterDepartment,
+                });
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, [searchText, filterPosition, filterDepartment, currentTarget?.type, selectAllEmployees, onFilterChange]);
+
+    useEffect(() => {
+        if (
+            selectAllEmployees &&
+            currentTarget?.type === "employee" &&
+            employees.length > 0
+        ) {
+            const allIds = employees.map((emp) => emp.id);
+            onSelectionChange(allIds);
+        } else if (!selectAllEmployees && currentTarget?.type === "employee") {
+            // Không reset về [], giữ nguyên giá trị hiện tại
+            if (Array.isArray(selectedValues) && selectedValues.length === employees.length && employees.length > 0) {
+                // Nếu đang chọn tất cả, reset về []
+                onSelectionChange([]);
+            }
+        }
+    }, [selectAllEmployees, employees, currentTarget?.type]);
+
+    const handleTargetTypeChange = (targetId: number) => {
+        const target = availableTargets.find((t) => t.id === targetId);
+        
+        // Chỉ reset khi chuyển sang target type mới
+        if (targetId !== selectedTargetType) {
+            if (target?.type === "employee") {
+                onSelectionChange([]);
+                setSelectAllEmployees(false);
+            } else {
+                onSelectionChange("");
+            }
+            clearFilters();
+        }
+        
+        onTargetTypeChange(targetId);
+        onErrorClear?.();
+    };
+
+    const toggleEmployeeSelection = (employeeId: number) => {
+        if (selectAllEmployees) return;
+
+        const current = Array.isArray(selectedValues) ? selectedValues : [];
+        const isSelected = current.includes(employeeId);
+        
+        onSelectionChange(
+            isSelected
+                ? current.filter((id) => id !== employeeId)
+                : [...current, employeeId]
+        );
+        
+        onErrorClear?.();
+    };
+
+    const selectItem = (itemId: number) => {
+        onSelectionChange(itemId);
+        onErrorClear?.();
+    };
+
+    const clearFilters = () => {
+        setSearchText("");
+        setFilterPosition(null);
+        setFilterDepartment(null);
+    };
+
+    const getSelectedCount = () => {
+        if (currentTarget?.type === "employee") {
+            if (selectAllEmployees) return employees.length;
+            return Array.isArray(selectedValues) ? selectedValues.length : 0;
+        }
+        if (
+            (currentTarget?.type === "position" ||
+                currentTarget?.type === "department" ||
+                currentTarget?.type === "custom") &&
+            selectedValues
+        ) {
+            return 1;
+        }
+        return 0;
+    };
+
+    const getColorClasses = (color: string, isActive: boolean) => {
+        const colors: Record<string, any> = {
+            blue: {
+                border: isActive ? "border-blue-500" : "border-slate-700",
+                bg: isActive ? "bg-blue-500/10" : "bg-slate-900",
+                text: isActive ? "text-blue-400" : "text-slate-400",
+                textActive: "text-white",
+                hover: "hover:border-slate-600",
+            },
+            purple: {
+                border: isActive ? "border-purple-500" : "border-slate-700",
+                bg: isActive ? "bg-purple-500/10" : "bg-slate-900",
+                text: isActive ? "text-purple-400" : "text-slate-400",
+                textActive: "text-white",
+                hover: "hover:border-slate-600",
+            },
+            green: {
+                border: isActive ? "border-green-500" : "border-slate-700",
+                bg: isActive ? "bg-green-500/10" : "bg-slate-900",
+                text: isActive ? "text-green-400" : "text-slate-400",
+                textActive: "text-white",
+                hover: "hover:border-slate-600",
+            },
+            orange: {
+                border: isActive ? "border-orange-500" : "border-slate-700",
+                bg: isActive ? "bg-orange-500/10" : "bg-slate-900",
+                text: isActive ? "text-orange-400" : "text-slate-400",
+                textActive: "text-white",
+                hover: "hover:border-slate-600",
+            },
+        };
+        return colors[color] || colors.blue;
+    };
+
+    const renderEmployeeList = () => (
+        <>
+            {showSelectAll && (
+                <div className="mb-4 space-y-3">
+                    <div className="flex items-center gap-2 p-3 bg-slate-900 border border-slate-700 rounded-lg">
+                        <input
+                            type="checkbox"
+                            id="selectAll"
+                            checked={selectAllEmployees}
+                            onChange={(e) => setSelectAllEmployees(e.target.checked)}
+                            className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900"
+                        />
+                        <label
+                            htmlFor="selectAll"
+                            className="text-sm font-semibold text-white cursor-pointer"
+                        >
+                            Chọn tất cả nhân viên ({employees.length})
+                        </label>
+                    </div>
+
+                    {!selectAllEmployees && showFilters && (
+                        <>
+                            <div className="relative">
+                                <Search
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+                                    size={16}
+                                />
+                                <input
+                                    type="text"
+                                    value={searchText}
+                                    onChange={(e) => setSearchText(e.target.value)}
+                                    placeholder="Tìm theo tên, email, số điện thoại..."
+                                    className="w-full pl-10 pr-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-400 mb-2 flex items-center gap-1">
+                                        <Filter size={12} />
+                                        Lọc theo vị trí
+                                    </label>
+                                    <select
+                                        value={filterPosition || ""}
+                                        onChange={(e) =>
+                                            setFilterPosition(
+                                                e.target.value ? parseInt(e.target.value) : null
+                                            )
+                                        }
+                                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500 transition"
+                                    >
+                                        <option value="">-- Tất cả vị trí --</option>
+                                        {positions.map((position) => (
+                                            <option key={position.id} value={position.id}>
+                                                {position.title || position.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-400 mb-2 flex items-center gap-1">
+                                        <Filter size={12} />
+                                        Lọc theo phòng ban
+                                    </label>
+                                    <select
+                                        value={filterDepartment || ""}
+                                        onChange={(e) =>
+                                            setFilterDepartment(
+                                                e.target.value ? parseInt(e.target.value) : null
+                                            )
+                                        }
+                                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500 transition"
+                                    >
+                                        <option value="">-- Tất cả phòng ban --</option>
+                                        {departments.map((department) => (
+                                            <option key={department.id} value={department.id}>
+                                                {department.name || department.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {(searchText || filterPosition || filterDepartment) && (
+                                <button
+                                    onClick={clearFilters}
+                                    className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition"
+                                >
+                                    <X size={12} />
+                                    Xóa bộ lọc
+                                </button>
+                            )}
+                        </>
+                    )}
+                </div>
+            )}
+
+            {!selectAllEmployees && (
+                <div className="space-y-2 overflow-y-auto pr-2" style={{ maxHeight }}>
+                    {employees.length > 0 ? (
+                        employees.map((employee) => {
+                            const isSelected =
+                                Array.isArray(selectedValues) &&
+                                selectedValues.includes(employee.id);
+                            return (
+                                <div
+                                    key={employee.id}
+                                    onClick={() => toggleEmployeeSelection(employee.id)}
+                                    className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
+                                        isSelected
+                                            ? "border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20"
+                                            : "border-slate-700 bg-slate-900 hover:border-slate-600 hover:bg-slate-800"
+                                    }`}
+                                >
+                                    <div
+                                        className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition ${
+                                            isSelected
+                                                ? "border-blue-500 bg-blue-500"
+                                                : "border-slate-600"
+                                        }`}
+                                    >
+                                        {isSelected && (
+                                            <CheckCircle2 size={14} className="text-white" />
+                                        )}
+                                    </div>
+                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                                        {employee.name.charAt(0)}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <span className="text-base font-semibold text-white truncate block">
+                                            {employee.name}
+                                        </span>
+                                        <div className="flex flex-col gap-0.5 text-xs text-slate-400">
+                                            {employee.email && (
+                                                <span className="truncate">
+                                                    Email: {employee.email}
+                                                </span>
+                                            )}
+                                            {employee.phone && (
+                                                <span>SĐT: {employee.phone}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col gap-1 text-right text-xs flex-shrink-0">
+                                        {employee.department && (
+                                            <span className="px-2 py-1 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                                {employee.department.name}
+                                            </span>
+                                        )}
+                                        {employee.position && (
+                                            <span className="px-2 py-1 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                                {employee.position.name}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })
+                    ) : (
+                        <div className="text-center py-8 text-slate-400">
+                            <Users size={32} className="mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">Không tìm thấy nhân viên</p>
+                        </div>
+                    )}
+                </div>
+            )}
+        </>
+    );
+
+    const renderItemList = (items: Item[], iconColor: string, IconComponent: React.ComponentType<any>) => (
+        <div className="space-y-2 overflow-y-auto pr-2" style={{ maxHeight }}>
+            {items.map((item) => {
+                const isSelected = selectedValues === item.id;
+                const displayName = item.name || item.title || "Không rõ";
+                
+                return (
+                    <div
+                        key={item.id}
+                        onClick={() => selectItem(item.id)}
+                        className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
+                            isSelected
+                                ? "border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20"
+                                : "border-slate-700 bg-slate-900 hover:border-slate-600 hover:bg-slate-800"
+                        }`}
+                    >
+                        <div
+                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition ${
+                                isSelected ? "border-blue-500 bg-blue-500" : "border-slate-600"
+                            }`}
+                        >
+                            {isSelected && <div className="w-3 h-3 bg-white rounded-full" />}
+                        </div>
+                        <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${iconColor} flex items-center justify-center flex-shrink-0`}>
+                            <IconComponent className="text-white" size={20} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <span className="text-base font-semibold text-white truncate block">
+                                {displayName}
+                            </span>
+                            <span className="text-xs text-slate-400">ID: {item.id}</span>
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+
+    return (
+        <div className="space-y-4">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Users size={20} className="text-blue-400" />
+                <span>Đối tượng nhận nhiệm vụ</span>
+            </h3>
+
+            <div className={`grid gap-3 ${
+                availableTargets.length === 4
+                    ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+                    : availableTargets.length === 3 
+                    ? 'grid-cols-1 sm:grid-cols-3' 
+                    : availableTargets.length === 2 
+                    ? 'grid-cols-1 sm:grid-cols-2'
+                    : 'grid-cols-1'
+            }`}>
+                {availableTargets.map((target) => {
+                    const isActive = selectedTargetType === target.id;
+                    const colorClasses = getColorClasses(target.color, isActive);
+                    const Icon = target.icon;
+
+                    return (
+                        <button
+                            key={target.id}
+                            type="button"
+                            onClick={() => handleTargetTypeChange(target.id)}
+                            className={`p-4 rounded-lg border-2 transition flex flex-col items-center gap-2 ${colorClasses.border} ${colorClasses.bg} ${!isActive && colorClasses.hover}`}
+                        >
+                            <Icon
+                                size={24}
+                                className={isActive ? colorClasses.text : "text-slate-400"}
+                            />
+                            <span
+                                className={`text-sm font-semibold ${
+                                    isActive ? colorClasses.textActive : "text-slate-400"
+                                }`}
+                            >
+                                {target.label}
+                            </span>
+                        </button>
+                    );
+                })}
+            </div>
+
+            {error && (
+                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                    <p className="text-red-400 text-sm flex items-center gap-2">
+                        <AlertCircle size={14} />
+                        {error}
+                    </p>
+                </div>
+            )}
+
+            {currentTarget?.type === "employee" && renderEmployeeList()}
+            
+            {currentTarget?.type === "position" &&
+                renderItemList(positions, "from-purple-500 to-pink-500", Briefcase)}
+            
+            {currentTarget?.type === "department" &&
+                renderItemList(departments, "from-green-500 to-teal-500", Building)}
+            
+            {currentTarget?.type === "level" &&
+                renderItemList(levels, "from-orange-500 to-amber-500", Award)}
+            
+            {currentTarget?.type === "custom" && currentTarget.id && customData[currentTarget.id] &&
+                renderItemList(customData[currentTarget.id], "from-orange-500 to-red-500", currentTarget.icon)}
+
+            {getSelectedCount() > 0 && (
+                <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                    <p className="text-sm text-slate-300">
+                        Đã chọn:{" "}
+                        <span className="font-semibold text-white">
+                            {getSelectedCount()} {currentTarget?.label.toLowerCase()}
+                        </span>
+                    </p>
+                </div>
+            )}
+        </div>
+    );
+}
+
+export default TaskTargetSelector;
