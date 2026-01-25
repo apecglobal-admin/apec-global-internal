@@ -17,7 +17,9 @@ export const createTask = createAsyncThunk(
                 process, 
                 task_status, 
                 employees,position_id,department_id,
-                token
+                token,
+                min_count_reject,
+                max_count_reject
             }: any = payload;
             const response = await apiAxiosInstance.post("/tasks/create",{ 
                 name, 
@@ -32,7 +34,9 @@ export const createTask = createAsyncThunk(
                 task_status, 
                 employees,
                 position_id,
-                department_id  
+                department_id,
+                min_count_reject,
+                max_count_reject
             }, {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -150,7 +154,7 @@ export const getListProject = createAsyncThunk(
     async (_, thunkAPI) => {
         try {
 
-            const response = await apiAxiosInstance.get("/cms/select/options/projects");
+            const response = await apiAxiosInstance.get("/projects/select/option");
             return {
                 data: response.data,
             };
@@ -182,10 +186,15 @@ export const getChildKpi = createAsyncThunk(
 
 export const getListEmployee = createAsyncThunk(
     "task/getListEmployee",
-    async (_, thunkAPI) => {
+    async (payload: any, thunkAPI) => {
         try {
-
-            const response = await apiAxiosInstance.get("/employees/select/options");
+            const {position_id, department_id, filter} = payload;
+            const params = Object.fromEntries(
+                Object.entries({ position_id, department_id, filter }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/employees/select/options", {params});
             return {
                 data: response.data,
             };
@@ -311,7 +320,8 @@ export const updateProgressTask = createAsyncThunk(
                 task_id, 
                 status, 
                 prove, 
-                token
+                token,
+                date_end
             }: any = payload;
             const response = await apiAxiosInstance.put("/tasks/progress/update",
                 {
@@ -320,6 +330,7 @@ export const updateProgressTask = createAsyncThunk(
                     task_id, 
                     status, 
                     prove, 
+                    date_end
                 },
                 {
                   headers: {
@@ -431,6 +442,158 @@ export const checkedTask = createAsyncThunk(
         }
     }
 );
+
+export const rejectTask = createAsyncThunk(
+    "task/rejectTask",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {id, task_id, date_end, reason, token} = payload;
+
+            const response = await apiAxiosInstance.put("/tasks/reject",
+                {
+                    id, 
+                    task_id,
+                    date_end, 
+                    reason
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`
+                  },
+                }
+            );
+            return {
+                data: response.data,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+
+export const getDetailListTaskAssign = createAsyncThunk(
+    "task/getDetailListTaskAssign",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {limit, page, id, token} = payload;
+            const params = Object.fromEntries(
+                Object.entries({ limit, page, id }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/tasks/created",
+                {
+                    params,
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                }
+            );
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+
+export const deleteTaskAssign = createAsyncThunk(
+    "task/deleteTaskAssign",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {id, token} = payload;
+
+            const response = await apiAxiosInstance.delete("/tasks/delete",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    data: {
+                        id: id,
+                    },
+                }
+            );
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+
+export const updateTaskAssign = createAsyncThunk(
+    "task/updateTaskAssign",
+    async (payload: any, thunkAPI) => {
+      try {
+        const {
+            id,
+            name,
+            description,
+            type_task,
+            date_start,
+            date_end,
+            task_priority,
+            project_id,
+            kpi_item_id,
+            min_count_reject,
+            max_count_reject,
+            employees,
+            token,
+        } = payload;
+  
+        const response = await apiAxiosInstance.put(
+          "/tasks/update",
+          {
+            id,
+            name,
+            description,
+            type_task,
+            date_start,
+            date_end,
+            task_priority,
+            project_id,
+            kpi_item_id,
+            min_count_reject,
+            max_count_reject,
+            employees,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+  
+        return {
+          data: response.data,
+          status: response.status,
+        };
+      } catch (error: any) {
+        return thunkAPI.rejectWithValue(
+          error?.response?.data || error?.message
+        );
+      }
+    }
+);
+  
+
+
+
+
+
 
 
 
