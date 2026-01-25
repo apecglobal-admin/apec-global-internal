@@ -7,8 +7,8 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: "https://api.apecglobal.net"
-        NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+        NEXT_PUBLIC_API_URL: "https://api.apecglobal.net/"
+        NEXT_PUBLIC_APP_URL: "https://api.apecglobal.net/"
         NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: "dbt97thds"
 
     environment:
