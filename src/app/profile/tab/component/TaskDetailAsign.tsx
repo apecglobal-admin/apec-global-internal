@@ -7,6 +7,7 @@ import {
     getListEmployee,
     getStatusTask,
     updateTaskAssign,
+    getDetailListTaskAssign,
 } from "@/src/features/task/api";
 import { useDispatch } from 'react-redux';
 import { useTaskData } from '@/src/hooks/taskhook';
@@ -21,6 +22,7 @@ interface TaskDetailProps {
 }
 
 const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate }) => {
+    
     const dispatch = useDispatch();
     const {
         typeTask,
@@ -86,7 +88,6 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate })
         const token = localStorage.getItem("userToken");
 
         try {
-            // Chỉ gửi các field đã thay đổi
             const payload: any = {
                 id: task.id,
                 token,
@@ -96,11 +97,17 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate })
             const response = await dispatch(updateTaskAssign(payload) as any);
 
             if (response.payload?.data?.success) {
+                dispatch(getDetailListTaskAssign({
+                    id: task.id,
+                    token: token,
+                    key: "detailTaskAssign"
+                }) as any);
                 toast.success('Cập nhật thành công!');
                 setIsEditing(false);
                 if (onUpdate) {
                     onUpdate();
                 }
+                
             } else {
                 toast.error(response.payload?.data?.message || 'Cập nhật thất bại!');
             }
@@ -133,6 +140,7 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate })
                     onSave={handleSave}
                     onCancel={handleCancel}
                     isLoading={isLoading}
+                    
                 />
             </div>
         );

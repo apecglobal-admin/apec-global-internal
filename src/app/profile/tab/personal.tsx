@@ -79,7 +79,6 @@ interface PersonalTabProps {
 function PersonalTab({ userInfo }: PersonalTabProps) {
   const dispatch = useDispatch();
   const { typePersonal, personals, listStatusPersonal } = useProfileData();
-  console.log(listStatusPersonal);
   
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
