@@ -35,7 +35,7 @@ import {
 } from "@/src/services/api";
 import { useProfileData } from "@/src/hooks/profileHook";
 import Cautions from "./tab/Cautions";
-import AIReportButton from "@/src/app/profile/aiReportMic";
+import AIReportButton from "@/components/ai-report/aiReportButton";
 import TaskManager from "./tab/TaskManager";
 import Event from "./tab/Event";
 
