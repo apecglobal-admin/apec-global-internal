@@ -215,6 +215,8 @@ function TaskDetail({
                 prove: selectedStatus === 4 
                     ? (uploadType === "image" ? imageTask : fileTask) || ""
                     : "",
+                token,
+                date_end: task.task.date_end
             };
             const result = await dispatch(updateProgressTask(updatePayload) as any);
 
