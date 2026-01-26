@@ -35,6 +35,7 @@ import {
 } from "@/src/services/api";
 import { useProfileData } from "@/src/hooks/profileHook";
 import Cautions from "./tab/Cautions";
+import AIReportButton from "@/src/app/profile/aiReportMic";
 
 function ProfilePage() {
     const dispatch = useDispatch();
@@ -726,6 +727,7 @@ function ProfilePage() {
                     </div>
                 </div>
             )}
+            <AIReportButton />
         </div>
     );
 }
