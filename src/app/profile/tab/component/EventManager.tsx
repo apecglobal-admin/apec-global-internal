@@ -133,7 +133,6 @@ function EventManager() {
                 key: "detailListInternalEvent" 
             }) as any);
 
-            console.log(s);
             
             setShowDetailModal(true);
         } catch (error) {

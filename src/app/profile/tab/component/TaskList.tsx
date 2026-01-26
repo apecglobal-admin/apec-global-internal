@@ -81,15 +81,18 @@ const TaskListAssign: React.FC = () => {
             showActionButtons: true,
             onConfirm: async () => {
                 const res = await dispatch(deleteTaskAssign(payload) as any);
-                if(res.payload.data.success){
+                
+                if(res.payload.data?.success){
                     dispatch(getDetailListTaskAssign({
                         page: currentPage,
                         token: token,
                         key: "listDetailTaskAssign"
                     }) as any);
+                    toast.success(res.payload.data.message)
+
                     closePopup();
                 }else{
-                    toast.error(res.payload.data.message)
+                    toast.error(res.payload.message)
                     closePopup();
                 }
                 
