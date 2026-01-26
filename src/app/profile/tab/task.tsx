@@ -31,45 +31,9 @@ import TaskDetail from "./component/taskDetail";
 import { getPriorityTask, getStatusTask } from "@/src/features/task/api";
 import { useTaskData } from "@/src/hooks/taskhook";
 import CheckedTask from "./component/CheckedTask";
+import { Task } from "@/src/services/interface";
 
-interface Task {
-  id: string;
-  employee_id: string;
-  prove: string | null;
-  checked: boolean;
-  process: number;
-  task: {
-    id: number;
-    name: string;
-    process: number;
-    date_start: string;
-    date_end: string;
-  };
-  status: {
-    id: number;
-    name: string;
-  };
-  priority: {
-    id: number;
-    name: string;
-  };
-  project: {
-    id: number;
-    name: string;
-  };
-  kpi_item: {
-    id: number;
-    name: string;
-  };
-  type: {
-    id: number;
-    name: string;
-  };
-  target_type: {
-    id: number;
-    name: string;
-  };
-}
+
 
 interface TasksResponse {
   data: Task[];
@@ -97,7 +61,7 @@ interface PriorityTask {
 
 function TasksTab() {
   const dispatch = useDispatch();
-  const { tasks: tasksResponse, typeTask } = useProfileData();
+  const { tasks: tasksResponse, typeTask, detailTask } = useProfileData();
   const { statusTask, priorityTask } = useTaskData();
   
   const [page, setPage] = useState(1);
@@ -111,6 +75,8 @@ function TasksTab() {
   const totalPages = tasksResponse?.total_pages || 1;
   const totalItems = tasksResponse?.total_items || 0;
   const currentPage = tasksResponse?.page || 1;
+
+  
 
   useEffect(() => {
     dispatch(listTypeTask() as any);
@@ -130,6 +96,7 @@ function TasksTab() {
         page,
         token,
         filter: taskFilter === "all" ? null : taskFilter,
+        key: "tasks"
       };
       dispatch(personTasks(payload as any) as any);
     }
@@ -144,6 +111,32 @@ function TasksTab() {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
       window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleTaskClick = async (taskId: string) => {
+      const token = localStorage.getItem("userToken");
+      const payload = {
+        token,
+        id: taskId,
+        key: "detailTasks"
+      }
+
+      await dispatch(personTasks(payload as any) as any);
+      setSelectedTask(taskId);
+
+  };
+
+  const refreshTasks = () => {
+    const token = localStorage.getItem("userToken");
+    if (token) {
+      const payload = {
+        page,
+        token,
+        filter: taskFilter === "all" ? null : taskFilter,
+        key: "tasks"
+      };
+      dispatch(personTasks(payload as any) as any);
     }
   };
 
@@ -260,6 +253,7 @@ function TasksTab() {
         page,
         token,
         filter: taskFilter === "all" ? null : taskFilter,
+        key: "tasks"
       };
       dispatch(personTasks(payload as any) as any);
     }
@@ -414,7 +408,7 @@ function TasksTab() {
                     <div
                       key={task.id}
                       className="rounded-lg border border-slate-800 bg-slate-950 p-4 hover:border-blue-500/50 transition cursor-pointer"
-                      onClick={() => setSelectedTask(task.id)}
+                      onClick={() => handleTaskClick(task.id)}
                     >
                       <div className="flex items-start justify-between gap-3 mb-3">
                         <div className="flex-1 min-w-0">
@@ -467,6 +461,33 @@ function TasksTab() {
                           <Star size={12} className="fill-yellow-400" />
                           <span className="font-semibold">+100 XP</span>
                         </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs mt-2">
+                        <div className="flex items-center gap-1 text-slate-400">
+                          <span className="truncate">
+                            { task.reject_status && 
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-red-600/30 text-red-300 border border-red-600/40">
+                                Bị từ chối
+                              </span>
+                            }
+                            { task.checked && 
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-blue-600 text-white">
+                                Xác nhận hoàn thành
+                              </span>
+                            }
+                          </span>
+                        </div>
+                        {task.last_reject_date && <div className="flex items-center gap-1 text-yellow-400 flex-shrink-0">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-red-600/30 text-red-300 border border-red-600/40">
+                                {formatDate(task.last_reject_date)}
+                              </span>
+                        </div>}
+                        {task.checked && <div className="flex items-center gap-1 text-yellow-400 flex-shrink-0">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-blue-600 text-white">
+                                {formatDate(task.completed_date)}
+                              </span>
+                        </div>}
                       </div>
                     </div>
                   );
@@ -535,25 +556,16 @@ function TasksTab() {
             )}
           </>
         ) : (
-          <>
-            {(() => {
-              const task = tasks.find((t: Task) => t.id === selectedTask);
-              if (!task) return null;
-              
-
-              return (
-                <TaskDetail
-                  task={task}
-                  onBack={() => setSelectedTask(null)}
-                  getTaskStatusBadge={getTaskStatusBadge}
-                  getPriorityBadge={getPriorityBadge}
-                  formatDate={formatDate}
-                  calculateProgress={calculateProgress}
-                  statusTask={statusTask}
-                />
-              );
-            })()}
-          </>
+              <TaskDetail
+                task={detailTask}
+                onBack={() => setSelectedTask(null)}
+                getTaskStatusBadge={getTaskStatusBadge}
+                getPriorityBadge={getPriorityBadge}
+                formatDate={formatDate}
+                calculateProgress={calculateProgress}
+                statusTask={statusTask}
+                onUpdateSuccess={refreshTasks}
+              />
         )}
       </div>
     </div>

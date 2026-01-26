@@ -11,6 +11,7 @@ export const useProfileData = () => {
     departments: user.departments.data,
     careers: user.careers.data,
     tasks: user.tasks.data,
+    detailTask: user.detailTasks.data.task,
     typeTask: user.typeTask.data,
     personals: user.personals.data,
     typePersonal: user.typePersonal.data,

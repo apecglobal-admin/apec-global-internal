@@ -33,7 +33,6 @@ const RequestDetail = ({ request, onBack, onHonor }: { request: any; onBack: () 
     const [showHonorDialog, setShowHonorDialog] = useState(false);
     const [honorReason, setHonorReason] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    console.log(request);
     
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('vi-VN', {

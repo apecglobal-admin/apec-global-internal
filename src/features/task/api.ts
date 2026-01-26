@@ -321,7 +321,8 @@ export const updateProgressTask = createAsyncThunk(
                 status, 
                 prove, 
                 token,
-                date_end
+                date_end,
+                date_start
             }: any = payload;
             const response = await apiAxiosInstance.put("/tasks/progress/update",
                 {
@@ -330,7 +331,8 @@ export const updateProgressTask = createAsyncThunk(
                     task_id, 
                     status, 
                     prove, 
-                    date_end
+                    date_end,
+                    date_start
                 },
                 {
                   headers: {
