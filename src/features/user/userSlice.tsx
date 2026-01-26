@@ -37,6 +37,8 @@ interface UserState {
   positions: InitState<any[]>;
   careers: InitState<any[]>;
   tasks: InitState<any[]>;
+  detailTasks: InitState<any[]>;
+
   typeTask: InitState<any[]>;
   personals: InitState<any[]>;
   typePersonal: InitState<any[]>;
@@ -60,6 +62,7 @@ const initialState: UserState = {
   positions: { data: [], loading: false, error: null, status: null },
   careers: { data: [], loading: false, error: null, status: null },
   tasks: { data: [], loading: false, error: null, status: null },
+  detailTasks: { data: [], loading: false, error: null, status: null },
   typeTask: { data: [], loading: false, error: null, status: null },
   personals: { data: [], loading: false, error: null, status: null },
   typePersonal: { data: [], loading: false, error: null, status: null },
@@ -116,7 +119,7 @@ const userSlice = createSlice({
     createAsyncReducer(builder, listPositions, "positions");
     createAsyncReducer(builder, listDepartments, "departments");
     createAsyncReducer(builder, personCareer, "careers");
-    createAsyncReducer(builder, personTasks, "tasks");
+    createAsyncReducerDynamic(builder, personTasks);
     createAsyncReducer(builder, listTypeTask, "typeTask");
     createAsyncReducer(builder, personalRequest, "personals");
     createAsyncReducer(builder, listTypePersonal, "typePersonal");

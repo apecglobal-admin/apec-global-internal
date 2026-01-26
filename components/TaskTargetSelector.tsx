@@ -142,7 +142,7 @@ function TaskTargetSelector({
             }, 300);
             return () => clearTimeout(timer);
         }
-    }, [searchText, filterPosition, filterDepartment, currentTarget?.type, selectAllEmployees, onFilterChange]);
+    }, [searchText, filterPosition, filterDepartment, currentTarget?.type, selectAllEmployees]);
 
     useEffect(() => {
         if (

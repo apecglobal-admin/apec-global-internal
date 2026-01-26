@@ -70,6 +70,8 @@ interface PaginationData {
 function Cautions() {
   const dispatch = useDispatch();
   const { listCaution, listCautionKPI, caution } = useCautionData();
+  console.log(listCaution);
+  
   const { listEmployeeDepartment } = useProfileData();
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -106,6 +108,8 @@ function Cautions() {
       }
     }
   }, [listCaution]);
+
+  
 
   const loadCautions = async (page: number) => {
     setIsLoading(true);
@@ -216,6 +220,8 @@ function Cautions() {
     emp.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  
+
   const renderPaginationItems = () => {
     const items = [];
     const { totalPages } = pagination;
@@ -300,7 +306,7 @@ function Cautions() {
   return (
     <>
       <PersonalCautions />
-      {cautions.length !== 0 && (
+      {/* {cautions.length !== 0 && ( */}
         <div className="min-h-screen p-4 sm:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
@@ -563,7 +569,7 @@ function Cautions() {
             )}
           </div>
         </div>
-      )}
+      {/* )} */}
     </>
   );
 }

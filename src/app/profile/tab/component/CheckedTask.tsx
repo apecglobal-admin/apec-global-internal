@@ -393,7 +393,7 @@ function CheckedTask() {
     
     return (
         <>
-        {tasks.length !== 0 && (
+        {/* {tasks.length !== 0 && ( */}
             <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6">
                 <div className="max-w-7xl mx-auto">
                     {/* Header */}
@@ -686,7 +686,7 @@ function CheckedTask() {
                     </div>
                 )}
             </div>
-        )}
+        {/* )} */}
 
         {previewImage && (
             <div

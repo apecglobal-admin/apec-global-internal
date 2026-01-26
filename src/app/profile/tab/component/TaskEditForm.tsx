@@ -412,7 +412,7 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                 {/* Nhân viên thực hiện */}
                 {!hasCompletedEmployee && (
                     <div className="bg-slate-900/50 p-4 rounded-lg mb-6">
-                        <label className="text-sm font-semibold text-slate-400">Nhân viên thực hiện</label>
+                        <label className="text-sm font-semibold text-slate-400">Nhân viên thực hiện (chỉ thêm mới)</label>
                         <div className="relative mt-2">
                             <button
                                 type="button"
