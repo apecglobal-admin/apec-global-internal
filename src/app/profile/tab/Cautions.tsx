@@ -70,7 +70,6 @@ interface PaginationData {
 function Cautions() {
   const dispatch = useDispatch();
   const { listCaution, listCautionKPI, caution } = useCautionData();
-  console.log(listCaution);
   
   const { listEmployeeDepartment } = useProfileData();
 

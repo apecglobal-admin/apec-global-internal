@@ -93,7 +93,6 @@ function CheckedTask() {
 
     const loadTasks = async (page: number) => {
         setIsLoading(true);
-        console.log(page);
         
         try {
             const token = localStorage.getItem("userToken");
