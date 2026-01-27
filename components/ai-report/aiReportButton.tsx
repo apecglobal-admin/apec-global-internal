@@ -24,17 +24,15 @@ export default function AIReportButton({
     setTranscribedText,
     error,
     isSending,
-    isSpeaking,
+    handleFormat,
+    handleSave,
+    isFormatting,
+    reportResult,
+    setReportResult,
+    isSuccess,
     startRecording,
     stopRecording,
     resetSession,
-    handleFormat,
-    handleSave,
-    handleSpeak,
-    handleStopSpeak,
-    isFormatting,
-    reportResult,
-    isSuccess,
   } = useAIReport(onReportGenerated, onSuccess);
 
 
@@ -58,6 +56,7 @@ export default function AIReportButton({
         }}
         // Prevent default touch behaviors that might interfere with holding
         style={{ touchAction: "none" }}
+        title="Ấn và giữ để bắt đầu báo cáo"
       >
         <Mic
           className={cn("text-white w-6 h-6", isRecording && "animate-pulse")}
@@ -76,16 +75,14 @@ export default function AIReportButton({
         transcribedText={transcribedText}
         setTranscribedText={setTranscribedText}
         error={error}
-        isSpeaking={isSpeaking}
         isSending={isSending}
-        handleSpeak={handleSpeak}
         handleFormat={handleFormat}
         handleSave={handleSave}
         isRecording={isRecording}
         isProcessing={isProcessing}
-        handleStopSpeak={handleStopSpeak}
         isFormatting={isFormatting}
         reportResult={reportResult}
+        setReportResult={setReportResult}
         isSuccess={isSuccess}
       />
 
