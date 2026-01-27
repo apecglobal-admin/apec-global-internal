@@ -21,17 +21,19 @@ export const useAIReport = (
   const [isSending, setIsSending] = useState(false); // Used for saving
   const [isFormatting, setIsFormatting] = useState(false); // Used for formatting
   const [reportResult, setReportResult] = useState<AIReportResult | null>(null);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const userInfo = useSelector((state: any) => state.user.userInfo.data);
+  const departments = useSelector((state: any) => state.user.departments.data);
+  
   const userName = userInfo?.name || "Unknown User";
+  const userEmail = userInfo?.email || "";
+  const userDepartment = departments?.find((d: any) => d.id === userInfo?.department_id)?.name || "Unknown Department";
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const isHoldingRef = useRef(false);
   const startTimeRef = useRef<number>(0);
-  const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const startRecording = async (e: React.PointerEvent) => {
     e.preventDefault();
@@ -155,7 +157,7 @@ export const useAIReport = (
 
     setIsSending(true);
     try {
-      await saveReport(dataToSave, userName);
+      await saveReport(dataToSave, userName, userEmail, userDepartment);
       setIsSuccess(true);
       if (onSuccess) {
         onSuccess();
@@ -168,39 +170,13 @@ export const useAIReport = (
     }
   };
 
-  const handleSpeak = () => {
-    if (!transcribedText) return;
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(transcribedText);
-    utterance.lang = "vi";
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    speechRef.current = utterance;
-    setIsSpeaking(true);
-    window.speechSynthesis.speak(utterance);
-  };
-
-  const handleStopSpeak = () => {
-    window.speechSynthesis.cancel();
-    setIsSpeaking(false);
-  };
-
   const resetSession = () => {
-    handleStopSpeak();
     setTranscribedText("");
     setError(null);
     setReportResult(null);
     setIsSuccess(false);
     setShowModal(false);
   };
-
-  useEffect(() => {
-    return () => {
-      window.speechSynthesis.cancel();
-    };
-  }, []);
 
   return {
     isRecording,
@@ -210,14 +186,11 @@ export const useAIReport = (
     setTranscribedText,
     error,
     isSending,
-    isSpeaking,
     startRecording,
     stopRecording,
     resetSession,
     handleFormat,
     handleSave,
-    handleSpeak,
-    handleStopSpeak,
     isFormatting,
     reportResult,
     setReportResult,

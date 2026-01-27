@@ -6,14 +6,11 @@ import {
   X,
   Loader2,
   AlertCircle,
-  Volume2,
-  Square,
-  CheckCircle,
-  FileSpreadsheet,
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { AIReportStatus } from "./aiReportStatus";
 import { AIReportResult } from "@/src/hooks/aiReportHook";
+import { toast } from "react-toastify";
 
 
 interface AIReportModalProps {
@@ -22,16 +19,14 @@ interface AIReportModalProps {
   transcribedText: string;
   setTranscribedText: (text: string) => void;
   error: string | null;
-  isSpeaking: boolean;
   isSending: boolean;
-  handleSpeak: () => void;
   handleFormat: () => void;
   handleSave: (result?: AIReportResult) => void;
   isRecording: boolean;
   isProcessing: boolean;
-  handleStopSpeak: () => void;
   isFormatting: boolean;
   reportResult: AIReportResult | null;
+  setReportResult: (result: AIReportResult) => void;
   isSuccess?: boolean;
 }
 
@@ -42,36 +37,21 @@ export const AIReportModal = ({
   transcribedText,
   setTranscribedText,
   error,
-  isSpeaking,
   isSending,
-  handleSpeak,
   handleFormat,
   handleSave,
   isRecording,
   isProcessing,
-  handleStopSpeak,
   isFormatting,
   reportResult,
+  setReportResult,
   isSuccess = false,
 }: AIReportModalProps) => {
-  const [countdown, setCountdown] = useState(5);
-
   useEffect(() => {
-    let timer: NodeJS.Timeout;
     if (isSuccess) {
-      setCountdown(5);
-      timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            onClose();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      toast.success("Đã lưu báo cáo thành công!");
+      onClose();
     }
-    return () => clearInterval(timer);
   }, [isSuccess, onClose]);
 
   return (
@@ -92,7 +72,6 @@ export const AIReportModal = ({
           />
 
             <div className="relative w-full max-w-lg">
-              {!isSuccess && (
                 <motion.div
                   initial={{ y: 30, scale: 0.9 }}
                   animate={{ y: 0, scale: 1 }}
@@ -131,24 +110,8 @@ export const AIReportModal = ({
                           className="w-full bg-slate-800/50 text-slate-200 text-sm leading-relaxed p-3 rounded-lg border border-slate-700/50 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none resize-none min-h-[200px] theme-scrollbar"
                           placeholder="Nội dung sẽ xuất hiện ở đây..."
                         />
-                        <div className="mt-4 pt-3 border-t border-slate-700 flex justify-between items-center gap-2">
-                          {/* <button
-                            className={cn(
-                              "flex items-center gap-2 px-3 py-1.5 text-xs rounded-md transition-colors font-medium border cursor-pointer",
-                              isSpeaking
-                                ? "bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20"
-                                : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
-                            )}
-                            onClick={isSpeaking ? handleStopSpeak : handleSpeak}
-                            title={isSpeaking ? "Dừng đọc" : "Đọc lại"}
-                          >
-                            {isSpeaking ? (
-                              <Square size={14} className="fill-current" />
-                            ) : (
-                              <Volume2 size={14} />
-                            )}
-                            {isSpeaking ? "Dừng" : "Nghe lại"}
-                          </button> */}
+                        <div className="mt-4 pt-3 border-t border-slate-700 flex justify-end items-center gap-2">
+
 
                           <button
                             className={cn(
@@ -178,25 +141,47 @@ export const AIReportModal = ({
                         <label className="text-xs font-semibold text-slate-400">
                           Phân loại
                         </label>
-                        <div className="w-full bg-slate-800/50 text-slate-200 text-sm p-3 rounded-lg border border-slate-700/50">
-                          {reportResult.category}
-                        </div>
+                        <input
+                          type="text"
+                          value={reportResult.category}
+                          onChange={(e) =>
+                            setReportResult({
+                              ...reportResult,
+                              category: e.target.value,
+                            })
+                          }
+                          className="w-full bg-slate-800/50 text-slate-200 text-sm p-3 rounded-lg border border-slate-700/50 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none"
+                        />
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-semibold text-slate-400">
                           Tóm tắt
                         </label>
-                        <div className="w-full bg-slate-800/50 text-slate-200 text-sm leading-relaxed p-3 rounded-lg border border-slate-700/50 whitespace-pre-wrap">
-                          {reportResult.summary}
-                        </div>
+                        <textarea
+                          value={reportResult.summary}
+                          onChange={(e) =>
+                            setReportResult({
+                              ...reportResult,
+                              summary: e.target.value,
+                            })
+                          }
+                          className="w-full bg-slate-800/50 text-slate-200 text-sm leading-relaxed p-3 rounded-lg border border-slate-700/50 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none resize-none theme-scrollbar min-h-[80px]"
+                        />
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-semibold text-slate-400">
                           Chi tiết
                         </label>
-                        <div className="w-full bg-slate-800/50 text-slate-200 text-sm leading-relaxed p-3 rounded-lg border border-slate-700/50 whitespace-pre-wrap min-h-[100px]">
-                          {reportResult.details}
-                        </div>
+                        <textarea
+                          value={reportResult.details}
+                          onChange={(e) =>
+                            setReportResult({
+                              ...reportResult,
+                              details: e.target.value,
+                            })
+                          }
+                          className="w-full bg-slate-800/50 text-slate-200 text-sm leading-relaxed p-3 rounded-lg border border-slate-700/50 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none resize-none min-h-[150px] theme-scrollbar"
+                        />
                       </div>
 
                       <div className="mt-4 pt-3 border-t border-slate-700 flex justify-end items-center gap-2">
@@ -205,7 +190,7 @@ export const AIReportModal = ({
                             "px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-md transition-colors font-medium cursor-pointer",
                             isSending && "opacity-70 cursor-not-allowed"
                           )}
-                          onClick={() => handleSave()}
+                          onClick={() => handleSave(reportResult)}
                           disabled={isSending}
                         >
                           {isSending ? (
@@ -231,43 +216,6 @@ export const AIReportModal = ({
                     )}
                 </div>
               </motion.div>
-            )}
-
-            {/* Success State */}
-            {isSuccess && (
-               <motion.div
-                initial={{ y: 30, scale: 0.9 }}
-                animate={{ y: 0, scale: 1 }}
-                exit={{ y: 30, scale: 0.9 }}
-                className="relative z-50 bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-2xl shadow-2xl p-6 w-full pointer-events-auto overflow-hidden"
-              >
-                <div className="flex flex-col items-center justify-center text-center py-6 space-y-4">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                  >
-                    <CheckCircle className="w-16 h-16 text-green-500" />
-                  </motion.div>
-                  
-                  <h3 className="text-xl font-bold text-white">Đã lưu thành công!</h3>
-
-                  <a 
-                    href="https://docs.google.com/spreadsheets/d/18oUTgeRvBRpofnoY-73j5lEv3PEUXGMdX81kotSxwy4/edit?usp=sharing"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600/20 text-green-400 border border-green-600/30 rounded-lg hover:bg-green-600/30 transition-colors text-sm font-medium"
-                  >
-                    <FileSpreadsheet size={16} />
-                    Xem trên Google Sheets
-                  </a>
-
-                  <p className="text-slate-500 text-xs mt-4">
-                    Tự động đóng sau <span className="font-mono text-slate-300">{countdown}s</span>
-                  </p>
-                </div>
-              </motion.div>
-            )}
 
               {/* Status Indicator */}
               <AIReportStatus

@@ -23,10 +23,17 @@ export const formatReport = async (text: string, userName: string) => {
 };
 
 // Step 2: Save Report (Send confirmed data to n8n to save to Sheet)
-export const saveReport = async (data: any, userName: string) => {
+export const saveReport = async (
+  data: any,
+  userName: string,
+  email: string,
+  department: string
+) => {
   return await axios.post("/api/webhook/save", {
     ...data,
-    userName: userName,
+    userName,
+    email,
+    department,
     timestamp: new Date().toISOString(),
   });
 };
