@@ -24,7 +24,11 @@ export const useAIReport = (
   const [isSuccess, setIsSuccess] = useState(false);
 
   const userInfo = useSelector((state: any) => state.user.userInfo.data);
+  const departments = useSelector((state: any) => state.user.departments.data);
+  
   const userName = userInfo?.name || "Unknown User";
+  const userEmail = userInfo?.email || "";
+  const userDepartment = departments?.find((d: any) => d.id === userInfo?.department_id)?.name || "Unknown Department";
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -153,7 +157,7 @@ export const useAIReport = (
 
     setIsSending(true);
     try {
-      await saveReport(dataToSave, userName);
+      await saveReport(dataToSave, userName, userEmail, userDepartment);
       setIsSuccess(true);
       if (onSuccess) {
         onSuccess();

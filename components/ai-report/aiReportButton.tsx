@@ -56,6 +56,7 @@ export default function AIReportButton({
         }}
         // Prevent default touch behaviors that might interfere with holding
         style={{ touchAction: "none" }}
+        title="Ấn và giữ để bắt đầu báo cáo"
       >
         <Mic
           className={cn("text-white w-6 h-6", isRecording && "animate-pulse")}

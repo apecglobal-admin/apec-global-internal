@@ -6,12 +6,11 @@ import {
   X,
   Loader2,
   AlertCircle,
-  CheckCircle,
-  FileSpreadsheet,
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { AIReportStatus } from "./aiReportStatus";
 import { AIReportResult } from "@/src/hooks/aiReportHook";
+import { toast } from "react-toastify";
 
 
 interface AIReportModalProps {
@@ -48,24 +47,11 @@ export const AIReportModal = ({
   setReportResult,
   isSuccess = false,
 }: AIReportModalProps) => {
-  const [countdown, setCountdown] = useState(5);
-
   useEffect(() => {
-    let timer: NodeJS.Timeout;
     if (isSuccess) {
-      setCountdown(5);
-      timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            onClose();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      toast.success("Đã lưu báo cáo thành công!");
+      onClose();
     }
-    return () => clearInterval(timer);
   }, [isSuccess, onClose]);
 
   return (
@@ -86,7 +72,6 @@ export const AIReportModal = ({
           />
 
             <div className="relative w-full max-w-lg">
-              {!isSuccess && (
                 <motion.div
                   initial={{ y: 30, scale: 0.9 }}
                   animate={{ y: 0, scale: 1 }}
@@ -231,43 +216,6 @@ export const AIReportModal = ({
                     )}
                 </div>
               </motion.div>
-            )}
-
-            {/* Success State */}
-            {isSuccess && (
-               <motion.div
-                initial={{ y: 30, scale: 0.9 }}
-                animate={{ y: 0, scale: 1 }}
-                exit={{ y: 30, scale: 0.9 }}
-                className="relative z-50 bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-2xl shadow-2xl p-6 w-full pointer-events-auto overflow-hidden"
-              >
-                <div className="flex flex-col items-center justify-center text-center py-6 space-y-4">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                  >
-                    <CheckCircle className="w-16 h-16 text-green-500" />
-                  </motion.div>
-                  
-                  <h3 className="text-xl font-bold text-white">Đã lưu thành công!</h3>
-
-                  <a 
-                    href="https://docs.google.com/spreadsheets/d/18oUTgeRvBRpofnoY-73j5lEv3PEUXGMdX81kotSxwy4/edit?usp=sharing"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600/20 text-green-400 border border-green-600/30 rounded-lg hover:bg-green-600/30 transition-colors text-sm font-medium"
-                  >
-                    <FileSpreadsheet size={16} />
-                    Xem trên Google Sheets
-                  </a>
-
-                  <p className="text-slate-500 text-xs mt-4">
-                    Tự động đóng sau <span className="font-mono text-slate-300">{countdown}s</span>
-                  </p>
-                </div>
-              </motion.div>
-            )}
 
               {/* Status Indicator */}
               <AIReportStatus
