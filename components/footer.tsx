@@ -4,6 +4,7 @@ import { getContact } from "@/src/features/contact/api/api";
 import { useContactData } from "@/src/hooks/contacthook";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
+import { MessageSquareWarning } from "lucide-react";
 
 export default function Footer() {
     const dispatch = useDispatch();
@@ -29,9 +30,6 @@ export default function Footer() {
         if (!time) return "";
         return time.substring(0, 5); // Lấy HH:MM từ HH:MM:SS
     };
-    
-
-
 
     return (
         <footer className="border-t border-slate-800 bg-white">
@@ -87,6 +85,16 @@ export default function Footer() {
                         >
                             Trung tâm hỗ trợ
                         </a>
+                        <div className="relative inline-flex group">
+                            <span className="absolute inline-flex h-full w-full animate-ping-small rounded-full bg-red-500 opacity-75"></span>
+                            <a
+                                href="/feedback"
+                                className="relative z-10 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-red-600 to-rose-600 px-6 py-2.5 pl-5 font-bold text-white shadow-xl shadow-red-500/30 ring-2 ring-red-500/50 transition-all duration-300 hover:scale-105 hover:shadow-red-500/50 hover:ring-red-400"
+                            >
+                                <MessageSquareWarning className="w-5 h-5 transition-transform group-hover:rotate-12" />
+                                <span>Phản ảnh</span>
+                            </a>
+                        </div>
 
                     </div>
                 </div>
