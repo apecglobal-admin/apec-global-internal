@@ -55,6 +55,11 @@ interface TargetType {
     name: string;
 }
 
+interface Unit{
+    id: number;
+    name: string;
+}
+
 export interface Task {
     id: string;
     employee_id: string;
@@ -63,6 +68,8 @@ export interface Task {
     checked: boolean;
 
     process: number;
+    target_value: string;
+    value: string;
 
     reject_status: boolean;
     last_reject_date: any;
@@ -84,5 +91,6 @@ export interface Task {
     type: Type;
 
     target_type: TargetType;
+    units: Unit
 }
 

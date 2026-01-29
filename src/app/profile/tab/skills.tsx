@@ -61,6 +61,9 @@ function SkillsTab({ userInfo }: any) {
         fullMark: 100,
     }));
 
+    console.log(skillsData);
+    
+
     const toggleSkill = (index: number) => {
         const newExpanded = new Set(expandedSkills);
         if (newExpanded.has(index)) {
@@ -87,92 +90,15 @@ function SkillsTab({ userInfo }: any) {
             {/* Radar Chart với Đánh giá */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
                 {/* Radar Chart */}
-                <div className="lg:col-span-2 w-full">
-                    <ResponsiveContainer
-                        width="100%"
-                        height={250}
-                        className="sm:hidden"
-                    >
+                <div className="lg:col-span-2 w-full h-[250px] sm:h-[400px]">
+                    <ResponsiveContainer width="100%" height="100%">
                         <RadarChart data={skillsData}>
-                            <PolarGrid stroke="#475569" strokeWidth={1} />
+                            <PolarGrid stroke="#475569" strokeWidth={1} className="sm:stroke-[1.5]" />
                             <PolarAngleAxis
                                 dataKey="skill"
                                 tick={{
                                     fill: "#cbd5e1",
-                                    fontSize: 9,
-                                    fontWeight: 500,
-                                }}
-                                tickSize={20}
-                            />
-                            <PolarRadiusAxis
-                                angle={90}
-                                domain={[0, 100]}
-                                tick={{ fill: "#94a3b8", fontSize: 9 }}
-                                tickCount={6}
-                            />
-                            <Radar
-                                name="Kỹ năng"
-                                dataKey="value"
-                                stroke="#abf0f3"
-                                fill="url(#colorGradient)"
-                                fillOpacity={0.8}
-                                strokeWidth={2.5}
-                            />
-                            <defs>
-                                <radialGradient id="colorGradient">
-                                    <stop
-                                        offset="0%"
-                                        stopColor="#abf0f3"
-                                        stopOpacity={0.5}
-                                    />
-                                    <stop
-                                        offset="25%"
-                                        stopColor="#abf0f3"
-                                        stopOpacity={0.45}
-                                    />
-                                    <stop
-                                        offset="60%"
-                                        stopColor="#abf0f3"
-                                        stopOpacity={0.85}
-                                    />
-                                    <stop
-                                        offset="100%"
-                                        stopColor="#abf0f3"
-                                        stopOpacity={1}
-                                    />
-                                </radialGradient>
-                            </defs>
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: "#1e293b",
-                                    border: "1px solid #334155",
-                                    borderRadius: "8px",
-                                    padding: "6px 8px",
-                                }}
-                                labelStyle={{
-                                    color: "#e2e8f0",
-                                    fontWeight: "bold",
-                                    fontSize: "11px",
-                                }}
-                                itemStyle={{
-                                    color: "#60a5fa",
-                                    fontSize: "11px",
-                                }}
-                            />
-                        </RadarChart>
-                    </ResponsiveContainer>
-                    <ResponsiveContainer
-                        width="100%"
-                        height={400}
-                        className="hidden sm:block"
-                    >
-                        <RadarChart data={skillsData}>
-                            <PolarGrid stroke="#475569" strokeWidth={1.5} />
-                            <PolarAngleAxis
-                                dataKey="skill"
-                                tick={{
-                                    fill: "#cbd5e1",
-                                    fontSize: 14,
+                                    fontSize: window.innerWidth >= 640 ? 14 : 9,
                                     fontWeight: 500,
                                 }}
                                 tickSize={20}
@@ -188,25 +114,25 @@ function SkillsTab({ userInfo }: any) {
                                 dataKey="value"
                                 stroke="#abf0f3"
                                 fill="url(#colorGradient)"
-                                fillOpacity={0.9}
-                                strokeWidth={2.0}
+                                fillOpacity={window.innerWidth >= 640 ? 0.9 : 0.8}
+                                strokeWidth={window.innerWidth >= 640 ? 2.0 : 2.5}
                             />
                             <defs>
                                 <radialGradient id="colorGradient">
                                     <stop
                                         offset="0%"
                                         stopColor="#abf0f3"
-                                        stopOpacity={0.4}
+                                        stopOpacity={window.innerWidth >= 640 ? 0.4 : 0.5}
                                     />
                                     <stop
                                         offset="25%"
                                         stopColor="#abf0f3"
-                                        stopOpacity={0.6}
+                                        stopOpacity={window.innerWidth >= 640 ? 0.6 : 0.45}
                                     />
                                     <stop
                                         offset="60%"
                                         stopColor="#abf0f3"
-                                        stopOpacity={0.75}
+                                        stopOpacity={window.innerWidth >= 640 ? 0.75 : 0.85}
                                     />
                                     <stop
                                         offset="100%"
@@ -312,7 +238,7 @@ function SkillsTab({ userInfo }: any) {
                                                 onClick={(e) => toggleDescription(index, e)}
                                                 className="text-slate-400 hover:text-blue-400 transition-colors"
                                             >
-                                                <HelpCircle className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+                                                <HelpCircle className="w-4 h-4 lg:w-4.5 lg:h-4.5" color="yellow"/>
                                             </button>
                                             {/* Description Tooltip */}
                                             {showDescription && (

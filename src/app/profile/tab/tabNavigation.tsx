@@ -16,13 +16,13 @@ function TabNavigation({ activeTab, setActiveTab }: any) {
   const [isOpen, setIsOpen] = useState(false);
 
   const tabs = [
-    { id: "skills", label: "Kỹ năng", icon: <Rocket size={18} /> },
+    { id: "skills", label: "Tổng quát", icon: <Rocket size={18} /> },
     { id: "projects", label: "Dự án", icon: <Briefcase size={18} /> },
     { id: "career", label: "Lộ trình", icon: <Layers size={18} /> },
     { id: "tasks", label: "Nhiệm vụ", icon: <ListTodo size={18} /> },
     { id: "tasksManager", label: "Quản lý", icon: <ListTodo size={18} /> },
     { id: "caution", label: "Vi phạm", icon: <ListTodo size={18} /> },
-    { id: "personal", label: "Cá nhân", icon: <User size={18} /> },
+    { id: "personal", label: "Yêu cầu", icon: <User size={18} /> },
     { id: "event", label: "Sự kiện", icon: <User size={18} /> },
 
     { id: "achievements", label: "Thành tích", icon: <Award size={18} /> },
@@ -65,7 +65,7 @@ function TabNavigation({ activeTab, setActiveTab }: any) {
           {/* Bên trái: 2 tab đầu */}
           <div className="flex gap-4">
             {tabs
-              .filter((t) => ["tasks", "projects"].includes(t.id))
+              .filter((t) => ["skills", "tasks"].includes(t.id))
               .map((tab) => (
                 <button
                   key={tab.id}
@@ -73,7 +73,7 @@ function TabNavigation({ activeTab, setActiveTab }: any) {
                   className={`flex flex-col items-center justify-center p-2 rounded-xl text-[11px] font-medium transition ${
                     activeTab === tab.id
                       ? "text-white"
-                      : "text-slate-300 hover:text-black/30"
+                      : "text-slate-300 hover:text-white/30"
                   }`}
                 >
                   <div className="mb-1">{tab.icon}</div>
@@ -93,7 +93,7 @@ function TabNavigation({ activeTab, setActiveTab }: any) {
                   className={`flex flex-col items-center justify-center p-2 rounded-xl text-[11px] font-medium transition ${
                     activeTab === tab.id
                       ? "text-white"
-                      : "text-slate-300 hover:text-black/30"
+                      : "text-slate-300 hover:text-white/30"
                   }`}
                 >
                   <div className="mb-1">{tab.icon}</div>

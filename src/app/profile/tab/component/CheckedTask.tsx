@@ -392,304 +392,312 @@ function CheckedTask() {
     
     return (
         <>
-        {/* {tasks.length !== 0 && ( */}
-            <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6">
-                <div className="max-w-7xl mx-auto">
-                    {/* Header */}
-                    <div className="mb-6">
-                        <div className="flex items-center gap-3 mb-2">
-                            <FileCheck className="text-blue-400" size={32} />
-                            <h1 className="text-2xl sm:text-3xl font-bold text-white">
-                                Duyệt nhiệm vụ
-                            </h1>
-                        </div>
-                        <p className="text-slate-400 text-sm sm:text-base">
-                            Danh sách nhiệm vụ đã giao cho nhân viên - Tổng: {pagination.total} nhiệm vụ
-                        </p>
+        <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6">
+            <div className="max-w-7xl mx-auto">
+                {/* Header */}
+                <div className="mb-4 sm:mb-6">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                        <FileCheck className="text-blue-400 flex-shrink-0" size={24} />
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">
+                            Duyệt nhiệm vụ
+                        </h1>
                     </div>
-
-                    {/* Loading State */}
-                    {isLoading && tasks.length === 0 ? (
-                        <div className="flex items-center justify-center py-20">
-                            <div className="flex flex-col items-center gap-3">
-                                <div className="w-12 h-12 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div>
-                                <p className="text-slate-400">Đang tải dữ liệu...</p>
-                            </div>
-                        </div>
-                    ) : tasks.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 bg-slate-800/50 rounded-lg border border-slate-700">
-                            <AlertCircle className="text-slate-500 mb-4" size={64} />
-                            <p className="text-slate-400 text-lg">Không có nhiệm vụ nào</p>
-                        </div>
-                    ) : (
-                        <>
-                            {/* Tasks Grid */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-                                {tasks.map((task) => (
-                                    <div
-                                        key={task.id}
-                                        className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 hover:border-slate-600 transition-all"
-                                    >
-                                        {/* Task Header */}
-                                        <div className="flex items-start justify-between gap-3 mb-3">
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="text-white font-semibold text-base sm:text-lg mb-2 line-clamp-2">
-                                                    {task.task.name}
-                                                </h3>
-                                                <div className="flex items-center gap-2 text-sm text-slate-300">
-                                                    <User size={16} className="text-slate-500 flex-shrink-0" />
-                                                    <span className="truncate">{task.employee.name}</span>
-                                                </div>
-                                            </div>
-                                            
-                                            <div className="flex gap-2 flex-shrink-0">
-                                                
-                                                <button
-                                                    onClick={() => handleCheckTask(task)}
-                                                    disabled={task.checked || checkingTaskId === task.id}
-                                                    className={`p-2 rounded-lg transition-all ${
-                                                        task.checked
-                                                            ? "bg-green-500/20 text-green-400 cursor-not-allowed"
-                                                            : "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-                                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
-                                                    title={task.checked ? "Đã duyệt" : "Duyệt nhiệm vụ"}
-                                                >
-                                                    {checkingTaskId === task.id ? (
-                                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                    ) : task.checked ? (
-                                                        <CheckCheck size={20} />
-                                                    ) : (
-                                                        <CheckCircle2 size={20} />
-                                                    )}
-                                                </button>
-
-                                                
-                                                <button
-                                                    onClick={() => handleOpenRejectModal(task)}
-                                                    disabled={task.checked}
-                                                    className={`p-2 rounded-lg transition-all ${
-                                                        task.checked
-                                                            ? "bg-gray-500/20 text-gray-500 cursor-not-allowed"
-                                                            : "bg-red-600 hover:bg-red-700 text-white cursor-pointer"
-                                                    } disabled:opacity-50`}
-                                                    title={task.checked ? "Không thể từ chối" : "Từ chối nhiệm vụ"}
-                                                >
-                                                    <XCircle size={20} />
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Task Info */}
-                                        <div className="space-y-2 mb-3">
-                                            <div className="flex items-center gap-2 text-xs sm:text-sm">
-                                                <Calendar size={16} className="text-slate-500 flex-shrink-0" />
-                                                <span className="text-slate-400">Ngày làm:</span>
-                                                <span className="text-white font-medium">
-                                                    {formatDate(task.task.date_start)} - 
-                                                </span>
-                                                <span className="text-white font-medium">
-                                                    {formatDate(task.task.date_end)}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-xs sm:text-sm">
-                                                <Calendar size={16} className="text-slate-500 flex-shrink-0" />
-                                                <span className="text-slate-400">Hoàn thành:</span>
-                                                <span className="text-white font-medium">
-                                                    {formatDate(task.completed_date)}
-                                                </span>
-                                            </div>
-                                            
-                                            <div className="flex items-center gap-2">
-                                                <Clock size={16} className="text-slate-500 flex-shrink-0" />
-                                                {getDeadlineBadge(task.deadline)}
-                                            </div>
-                                        </div>
-
-                                        {/* Status and Progress */}
-                                        <div className="flex items-center justify-between pt-3 border-t border-slate-700">
-                                            <div className="flex items-center gap-2">
-                                                {getStatusBadge(task.status)}
-                                                {task.checked && (
-                                                    <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-md text-xs font-semibold border border-green-500/30 flex items-center gap-1">
-                                                        <CheckCheck size={14} />
-                                                        Đã duyệt
-                                                    </span>
-                                                )}
-                                            </div>
-                                            
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-24 h-2 bg-slate-700 rounded-full overflow-hidden">
-                                                    <div
-                                                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all"
-                                                        style={{ width: `${task.process}%` }}
-                                                    ></div>
-                                                </div>
-                                                <span className="text-xs font-semibold text-blue-400 min-w-[3rem]">
-                                                    {task.process}%
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Proof Image */}
-                                        {task.prove && (
-                                            <div className="mt-3 pt-3 border-t border-slate-700">
-                                                <p className="text-xs text-slate-500 mb-2">Minh chứng:</p>
-                                                {renderFilePreview(task.prove)}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Pagination */}
-                            {pagination.totalPages > 1 && (
-                                <Pagination className="mt-8">
-                                    <PaginationContent>
-                                        <PaginationItem>
-                                            <PaginationPrevious
-                                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                                className={`cursor-pointer ${
-                                                    currentPage === 1 ? "pointer-events-none opacity-50" : ""
-                                                }`}
-                                            />
-                                        </PaginationItem>
-
-                                        {renderPaginationItems()}
-
-                                        <PaginationItem>
-                                            <PaginationNext
-                                                onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
-                                                className={`cursor-pointer ${
-                                                    currentPage === pagination.totalPages ? "pointer-events-none opacity-50" : ""
-                                                }`}
-                                            />
-                                        </PaginationItem>
-                                    </PaginationContent>
-                                </Pagination>
-                            )}
-                        </>
-                    )}
+                    <p className="text-slate-400 text-xs sm:text-sm lg:text-base">
+                        Danh sách nhiệm vụ đã giao - Tổng: {pagination.total} nhiệm vụ
+                    </p>
                 </div>
 
-                {/* Reject Modal */}
-                {showRejectModal && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                        <div className="bg-slate-800 rounded-xl shadow-2xl max-w-md w-full border border-slate-700">
-                            {/* Modal Header */}
-                            <div className="flex items-center justify-between p-5 border-b border-slate-700">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-red-500/20 rounded-lg">
-                                        <XCircle className="text-red-400" size={24} />
-                                    </div>
-                                    <h3 className="text-xl font-bold text-white">
-                                        Từ chối nhiệm vụ
-                                    </h3>
-                                </div>
-                                <button
-                                    onClick={handleCloseRejectModal}
-                                    className="p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
-                                    disabled={rejectingTaskId !== null}
-                                >
-                                    <X className="text-slate-400" size={20} />
-                                </button>
-                            </div>
-
-                            {/* Modal Body */}
-                            <div className="p-5 space-y-4">
-                                <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
-                                    <div className="space-y-2">
-                                        <div>
-                                            <p className="text-xs text-slate-500 mb-1">Nhiệm vụ</p>
-                                            <p className="text-sm font-semibold text-white">
-                                                {selectedTask?.task.name}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-slate-500 mb-1">Nhân viên</p>
-                                            <p className="text-sm text-slate-300">
-                                                {selectedTask?.employee.name}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-slate-500 mb-1">Thời gian kết thúc hiện tại</p>
-                                            <p className="text-sm text-slate-300 font-medium">
-                                                {selectedTask && formatDate(selectedTask.task.date_end)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                                        Thời gian kết thúc mới <span className="text-red-400">*</span>
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={newDateEnd}
-                                        onChange={(e) => setNewDateEnd(e.target.value)}
-                                        min={selectedTask ? new Date(new Date(selectedTask.task.date_end).getTime() + 86400000).toISOString().split('T')[0] : ''}
-                                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                                        disabled={rejectingTaskId !== null}
-                                    />
-                                    <p className="text-xs text-slate-500 mt-1">
-                                        Thời gian mới phải lớn hơn {selectedTask && formatDate(selectedTask.task.date_end)}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                                        Lý do từ chối <span className="text-red-400">*</span>
-                                    </label>
-                                    <textarea
-                                        value={rejectReason}
-                                        onChange={(e) => setRejectReason(e.target.value)}
-                                        placeholder="Nhập lý do từ chối nhiệm vụ..."
-                                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
-                                        rows={4}
-                                        disabled={rejectingTaskId !== null}
-                                    />
-                                    <p className="text-xs text-slate-500 mt-1">
-                                        Vui lòng cung cấp lý do cụ thể để nhân viên có thể hiểu và cải thiện
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Modal Footer */}
-                            <div className="flex gap-3 p-5 border-t border-slate-700">
-                                <button
-                                    onClick={handleCloseRejectModal}
-                                    className="flex-1 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors"
-                                    disabled={rejectingTaskId !== null}
-                                >
-                                    Hủy
-                                </button>
-                                <button
-                                    onClick={handleRejectTask}
-                                    disabled={rejectingTaskId !== null || !rejectReason.trim() || !newDateEnd}
-                                    className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                >
-                                    {rejectingTaskId ? (
-                                        <>
-                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                            Đang xử lý...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <XCircle size={18} />
-                                            Xác nhận từ chối
-                                        </>
-                                    )}
-                                </button>
-                            </div>
+                {/* Loading State */}
+                {isLoading && tasks.length === 0 ? (
+                    <div className="flex items-center justify-center py-16 sm:py-20">
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div>
+                            <p className="text-slate-400 text-sm sm:text-base">Đang tải dữ liệu...</p>
                         </div>
                     </div>
+                ) : tasks.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 sm:py-20 bg-slate-800/50 rounded-lg border border-slate-700">
+                        <AlertCircle className="text-slate-500 mb-3 sm:mb-4" size={48} />
+                        <p className="text-slate-400 text-base sm:text-lg">Không có nhiệm vụ nào</p>
+                    </div>
+                ) : (
+                    <>
+                        {/* Tasks Grid */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                            {tasks.map((task) => (
+                                <div
+                                    key={task.id}
+                                    className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4 hover:border-slate-600 transition-all"
+                                >
+                                    {/* Task Header */}
+                                    <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-white font-semibold text-sm sm:text-base lg:text-lg mb-1.5 sm:mb-2 line-clamp-2">
+                                                {task.task.name}
+                                            </h3>
+                                            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-slate-300">
+                                                <User size={14} className="text-slate-500 flex-shrink-0 sm:hidden" />
+                                                <User size={16} className="text-slate-500 flex-shrink-0 hidden sm:block" />
+                                                <span className="truncate">{task.employee.name}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
+                                            <button
+                                                onClick={() => handleCheckTask(task)}
+                                                disabled={task.checked || checkingTaskId === task.id}
+                                                className={`p-1.5 sm:p-2 rounded-lg transition-all ${
+                                                    task.checked
+                                                        ? "bg-green-500/20 text-green-400 cursor-not-allowed"
+                                                        : "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                                                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                                title={task.checked ? "Đã duyệt" : "Duyệt nhiệm vụ"}
+                                            >
+                                                {checkingTaskId === task.id ? (
+                                                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                ) : task.checked ? (
+                                                    <>
+                                                        <CheckCheck size={16} className="sm:hidden" />
+                                                        <CheckCheck size={20} className="hidden sm:block" />
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <CheckCircle2 size={16} className="sm:hidden" />
+                                                        <CheckCircle2 size={20} className="hidden sm:block" />
+                                                    </>
+                                                )}
+                                            </button>
+
+                                            <button
+                                                onClick={() => handleOpenRejectModal(task)}
+                                                disabled={task.checked}
+                                                className={`p-1.5 sm:p-2 rounded-lg transition-all ${
+                                                    task.checked
+                                                        ? "bg-gray-500/20 text-gray-500 cursor-not-allowed"
+                                                        : "bg-red-600 hover:bg-red-700 text-white cursor-pointer"
+                                                } disabled:opacity-50`}
+                                                title={task.checked ? "Không thể từ chối" : "Từ chối nhiệm vụ"}
+                                            >
+                                                <XCircle size={16} className="sm:hidden" />
+                                                <XCircle size={20} className="hidden sm:block" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Task Info */}
+                                    <div className="space-y-1.5 sm:space-y-2 mb-2 sm:mb-3">
+                                        <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm flex-wrap">
+                                            <Calendar size={14} className="text-slate-500 flex-shrink-0 sm:hidden" />
+                                            <Calendar size={16} className="text-slate-500 flex-shrink-0 hidden sm:block" />
+                                            <span className="text-slate-400">Ngày làm:</span>
+                                            <span className="text-white font-medium">
+                                                {formatDate(task.task.date_start)} - {formatDate(task.task.date_end)}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
+                                            <Calendar size={14} className="text-slate-500 flex-shrink-0 sm:hidden" />
+                                            <Calendar size={16} className="text-slate-500 flex-shrink-0 hidden sm:block" />
+                                            <span className="text-slate-400">Hoàn thành:</span>
+                                            <span className="text-white font-medium">
+                                                {formatDate(task.completed_date)}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="flex items-center gap-1.5 sm:gap-2">
+                                            <Clock size={14} className="text-slate-500 flex-shrink-0 sm:hidden" />
+                                            <Clock size={16} className="text-slate-500 flex-shrink-0 hidden sm:block" />
+                                            {getDeadlineBadge(task.deadline)}
+                                        </div>
+                                    </div>
+
+                                    {/* Status and Progress */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 pt-2 sm:pt-3 border-t border-slate-700">
+                                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                                            {getStatusBadge(task.status)}
+                                            {task.checked && (
+                                                <span className="px-2 py-0.5 sm:py-1 bg-green-500/20 text-green-400 rounded-md text-xs font-semibold border border-green-500/30 flex items-center gap-1">
+                                                    <CheckCheck size={12} className="sm:hidden" />
+                                                    <CheckCheck size={14} className="hidden sm:block" />
+                                                    Đã duyệt
+                                                </span>
+                                            )}
+                                        </div>
+                                        
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-20 sm:w-24 h-1.5 sm:h-2 bg-slate-700 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all"
+                                                    style={{ width: `${task.process}%` }}
+                                                ></div>
+                                            </div>
+                                            <span className="text-xs font-semibold text-blue-400 min-w-[2.5rem] sm:min-w-[3rem]">
+                                                {task.process}%
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Proof Image */}
+                                    {task.prove && (
+                                        <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-slate-700">
+                                            <p className="text-xs text-slate-500 mb-1.5 sm:mb-2">Minh chứng:</p>
+                                            {renderFilePreview(task.prove)}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Pagination */}
+                        {pagination.totalPages > 1 && (
+                            <Pagination className="mt-6 sm:mt-8">
+                                <PaginationContent>
+                                    <PaginationItem>
+                                        <PaginationPrevious
+                                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                            className={`cursor-pointer ${
+                                                currentPage === 1 ? "pointer-events-none opacity-50" : ""
+                                            }`}
+                                        />
+                                    </PaginationItem>
+
+                                    {renderPaginationItems()}
+
+                                    <PaginationItem>
+                                        <PaginationNext
+                                            onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                                            className={`cursor-pointer ${
+                                                currentPage === pagination.totalPages ? "pointer-events-none opacity-50" : ""
+                                            }`}
+                                        />
+                                    </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
+                        )}
+                    </>
                 )}
             </div>
-        {/* )} */}
+
+            {/* Reject Modal */}
+            {showRejectModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 z-50">
+                    <div className="bg-slate-800 rounded-xl shadow-2xl max-w-md w-full border border-slate-700 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-700 sticky top-0 bg-slate-800 z-10">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="p-1.5 sm:p-2 bg-red-500/20 rounded-lg">
+                                    <XCircle className="text-red-400" size={20} />
+                                </div>
+                                <h3 className="text-lg sm:text-xl font-bold text-white">
+                                    Từ chối nhiệm vụ
+                                </h3>
+                            </div>
+                            <button
+                                onClick={handleCloseRejectModal}
+                                className="p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
+                                disabled={rejectingTaskId !== null}
+                            >
+                                <X className="text-slate-400" size={18} />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-4 sm:p-5 space-y-3 sm:space-y-4">
+                            <div className="bg-slate-900/50 rounded-lg p-3 sm:p-4 border border-slate-700">
+                                <div className="space-y-2">
+                                    <div>
+                                        <p className="text-xs text-slate-500 mb-1">Nhiệm vụ</p>
+                                        <p className="text-sm font-semibold text-white line-clamp-2">
+                                            {selectedTask?.task.name}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-slate-500 mb-1">Nhân viên</p>
+                                        <p className="text-sm text-slate-300">
+                                            {selectedTask?.employee.name}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-slate-500 mb-1">Thời gian kết thúc hiện tại</p>
+                                        <p className="text-sm text-slate-300 font-medium">
+                                            {selectedTask && formatDate(selectedTask.task.date_end)}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2">
+                                    Thời gian kết thúc mới <span className="text-red-400">*</span>
+                                </label>
+                                <input
+                                    type="date"
+                                    value={newDateEnd}
+                                    onChange={(e) => setNewDateEnd(e.target.value)}
+                                    min={selectedTask ? new Date(new Date(selectedTask.task.date_end).getTime() + 86400000).toISOString().split('T')[0] : ''}
+                                    className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                    disabled={rejectingTaskId !== null}
+                                />
+                                <p className="text-xs text-slate-500 mt-1">
+                                    Thời gian mới phải lớn hơn {selectedTask && formatDate(selectedTask.task.date_end)}
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1.5 sm:mb-2">
+                                    Lý do từ chối <span className="text-red-400">*</span>
+                                </label>
+                                <textarea
+                                    value={rejectReason}
+                                    onChange={(e) => setRejectReason(e.target.value)}
+                                    placeholder="Nhập lý do từ chối nhiệm vụ..."
+                                    className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                                    rows={4}
+                                    disabled={rejectingTaskId !== null}
+                                />
+                                <p className="text-xs text-slate-500 mt-1">
+                                    Vui lòng cung cấp lý do cụ thể để nhân viên có thể hiểu và cải thiện
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="flex gap-2 sm:gap-3 p-4 sm:p-5 border-t border-slate-700 sticky bottom-0 bg-slate-800">
+                            <button
+                                onClick={handleCloseRejectModal}
+                                className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors text-sm sm:text-base"
+                                disabled={rejectingTaskId !== null}
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={handleRejectTask}
+                                disabled={rejectingTaskId !== null || !rejectReason.trim() || !newDateEnd}
+                                className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base"
+                            >
+                                {rejectingTaskId ? (
+                                    <>
+                                        <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        <span className="hidden sm:inline">Đang xử lý...</span>
+                                        <span className="sm:hidden">Xử lý...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <XCircle size={16} className="sm:hidden" />
+                                        <XCircle size={18} className="hidden sm:block" />
+                                        <span className="hidden sm:inline">Xác nhận từ chối</span>
+                                        <span className="sm:hidden">Từ chối</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
 
         {previewImage && (
             <div
-                className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+                className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-3 sm:p-4"
                 onClick={() => setPreviewImage(null)}
             >
                 <img

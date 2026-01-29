@@ -1,5 +1,6 @@
-import { toast } from "@/components/ui/use-toast";
+import { uploadFileTask, uploadImageTask } from "@/src/features/task/api";
 import { useProfileData } from "@/src/hooks/profileHook";
+import { useTaskData } from "@/src/hooks/taskhook";
 import {
   createRequestUser,
   listTypePersonal,
@@ -19,9 +20,28 @@ import {
   Target,
   XCircle,
   Filter,
+  ChevronRight,
+  ArrowLeft,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 
 // Color map cho status
 const colorMap: Record<string, string> = {
@@ -79,10 +99,14 @@ interface PersonalTabProps {
 function PersonalTab({ userInfo }: PersonalTabProps) {
   const dispatch = useDispatch();
   const { typePersonal, personals, listStatusPersonal } = useProfileData();
+  const { imageTask, fileTask } = useTaskData();
+
+  
   
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [showNewRequestModal, setShowNewRequestModal] = useState<boolean>(false);
+  const [showProposalSubmenu, setShowProposalSubmenu] = useState<boolean>(false);
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [selectedType, setSelectedType] = useState<any>(null);
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
@@ -90,9 +114,19 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
     title: "",
     description: "",
   });
-  const [page] = useState(1);
-  const [limit] = useState(100);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10); // Số items mỗi trang
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
+  const [uploadType, setUploadType] = useState<"image" | "document" | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedProve, setUploadedProve] = useState<string>("");
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   
+
   useEffect(() => {
     dispatch(listTypePersonal() as any);
     dispatch(getListStatusPersonal() as any);
@@ -106,6 +140,77 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
       dispatch(personalRequest(payload as any) as any);
     }
   }, [dispatch, page, limit]);
+  
+  // Cập nhật totalPages và totalItems khi nhận data
+  useEffect(() => {
+    if (personals) {
+      // Giả sử API trả về: { data: [], total_items: 100, total_pages: 10 }
+      setTotalItems(personals.total_items || personals.length || 0);
+      setTotalPages(Math.ceil((personals.total_items || personals.length) / limit));
+    }
+  }, [personals, limit]);
+
+  const getPaginationItems = () => {
+    const items = [];
+    const maxVisible = 5;
+  
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(i);
+      }
+    } else {
+      items.push(1);
+  
+      let startPage = Math.max(2, page - 1);
+      let endPage = Math.min(totalPages - 1, page + 1);
+  
+      if (page <= 3) {
+        endPage = 4;
+      } else if (page >= totalPages - 2) {
+        startPage = totalPages - 3;
+      }
+  
+      if (startPage > 2) {
+        items.push("ellipsis-start");
+      }
+  
+      for (let i = startPage; i <= endPage; i++) {
+        items.push(i);
+      }
+  
+      if (endPage < totalPages - 1) {
+        items.push("ellipsis-end");
+      }
+  
+      items.push(totalPages);
+    }
+  
+    return items;
+  };
+  
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
+      setPage(newPage);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleFilterChange = (value: string, type: 'type' | 'status') => {
+    if (type === 'type') {
+      if (value === "all") {
+        setSelectedTypes([]);
+      } else {
+        setSelectedTypes([value]);
+      }
+    } else {
+      if (value === "all") {
+        setSelectedStatuses([]);
+      } else {
+        setSelectedStatuses([value]);
+      }
+    }
+    setPage(1); // Reset về trang 1
+  };
 
   const getTypeIcon = (iconName: string) => {
     switch (iconName) {
@@ -231,34 +336,259 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
   const clearFilters = () => {
     setSelectedTypes([]);
     setSelectedStatuses([]);
+    setPage(1);
+
   };
 
   const handleSubmitNewRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     const payload = {
       token: localStorage.getItem("userToken"),
       title: newRequest.title,
       description: newRequest.description,
       type_request_id: selectedType.id,
+      prove: uploadedProve, // Thêm prove vào payload
     };
-
+  
     try {
       const res = await dispatch(createRequestUser(payload as any) as any);
-
+  
       if (res.payload.status == 200 || res.payload.status == 201) {
-        toast(res.payload.data.message);
+        toast.success("upload file thành công");
         await dispatch(personalRequest(payload as any) as any);
       }
     } catch (error) {
+      console.error("Error creating request:", error);
     }
+    
     // Reset form và đóng modal
     setNewRequest({ title: "", description: "" });
     setShowCreateModal(false);
     setSelectedType(null);
+    setUploadType(null);
+    setSelectedFile(null);
+    setFilePreview(null);
+    setUploadedProve("");
   };
 
   const activeFilterCount = selectedTypes.length + selectedStatuses.length;
+
+  const getFileInfo = (url: string) => {
+    const extension = url.split('.').pop()?.toLowerCase() || '';
+    const fileName = url.split('/').pop() || 'file';
+    
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
+    const isImage = imageExtensions.includes(extension);
+    
+    const fileIcons: Record<string, string> = {
+        'pdf': '📄',
+        'doc': '📝',
+        'docx': '📝',
+        'xls': '📊',
+        'xlsx': '📊',
+        'ppt': '📊',
+        'pptx': '📊',
+        'txt': '📃',
+        'zip': '🗜️',
+        'rar': '🗜️',
+    };
+    
+    return {
+        isImage,
+        extension: extension.toUpperCase(),
+        fileName,
+        icon: fileIcons[extension] || '📎'
+    };
+};
+
+  // Phân loại các loại yêu cầu
+  const proposalTypes = (typePersonal || []).filter((type: any) => 
+    ["Đề xuất", "Chuyển vị trí", "Ứng lương"].includes(type.name)
+  );
+  
+  const otherTypes = (typePersonal || []).filter((type: any) => 
+    !["Đề xuất", "Chuyển vị trí", "Ứng lương"].includes(type.name)
+  );
+
+  const renderFilePreview = (url?: string) => {
+    if (!url) return null;
+
+    const file = getFileInfo(url);
+
+    if (file.isImage) {
+        return (
+            <img
+                src={url}
+                alt={file.fileName}
+                className="w-full h-32 object-cover rounded-lg cursor-zoom-in hover:opacity-90 transition"
+                onClick={() => setPreviewImage(url)}
+            />
+        );
+    }
+
+    return (
+        <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2 p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition text-sm text-slate-200"
+    >
+        <span className="text-lg">{file.icon}</span>
+        <span className="truncate">{file.fileName}</span>
+        <span className="ml-auto text-xs text-slate-400">
+            {file.extension}
+        </span>
+    </a>
+    );
+};
+
+
+
+
+// Thêm các handler functions
+const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    setSelectedFile(file);
+    setUploadedProve("");
+
+    if (uploadType === "image" && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview(null);
+    }
+  }
+};
+
+const handleUploadTypeChange = (type: "image" | "document") => {
+  if (uploadType === type) {
+    setUploadType(null);
+    setSelectedFile(null);
+    setFilePreview(null);
+    setUploadedProve("");
+  } else {
+    setUploadType(type);
+    setSelectedFile(null);
+    setFilePreview(null);
+    setUploadedProve("");
+  }
+};
+
+const getAcceptedFileTypes = () => {
+  if (uploadType === "image") {
+    return "image/*";
+  } else if (uploadType === "document") {
+    return ".pdf,.doc,.docx,.xls,.xlsx,.txt";
+  }
+  return "";
+};
+
+// Placeholder upload functions - bạn cần implement logic upload thực tế
+const handleUploadImage = async (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const token = localStorage.getItem("userToken");
+  const payload = {
+    formData,
+    token
+  };
+
+  const result = await dispatch(uploadImageTask(payload) as any);
+  
+  if (result?.payload?.data?.success && !result?.error) {
+    return imageTask || "";
+  } else {
+    toast.error("Tải ảnh thất bại");
+    throw new Error("Upload failed");
+  }
+};
+
+const handleUploadFile = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = localStorage.getItem("userToken");
+    const payload = {
+      formData,
+      token
+    };
+
+    const result = await dispatch(uploadFileTask(payload) as any);
+    
+    if (result?.payload?.data?.success && !result?.error) {
+      return fileTask || "";
+    } else {
+      toast.error("Tải file thất bại");
+      throw new Error("Upload failed");
+    }
+};
+
+const handleUpload = async () => {
+  if (!selectedFile) {
+    return;
+  }
+
+  setIsUploading(true);
+  try {
+    let uploadedUrl = "";
+    
+    if (uploadType === "image") {
+      const result = await dispatch(uploadImageTask({
+        formData: (() => {
+          const fd = new FormData();
+          fd.append('file', selectedFile);
+          return fd;
+        })(),
+        token: localStorage.getItem("userToken")
+      }) as any);
+      
+      // Lấy URL trực tiếp từ response thay vì từ Redux state
+      if (result?.payload?.data?.success && !result?.error) {
+        uploadedUrl = result.payload.data.url || result.payload.data.data?.url || "";
+        if (uploadedUrl) {
+          setUploadedProve(uploadedUrl);
+          toast.success("Tải ảnh thành công");
+        } else {
+          throw new Error("Không nhận được URL từ server");
+        }
+      } else {
+        throw new Error("Upload failed");
+      }
+    } else if (uploadType === "document") {
+      const result = await dispatch(uploadFileTask({
+        formData: (() => {
+          const fd = new FormData();
+          fd.append('file', selectedFile);
+          return fd;
+        })(),
+        token: localStorage.getItem("userToken")
+      }) as any);
+      
+      // Lấy URL trực tiếp từ response thay vì từ Redux state
+      if (result?.payload?.data?.success && !result?.error) {
+        uploadedUrl = result.payload.data.url || result.payload.data.data?.url || "";
+        if (uploadedUrl) {
+          setUploadedProve(uploadedUrl);
+          toast.success("Tải file thành công");
+        } else {
+          throw new Error("Không nhận được URL từ server");
+        }
+      } else {
+        throw new Error("Upload failed");
+      }
+    }
+  } catch (error) {
+    console.error("Upload error:", error);
+    toast.error("Upload thất bại");
+    setUploadedProve(""); // Reset về rỗng nếu lỗi
+  } finally {
+    setIsUploading(false);
+  }
+};
 
   return (
     <div className="space-y-4">
@@ -286,103 +616,101 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            {activeFilterCount > 0 && (
-              <button
-                onClick={clearFilters}
-                className="text-xs text-slate-400 hover:text-white transition hidden md:block"
-              >
-                Xóa tất cả
-              </button>
-            )}
-            {/* Mobile filter toggle button */}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="md:hidden px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition text-xs font-medium flex items-center gap-1.5"
-            >
-              <Filter size={14} />
-              {showFilters ? "Ẩn" : "Hiện"}
-            </button>
-          </div>
-        </div>
-
-        {/* Filters - Always show on desktop, toggle on mobile */}
-        <div className={`${showFilters ? "block" : "hidden"} md:block`}>
-          <div className="flex flex-wrap gap-2">
-            {allFilters.map((filter: any) => {
-              const Icon = filter.icon;
-              const isSelected =
-                filter.type === "type"
-                  ? selectedTypes.includes(filter.value)
-                  : selectedStatuses.includes(filter.value);
-
-              return (
-                <button
-                  key={filter.id}
-                  onClick={() => {
-                    if (filter.type === "type") {
-                      toggleType(filter.value);
-                    } else {
-                      toggleStatus(filter.value);
-                    }
-                  }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition flex items-center gap-1.5 border ${
-                    isSelected
-                      ? filter.color || "bg-blue-600 text-white border-blue-500"
-                      : "bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-600 hover:text-white"
-                  }`}
-                >
-                  <div
-                    className={`w-3 h-3 rounded border flex items-center justify-center ${
-                      isSelected
-                        ? "bg-white/20 border-current"
-                        : "border-slate-600"
-                    }`}
-                  >
-                    {isSelected && (
-                      <svg className="w-2 h-2" viewBox="0 0 12 12" fill="none">
-                        <path
-                          d="M10 3L4.5 8.5L2 6"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                  <Icon size={14} />
-                  {filter.label}
-                  <span
-                    className={`${isSelected ? "opacity-80" : "opacity-60"}`}
-                  >
-                    ({filter.count})
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Mobile clear filters button */}
           {activeFilterCount > 0 && (
             <button
               onClick={clearFilters}
-              className="md:hidden w-full mt-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg transition text-xs font-medium"
+              className="text-xs text-slate-400 hover:text-white transition"
             >
-              Xóa tất cả bộ lọc
+              Xóa tất cả
             </button>
           )}
         </div>
+
+        {/* Select Filters */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Type Filter Select */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-300">
+              Loại yêu cầu
+            </label>
+            <Select
+              value={selectedTypes.length === 1 ? selectedTypes[0] : "all"}
+              onValueChange={(value) => handleFilterChange(value, 'type')}
+            >
+              <SelectTrigger className="w-full bg-slate-800 border-slate-700 text-white text-sm h-10">
+                <SelectValue placeholder="Tất cả loại yêu cầu" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-slate-700">
+                <SelectItem value="all" className="text-white text-sm">
+                  Tất cả ({(personals || []).length})
+                </SelectItem>
+                {(typePersonal || []).map((type: any) => {
+                  const Icon = getTypeIconLarge(type.name);
+                  const count = (personals || []).filter(
+                    (p: any) => String(p.type_requests?.id) === String(type.id)
+                  ).length;
+                  
+                  return (
+                    <SelectItem
+                      key={type.id}
+                      value={String(type.id)}
+                      className="text-white text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Icon size={14} />
+                        <span>{type.name}</span>
+                        <span className="text-slate-400">({count})</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Status Filter Select */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-300">
+              Trạng thái
+            </label>
+            <Select
+              value={selectedStatuses.length === 1 ? selectedStatuses[0] : "all"}
+              onValueChange={(value) => handleFilterChange(value, 'status')}
+            >
+              <SelectTrigger className="w-full bg-slate-800 border-slate-700 text-white text-sm h-10">
+                <SelectValue placeholder="Tất cả trạng thái" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-slate-700">
+                <SelectItem value="all" className="text-white text-sm">
+                  Tất cả ({(personals || []).length})
+                </SelectItem>
+                {(listStatusPersonal || []).map((status: any) => {
+                  const Icon = getStatusIcon(status.name);
+                  const count = (personals || []).filter(
+                    (p: any) => p.status_requests?.name === status.name
+                  ).length;
+                  
+                  return (
+                    <SelectItem
+                      key={status.id}
+                      value={status.name}
+                      className="text-white text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Icon size={14} />
+                        <span>{status.name === "Đã duyệt" ? "Chưa tiếp nhận" : status.name}</span>
+                        <span className="text-slate-400">({count})</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
-      {/* Results count */}
-      <div className="text-sm text-slate-400">
-        Hiển thị{" "}
-        <span className="text-white font-medium">{sortedRequests.length}</span>{" "}
-        / {(personals || []).length} yêu cầu
-      </div>
-
-      {/* List */}
+      {/* List Pagination */}
       <div className="space-y-3">
         {sortedRequests.length === 0 ? (
           <div className="text-center py-12 bg-slate-800/30 rounded-lg border border-slate-700">
@@ -400,8 +728,6 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
         ) : (
           sortedRequests.map((request: any) => {
             const statusName = request.status_requests?.name;
-            
-            // Lấy màu và icon từ helper functions
             const statusColor = statusName ? getStatusColor(statusName) : colorMap["blue"];
             const StatusIcon = statusName ? getStatusIcon(statusName) : Clock;
 
@@ -450,35 +776,34 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
                       {request.date_end && (
                         <p className="text-sm text-orange-400 mb-2">
                           <span className="font-medium">Thời hạn:</span>{" "}
-                          {new Date(request.date_end).toLocaleDateString(
-                            "vi-VN"
-                          )}
+                          {new Date(request.date_end).toLocaleDateString("vi-VN")}
                         </p>
                       )}
-                      {request.process !== null &&
-                        request.process !== undefined && (
-                          <div className="mb-2">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs text-slate-400">
-                                Tiến độ
-                              </span>
-                              <span className="text-xs font-medium text-slate-300">
-                                {request.process}%
-                              </span>
-                            </div>
-                            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all"
-                                style={{ width: `${request.process}%` }}
-                              />
-                            </div>
+                      {request.process !== null && request.process !== undefined && (
+                        <div className="mb-2">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-slate-400">Tiến độ</span>
+                            <span className="text-xs font-medium text-slate-300">
+                              {request.process}%
+                            </span>
                           </div>
-                        )}
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all"
+                              style={{ width: `${request.process}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {request.document && (
+                          <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-slate-700">
+                              <p className="text-xs text-slate-500 mb-1.5 sm:mb-2">Minh chứng:</p>
+                              {renderFilePreview(request.document)}
+                          </div>
+                      )} 
+                      <div className="flex items-center gap-2 text-xs text-slate-500 mt-4">
                         <Calendar size={14} />
-                        {new Date(request.date_request).toLocaleDateString(
-                          "vi-VN"
-                        )}
+                        {new Date(request.date_request).toLocaleDateString("vi-VN")}
                       </div>
                     </div>
                   </div>
@@ -486,24 +811,119 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
                     className={`px-3 py-1.5 rounded-full border text-xs font-medium flex items-center gap-1.5 whitespace-nowrap ${statusColor}`}
                   >
                     <StatusIcon size={14} />
-                    {statusName || "Không xác định"}
+                    {statusName === "Đã duyệt" ? "Chưa tiếp nhận" : statusName || "Không xác định"}
                   </div>
+
                 </div>
+
+
               </div>
             );
           })
         )}
       </div>
+      {previewImage && (
+            <div
+                className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-3 sm:p-4"
+                onClick={() => setPreviewImage(null)}
+            >
+                <img
+                    src={previewImage}
+                    alt="Preview"
+                    className="max-w-full max-h-full rounded-lg shadow-xl"
+                    onClick={(e) => e.stopPropagation()}
+                />
+            </div>
+        )}
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex flex-col items-center gap-4 mt-6">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(page - 1)}
+                  className={
+                    page === 1
+                      ? "pointer-events-none opacity-50 cursor-not-allowed"
+                      : "cursor-pointer hover:bg-slate-800 text-white"
+                  }
+                />
+              </PaginationItem>
 
-      {/* Modal - Tạo yêu cầu mới */}
-      {showNewRequestModal && (
+              {getPaginationItems().map((item, index) => {
+                if (item === "ellipsis-start" || item === "ellipsis-end") {
+                  return (
+                    <PaginationItem key={`${item}-${index}`}>
+                      <PaginationEllipsis className="text-slate-400" />
+                    </PaginationItem>
+                  );
+                }
+
+                return (
+                  <PaginationItem key={item}>
+                    <PaginationLink
+                      onClick={() => handlePageChange(item as number)}
+                      isActive={page === item}
+                      className={`cursor-pointer ${
+                        page === item
+                          ? "bg-blue-600 text-white hover:bg-blue-700 border-blue-500"
+                          : "text-white hover:bg-slate-800 border-slate-700"
+                      }`}
+                    >
+                      {item}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(page + 1)}
+                  className={
+                    page === totalPages
+                      ? "pointer-events-none opacity-50 cursor-not-allowed"
+                      : "cursor-pointer hover:bg-slate-800 text-white"
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+
+          {/* Page info */}
+          <div className="text-center text-sm text-slate-400">
+            Trang {page} / {totalPages} - Hiển thị {sortedRequests.length} yêu cầu
+          </div>
+        </div>
+      )}
+
+      {/* Modal - Tạo yêu cầu mới - Main menu */}
+      {showNewRequestModal && !showProposalSubmenu && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-lg w-full">
             <h3 className="text-xl font-bold text-white mb-4">
               Tạo yêu cầu mới
             </h3>
             <div className="grid grid-cols-2 gap-3">
-              {(typePersonal || []).map((type: any) => {
+              {/* Các đề xuất - nhóm 3 loại */}
+              <button
+                onClick={() => setShowProposalSubmenu(true)}
+                className="p-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-blue-500 rounded-lg transition text-left group"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <FileText size={24} className="text-blue-400" />
+                  <ChevronRight size={20} className="text-slate-500 group-hover:text-blue-400 transition" />
+                </div>
+                <p className="text-sm font-semibold text-white">
+                  Các đề xuất
+                </p>
+                <p className="text-xs text-slate-400 mt-1">
+                  Đề xuất, chuyển vị trí, ứng lương
+                </p>
+              </button>
+
+              {/* Các loại yêu cầu khác */}
+              {otherTypes.map((type: any) => {
                 const Icon = getTypeIconLarge(type.name);
                 return (
                   <button
@@ -536,17 +956,75 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
         </div>
       )}
 
+      {/* Modal - Submenu các đề xuất */}
+      {showNewRequestModal && showProposalSubmenu && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-lg w-full">
+            <div className="flex items-center gap-3 mb-4">
+              <button
+                onClick={() => setShowProposalSubmenu(false)}
+                className="p-1.5 hover:bg-slate-800 rounded-lg transition"
+              >
+                <ArrowLeft size={20} className="text-slate-400" />
+              </button>
+              <h3 className="text-xl font-bold text-white">
+                Chọn loại đề xuất
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+              {proposalTypes.map((type: any) => {
+                const Icon = getTypeIconLarge(type.name);
+                return (
+                  <button
+                    key={type.id}
+                    onClick={() => {
+                      setSelectedType(type);
+                      setShowNewRequestModal(false);
+                      setShowProposalSubmenu(false);
+                      setShowCreateModal(true);
+                    }}
+                    className="p-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-blue-500 rounded-lg transition text-left flex items-center gap-4"
+                  >
+                    <div className="p-3 bg-slate-700/50 rounded-lg">
+                      <Icon size={24} className="text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-white">
+                        {type.name}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {getTypeDescription(type.name)}
+                      </p>
+                    </div>
+                    <ChevronRight size={20} className="text-slate-500" />
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => {
+                setShowProposalSubmenu(false);
+                setShowNewRequestModal(false);
+              }}
+              className="w-full mt-4 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition text-sm font-medium"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Modal - Form tạo yêu cầu */}
       {showCreateModal && selectedType && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-md w-full">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold text-white mb-4">
               Tạo yêu cầu {selectedType.name}
             </h3>
 
-            <form onSubmit={handleSubmitNewRequest} className="space-y-3">
+            <form onSubmit={handleSubmitNewRequest} className="space-y-4">
               <div>
-                <label className="text-sm text-slate-400">Tiêu đề</label>
+                <label className="text-sm text-slate-400 font-semibold">Tiêu đề *</label>
                 <input
                   type="text"
                   value={newRequest.title}
@@ -559,7 +1037,7 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
               </div>
 
               <div>
-                <label className="text-sm text-slate-400">Mô tả</label>
+                <label className="text-sm text-slate-400 font-semibold">Mô tả</label>
                 <textarea
                   value={newRequest.description}
                   onChange={(e) =>
@@ -573,12 +1051,133 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
                 />
               </div>
 
+              {/* Upload Section */}
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText size={16} className="text-blue-400" />
+                  <span className="text-sm font-semibold text-blue-400">
+                    Minh chứng (tùy chọn)
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-400 mb-3">
+                  Chọn loại minh chứng bạn muốn tải lên:
+                </p>
+
+                {/* Upload Type Selection */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => handleUploadTypeChange("image")}
+                    className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition ${
+                      uploadType === "image"
+                        ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                        : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
+                    }`}
+                  >
+                    <FileText size={20} />
+                    <span className="text-xs font-semibold">Hình ảnh</span>
+                    <span className="text-[10px] text-slate-500">JPG, PNG, GIF</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleUploadTypeChange("document")}
+                    className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition ${
+                      uploadType === "document"
+                        ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                        : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
+                    }`}
+                  >
+                    <FileText size={20} />
+                    <span className="text-xs font-semibold">Tài liệu</span>
+                    <span className="text-[10px] text-slate-500">PDF, DOC, XLS</span>
+                  </button>
+                </div>
+
+                {/* File Upload Input */}
+                {uploadType && (
+                  <div>
+                    <label className="block w-full cursor-pointer">
+                      <div className="flex items-center justify-center gap-2 px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-750 transition">
+                        <FileText size={14} className="text-blue-400" />
+                        <span className="text-xs text-slate-300 truncate">
+                          {selectedFile
+                            ? selectedFile.name
+                            : `Chọn ${uploadType === "image" ? "hình ảnh" : "tài liệu"}`}
+                        </span>
+                      </div>
+                      <input
+                        type="file"
+                        accept={getAcceptedFileTypes()}
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                    </label>
+
+                    {/* Image Preview */}
+                    {filePreview && uploadType === "image" && (
+                      <div className="mt-3">
+                        <img
+                          src={filePreview}
+                          alt="Preview"
+                          className="w-full h-40 object-cover rounded-lg border border-slate-700"
+                        />
+                      </div>
+                    )}
+
+                    {/* File Info */}
+                    {selectedFile && (
+                      <div className="mt-3 p-2.5 bg-slate-800 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <FileText size={14} className="text-blue-400 flex-shrink-0" />
+                            <span className="text-xs text-slate-300 truncate">
+                              {selectedFile.name}
+                            </span>
+                          </div>
+                          <span className="text-xs text-slate-500 ml-2 flex-shrink-0">
+                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Upload Button */}
+                    {selectedFile && !uploadedProve && (
+                      <button
+                        type="button"
+                        onClick={handleUpload}
+                        disabled={isUploading}
+                        className="w-full mt-3 flex items-center justify-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition"
+                      >
+                        <FileText size={14} />
+                        {isUploading ? "Đang tải lên..." : "Tải lên"}
+                      </button>
+                    )}
+
+                    {/* Upload Success Message */}
+                    {uploadedProve && (
+                      <div className="mt-3 p-2.5 bg-green-900/30 border border-green-500/50 rounded-lg">
+                        <p className="text-xs text-green-400 text-center">
+                          ✓ Đã tải lên thành công!
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-end gap-2 mt-4">
                 <button
                   type="button"
                   onClick={() => {
                     setShowCreateModal(false);
                     setSelectedType(null);
+                    setUploadType(null);
+                    setSelectedFile(null);
+                    setFilePreview(null);
+                    setUploadedProve("");
                   }}
                   className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition text-sm font-medium"
                 >
