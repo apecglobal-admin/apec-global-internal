@@ -4,6 +4,30 @@ import { toast } from "react-toastify";
 import { getStatEvent } from "../features/event/api/api";
 import type {RootState} from "../lib/store";
 
+
+export const updatePassword = createAsyncThunk(
+  "user/updatePassword",
+  async (payload: any, thunkAPI) => {
+    try {
+      const { old_password, new_password, token }: any = payload;
+      const response = await apiAxiosInstance.put(`/auth/change/password`, {
+        old_password, new_password
+      },  {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      return {
+        data: response.data,
+        status: response.status
+      };
+    } catch (error: any) {
+      // toast.error(error?.response?.data.message)
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
 export const loginWeb = createAsyncThunk(
   "user/loginWeb",
   async (payload: any, thunkAPI) => {
@@ -120,10 +144,10 @@ export const personTasks = createAsyncThunk(
   "user/personTasks",
   async (payload, thunkAPI) => {
     try {
-      const { page, limit, token, id, filter }: any = payload;
+      const { page, limit, token, id, filter, kpiFilter, projectFilter, statusFilter, priorityFilter }: any = payload;
 
       const params = Object.fromEntries(
-        Object.entries({ page, limit, id, filter }).filter(
+        Object.entries({ page, limit, id, filter, kpiFilter, projectFilter, statusFilter, priorityFilter }).filter(
             ([key, value]) => value != null
         )
     );
@@ -198,7 +222,7 @@ export const personalRequest = createAsyncThunk(
     try {
       const { page, limit, token }: any = payload;
       const response = await apiAxiosInstance.get(
-        `/profile/personal-requests?page=${page}&limit=${limit}`,
+        `/profile/personal-requests?page=${page}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -214,6 +238,37 @@ export const personalRequest = createAsyncThunk(
     }
   }
 );
+
+export const personalTarget = createAsyncThunk(
+  "user/personalTarget",
+  async (payload: any, thunkAPI) => {
+    try {
+      const { id, page, limit, token }: any = payload;
+      const params = Object.fromEntries(
+        Object.entries({ id, page, limit }).filter(
+            ([key, value]) => value != null
+        )
+    );
+      const response = await apiAxiosInstance.get(
+        `/profile/personal-requests/target`,
+        {
+          params,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return {
+        data: response.data,
+        status: response.status
+      };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
+
+
 
 export const personalRequestAssign = createAsyncThunk(
   "user/personalRequestAssign",
@@ -245,6 +300,8 @@ export const personalRequestAssign = createAsyncThunk(
   }
 );
 
+
+
 export const personalRequestHonor = createAsyncThunk(
   "user/personalRequestHonor",
   async (payload: any, thunkAPI) => {
@@ -274,6 +331,61 @@ export const personalRequestHonor = createAsyncThunk(
   }
 );
 
+
+export const personalRequestApply = createAsyncThunk(
+  "user/personalRequestApply",
+  async (payload: any, thunkAPI) => {
+    try {
+      const {  id, token }: any = payload;
+
+      const response = await apiAxiosInstance.put(
+        `/profile/personal-requests/apply`,
+        {
+          id, 
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return {
+        data: response.data,
+        status: response.status
+      };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
+
+export const personalRequestReject = createAsyncThunk(
+  "user/personalRequestReject",
+  async (payload: any, thunkAPI) => {
+    try {
+      const {  id, token }: any = payload;
+
+
+      const response = await apiAxiosInstance.put(
+        `/profile/personal-requests/reject`,
+        {
+          id, 
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return {
+        data: response.data,
+        status: response.status
+      };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
 
 
 
@@ -379,13 +491,14 @@ export const createRequestUser = createAsyncThunk(
   "user/createRequestUser",
   async (payload: any, thunkAPI) => {
     try {
-      const { token, title, description, type_request_id }: any = payload;
+      const { token, title, description, prove, type_request_id }: any = payload;
       const response = await apiAxiosInstance.post(
         `/profile/personal-requests/create`,
         {
           title,
           description,
           type_request_id,
+          document: prove
         },
         {
           headers: {

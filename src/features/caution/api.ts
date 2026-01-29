@@ -61,10 +61,10 @@ export const createCaution = createAsyncThunk(
     "task/createCaution",
     async (payload: any, thunkAPI) => {
         try {
-            const {employees, kpi_item_id, token} = payload;
+            const {employees, kpi_item_id, reason, prove, token} = payload;
             const response = await apiAxiosInstance.post("/cautions/create",
                 {
-                    employees, kpi_item_id
+                    employees, kpi_item_id, reason, prove
                 },
                 {
                   headers: {

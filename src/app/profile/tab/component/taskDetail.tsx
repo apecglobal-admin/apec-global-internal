@@ -27,6 +27,7 @@ import { toast } from "react-toastify";
 import CreateSubTask from "./createSubTask";
 import UpdateSubTask from "./updateSubTask";
 import { Task } from "@/src/services/interface";
+import { formatNumber } from "@/src/utils/formatNumber";
 
 
 interface StatusTask {
@@ -90,6 +91,7 @@ function TaskDetail({
     const [allSubTasks, setAllSubTasks] = useState<SubTask[]>([]);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [showTaskLogs, setShowTaskLogs] = useState(false);
+    const [actualValue, setActualValue] = useState<number>(0);
 
     useEffect(() => {
         if (!task) return;
@@ -130,6 +132,14 @@ function TaskDetail({
             });
         }
     }, [listSubTask]);
+
+    useEffect(() => {
+        // Tính giá trị thực tế từ process và target_value
+        if (task.units?.name !== "%") {
+            const calculatedValue = (progress / 100) * Number(task.target_value);
+            setActualValue(calculatedValue);
+        }
+    }, [task, progress]);
 
     const handleUpload = async () => {
         if (!selectedFile) {
@@ -176,9 +186,16 @@ function TaskDetail({
         setIsSaving(true);
         try {
             const token = localStorage.getItem("userToken");
+
+            let finalProcess = progressValue;
+            if (task.units?.name !== "%" && task.units?.name !== null) {
+                // Tính phần trăm từ giá trị thực tế
+                finalProcess = actualValue;
+            }
+
             const updatePayload = {
                 id: parseInt(task.id),
-                process: progressValue.toString(),
+                value: finalProcess,
                 task_id: task.task.id,
                 status: selectedStatus,
                 prove: selectedStatus === 4
@@ -189,8 +206,9 @@ function TaskDetail({
                 date_start: task.task.date_start,
 
             };
+            
             const result = await dispatch(updateProgressTask(updatePayload) as any);
-
+            
             if (result?.payload.data.success && !result?.error) {
                 setIsEditing(false);
                 resetForm();
@@ -199,7 +217,7 @@ function TaskDetail({
                     onUpdateSuccess();
                 }
             } else {
-                toast.error("Cập nhật tiến độ thất bại")
+                toast.error(result?.payload.data?.message || "Cập nhật tiến độ thất bại")
                 throw new Error(result?.payload || "Update failed");
             }
         } catch (error: any) {
@@ -234,13 +252,16 @@ function TaskDetail({
     const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newStatus = parseInt(e.target.value);
         setSelectedStatus(newStatus);
-
+    
         if (newStatus !== 4) {
             resetForm();
         }
-
+    
         if (newStatus === 4) {
             setProgressValue(100);
+            if (task.units?.name !== "%") {
+                setActualValue(Number(task.target_value)); // Set giá trị = mục tiêu
+            }
         }
     };
 
@@ -367,6 +388,19 @@ function TaskDetail({
         };
     };
 
+    const handleActualValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = parseFloat(e.target.value);
+        if (!isNaN(value) && value >= 0) {
+            const targetValue = Number(task.target_value);
+            const newValue = Math.min(value, targetValue);
+            setActualValue(newValue);
+            
+            // Tự động tính process
+            const newProcess = Math.min(100, (newValue / targetValue) * 100);
+            setProgressValue(Math.round(newProcess));
+        }
+    };
+
     const renderFilePreview = (url?: string) => {
         if (!url) return null;
     
@@ -446,6 +480,19 @@ function TaskDetail({
                                 />
                                 <span className="font-semibold">KPI:</span>
                                 <span className="truncate">{task.kpi_item.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
+                                <Target
+                                    size={16}
+                                    className="text-slate-500 flex-shrink-0"
+                                />
+                                <span className="font-semibold">Chỉ tiêu:</span>
+                                {task.units?.name !== "%" && task.units?.name !== null ? (
+                                <span className="">{formatNumber(Number(task.target_value))} {task.units?.name}</span>
+                                ) : (
+                                <span className="">100%</span>
+
+                                )}
                             </div>
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
                                 <ClipboardList
@@ -827,34 +874,56 @@ function TaskDetail({
                             )}
 
                             {/* Progress Input */}
+                            {/* Progress Input */}
                             <div>
                                 <label className="block text-xs font-semibold text-slate-300 mb-2">
-                                    Tiến độ (%)
+                                    {task.units?.name === "%" ? `Tiến độ (${task.units?.name})` : `Giá trị đạt được (${task.units?.name || "%"})`}
                                 </label>
-                                <div className="flex items-center gap-3">
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max="100"
-                                        value={progressValue}
-                                        onChange={handleProgressChange}
-                                        disabled={selectedStatus === 4}
-                                        className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    />
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        value={progressValue}
-                                        onChange={handleProgressChange}
-                                        disabled={selectedStatus === 4}
-                                        className="w-20 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:outline-none focus:border-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                    />
-                                </div>
+                                {task.units?.name === "%" || task.units?.name === null ? (
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="100"
+                                            value={progressValue}
+                                            onChange={handleProgressChange}
+                                            disabled={selectedStatus === 4}
+                                            className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        />
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="100"
+                                            value={progressValue}
+                                            onChange={handleProgressChange}
+                                            disabled={selectedStatus === 4}
+                                            className="w-20 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:outline-none focus:border-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                max={task.target_value}
+                                                value={actualValue}
+                                                onChange={handleActualValueChange}
+                                                disabled={selectedStatus === 4}
+                                                className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                                placeholder={`Nhập giá trị (tối đa ${formatNumber(Number(task.target_value))})`}
+                                            />
+                                        </div>
+                                        <div className="text-xs text-slate-400">
+                                            Mục tiêu: {formatNumber(Number(task.target_value))} {task.units?.name}
+                                        </div>
+                                    </div>
+                                )}
                                 {selectedStatus === 4 && (
                                     <p className="text-xs text-slate-500 mt-1">
-                                        Tiến độ tự động đặt thành 100% khi hoàn
-                                        thành
+                                        {task.units?.name === "%" 
+                                            ? "Tiến độ tự động đặt thành 100% khi hoàn thành"
+                                            : "Giá trị sẽ được đặt bằng mục tiêu khi hoàn thành"}
                                     </p>
                                 )}
                             </div>

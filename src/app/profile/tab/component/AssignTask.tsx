@@ -38,6 +38,8 @@ interface AssignFormData {
     employees: number[] | number | string;
     min_reject: number;
     max_reject: number;
+    target: Number;
+    value: Number;
 }
 
 interface ValidationErrors {
@@ -68,6 +70,7 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
     } = useTaskData();
 
     const { tasks } = useProfileData();
+    
 
     const [assignForm, setAssignForm] = useState<AssignFormData>({
         name: "",
@@ -79,26 +82,52 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
         kpi_item_id: 0,
         target_type: 3,
         process: 0,
-        task_status: 1,
+        task_status: 2,
         employees: [],
         min_reject: 2,
         max_reject: 3,
-    });
+        target: 0,
+        value: 0
+    });    
+    
 
     const [errors, setErrors] = useState<ValidationErrors>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedProject, setSelectedProject] = useState<any>(null);
+    const [unit, setUnit] = useState<string>("%");
+
+    useEffect(() => {
+        const filter = childKpi?.find((data: any) => Number(data.id) === assignForm?.kpi_item_id)
+        if(filter?.unit_name){
+            setUnit(filter.unit_name)
+        }
+        
+    }, [assignForm?.kpi_item_id]);
+
+    
 
     useEffect(() => {
         if (!statusTask) {
             dispatch(getStatusTask() as any);
         }
-        dispatch(getTypeTask() as any);
-        dispatch(getPriorityTask() as any);
-        dispatch(getListProject() as any);
-        dispatch(getChildKpi() as any);
-        dispatch(getListPosition() as any);
-        dispatch(getListDepartment() as any);
+        if(!typeTask){
+            dispatch(getTypeTask() as any);
+        }
+        if(!priorityTask){
+            dispatch(getPriorityTask() as any);
+        }
+        if(!listProject){
+            dispatch(getListProject() as any);
+        }
+        if(!childKpi){
+            dispatch(getChildKpi() as any);
+        }
+        if(!listPosition){
+            dispatch(getListPosition() as any);
+        }
+        if(!listDepartment){
+            dispatch(getListDepartment() as any);
+        }
 
         dispatch(
             getListEmployee({
@@ -231,7 +260,7 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                 project_id: parseInt(assignForm.project_id.toString()),
                 kpi_item_id: parseInt(assignForm.kpi_item_id.toString()),
                 target_type: parseInt(assignForm.target_type.toString()),
-                process: assignForm.process,
+                target_value: assignForm.process,
                 task_status: parseInt(assignForm.task_status.toString()),
                 employees: null,
                 position_id: null,
@@ -255,6 +284,7 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                 taskData.position_id = null;
             }
 
+
             const result = await dispatch(createTask(taskData) as any);
 
             if (result.payload.data.success) {
@@ -275,6 +305,8 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                     employees: [],
                     min_reject: 2,
                     max_reject: 3,
+                    target: 0,
+                    value: 0,
                 });
                 setErrors({});
                 onBack();
@@ -303,6 +335,34 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
         }
         return 0;
     };
+
+    const formatNumber = (value: number) => {
+        if (!value) return "";
+        return new Intl.NumberFormat("en-US").format(value);
+      };
+      
+
+      const handleProcessChange = (
+        e: React.ChangeEvent<HTMLInputElement>
+      ) => {
+        // Bỏ hết dấu phẩy
+        const rawValue = e.target.value.replace(/,/g, "");
+      
+        let value = Number(rawValue);
+        if (Number.isNaN(value)) value = 0;
+      
+        if (unit === "%") {
+          if (value > 100) value = 100;
+          if (value < 0) value = 0;
+        }
+      
+        setAssignForm((prev) => ({
+          ...prev,
+          process: value,
+        }));
+      };
+      
+    
 
     const getTargetLabel = () => {
         if (assignForm.target_type === 3) return "nhân viên";
@@ -523,6 +583,7 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                             kpi_item_id: parseInt(
                                                 e.target.value
                                             ),
+                                            process: 0
                                         })
                                     }
                                     className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border border-slate-700 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-500 transition"
@@ -651,23 +712,20 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
 
                                 <div>
                                     <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
-                                        Tiến độ (%)
+                                        Mục tiêu cần đạt ({unit})
                                     </label>
                                     <input
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        value={assignForm.process}
-                                        onChange={(e) =>
-                                            setAssignForm({
-                                                ...assignForm,
-                                                process:
-                                                    parseInt(e.target.value) ||
-                                                    0,
-                                            })
-                                        }
-                                        className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border border-slate-700 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-500 transition"
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={formatNumber(assignForm.process)}
+                                        onChange={handleProcessChange}
+                                        className="w-full px-3 py-2.5 sm:px-4 sm:py-3
+                                            bg-slate-900 border border-slate-700 rounded-lg
+                                            text-sm sm:text-base text-white
+                                            focus:outline-none focus:border-blue-500 transition"
                                     />
+
+
                                 </div>
                             </div>
 
