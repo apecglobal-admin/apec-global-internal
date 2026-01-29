@@ -14,7 +14,7 @@ export const createTask = createAsyncThunk(
                 project_id, 
                 kpi_item_id, 
                 target_type, 
-                process, 
+                target_value, 
                 task_status, 
                 employees,position_id,department_id,
                 token,
@@ -30,7 +30,7 @@ export const createTask = createAsyncThunk(
                 project_id, 
                 kpi_item_id, 
                 target_type, 
-                process, 
+                target_value, 
                 task_status, 
                 employees,
                 position_id,
@@ -319,7 +319,7 @@ export const updateProgressTask = createAsyncThunk(
                 process, 
                 task_id, 
                 status, 
-                prove, 
+                value, 
                 token,
                 date_end,
                 date_start
@@ -330,7 +330,7 @@ export const updateProgressTask = createAsyncThunk(
                     process, 
                     task_id, 
                     status, 
-                    prove, 
+                    value, 
                     date_end,
                     date_start
                 },
@@ -590,6 +590,8 @@ export const updateTaskAssign = createAsyncThunk(
       }
     }
 );
+
+
   
 
 

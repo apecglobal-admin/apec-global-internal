@@ -9,6 +9,7 @@ import {
     ChevronRight,
     Camera,
     Upload,
+    Info,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -38,6 +39,8 @@ import Cautions from "./tab/Cautions";
 import AIReportButton from "@/components/ai-report/aiReportButton";
 import TaskManager from "./tab/TaskManager";
 import Event from "./tab/Event";
+import UserInfoModal from "./tab/component/UserInfoModal";
+import { toast } from "react-toastify";
 
 function ProfilePage() {
     const dispatch = useDispatch();
@@ -55,6 +58,9 @@ function ProfilePage() {
         avatar2?: string;
         avatar3?: string;
     }>({});
+    const [showInfoModal, setShowInfoModal] = useState(false);
+
+    
 
     
     useEffect(() => {
@@ -204,6 +210,10 @@ function ProfilePage() {
         });
     };
 
+    const handleShowInfo = () => {
+        setShowInfoModal(true);
+    }
+
     
 
     return (
@@ -305,9 +315,16 @@ function ProfilePage() {
                                         {/* Mobile: User Info */}
                                         <div className="flex-1">
                                             <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-3 h-full flex flex-col justify-center">
-                                                <h2 className="text-lg font-bold text-slate-100 mb-1">
-                                                    {userInfo.name}
-                                                </h2>
+                                                <div 
+                                                    onClick={handleShowInfo}
+                                                    className="flex justify-between items-center"
+                                                
+                                                >
+                                                    <h2 className="text-lg font-bold text-slate-100 mb-1">
+                                                        {userInfo.name}
+                                                    </h2>
+                                                    <Info size={20} color="yellow"/>
+                                                </div>
                                                 <p className="text-xs font-semibold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                                                     {
                                                         positions.find(
@@ -439,9 +456,16 @@ function ProfilePage() {
 
                                 <div className="hidden lg:block space-y-4">
                                     <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
-                                        <h2 className="text-2xl font-bold text-slate-100 mb-1">
-                                            {userInfo.name}
-                                        </h2>
+                                        <div 
+                                            onClick={handleShowInfo}
+                                            className="flex justify-between items-center"
+                                        
+                                        >
+                                            <h2 className="text-2xl font-bold text-slate-100 mb-1">
+                                                {userInfo.name}
+                                            </h2>
+                                            <Info size={20} color="yellow"/>
+                                        </div>
                                         <p className="text-sm font-semibold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                                             {
                                                 positions.find(
@@ -733,6 +757,13 @@ function ProfilePage() {
                     </div>
                 </div>
             )}
+            <UserInfoModal 
+                isOpen={showInfoModal}
+                onClose={() => setShowInfoModal(false)}
+                userInfo={userInfo}
+                departments={departments}
+                positions={positions}
+            />
             <AIReportButton />
         </div>
     );

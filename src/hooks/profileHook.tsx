@@ -24,6 +24,8 @@ export const useProfileData = () => {
     listPersonalRequestAssign: user.listPersonalRequestAssign.data.data,
     detailPersonalRequestAssign: user.detailPersonalRequestAssign.data.data,
     listStatusPersonal: user.listStatusPersonal.data.data,
+    listPersonalTarget: user.listPersonalTarget.data.data,
+    detailPersonalTarget: user.detailPersonalTarget.data.data,
     
     // Loading states
     isLoadingUser: user.userInfo.loading,

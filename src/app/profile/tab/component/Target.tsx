@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { 
     personalRequestAssign, 
-    personalRequestHonor,   
     personalRequestApply,
-    personalRequestReject, 
+    personalRequestReject,
+    personalTarget, 
 } from "@/src/services/api";
 import { useProfileData } from '@/src/hooks/profileHook';
 import { useDispatch } from 'react-redux';
@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Award, Check, X } from 'lucide-react';
+import { ArrowLeft, Check, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import {
   Dialog,
@@ -30,30 +30,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
 // Component hiển thị chi tiết
-const RequestDetail = ({ 
+const TargetDetail = ({ 
     request, 
     onBack, 
-    onHonor, 
     onApply, 
     onReject 
 }: { 
     request: any; 
     onBack: () => void; 
-    onHonor: (id: string, reason: string) => void;
     onApply: (id: string) => void;
     onReject: (id: string) => void;
 }) => {
-    const [showHonorDialog, setShowHonorDialog] = useState(false);
-    const [honorReason, setHonorReason] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showRejectDialog, setShowRejectDialog] = useState(false);
     const [showApplyDialog, setShowApplyDialog] = useState(false);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
-    
     
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('vi-VN', {
@@ -71,27 +65,6 @@ const RequestDetail = ({
             hour: '2-digit',
             minute: '2-digit'
         });
-    };
-
-    const handleHonorClick = () => {
-        setShowHonorDialog(true);
-        setHonorReason('');
-    };
-
-    const handleHonorSubmit = async () => {
-        if (!honorReason.trim()) {
-            toast.error('Vui lòng nhập lý do vinh danh');
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            await onHonor(request.id, honorReason);
-            setShowHonorDialog(false);
-            setHonorReason('');
-        } finally {
-            setIsSubmitting(false);
-        }
     };
 
     const handleApplyClick = () => {
@@ -123,8 +96,7 @@ const RequestDetail = ({
     };
 
     // Kiểm tra trạng thái để hiển thị nút
-    const canApproveOrReject = request.status_requests.id !== 5; // Không phải "Đã vinh danh"
-
+    const canApproveOrReject = request.status?.id !== 5;
     const getFileInfo = (url: string) => {
         const extension = url.split('.').pop()?.toLowerCase() || '';
         const fileName = url.split('/').pop() || 'file';
@@ -205,7 +177,7 @@ const RequestDetail = ({
                     </div>
 
                     {/* Action buttons - Icon only */}
-                    {canApproveOrReject ? (
+                    {canApproveOrReject && (
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={handleApplyClick}
@@ -236,26 +208,6 @@ const RequestDetail = ({
                             >
                                 <X className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                             </button>
-
-                            <button
-                                onClick={handleHonorClick}
-                                className="
-                                    w-10 h-10 sm:w-11 sm:h-11
-                                    rounded-lg
-                                    bg-yellow-600 hover:bg-yellow-700
-                                    flex items-center justify-center
-                                    transition-colors
-                                    shadow-lg
-                                "
-                                title="Vinh danh"
-                            >
-                                <Award className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-600 text-white text-sm">
-                            <Award className="h-5 w-5" />
-                            <span className="hidden sm:inline">Đã vinh danh</span>
                         </div>
                     )}
                 </div>
@@ -323,7 +275,7 @@ const RequestDetail = ({
                                     variant="outline"
                                     className="bg-blue-900/50 text-blue-300 border-blue-700 text-sm px-3 py-1"
                                 >
-                                    {request.type_requests?.name}
+                                    {request.type?.name}
                                 </Badge>
                             </div>
                             <div>
@@ -334,7 +286,7 @@ const RequestDetail = ({
                                     variant="secondary"
                                     className="bg-amber-900/50 text-amber-300 text-sm px-3 py-1"
                                 >
-                                    {request.status_requests?.name}
+                                    {request.status?.name}
                                 </Badge>
                             </div>
                         </div>
@@ -366,6 +318,7 @@ const RequestDetail = ({
                                 </p>
                             </div>
                         </div>
+
                         {request.document && (
                             <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-slate-700">
                                 <p className="text-xs text-slate-500 mb-1.5 sm:mb-2">Minh chứng:</p>
@@ -389,65 +342,6 @@ const RequestDetail = ({
                     />
                 </div>
             )}
-
-            {/* Honor Dialog */}
-            <Dialog open={showHonorDialog} onOpenChange={setShowHonorDialog}>
-                <DialogContent className="bg-slate-800 border-slate-700 text-white w-[95vw] sm:max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                            <Award className="h-6 w-6 text-yellow-500" />
-                            Vinh danh yêu cầu
-                        </DialogTitle>
-                        <DialogDescription className="text-slate-400 text-sm">
-                            Nhập lý do vinh danh cho yêu cầu "{request.title}"
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="reason" className="text-slate-300">
-                                Lý do vinh danh <span className="text-red-500">*</span>
-                            </Label>
-                            <Textarea
-                                id="reason"
-                                placeholder="Nhập lý do vinh danh..."
-                                value={honorReason}
-                                onChange={(e) => setHonorReason(e.target.value)}
-                                className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 min-h-[120px]"
-                                disabled={isSubmitting}
-                            />
-                        </div>
-                    </div>
-
-                    <DialogFooter className="flex-col sm:flex-row gap-2">
-                        <Button
-                            variant="ghost"
-                            onClick={() => setShowHonorDialog(false)}
-                            disabled={isSubmitting}
-                            className="text-slate-300 hover:text-white hover:bg-slate-700 w-full sm:w-auto"
-                        >
-                            Hủy
-                        </Button>
-                        <Button
-                            onClick={handleHonorSubmit}
-                            disabled={isSubmitting || !honorReason.trim()}
-                            className="bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white w-full sm:w-auto"
-                        >
-                            {isSubmitting ? (
-                                <>
-                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-                                    Đang xử lý...
-                                </>
-                            ) : (
-                                <>
-                                    <Award className="h-4 w-4 mr-2" />
-                                    Xác nhận vinh danh
-                                </>
-                            )}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
 
             {/* Apply Dialog */}
             <Dialog open={showApplyDialog} onOpenChange={setShowApplyDialog}>
@@ -491,7 +385,6 @@ const RequestDetail = ({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-            
 
             {/* Reject Dialog */}
             <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
@@ -540,23 +433,25 @@ const RequestDetail = ({
 };
 
 // Component chính
-function Request() {
+function Target() {
     const dispatch = useDispatch();
-    const { listPersonalRequestAssign, detailPersonalRequestAssign } = useProfileData();
+    const { 
+        listPersonalTarget,
+        detailPersonalTarget
+    } = useProfileData();
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedId, setSelectedId] = useState<string | null>(null);
-    console.log(listPersonalRequestAssign);
 
     const limit = 6;
 
     useEffect(() => {
         const token = localStorage.getItem("userToken");
         if (token) {
-            dispatch(personalRequestAssign({
+            dispatch(personalTarget({
                 page: currentPage,
                 limit,
                 token: token,
-                key: "listPersonalRequestAssign"
+                key: "listPersonalTarget"
             }) as any);
         }
     }, [currentPage, dispatch]);
@@ -565,50 +460,15 @@ function Request() {
         const token = localStorage.getItem("userToken");
         
         setSelectedId(id);
-        dispatch(personalRequestAssign({
+        dispatch(personalTarget({
             id: id,
             token: token,
-            key: "detailPersonalRequestAssign"
+            key: "detailPersonalTarget"
         }) as any);
     };
 
     const handleBackToList = () => {
         setSelectedId(null);
-    };
-
-    const handleHonor = async (id: string, reason: string) => {
-        const token = localStorage.getItem("userToken");
-        
-        try {
-            const result = await dispatch(personalRequestHonor({
-                id,
-                reason,
-                token
-            }) as any);
-
-            if (result.payload?.data?.success) {
-                toast.success('Vinh danh thành công!');
-                
-                // Refresh chi tiết
-                dispatch(personalRequestAssign({
-                    id: id,
-                    token: token,
-                    key: "detailPersonalRequestAssign"
-                }) as any);
-                
-                // Refresh danh sách
-                dispatch(personalRequestAssign({
-                    page: currentPage,
-                    limit,
-                    token: token,
-                    key: "listPersonalRequestAssign"
-                }) as any);
-            } else {
-                toast.error(result.payload?.data?.message || 'Có lỗi xảy ra khi vinh danh');
-            }
-        } catch (error) {
-            toast.error('Có lỗi xảy ra khi vinh danh');
-        }
     };
 
     const handleApply = async (id: string) => {
@@ -624,24 +484,26 @@ function Request() {
                 toast.success('Xác nhận yêu cầu thành công!');
                 
                 // Refresh chi tiết
-                dispatch(personalRequestAssign({
+                dispatch(personalTarget({
                     id: id,
                     token: token,
-                    key: "detailPersonalRequestAssign"
+                    key: "detailPersonalTarget"
                 }) as any);
                 
                 // Refresh danh sách
-                dispatch(personalRequestAssign({
+                dispatch(personalTarget({
                     page: currentPage,
                     limit,
                     token: token,
-                    key: "listPersonalRequestAssign"
+                    key: "listPersonalTarget"
                 }) as any);
             } else {
-                toast.error(result.payload?.data?.message || 'Có lỗi xảy ra khi xác nhận');
+                console.log(result);
+                
+                toast.error(result.payload?.data?.message || result.payload?.message ||'Có lỗi xảy ra khi xác nhận');
             }
         } catch (error) {
-            toast.error('Có lỗi xảy ra khi xác nhận');
+            // toast.error('Có lỗi xảy ra khi xác nhận');
         }
     };
 
@@ -658,21 +520,21 @@ function Request() {
                 toast.success('Từ chối yêu cầu thành công!');
                 
                 // Refresh chi tiết
-                dispatch(personalRequestAssign({
+                dispatch(personalTarget({
                     id: id,
                     token: token,
-                    key: "detailPersonalRequestAssign"
+                    key: "detailPersonalTarget"
                 }) as any);
                 
                 // Refresh danh sách
-                dispatch(personalRequestAssign({
+                dispatch(personalTarget({
                     page: currentPage,
                     limit,
                     token: token,
-                    key: "listPersonalRequestAssign"
+                    key: "listPersonalTarget"
                 }) as any);
             } else {
-                toast.error(result.payload?.data?.message || 'Có lỗi xảy ra khi từ chối');
+                toast.error(result.payload?.data?.message || result.payload?.message ||'Có lỗi xảy ra khi xác nhận');
             }
         } catch (error) {
             toast.error('Có lỗi xảy ra khi từ chối');
@@ -692,9 +554,9 @@ function Request() {
     };
 
     const renderPaginationItems = () => {
-        if (!listPersonalRequestAssign?.pagination) return null;
+        if (!listPersonalTarget?.pagination) return null;
 
-        const { totalPages } = listPersonalRequestAssign.pagination;
+        const { totalPages } = listPersonalTarget.pagination;
         const items = [];
         const showEllipsisThreshold = 7;
 
@@ -779,18 +641,17 @@ function Request() {
     };
 
     // Hiển thị chi tiết request
-    if (selectedId && detailPersonalRequestAssign) {
+    if (selectedId && detailPersonalTarget) {
         return (
-            <RequestDetail 
-                request={detailPersonalRequestAssign} 
+            <TargetDetail 
+                request={detailPersonalTarget} 
                 onBack={handleBackToList} 
-                onHonor={handleHonor}
                 onApply={handleApply}
                 onReject={handleReject}
             />
         );
     }
-
+    
     // Hiển thị danh sách request
     return (
         <div className="min-h-screen bg-slate-900">
@@ -801,7 +662,7 @@ function Request() {
 
                 {/* Request List */}
                 <div className="grid gap-4 mb-6">
-                    {listPersonalRequestAssign?.data?.map((request: any) => (
+                    {listPersonalTarget?.data?.map((request: any) => (
                         <Card
                             key={request.id}
                             onClick={() => handleViewDetail(request.id)}
@@ -833,13 +694,13 @@ function Request() {
                                             variant="outline"
                                             className="bg-blue-900/50 text-blue-300 border-blue-700 text-xs"
                                         >
-                                            {request.type_requests?.name}
+                                            {request.type?.name}
                                         </Badge>
                                         <Badge
                                             variant="secondary"
                                             className="bg-amber-900/50 text-amber-300 text-xs"
                                         >
-                                            {request.status_requests?.name}
+                                            {request.status?.name}
                                         </Badge>
                                     </div>
                                 </div>
@@ -863,7 +724,7 @@ function Request() {
                     ))}
 
                     {/* Empty state */}
-                    {listPersonalRequestAssign?.data?.length === 0 && (
+                    {listPersonalTarget?.data?.length === 0 && (
                         <div className="text-center py-12 sm:py-16 bg-slate-800 border border-slate-700 rounded-lg">
                             <svg
                                 className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-slate-600"
@@ -886,8 +747,8 @@ function Request() {
                 </div>
 
                 {/* Pagination */}
-                {listPersonalRequestAssign?.pagination &&
-                    listPersonalRequestAssign.pagination.totalPages > 1 && (
+                {listPersonalTarget?.pagination &&
+                    listPersonalTarget.pagination.totalPages > 1 && (
                         <div className="mt-6 sm:mt-8 overflow-x-auto">
                             <Pagination>
                                 <PaginationContent className="flex-nowrap">
@@ -915,14 +776,14 @@ function Request() {
                                                 e.preventDefault();
                                                 if (
                                                     currentPage <
-                                                    listPersonalRequestAssign.pagination.totalPages
+                                                    listPersonalTarget.pagination.totalPages
                                                 ) {
                                                     handlePageChange(currentPage + 1);
                                                 }
                                             }}
                                             className={`cursor-pointer ${
                                                 currentPage ===
-                                                listPersonalRequestAssign.pagination.totalPages
+                                                listPersonalTarget.pagination.totalPages
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }`}
@@ -937,4 +798,4 @@ function Request() {
     );
 }
 
-export default Request
+export default Target
