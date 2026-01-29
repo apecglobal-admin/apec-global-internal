@@ -51,7 +51,7 @@ const formSchema = z.object({
   project: z.string().optional(),
   area: z.string().optional(),
 
-  // Section 2: Feedback Content
+  // Section 2: Complain Content
   content: z.string().min(1, "Vui lòng nhập nội dung phản ảnh"),
   subject: z.string().optional(), // Object/Person being reported
 });
@@ -73,7 +73,7 @@ const CONTENT_FIELDS: FieldConfig[] = [
   { name: "content", label: "Nội dung chi tiết", type: "textarea", required: true, placeholder: "Mô tả chi tiết sự việc..." },
 ];
 
-export default function FeedbackPage() {
+export default function ComplainPage() {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch<AppDispatch>(); // Type dispatch if possible
   const { listProject } = useProjectData();
@@ -100,7 +100,7 @@ export default function FeedbackPage() {
   ];
 
   // Placeholder URL
-  const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyf-Occvv37qpsbueyT0cZnWgwXNw6SqXNmcF7oB2oGigtOIWCriMycn8vTZRLuc7o/exec";
+  const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycby-xWKwp0zSqBdGZ2yCnqrNzFrbAqkOmbyn05KEnjzsCPLyJkhcddZOjws0WOIfARfB/exec";
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -132,7 +132,7 @@ export default function FeedbackPage() {
       toast.success("Cảm ơn bạn đã gửi phản ảnh! Chúng tôi sẽ ghi nhận sớm nhất.");
       form.reset();
     } catch (error) {
-      console.error("Error submitting feedback:", error);
+      console.error("Error submitting complain:", error);
       toast.error("Có lỗi xảy ra khi gửi phản ảnh. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
@@ -153,12 +153,12 @@ export default function FeedbackPage() {
             <FormControl>
               {config.type === "select" ? (
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <SelectTrigger className="text-slate-900 w-full border-slate-600">
+                  <SelectTrigger className="text-slate-900 w-full min-w-0 border-slate-600 [&>[data-slot=select-value]]:truncate [&>[data-slot=select-value]]:min-w-0 [&>[data-slot=select-value]]:flex-1 [&>[data-slot=select-value]]:text-left">
                     <SelectValue placeholder={config.placeholder} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-w-[var(--radix-select-trigger-width)]">
                     {config.options?.map((opt) => (
-                      <SelectItem key={opt} value={opt} className="text-slate-200">
+                      <SelectItem key={opt} value={opt} className="text-slate-200 whitespace-normal h-auto py-2">
                         {opt}
                       </SelectItem>
                     ))}
@@ -199,7 +199,7 @@ export default function FeedbackPage() {
             Cổng Thông Tin Phản Ảnh
           </h1>
           <p className="mt-2 text-sm sm:text-base text-slate-700 font-medium">
-            Nơi tiếp nhận mọi ý kiến đóng góp và phản ảnh từ CBNV
+            Nơi tiếp nhận mọi kiến nghị và phản ảnh từ CBNV
           </p>
         </div>
 
@@ -208,7 +208,7 @@ export default function FeedbackPage() {
             
             {/* SECTION 1: Reporter Information */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="bg-blue-50/50 px-4 py-3 sm:px-6 sm:py-4 border-b border-blue-100 flex items-center gap-3">
+              <div className="bg-blue-100/50 px-4 py-3 sm:px-6 sm:py-4 border-b border-blue-100 flex items-center gap-3">
                 <UserCircle className="w-5 h-5 sm:w-6 sm:h-6 text-blue-700" />
                 <h2 className="text-base sm:text-lg font-bold text-blue-900">Thông tin người phản ảnh</h2>
               </div>
@@ -218,9 +218,9 @@ export default function FeedbackPage() {
               </div>
             </div>
 
-            {/* SECTION 2: Feedback Content */}
+            {/* SECTION 2: Complain Content */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-               <div className="bg-amber-50/50 px-4 py-3 sm:px-6 sm:py-4 border-b border-amber-100 flex items-center gap-3">
+               <div className="bg-amber-100/50 px-4 py-3 sm:px-6 sm:py-4 border-b border-amber-100 flex items-center gap-3">
                 <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-amber-700" />
                 <h2 className="text-base sm:text-lg font-bold text-amber-900">Nội dung phản ảnh</h2>
               </div>
@@ -231,7 +231,7 @@ export default function FeedbackPage() {
             </div>
 
             {/* Submit Actions */}
-            <div className="flex justify-end pt-2 sm:pt-4">
+            <div className="flex justify-center pt-2 md:pt-0">
                <Button 
                 type="submit" 
                 size="lg" 
