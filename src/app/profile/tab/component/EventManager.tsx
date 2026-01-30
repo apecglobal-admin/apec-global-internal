@@ -99,6 +99,14 @@ function EventManager() {
 
     const handleTargetTypeChange = (type: number) => {
         setSelectedTargetType(type);
+        // Reset về đúng kiểu dữ liệu
+        if (type === 3) {
+            // Employee → array
+            setSelectedTargetValues([]);
+        } else {
+            // Position/Department/Level → string hoặc number
+            setSelectedTargetValues("");
+        }
         setTargetError('');
     };
 
@@ -413,8 +421,7 @@ function EventManager() {
                             onClick={() => setShowCreateForm(true)} 
                             className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition shadow-lg shadow-blue-500/30 w-full sm:w-auto text-sm sm:text-base"
                         >
-                            <Plus size={18} className="sm:hidden" />
-                            <Plus size={20} className="hidden sm:block" />
+                            <Plus size={18} />
                             Tạo sự kiện mới
                         </button>
                     )}
@@ -424,8 +431,7 @@ function EventManager() {
                             onClick={handleCancel} 
                             className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition font-medium text-sm sm:text-base"
                         >
-                            <ArrowLeft size={16} className="sm:hidden" />
-                            <ArrowLeft size={18} className="hidden sm:block" />
+                            <ArrowLeft size={16} />
                             Quay lại
                         </button>
                     )}
@@ -554,6 +560,7 @@ function EventManager() {
                                     showFilters={true}
                                     maxHeight="20rem"
                                     placeholder="Chọn đối tượng tham gia..."
+                                    
                                 />
                             </div>
 

@@ -61,7 +61,6 @@ function SkillsTab({ userInfo }: any) {
         fullMark: 100,
     }));
 
-    console.log(skillsData);
     
 
     const toggleSkill = (index: number) => {

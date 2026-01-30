@@ -563,6 +563,31 @@ export const getTotalKpiSkill = createAsyncThunk(
   }
 );
 
+export const getPermissonManager = createAsyncThunk(
+  "user/getPermissonManager",
+  async (payload: any, thunkAPI) => {
+    try {
+      const {token} = payload;
+      const response = await apiAxiosInstance.get(
+        `/profile/manager/check`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );      
+
+      return {
+        data: response.data,
+        status: response.status,
+      };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
+
+
 
 
 

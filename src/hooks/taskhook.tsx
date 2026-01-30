@@ -19,6 +19,16 @@ export const useTaskData = () => {
     listTaskAssign: task.listTaskAssign.data.data,
     listDetailTaskAssign: task.listDetailTaskAssign.data.data,
     detailTaskAssign: task.detailTaskAssign.data.data,
+    supportTaskTypes: task.supportTaskTypes.data.data,
+    supportTask: task.supportTask.data.data,
+    detailSupportTask: task.detailSupportTask.data.data,
+    supportTaskManager: task.supportTaskManager.data.data,
+    detailSupportTaskManager: task.detailSupportTaskManager.data.data,
+    supportTaskEmployee: task.supportTaskEmployee.data.data,
+    detailSupportTaskEmployee: task.detailSupportTaskEmployee.data.data,
+    supportTaskPending: task.supportTaskPending.data.data,
+    detailSupportTaskPending: task.detailSupportTaskPending.data.data,
+
     // Loading states
 
     loadingListDetailTaskAssign: task.listDetailTaskAssign.loading,

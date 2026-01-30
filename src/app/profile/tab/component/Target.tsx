@@ -95,8 +95,16 @@ const TargetDetail = ({
         }
     };
 
+
     // Kiểm tra trạng thái để hiển thị nút
     const canApproveOrReject = request.status?.id !== 5;
+    const statusId = request.status?.id;
+    const canApply = statusId === 4; // Chờ xử lý - hiện Apply và Reject
+    const canHonor = statusId === 6; // Đã áp dụng - chỉ hiện Honor
+    const hideButtons = statusId === 3 || statusId === 5; // Từ chối hoặc Vinh danh - không hiện gì
+
+
+
     const getFileInfo = (url: string) => {
         const extension = url.split('.').pop()?.toLowerCase() || '';
         const fileName = url.split('/').pop() || 'file';
@@ -177,44 +185,48 @@ const TargetDetail = ({
                     </div>
 
                     {/* Action buttons - Icon only */}
-                    {canApproveOrReject && (
+                    {!hideButtons && (
                         <div className="flex items-center gap-2">
-                            <button
-                                onClick={handleApplyClick}
-                                className="
-                                    w-10 h-10 sm:w-11 sm:h-11
-                                    rounded-lg
-                                    bg-blue-600 hover:bg-blue-700
-                                    flex items-center justify-center
-                                    transition-colors
-                                    shadow-lg
-                                "
-                                title="Xác nhận"
-                            >
-                                <Check className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                            </button>
+                            {canApply && (
+                                <>
+                                    <button
+                                        onClick={handleApplyClick}
+                                        className="
+                                            w-10 h-10 sm:w-11 sm:h-11
+                                            rounded-lg
+                                            bg-blue-600 hover:bg-blue-700
+                                            flex items-center justify-center
+                                            transition-colors
+                                            shadow-lg
+                                        "
+                                        title="Xác nhận"
+                                    >
+                                        <Check className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                                    </button>
 
-                            <button
-                                onClick={handleRejectClick}
-                                className="
-                                    w-10 h-10 sm:w-11 sm:h-11
-                                    rounded-lg
-                                    bg-red-600 hover:bg-red-700
-                                    flex items-center justify-center
-                                    transition-colors
-                                    shadow-lg
-                                "
-                                title="Từ chối"
-                            >
-                                <X className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                            </button>
+                                    <button
+                                        onClick={handleRejectClick}
+                                        className="
+                                            w-10 h-10 sm:w-11 sm:h-11
+                                            rounded-lg
+                                            bg-red-600 hover:bg-red-700
+                                            flex items-center justify-center
+                                            transition-colors
+                                            shadow-lg
+                                        "
+                                        title="Từ chối"
+                                    >
+                                        <X className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                                    </button>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>
 
                 {/* Content */}
                 <Card className="bg-slate-800 border-slate-700">
-                    <CardContent className="p-4 sm:p-6 space-y-6">
+                    <CardContent className="space-y-6">
                         {/* Employee */}
                         <div className="flex items-center gap-4 pb-4 border-b border-slate-700">
                             <Avatar className="h-14 w-14 sm:h-16 sm:w-16">
@@ -224,11 +236,11 @@ const TargetDetail = ({
                                 </AvatarFallback>
                             </Avatar>
                             <div>
-                                <p className="font-semibold text-base sm:text-lg text-white">
-                                    {request.employee?.name}
-                                </p>
                                 <p className="text-xs sm:text-sm text-slate-400">
                                     Người tạo yêu cầu
+                                </p>
+                                <p className="font-semibold text-base sm:text-lg text-white">
+                                    {request.employee?.name}
                                 </p>
                             </div>
                         </div>
@@ -498,7 +510,6 @@ function Target() {
                     key: "listPersonalTarget"
                 }) as any);
             } else {
-                console.log(result);
                 
                 toast.error(result.payload?.data?.message || result.payload?.message ||'Có lỗi xảy ra khi xác nhận');
             }
