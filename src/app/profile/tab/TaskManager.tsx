@@ -91,8 +91,8 @@ function TaskManager() {
         {/* ================= TAB NAV ================= */}
         <div className="bg-slate-800 rounded-lg p-1">
 
-          {/* MOBILE: 3 trên - 2 dưới */}
-          <div className="grid grid-cols-3 gap-1 sm:hidden">
+          {/* MOBILE & TABLET: 3 cột grid */}
+          <div className="grid grid-cols-3 gap-1 lg:hidden">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -113,28 +113,8 @@ function TaskManager() {
             ))}
           </div>
 
-          {/* TABLET */}
-          <div className="hidden sm:grid md:hidden grid-cols-5 gap-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`py-3 rounded-lg text-sm font-semibold transition
-                  ${activeTab === tab.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-400 hover:bg-slate-700'
-                  }`}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  {/* {tab.icon} */}
-                  <span>{tab.shortLabel}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-
           {/* DESKTOP */}
-          <div className="hidden md:flex gap-1">
+          <div className="hidden lg:flex gap-1">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
