@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import { sendAudioToGemini, formatReport, saveReport } from "../features/ai-report/api/api";
 import { useSelector } from "react-redux";
 
-export interface AIReportResult {
+export interface NTLReportItem {
   report_date: string;
   area: string;
   new_customers_opened: string;
@@ -19,6 +19,27 @@ export interface AIReportResult {
   staff_suggestions_feedback: string;
 }
 
+export interface GenericReportData {
+  category: string;
+  project: string;
+  task_name: string;
+  quantity: number;
+  progress: string;
+  status: string;
+  start_date: string;
+  deadline: string;
+}
+
+export interface GenericReportItem {
+  action: "insert" | "update";
+  data: GenericReportData;
+  missing_deadline: boolean;
+}
+
+export type AIReportResponse =
+  | { report_project: "ntl"; reports: NTLReportItem[] }
+  | { report_project: "other"; reports: GenericReportItem[] };
+
 export const useAIReport = (
   onReportGenerated?: (text: string) => void,
   onSuccess?: () => void
@@ -30,7 +51,7 @@ export const useAIReport = (
   const [error, setError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false); // Used for saving
   const [isFormatting, setIsFormatting] = useState(false); // Used for formatting
-  const [reportResult, setReportResult] = useState<AIReportResult[] | null>(null);
+  const [reportResult, setReportResult] = useState<AIReportResponse | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const userInfo = useSelector((state: any) => state.user.userInfo.data);
@@ -151,16 +172,25 @@ export const useAIReport = (
     setIsFormatting(true);
     try {
       const response = await formatReport(transcribedText, userName);
-      // Assuming response.data contains the structured data array.
-      let result: AIReportResult[] = [];
-      if (Array.isArray(response.data)) {
-        result = response.data;
-      } else if (typeof response.data === 'object') {
-         // Fallback incase it returns a single object
-         result = [response.data];
+      // Ensure response.data matches AIReportResponse
+      // If the API returns exactly what the user described:
+      // { "report_project": "...", "reports": [...] }
+      if (response.data && (response.data.report_project === 'ntl' || response.data.report_project === 'other')) {
+          setReportResult(response.data);
+      } else {
+          // Fallback or error handling if unexpected structure
+           console.warn("Unexpected response format:", response.data);
+           // Attempt to cast or error out? 
+           // For now assume it might just be the array if looking at legacy, but user requested new structure.
+           // If it's legacy array, maybe wrap it?
+           if (Array.isArray(response.data)) {
+               // Assuming legacy behavior was NTL
+               setReportResult({ report_project: 'ntl', reports: response.data } as any);
+           } else {
+               setReportResult(null);
+               setError("Cấu trúc dữ liệu không hợp lệ.");
+           }
       }
-      setReportResult(result);
-      // Do NOT close modal or reset session yet
     } catch (err: any) {
       console.error("Error formatting report:", err);
       setError("Xảy ra lỗi khi AI xử lý báo cáo. Vui lòng thử lại.");
@@ -169,12 +199,14 @@ export const useAIReport = (
     }
   };
 
-  const handleSave = async (updatedResult?: AIReportResult[]) => {
+  const handleSave = async (updatedResult?: AIReportResponse) => {
     const dataToSave = updatedResult || reportResult;
     if (!dataToSave) return;
 
     setIsSending(true);
     try {
+      // Pass the whole object or just reports?
+      // Assuming api.saveReport expects the data object
       await saveReport(dataToSave, userName, userEmail, userDepartment, userPosition);
       setIsSuccess(true);
       if (onSuccess) {

@@ -6,10 +6,12 @@ import {
   X,
   Loader2,
   AlertCircle,
+  Calendar,
+  CheckCircle2
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { AIReportStatus } from "./aiReportStatus";
-import { AIReportResult } from "@/src/hooks/aiReportHook";
+import { AIReportResponse, NTLReportItem, GenericReportItem } from "@/src/hooks/aiReportHook";
 import { toast } from "react-toastify";
 
 
@@ -21,12 +23,12 @@ interface AIReportModalProps {
   error: string | null;
   isSending: boolean;
   handleFormat: () => void;
-  handleSave: (result?: AIReportResult[]) => void;
+  handleSave: (result?: AIReportResponse) => void;
   isRecording: boolean;
   isProcessing: boolean;
   isFormatting: boolean;
-  reportResult: AIReportResult[] | null;
-  setReportResult: (result: AIReportResult[]) => void;
+  reportResult: AIReportResponse | null;
+  setReportResult: (result: AIReportResponse) => void;
   isSuccess?: boolean;
 }
 
@@ -35,12 +37,14 @@ const ReportInput = ({
   label, 
   value, 
   onChange, 
-  type = "text" 
+  type = "text",
+  disabled = false
 }: { 
   label: string; 
   value: string | number; 
   onChange: (val: any) => void; 
   type?: string;
+  disabled?: boolean;
 }) => (
   <div className="space-y-1 m-0">
     <label className="text-xs font-semibold text-slate-300">{label}</label>
@@ -48,7 +52,11 @@ const ReportInput = ({
       type={type}
       value={value}
       onChange={(e) => onChange(type === "number" ? Number(e.target.value) : e.target.value)}
-      className="w-full bg-slate-800/50 text-slate-200 text-sm px-2.5 py-1.5 rounded-lg border border-slate-500/50 focus:border-blue-500/50 outline-none mt-1"
+      disabled={disabled}
+      className={cn(
+        "w-full bg-slate-800/50 text-slate-200 text-sm px-2.5 py-1.5 rounded-lg border border-slate-500/50 outline-none mt-1",
+        disabled ? "opacity-50 cursor-not-allowed bg-slate-900/50" : "focus:border-blue-500/50"
+      )}
     />
   </div>
 );
@@ -57,19 +65,25 @@ const ReportTextarea = ({
   label, 
   value, 
   onChange,
-  minHeight = "60px"
+  minHeight = "60px",
+  disabled = false
 }: { 
   label: string; 
   value: string; 
   onChange: (val: string) => void;
   minHeight?: string; 
+  disabled?: boolean;
 }) => (
   <div className="space-y-1 m-0">
     <label className="text-xs font-semibold text-slate-300">{label}</label>
     <textarea
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={`w-full bg-slate-800/50 text-slate-200 text-sm leading-relaxed p-1.5 mt-1 rounded-lg border border-slate-500/50 focus:border-blue-500/50 outline-none resize-none theme-scrollbar min-h-[${minHeight}]`}
+      disabled={disabled}
+      className={cn(
+        `w-full bg-slate-800/50 text-slate-200 text-sm leading-relaxed p-1.5 mt-1 rounded-lg border border-slate-500/50 outline-none resize-none theme-scrollbar min-h-[${minHeight}]`,
+        disabled ? "opacity-50 cursor-not-allowed bg-slate-900/50" : "focus:border-blue-500/50"
+      )}
       style={{ minHeight }}
     />
   </div>
@@ -98,6 +112,217 @@ export const AIReportModal = ({
       onClose();
     }
   }, [isSuccess, onClose]);
+
+  // Generic Render helper for 'other' project types
+  const renderOtherReport = (report: GenericReportItem, index: number) => {
+    const isUpdate = report.action === "update";
+    const canEdit = !isUpdate; // If insert, can edit all. If update, limited.
+    
+    // Helper to update specific data field
+    const updateDataField = (field: keyof typeof report.data, value: any) => {
+      if (!reportResult || reportResult.report_project !== 'other') return;
+      const newReports = [...reportResult.reports];
+      newReports[index] = {
+        ...newReports[index],
+        data: {
+          ...newReports[index].data,
+          [field]: value
+        }
+      };
+      setReportResult({ ...reportResult, reports: newReports });
+    };
+
+    return (
+      <div key={index} className="bg-slate-800/30 p-4 rounded-xl border border-white/40 space-y-4">
+        <div className="flex items-center border-b border-white/10 pb-2">
+            <span className={cn(
+                "text-xs px-2 py-0.5 mr-2 rounded-md border",
+                report.action === 'insert' ? "bg-green-500/20 text-green-300 border-green-500/30" : "bg-amber-500/20 text-amber-300 border-amber-500/30"
+            )}>
+                {report.action === 'insert' ? 'Thêm mới' : 'Cập nhật'}
+            </span>
+            <h4 className={cn(
+                "text-xs flex items-center gap-2",
+                report.action === 'insert' ? "text-green-300" : "text-amber-300"
+            )}>
+               {report.data.task_name}
+            </h4>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ReportInput 
+                label="Dự án" 
+                value={report.data.project} 
+                onChange={(v) => updateDataField("project", v)}
+                disabled={!canEdit}
+            />
+             <ReportInput 
+                label="Phân loại" 
+                value={report.data.category} 
+                onChange={(v) => updateDataField("category", v)}
+                disabled={!canEdit}
+            />
+             <ReportInput 
+                label="Công việc" 
+                value={report.data.task_name} 
+                onChange={(v) => updateDataField("task_name", v)}
+                disabled={!canEdit}
+            />
+             <ReportInput 
+                label="Số lượng" 
+                value={report.data.quantity} 
+                onChange={(v) => updateDataField("quantity", v)}
+                type="number"
+                disabled={!canEdit}
+            />
+
+             {/* Always Editable Fields for Update: Progress & Status */}
+             <ReportInput 
+                label="Tiến độ" 
+                value={report.data.progress} 
+                onChange={(v) => updateDataField("progress", v)}
+                // Always editable
+            />
+            <ReportInput 
+                label="Trạng thái" 
+                value={report.data.status} 
+                onChange={(v) => updateDataField("status", v)}
+                // Always editable
+            />
+            
+            {/* Start/End Date */}
+            <ReportInput 
+                label="Ngày bắt đầu" 
+                value={report.data.start_date} 
+                onChange={(v) => updateDataField("start_date", v)}
+                disabled={!canEdit}
+            />
+            <ReportInput 
+                label="Deadline" 
+                value={report.data.deadline} 
+                onChange={(v) => updateDataField("deadline", v)}
+                disabled={!canEdit}
+            />
+
+        </div>
+        {report.missing_deadline && (
+             <div className="text-red-400 text-xs flex items-center gap-1">
+                 <AlertCircle size={12}/>
+                 <span>Quá hạn</span>
+             </div>
+        )}
+      </div>
+    );
+  };
+
+  // NTL Render Helper
+  const renderNTLReport = (report: NTLReportItem, index: number) => {
+    const updateField = (field: keyof NTLReportItem, value: any) => {
+        if (!reportResult || reportResult.report_project !== 'ntl') return;
+        const newReports = [...reportResult.reports];
+        newReports[index] = { ...newReports[index], [field]: value };
+        setReportResult({ ...reportResult, reports: newReports });
+    };
+
+    return (
+        <div key={index} className="bg-slate-800/30 p-4 rounded-xl border border-white/50 space-y-6">
+            <div className="border-b border-slate-300/50 pb-3">
+            <h4 className="text-blue-100 font-bold text-lg bg-blue-900/40 py-2 rounded-lg text-center border border-indigo-500/30">
+                Báo cáo {report.area ? `- ${report.area}` : `#${index + 1}`}
+            </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                <ReportInput 
+                    label="Ngày báo cáo" 
+                    value={report.report_date} 
+                    onChange={(v) => updateField("report_date", v)} 
+                />
+                <ReportInput 
+                    label="Khu vực" 
+                    value={report.area} 
+                    onChange={(v) => updateField("area", v)} 
+                />
+                </div>
+            </div>
+            
+            {/* SECTION 1: TÌNH HÌNH KHÁCH HÀNG */}
+            <div className="space-y-4">
+            <h5 className="text-blue-400 font-bold text-sm uppercase tracking-wider border-l-4 border-blue-500 pl-3">
+                Tình hình khách hàng
+            </h5>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ReportInput 
+                    label="Khách hàng mới (ra quân)" 
+                    value={report.new_customers_opened} 
+                    onChange={(v) => updateField("new_customers_opened", v)} 
+                />
+                <ReportInput 
+                    label="Khách hàng thanh lý (rút quân)" 
+                    value={report.customers_closed_withdrawn} 
+                    onChange={(v) => updateField("customers_closed_withdrawn", v)} 
+                />
+                <ReportInput 
+                    label="Tăng vị trí" 
+                    value={report.positions_increased} 
+                    onChange={(v) => updateField("positions_increased", v)} 
+                />
+                <ReportInput 
+                    label="Giảm vị trí" 
+                    value={report.positions_decreased} 
+                    onChange={(v) => updateField("positions_decreased", v)} 
+                />
+            </div>
+                <ReportTextarea 
+                label="Ý kiến / Phản ánh của khách hàng / Sự cố" 
+                value={report.customer_feedback_incidents} 
+                onChange={(v) => updateField("customer_feedback_incidents", v)} 
+                />
+                <ReportTextarea 
+                label="Ghi chú" 
+                value={report.notes} 
+                onChange={(v) => updateField("notes", v)} 
+                minHeight="60px"
+                />
+            </div>
+
+            {/* SECTION 2: TÌNH HÌNH NHÂN SỰ */}
+            <div className="space-y-4 pt-4 border-t border-slate-300/50">
+            <h5 className="text-amber-400 font-bold text-sm uppercase tracking-wider border-l-4 border-amber-500 pl-3">
+                Tình hình nhân sự
+            </h5> 
+            <ReportInput 
+                label="Quân số (Thực tế/Hợp đồng)" 
+                value={report.actual_vs_contracted_staff} 
+                onChange={(v) => updateField("actual_vs_contracted_staff", v)} 
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                <ReportInput 
+                    label="Tuyển mới" 
+                    value={report.new_staff_hired} 
+                    onChange={(v) => updateField("new_staff_hired", v)} 
+                />
+                <ReportInput 
+                    label="Nghỉ việc" 
+                    value={report.staff_resigned} 
+                    onChange={(v) => updateField("staff_resigned", v)} 
+                />
+                </div>
+
+                <ReportTextarea 
+                label="Nhân sự vi phạm" 
+                value={report.staff_violations} 
+                onChange={(v) => updateField("staff_violations", v)} 
+                />
+                
+                <ReportTextarea 
+                label="Ý kiến / Đề xuất của nhân sự" 
+                value={report.staff_suggestions_feedback} 
+                onChange={(v) => updateField("staff_suggestions_feedback", v)} 
+                />
+            </div>
+        </div>
+    );
+  };
+
 
   return (
     <AnimatePresence>
@@ -144,7 +369,7 @@ export const AIReportModal = ({
                     </div>
                   )}
 
-                  {/* Result State - Allow manual input even if transcribedText is empty (as long as we are not showing a report result) */}
+                  {/* Input State: Show only if NO result yet */}
                   {!reportResult && (
                       <div className="w-full text-left">
                         <textarea
@@ -176,120 +401,19 @@ export const AIReportModal = ({
                     )}
 
                   {/* Preview State */}
-                  {reportResult && reportResult.length > 0 && (
+                  {reportResult && (
                     <div className="w-full text-left space-y-8">
-
-                      {reportResult.map((report, index) => {
-                        const updateField = (field: keyof AIReportResult, value: any) => {
-                          const newReports = [...reportResult];
-                          (newReports[index] as any)[field] = value;
-                          setReportResult(newReports);
-                        };
-
-                        return (
-                        <div key={index} className="bg-slate-800/30 p-4 rounded-xl border border-white/50 space-y-6">
-                          <div className="border-b border-slate-300/50 pb-3">
-                            <h4 className="text-blue-100 font-bold text-lg bg-blue-900/40 py-2 rounded-lg text-center border border-indigo-500/30">
-                               Báo cáo {report.area ? `- ${report.area}` : `#${index + 1}`}
-                            </h4>
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-                                <ReportInput 
-                                  label="Ngày báo cáo" 
-                                  value={report.report_date} 
-                                  onChange={(v) => updateField("report_date", v)} 
-                                />
-                                <ReportInput 
-                                  label="Khu vực" 
-                                  value={report.area} 
-                                  onChange={(v) => updateField("area", v)} 
-                                />
-                             </div>
+                      {reportResult.report_project === 'ntl' && (
+                          <div className="space-y-6">
+                              {reportResult.reports.map((report, idx) => renderNTLReport(report, idx))}
                           </div>
-                          
-                          {/* SECTION 1: TÌNH HÌNH KHÁCH HÀNG */}
-                          <div className="space-y-4">
-                            <h5 className="text-blue-400 font-bold text-sm uppercase tracking-wider border-l-4 border-blue-500 pl-3">
-                              Tình hình khách hàng
-                            </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <ReportInput 
-                                  label="Khách hàng mới (ra quân)" 
-                                  value={report.new_customers_opened} 
+                      )}
 
-                                  onChange={(v) => updateField("new_customers_opened", v)} 
-                                />
-                                <ReportInput 
-                                  label="Khách hàng thanh lý (rút quân)" 
-                                  value={report.customers_closed_withdrawn} 
-
-                                  onChange={(v) => updateField("customers_closed_withdrawn", v)} 
-                                />
-                                <ReportInput 
-                                  label="Tăng vị trí" 
-                                  value={report.positions_increased} 
-
-                                  onChange={(v) => updateField("positions_increased", v)} 
-                                />
-                                <ReportInput 
-                                  label="Giảm vị trí" 
-                                  value={report.positions_decreased} 
-
-                                  onChange={(v) => updateField("positions_decreased", v)} 
-                                />
-                            </div>
-                             <ReportTextarea 
-                               label="Ý kiến / Phản ánh của khách hàng / Sự cố" 
-                               value={report.customer_feedback_incidents} 
-                               onChange={(v) => updateField("customer_feedback_incidents", v)} 
-                             />
-                             <ReportTextarea 
-                               label="Ghi chú" 
-                               value={report.notes} 
-                               onChange={(v) => updateField("notes", v)} 
-                               minHeight="60px"
-                             />
+                      {reportResult.report_project === 'other' && (
+                          <div className="space-y-6">
+                              {reportResult.reports.map((report, idx) => renderOtherReport(report, idx))}
                           </div>
-
-                          {/* SECTION 2: TÌNH HÌNH NHÂN SỰ */}
-                          <div className="space-y-4 pt-4 border-t border-slate-300/50">
-                            <h5 className="text-amber-400 font-bold text-sm uppercase tracking-wider border-l-4 border-amber-500 pl-3">
-                              Tình hình nhân sự
-                            </h5> 
-                            <ReportInput 
-                              label="Quân số (Thực tế/Hợp đồng)" 
-                              value={report.actual_vs_contracted_staff} 
-                              onChange={(v) => updateField("actual_vs_contracted_staff", v)} 
-                            />
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-                                <ReportInput 
-                                  label="Tuyển mới" 
-                                  value={report.new_staff_hired} 
-
-                                  onChange={(v) => updateField("new_staff_hired", v)} 
-                                />
-                                <ReportInput 
-                                  label="Nghỉ việc" 
-                                  value={report.staff_resigned} 
-
-                                  onChange={(v) => updateField("staff_resigned", v)} 
-                                />
-                             </div>
-
-                             <ReportTextarea 
-                               label="Nhân sự vi phạm" 
-                               value={report.staff_violations} 
-                               onChange={(v) => updateField("staff_violations", v)} 
-                             />
-                              
-                             <ReportTextarea 
-                               label="Ý kiến / Đề xuất của nhân sự" 
-                               value={report.staff_suggestions_feedback} 
-                               onChange={(v) => updateField("staff_suggestions_feedback", v)} 
-                             />
-                          </div>
-
-                        </div>
-                      );})}
+                      )}
 
                       <div className="mt-4 pt-3 border-t border-slate-700 flex justify-end items-center gap-2">
                         <button
