@@ -109,7 +109,6 @@ function ProfilePage() {
             </div>
         );
     }
-    console.log(permission);
     
     const currentExp =
         typeof userInfo.exp === "string"

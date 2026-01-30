@@ -56,7 +56,6 @@ export default function Header() {
         const token = localStorage.getItem("userToken");
         const loadPermission = async () => {
             const res = await dispatch(getPermissonManager({token }) as any)
-            console.log("asadasd", res);
 
         }
         loadPermission();

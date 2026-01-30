@@ -12,7 +12,7 @@ export const useProfileData = () => {
     careers: user.careers.data,
     tasks: user.tasks.data,
     detailTask: user.detailTasks.data.task,
-    typeTask: user.typeTask.data,
+    typeTask: user.typeTask.data.data,
     personals: user.personals.data,
     typePersonal: user.typePersonal.data,
     achievements: user.achievements.data,

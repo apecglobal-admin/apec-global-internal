@@ -83,7 +83,6 @@ const TaskListAssign: React.FC = () => {
             showActionButtons: true,
             onConfirm: async () => {
                 const res = await dispatch(deleteTaskAssign(payload) as any);
-                console.log(res);
                 
                 if(res.payload.data?.success){
                     dispatch(getDetailListTaskAssign({
