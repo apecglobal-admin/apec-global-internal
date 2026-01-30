@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import PopupComponent, { usePopup } from "@/components/PopupComponent";
 
 // Component hiển thị chi tiết
 const RequestDetail = ({ 
@@ -50,10 +51,8 @@ const RequestDetail = ({
     const [showHonorDialog, setShowHonorDialog] = useState(false);
     const [honorReason, setHonorReason] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showRejectDialog, setShowRejectDialog] = useState(false);
-    const [showApplyDialog, setShowApplyDialog] = useState(false);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
-    
+    const { isOpen, openPopup, closePopup, popupProps } = usePopup();
     
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('vi-VN', {
@@ -94,32 +93,43 @@ const RequestDetail = ({
         }
     };
 
-    const handleApplyClick = () => {
-        setShowApplyDialog(true);
+    const handleApplyClick = async () => {
+
+        openPopup({
+            type: "info",
+            title: "Áp dụng thực hiện yêu cầu này",
+            confirmText: "Xác nhận",
+            showActionButtons: true,
+            onConfirm: async () => {
+                try {
+                    await onApply(request.id);
+                } finally {
+                    setIsSubmitting(false);
+                    closePopup();
+                }                
+            },
+            onCancel: closePopup,
+        });
     };
 
-    const handleApplySubmit = async () => {
-        setIsSubmitting(true);
-        try {
-            await onApply(request.id);
-            setShowApplyDialog(false);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
 
-    const handleRejectClick = () => {
-        setShowRejectDialog(true);
-    };
+    const handleRejectClick = async () => {
+        openPopup({
+            type: "warning",
+            title: "Xác nhận xóa yêu cầu này",
+            confirmText: "Xác nhận",
+            showActionButtons: true,
+            onConfirm: async () => {
+                try {
+                    await onReject(request.id);
+                } finally {
+                    setIsSubmitting(false);
+                    closePopup();
 
-    const handleRejectSubmit = async () => {
-        setIsSubmitting(true);
-        try {
-            await onReject(request.id);
-            setShowRejectDialog(false);
-        } finally {
-            setIsSubmitting(false);
-        }
+                }                
+            },
+            onCancel: closePopup,
+        });
     };
 
     // Kiểm tra trạng thái để hiển thị nút
@@ -192,6 +202,7 @@ const RequestDetail = ({
     return (
         <div className="min-h-screen bg-slate-900 p-4 sm:p-6">
             <div className="max-w-4xl mx-auto">
+                <PopupComponent isOpen={isOpen} onClose={closePopup} {...popupProps} />
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
@@ -447,93 +458,6 @@ const RequestDetail = ({
                                 <>
                                     <Award className="h-4 w-4 mr-2" />
                                     Xác nhận vinh danh
-                                </>
-                            )}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Apply Dialog */}
-            <Dialog open={showApplyDialog} onOpenChange={setShowApplyDialog}>
-                <DialogContent className="bg-slate-800 border-slate-700 text-white w-[95vw] sm:max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                            <Check className="h-6 w-6 text-blue-500" />
-                            Xác nhận yêu cầu
-                        </DialogTitle>
-                        <DialogDescription className="text-slate-400 text-sm">
-                            Bạn có chắc chắn muốn xác nhận yêu cầu "{request.title}"?
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <DialogFooter className="flex-col sm:flex-row gap-2">
-                        <Button
-                            variant="ghost"
-                            onClick={() => setShowApplyDialog(false)}
-                            disabled={isSubmitting}
-                            className="text-slate-300 hover:text-white hover:bg-slate-700 w-full sm:w-auto"
-                        >
-                            Hủy
-                        </Button>
-                        <Button
-                            onClick={handleApplySubmit}
-                            disabled={isSubmitting}
-                            className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
-                        >
-                            {isSubmitting ? (
-                                <>
-                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-                                    Đang xử lý...
-                                </>
-                            ) : (
-                                <>
-                                    <Check className="h-4 w-4 mr-2" />
-                                    Xác nhận
-                                </>
-                            )}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-            
-
-            {/* Reject Dialog */}
-            <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-                <DialogContent className="bg-slate-800 border-slate-700 text-white w-[95vw] sm:max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                            <X className="h-6 w-6 text-red-500" />
-                            Từ chối yêu cầu
-                        </DialogTitle>
-                        <DialogDescription className="text-slate-400 text-sm">
-                            Bạn có chắc chắn muốn từ chối yêu cầu "{request.title}"?
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <DialogFooter className="flex-col sm:flex-row gap-2">
-                        <Button
-                            variant="ghost"
-                            onClick={() => setShowRejectDialog(false)}
-                            disabled={isSubmitting}
-                            className="text-slate-300 hover:text-white hover:bg-slate-700 w-full sm:w-auto"
-                        >
-                            Hủy
-                        </Button>
-                        <Button
-                            onClick={handleRejectSubmit}
-                            disabled={isSubmitting}
-                            className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto"
-                        >
-                            {isSubmitting ? (
-                                <>
-                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-                                    Đang xử lý...
-                                </>
-                            ) : (
-                                <>
-                                    <X className="h-4 w-4 mr-2" />
-                                    Từ chối
                                 </>
                             )}
                         </Button>

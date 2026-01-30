@@ -12,6 +12,7 @@ import {
     Info,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import SkillsTab from "./tab/skills";
 import ProjectsTab from "./tab/project";
@@ -46,6 +47,7 @@ import PersonalCautions from "./tab/component/PersonalCautions";
 
 function ProfilePage() {
     const dispatch = useDispatch();
+    const router = useRouter();
     const { userInfo, departments, positions, userKPI, permission } = useProfileData();
     
     const [currentImage, setCurrentImage] = useState(0);
@@ -69,7 +71,10 @@ function ProfilePage() {
     useEffect(() => {
         const token = localStorage.getItem("userToken");
      
-        if(!token) return;
+        if(!token) {
+            router.replace("/");
+            return;
+        }
 
         if (!userInfo) {
             dispatch(fetchUserInfo(token as any) as any);
