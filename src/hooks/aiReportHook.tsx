@@ -4,9 +4,19 @@ import { sendAudioToGemini, formatReport, saveReport } from "../features/ai-repo
 import { useSelector } from "react-redux";
 
 export interface AIReportResult {
-  category: string;
-  summary: string;
-  details: string;
+  report_date: string;
+  area: string;
+  new_customers_opened: string;
+  customers_closed_withdrawn: string;
+  positions_increased: string;
+  positions_decreased: string;
+  customer_feedback_incidents: string;
+  notes: string;
+  actual_vs_contracted_staff: string;
+  new_staff_hired: string;
+  staff_resigned: string;
+  staff_violations: string;
+  staff_suggestions_feedback: string;
 }
 
 export const useAIReport = (
@@ -20,15 +30,17 @@ export const useAIReport = (
   const [error, setError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false); // Used for saving
   const [isFormatting, setIsFormatting] = useState(false); // Used for formatting
-  const [reportResult, setReportResult] = useState<AIReportResult | null>(null);
+  const [reportResult, setReportResult] = useState<AIReportResult[] | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const userInfo = useSelector((state: any) => state.user.userInfo.data);
+  const positions = useSelector((state: any) => state.user.positions.data);
   const departments = useSelector((state: any) => state.user.departments.data);
-  
+
   const userName = userInfo?.name || "Unknown User";
   const userEmail = userInfo?.email || "";
   const userDepartment = departments?.find((d: any) => d.id === userInfo?.department_id)?.name || "Unknown Department";
+  const userPosition = positions?.find((p: any) => p.id === userInfo?.position_id)?.title || "Unknown Position";
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -139,8 +151,14 @@ export const useAIReport = (
     setIsFormatting(true);
     try {
       const response = await formatReport(transcribedText, userName);
-      // Assuming response.data contains the structured data. Adjust if nested.
-      const result: AIReportResult = response.data;
+      // Assuming response.data contains the structured data array.
+      let result: AIReportResult[] = [];
+      if (Array.isArray(response.data)) {
+        result = response.data;
+      } else if (typeof response.data === 'object') {
+         // Fallback incase it returns a single object
+         result = [response.data];
+      }
       setReportResult(result);
       // Do NOT close modal or reset session yet
     } catch (err: any) {
@@ -151,13 +169,13 @@ export const useAIReport = (
     }
   };
 
-  const handleSave = async (updatedResult?: AIReportResult) => {
+  const handleSave = async (updatedResult?: AIReportResult[]) => {
     const dataToSave = updatedResult || reportResult;
     if (!dataToSave) return;
 
     setIsSending(true);
     try {
-      await saveReport(dataToSave, userName, userEmail, userDepartment);
+      await saveReport(dataToSave, userName, userEmail, userDepartment, userPosition);
       setIsSuccess(true);
       if (onSuccess) {
         onSuccess();
@@ -195,5 +213,6 @@ export const useAIReport = (
     reportResult,
     setReportResult,
     isSuccess,
+    setShowModal,
   };
 };

@@ -199,7 +199,7 @@ export default function ComplainPage() {
             Cổng Thông Tin Phản Ảnh
           </h1>
           <p className="mt-2 text-sm sm:text-base text-slate-700 font-medium">
-            Nơi tiếp nhận mọi kiến nghị và phản ảnh từ CBNV
+            Nơi tiếp nhận mọi ý kiến đóng góp và phản ảnh từ CBNV
           </p>
         </div>
 

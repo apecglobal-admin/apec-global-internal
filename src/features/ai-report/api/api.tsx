@@ -1,4 +1,5 @@
 import axios from "axios";
+import { formatDateTime } from "@/src/utils/formatDate";
 
 export const sendAudioToGemini = async (audioBlob: Blob, context: string) => {
   const formData = new FormData();
@@ -18,7 +19,7 @@ export const formatReport = async (text: string, userName: string) => {
   return await axios.post("/api/webhook", {
     text: text,
     userName: userName,
-    timestamp: new Date().toISOString(),
+    timestamp: formatDateTime(new Date()),
   });
 };
 
@@ -27,13 +28,15 @@ export const saveReport = async (
   data: any,
   userName: string,
   email: string,
-  department: string
+  department: string,
+  position: string
 ) => {
   return await axios.post("/api/webhook/save", {
-    ...data,
+    reports: data,
     userName,
     email,
     department,
-    timestamp: new Date().toISOString(),
+    position,
+    timestamp: formatDateTime(new Date()),
   });
 };
