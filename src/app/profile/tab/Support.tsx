@@ -49,7 +49,6 @@ function Support() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
 
-    console.log("supportTaskEmployee", supportTaskEmployee);
     
     
     // Confirm Modal State

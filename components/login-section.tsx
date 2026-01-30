@@ -70,7 +70,6 @@ export default function LoginSection() {
             };
 
             const res = await dispatch(loginWeb(payload) as any);
-            console.log(res);
             
             if (res.payload.status === 200) {
                 const token = res.payload.data.token;

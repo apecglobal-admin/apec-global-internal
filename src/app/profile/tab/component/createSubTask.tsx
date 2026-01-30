@@ -71,7 +71,6 @@ function CreateSubTask({ task, statusTask, onClose, onSuccess }: CreateSubTaskPr
             };
 
             // TODO: Dispatch action to create subtask
-            console.log("Creating subtask:", payload);
 
             const result = await dispatch(createSubTask(payload) as any);
             if (result?.payload.data.success) {

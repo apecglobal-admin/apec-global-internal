@@ -164,7 +164,6 @@ function TaskDetail({
                 result = await dispatch(uploadFileTask(payload) as any);
             }
 
-            console.log( result?.payload?.data);
             
 
             if (result?.payload?.data?.status === 200 || result?.payload?.data?.status === 201 || result?.payload?.data?.success) {
