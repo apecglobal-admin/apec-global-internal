@@ -18,8 +18,8 @@ export default function AIReportButton({
 }: AIReportButtonProps) {
   const {
     isRecording,
-    isProcessing,
     showModal,
+    setShowModal,
     transcribedText,
     setTranscribedText,
     error,
@@ -33,7 +33,64 @@ export default function AIReportButton({
     startRecording,
     stopRecording,
     resetSession,
+    // We don't use isProcessing here directly but the modal needs it
+    isProcessing,
   } = useAIReport(onReportGenerated, onSuccess);
+
+  const longPressTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const isLongPressRef = React.useRef(false);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    // Prevent default browser actions (scrolling, text selection, context menu)
+    e.preventDefault();
+    
+    isLongPressRef.current = false;
+    
+    // Start a timer to detect long press
+    longPressTimerRef.current = setTimeout(() => {
+      isLongPressRef.current = true;
+      // Start recording
+      // We pass a dummy object because the hook expects an event to call preventDefault
+      // but we already did that here.
+      startRecording({ preventDefault: () => {} } as any);
+    }, 200); // 200ms threshold for "Hold"
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    e.preventDefault();
+
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+
+    if (isLongPressRef.current) {
+        // If it was a long press (timer fired), we definitely attempted to start recording.
+        // We must call stopRecording() to signal the hook that the user released the button.
+        // This handles both cases:
+        // 1. Recording already active -> Stops it.
+        // 2. Recording still initializing (race condition) -> Sets internal ref to false so initialization aborts.
+        stopRecording();
+    } else {
+        // Short press (timer didn't fire) -> Open Modal for manual entry
+        setShowModal(true);
+    }
+    
+    // Reset state
+    isLongPressRef.current = false;
+  };
+
+  const handlePointerLeave = (e: React.PointerEvent) => {
+      // If cursor/finger leaves the button while holding
+      if (longPressTimerRef.current) {
+          clearTimeout(longPressTimerRef.current);
+          longPressTimerRef.current = null;
+      }
+      if (isRecording) {
+          stopRecording();
+      }
+      isLongPressRef.current = false;
+  };
 
 
   return (
@@ -48,15 +105,12 @@ export default function AIReportButton({
         )}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        onPointerDown={startRecording}
-        onPointerUp={stopRecording}
-        onPointerLeave={() => {
-          // Safety measure: if user drags finger off button, stop recording
-          stopRecording();
-        }}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerLeave}
         // Prevent default touch behaviors that might interfere with holding
         style={{ touchAction: "none" }}
-        title="Ấn và giữ để bắt đầu báo cáo"
+        title="Nhấn để nhập văn bản, nhấn giữ để nói"
       >
         <Mic
           className={cn("text-white w-6 h-6", isRecording && "animate-pulse")}
