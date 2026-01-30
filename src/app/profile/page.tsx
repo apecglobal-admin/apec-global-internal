@@ -41,10 +41,13 @@ import TaskManager from "./tab/TaskManager";
 import Event from "./tab/Event";
 import UserInfoModal from "./tab/component/UserInfoModal";
 import { toast } from "react-toastify";
+import Support from "./tab/Support";
+import PersonalCautions from "./tab/component/PersonalCautions";
 
 function ProfilePage() {
     const dispatch = useDispatch();
-    const { userInfo, departments, positions, userKPI } = useProfileData();
+    const { userInfo, departments, positions, userKPI, permission } = useProfileData();
+    
     const [currentImage, setCurrentImage] = useState(0);
     const [activeTab, setActiveTab] = useState("skills");
     const [showUploadModal, setShowUploadModal] = useState(false);
@@ -101,7 +104,8 @@ function ProfilePage() {
             </div>
         );
     }
-
+    console.log(permission);
+    
     const currentExp =
         typeof userInfo.exp === "string"
             ? parseFloat(userInfo.exp)
@@ -543,15 +547,18 @@ function ProfilePage() {
                                 {activeTab === "achievements" && (
                                     <AchievementsTab userInfo={userInfo} />
                                 )}
+                                
                                 {activeTab === "career" && (
                                     <CareerTab userInfo={userInfo} />
                                 )}
                                 {activeTab === "tasks" && <TasksTab />}
-                                {activeTab === "tasksManager" && <TaskManager />}
+                                {permission && activeTab === "tasksManager" && <TaskManager />}
+                                {activeTab === "event" && <Support />}
                                 {activeTab === "event" && <Event />}
 
+
                                 
-                                {activeTab === "caution" && <Cautions />}
+                                {activeTab === "caution" && <PersonalCautions />}
 
                                 {activeTab === "personal" && (
                                     <PersonalTab userInfo={userInfo} />
