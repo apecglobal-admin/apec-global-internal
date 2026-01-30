@@ -321,6 +321,7 @@ export const updateProgressTask = createAsyncThunk(
                 status, 
                 value, 
                 token,
+                prove,
                 date_end,
                 date_start
             }: any = payload;
@@ -331,6 +332,7 @@ export const updateProgressTask = createAsyncThunk(
                     task_id, 
                     status, 
                     value, 
+                    prove,
                     date_end,
                     date_start
                 },
