@@ -12,9 +12,12 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: 'APEC GLOBAL',
+  description: 'APEC GLOBAL - Kiến tạo giá trị - Làm Chủ Tương Lai',
   generator: 'v0.app',
+  icons: {
+    icon: '/favi.png',
+  },
 }
 
 export default function RootLayout({
