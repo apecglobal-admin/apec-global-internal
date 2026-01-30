@@ -803,7 +803,7 @@ const handleUpload = async () => {
                       )} 
                       <div className="flex items-center gap-2 text-xs text-slate-500 mt-4">
                         <Calendar size={14} />
-                        {new Date(request.date_request).toLocaleDateString("vi-VN")}
+                        {new Date(request.created_at).toLocaleDateString("vi-VN")}
                       </div>
                     </div>
                   </div>

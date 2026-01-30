@@ -38,7 +38,7 @@ function AchievementsTab({ userInfo }: any) {
   const getCategoryColor = (categoryName: string): string => {
     return categoryColorMap[categoryName] || categoryColorMap.default;
   };
-
+  
   return (
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -80,30 +80,36 @@ function AchievementsTab({ userInfo }: any) {
           <FileText size={20} className="text-blue-400" />
           Trình độ học vấn
         </h4>
-        <div className="space-y-2 text-sm">
-          <p className="text-slate-300">
-            <span className="text-slate-500">Bằng cấp:</span>{" "}
-            {userInfo.educations.degree_level === "tien_si"
-              ? "Tiến sĩ"
-              : userInfo.educations.degree_level === "thac_si"
-              ? "Thạc sĩ"
-              : userInfo.educations.degree_level === "dai_hoc"
-              ? "Đại học"
-              : "N/A"}
-          </p>
-          <p className="text-slate-300">
-            <span className="text-slate-500">Chuyên ngành:</span>{" "}
-            {userInfo.educations.major}
-          </p>
-          <p className="text-slate-300">
-            <span className="text-slate-500">Trường:</span>{" "}
-            {userInfo.educations.school_name}
-          </p>
-          <p className="text-slate-300">
-            <span className="text-slate-500">Năm tốt nghiệp:</span>{" "}
-            {userInfo.educations.graduation_year}
-          </p>
-        </div>
+        {userInfo?.educations ? (
+          <div className="space-y-2 text-sm">
+            <p className="text-slate-300">
+              <span className="text-slate-500">Bằng cấp:</span>{" "}
+              {userInfo.educations.degree_level === "tien_si"
+                ? "Tiến sĩ"
+                : userInfo.educations.degree_level === "thac_si"
+                ? "Thạc sĩ"
+                : userInfo.educations.degree_level === "dai_hoc"
+                ? "Đại học"
+                : "N/A"}
+            </p>
+            <p className="text-slate-300">
+              <span className="text-slate-500">Chuyên ngành:</span>{" "}
+              {userInfo.educations.major || "N/A"}
+            </p>
+            <p className="text-slate-300">
+              <span className="text-slate-500">Trường:</span>{" "}
+              {userInfo.educations.school_name || "N/A"}
+            </p>
+            <p className="text-slate-300">
+              <span className="text-slate-500">Năm tốt nghiệp:</span>{" "}
+              {userInfo.educations.graduation_year || "N/A"}
+            </p>
+          </div>
+        ) : (
+          <div className="text-center text-slate-400 py-4">
+            Chưa có dữ liệu học vấn
+          </div>
+        )}
       </div>
     </div>
   );

@@ -146,11 +146,11 @@ function SupportTaskPending({ tasks, pagination, onPageChange }: SupportTaskPend
 
     if (!tasks || tasks.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-8 sm:py-12 px-4 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50">
+            <div className="flex flex-col items-center justify-center bg-slate-800 py-8 sm:py-12 px-4 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-800 flex items-center justify-center mb-3 sm:mb-4">
                     <ClipboardList className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                 </div>
-                <p className="text-base sm:text-lg font-bold text-slate-800 text-center">Chưa có nhiệm vụ chờ duyệt</p>
+                <p className="text-base sm:text-lg font-bold text-white text-center">Chưa có nhiệm vụ chờ duyệt</p>
                 <p className="text-xs sm:text-sm text-slate-500 mt-1 text-center">Các nhiệm vụ chờ duyệt sẽ xuất hiện tại đây</p>
             </div>
         );
