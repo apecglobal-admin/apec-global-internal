@@ -32,7 +32,7 @@ function Support() {
         supportTask, 
         supportTaskManager,
         supportTaskPending,
-} = useTaskData();
+    } = useTaskData();
 
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
@@ -113,9 +113,7 @@ function Support() {
 
 
     return (
-        <div className="container mx-auto py-6 space-y-6">
-
-
+        <div className="container mx-auto py-3 sm:py-6 px-3 sm:px-4 space-y-4 sm:space-y-6">
             {showCreateForm ? (
                 <CreateSupportTaskForm
                     supportTaskTypes={supportTaskTypes || []}
@@ -126,37 +124,46 @@ function Support() {
                 />
             ) : (
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <div className="flex justify-between items-center">
-                        <TabsList className="bg-slate-800 rounded-lg p-1 flex gap-1 h-auto">
-                            <TabsTrigger 
-                                value="need-support"
-                                className="flex-1 py-2 rounded-lg font-semibold data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=inactive]:text-slate-400 data-[state=inactive]:hover:bg-slate-700 data-[state=inactive]:bg-transparent"
+                    {/* Header with tabs and create button */}
+                    <div className="flex flex-col gap-3 lg:gap-4">
+                        {/* Mobile/Tablet: Stack vertically, Desktop: Horizontal */}
+                        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3">
+                            {/* Tabs */}
+                            <TabsList className="bg-slate-800 rounded-lg p-1 flex gap-1 h-auto w-full lg:w-auto overflow-x-auto">
+                                <TabsTrigger 
+                                    value="need-support"
+                                    className="flex-1 lg:flex-initial py-2 px-3 lg:px-4 rounded-lg text-xs lg:text-sm font-semibold whitespace-nowrap data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=inactive]:text-slate-400 data-[state=inactive]:hover:bg-slate-700 data-[state=inactive]:bg-transparent"
+                                >
+                                    Hỗ trợ của tôi
+                                </TabsTrigger>
+                                <TabsTrigger 
+                                    value="supporting"
+                                    className="flex-1 lg:flex-initial py-2 px-3 lg:px-4 rounded-lg text-xs lg:text-sm font-semibold whitespace-nowrap data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=inactive]:text-slate-400 data-[state=inactive]:hover:bg-slate-700 data-[state=inactive]:bg-transparent"
+                                >
+                                    Cần Hỗ trợ 
+                                </TabsTrigger>
+                                <TabsTrigger 
+                                    value="supported"
+                                    className="flex-1 lg:flex-initial py-2 px-3 lg:px-4 rounded-lg text-xs lg:text-sm font-semibold whitespace-nowrap data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=inactive]:text-slate-400 data-[state=inactive]:hover:bg-slate-700 data-[state=inactive]:bg-transparent"
+                                >
+                                    Hoàn thành
+                                </TabsTrigger>
+                            </TabsList>
+                            
+                            {/* Create button */}
+                            <Button 
+                                onClick={() => setShowCreateForm(true)}
+                                className="w-full lg:w-auto text-sm"
                             >
-                                Hỗ trợ của tôi
-                            </TabsTrigger>
-                            <TabsTrigger 
-                                value="supporting"
-                                className="flex-1 py-2 rounded-lg font-semibold data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=inactive]:text-slate-400 data-[state=inactive]:hover:bg-slate-700 data-[state=inactive]:bg-transparent"
-                            >
-                                Cần Hỗ trợ 
-                            </TabsTrigger>
-                            <TabsTrigger 
-                                value="supported"
-                                className="flex-1 py-2 rounded-lg font-semibold data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=inactive]:text-slate-400 data-[state=inactive]:hover:bg-slate-700 data-[state=inactive]:bg-transparent"
-                            >
-                                Hoàn thành
-                            </TabsTrigger>
-                        </TabsList>
-                        {!showCreateForm && (
-                            <Button onClick={() => setShowCreateForm(true)}>
                                 <Plus className="h-4 w-4 mr-2" />
-                                Tạo yêu cầu hỗ trợ
+                                <span className="hidden lg:inline">Tạo yêu cầu hỗ trợ</span>
+                                <span className="lg:hidden">Tạo yêu cầu</span>
                             </Button>
-                        )}
+                        </div>
                     </div>
 
-
-                    <TabsContent value="need-support" className="space-y-4">
+                    {/* Tab Contents */}
+                    <TabsContent value="need-support" className="space-y-4 mt-4">
                         <SupportTaskList
                             tasks={supportTask?.data || []}
                             pagination={supportTask?.pagination}
@@ -165,7 +172,7 @@ function Support() {
                         />
                     </TabsContent>
 
-                    <TabsContent value="supporting" className="space-y-4">
+                    <TabsContent value="supporting" className="space-y-4 mt-4">
                         <ManagerSupportTaskList 
                             tasks={supportTaskManager?.data || []}
                             pagination={supportTaskManager?.pagination}
@@ -173,7 +180,7 @@ function Support() {
                         />
                     </TabsContent>
 
-                    <TabsContent value="supported" className="space-y-4">
+                    <TabsContent value="supported" className="space-y-4 mt-4">
                         <SupportTaskPending 
                             tasks={supportTaskPending?.rows || []}
                             pagination={supportTaskManager?.pagination}
