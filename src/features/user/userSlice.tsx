@@ -23,7 +23,8 @@ import {
   personalRequestApply,
   personalRequestReject,
   updatePassword,
-  personalTarget
+  personalTarget,
+  getPermissonManager
 } from "../../services/api";
 import { createAsyncReducer, createAsyncReducerDynamic } from "@/src/utils/createAsyncReducer";
 
@@ -35,6 +36,7 @@ interface InitState<T> {
 }
 
 interface UserState {
+  permission: InitState<any[]>;
   token: string | null;
   userInfo: InitState<any | null>;
   departments: InitState<any[]>;
@@ -63,6 +65,7 @@ interface UserState {
 }
 
 const initialState: UserState = {
+  permission: { data: [], loading: false, error: null, status: null },
   token: null,
   userInfo: { data: null, loading: false, error: null, status: null },
   userKpi: { data: null, loading: false, error: null, status: null },
@@ -126,11 +129,6 @@ const userSlice = createSlice({
 
     createAsyncReducer(builder, updatePassword);
 
-    
-    
-
-    
-
     // API call cần lưu dữ liệu
     createAsyncReducer(builder, fetchUserInfo, "userInfo");
     createAsyncReducer(builder, fetchUserKPI, "userKpi");
@@ -152,7 +150,9 @@ const userSlice = createSlice({
     createAsyncReducer(builder, getTotalKpiSkill, "totalKpiSkill");
     createAsyncReducerDynamic(builder, personalRequestAssign);
     createAsyncReducerDynamic(builder, personalTarget);
+    createAsyncReducer(builder, getPermissonManager, "permission");
 
+    
   },
 });
 

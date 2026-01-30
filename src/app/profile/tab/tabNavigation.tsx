@@ -11,19 +11,21 @@ import {
   Link2,
   X,
 } from "lucide-react";
+import { useProfileData } from "@/src/hooks/profileHook";
 
 function TabNavigation({ activeTab, setActiveTab }: any) {
   const [isOpen, setIsOpen] = useState(false);
+  const { permission } = useProfileData();
 
   const tabs = [
     { id: "skills", label: "Tổng quát", icon: <Rocket size={18} /> },
     { id: "projects", label: "Dự án", icon: <Briefcase size={18} /> },
     { id: "career", label: "Lộ trình", icon: <Layers size={18} /> },
     { id: "tasks", label: "Nhiệm vụ", icon: <ListTodo size={18} /> },
-    { id: "tasksManager", label: "Quản lý", icon: <ListTodo size={18} /> },
+    { id: "event", label: "Sự kiện", icon: <User size={18} /> },
+    ...(permission ? [{ id: "tasksManager", label: "Quản lý", icon: <ListTodo size={18} /> }] : []),
     { id: "caution", label: "Vi phạm", icon: <ListTodo size={18} /> },
     { id: "personal", label: "Yêu cầu", icon: <User size={18} /> },
-    { id: "event", label: "Sự kiện", icon: <User size={18} /> },
 
     { id: "achievements", label: "Thành tích", icon: <Award size={18} /> },
     { id: "card", label: "Thẻ Apec", icon: <Home size={18} /> },
