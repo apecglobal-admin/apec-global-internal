@@ -38,13 +38,13 @@ const menuItems = [
 ];
 
 export default function Header() {
-    const { permission } = useProfileData();
+    const dispatch = useDispatch();
+    const { userInfo, permission  } = useProfileData();
+
     const pathname = usePathname();
     const profifle = pathname === "/profile";
     const searchPath = pathname === "/project" || pathname === "/event" || pathname === "/policy" || pathname === "/compet"
     const router = useRouter();
-    const dispatch = useDispatch();
-    const { userInfo } = useProfileData();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -90,12 +90,12 @@ export default function Header() {
             document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         localStorage.removeItem("userToken");
-        dispatch(logout());
-        setIsDropdownOpen(false);
-        setIsSidebarOpen(false);
         router.push("/login");
+        // await dispatch(logout());
+        // setIsDropdownOpen(false);
+        // setIsSidebarOpen(false);
     };
 
     const icons: any = {
