@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { deleteTaskAssign, getDetailListTaskAssign } from '@/src/features/task/api';
 import { useTaskData } from '@/src/hooks/taskhook';
-import { XCircle } from 'lucide-react';
+import { Plus, XCircle } from 'lucide-react';
 import PopupComponent, { usePopup } from "@/components/PopupComponent";
 import { toast } from 'react-toastify';
 import {
@@ -15,6 +15,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import TaskDetailAssign from './TaskDetailAsign'; 
+import AssignTask from './AssignTask';
 
 const TaskListAssign: React.FC = () => {
     const dispatch = useDispatch();
@@ -22,6 +23,7 @@ const TaskListAssign: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
     const { isOpen, openPopup, closePopup, popupProps } = usePopup();
+    const [showAssignTask, setShowAssignTask] = useState(false);
     
     useEffect(() => {
         const token = localStorage.getItem("userToken");
@@ -193,10 +195,29 @@ const TaskListAssign: React.FC = () => {
         return <TaskDetailAssign task={detailTaskAssign} onBack={handleBackToList} />;
     }
 
+    if (showAssignTask) {
+        return (
+          <AssignTask
+            onBack={() => setShowAssignTask(false)}
+            // onAssignSuccess={handleAssignSuccess}
+          />
+        );
+    }
+
     // Hiển thị danh sách task
     return (
         <div className="max-w-7xl mx-auto p-6">
-            <h1 className="text-3xl font-bold text-white mb-6">Danh sách công việc được giao</h1>
+            <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-5'>
+                <h1 className="text-3xl font-bold text-white mb-6">Công việc đã giao</h1>
+                <button
+                    onClick={() => setShowAssignTask(true)}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition shadow-lg shadow-blue-500/30 w-full sm:w-auto"
+                >
+                    <Plus size={18} />
+                    Giao nhiệm vụ
+                </button>
+
+            </div>
             <PopupComponent isOpen={isOpen} onClose={closePopup} {...popupProps} />
             {loadingListDetailTaskAssign ? (
                 <div className="flex justify-center items-center h-64">
@@ -309,7 +330,7 @@ const TaskListAssign: React.FC = () => {
                             <svg className="mx-auto h-16 w-16 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                             </svg>
-                            <p className="mt-4 text-lg text-slate-400">Chưa có công việc nào được giao</p>
+                            <p className="mt-4 text-lg text-slate-400">Chưa giao công việc</p>
                         </div>
                     )}
                 </>

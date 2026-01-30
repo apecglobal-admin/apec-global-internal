@@ -19,7 +19,11 @@ import {
   personTasks,
   uploadAvatar,
   personalRequestAssign,
-  personalRequestHonor
+  personalRequestHonor,
+  personalRequestApply,
+  personalRequestReject,
+  updatePassword,
+  personalTarget
 } from "../../services/api";
 import { createAsyncReducer, createAsyncReducerDynamic } from "@/src/utils/createAsyncReducer";
 
@@ -52,6 +56,10 @@ interface UserState {
   listPersonalRequestAssign: InitState<any[]>;
   detailPersonalRequestAssign: InitState<any[]>;
   listStatusPersonal: InitState<any[]>;
+  listPersonalTarget: InitState<any[]>;
+  detailPersonalTarget: InitState<any[]>;
+
+  
 }
 
 const initialState: UserState = {
@@ -75,6 +83,8 @@ const initialState: UserState = {
   listPersonalRequestAssign: { data: [], loading: false, error: null, status: null },
   detailPersonalRequestAssign: { data: [], loading: false, error: null, status: null },
   listStatusPersonal: { data: [], loading: false, error: null, status: null },
+  listPersonalTarget: { data: [], loading: false, error: null, status: null },
+  detailPersonalTarget: { data: [], loading: false, error: null, status: null },
 };
 
 const userSlice = createSlice({
@@ -111,7 +121,15 @@ const userSlice = createSlice({
     createAsyncReducer(builder, loginWeb);
     createAsyncReducer(builder, uploadAvatar);
     createAsyncReducer(builder, personalRequestHonor);
+    createAsyncReducer(builder, personalRequestApply);
+    createAsyncReducer(builder, personalRequestReject);
 
+    createAsyncReducer(builder, updatePassword);
+
+    
+    
+
+    
 
     // API call cần lưu dữ liệu
     createAsyncReducer(builder, fetchUserInfo, "userInfo");
@@ -133,6 +151,8 @@ const userSlice = createSlice({
     createAsyncReducer(builder, getListEmployeeDepartment, "listEmployeeDepartment");
     createAsyncReducer(builder, getTotalKpiSkill, "totalKpiSkill");
     createAsyncReducerDynamic(builder, personalRequestAssign);
+    createAsyncReducerDynamic(builder, personalTarget);
+
   },
 });
 
