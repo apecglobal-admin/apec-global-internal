@@ -1,4 +1,8 @@
-import { useState, useEffect } from "react";
+'use client';
+
+import React from "react"
+
+import { useState, useEffect, useRef } from "react";
 import {
     Users,
     CheckCircle2,
@@ -58,6 +62,10 @@ interface TaskTargetSelectorProps {
     showFilters?: boolean;
     maxHeight?: string;
     placeholder?: string;
+    // Tham số mới để cho phép chọn nhiều
+    allowMultiplePositions?: boolean;
+    allowMultipleDepartments?: boolean;
+    allowMultipleLevels?: boolean;
 }
 
 const defaultTargetOptions: TargetOption[] = [
@@ -110,11 +118,18 @@ function TaskTargetSelector({
     showFilters = true,
     maxHeight = "24rem",
     placeholder = "Chọn đối tượng...",
+    allowMultiplePositions = false,
+    allowMultipleDepartments = false,
+    allowMultipleLevels = false,
 }: TaskTargetSelectorProps) {
-    const [searchText, setSearchText] = useState("");
+const [searchText, setSearchText] = useState("");
     const [filterPosition, setFilterPosition] = useState<number | null>(null);
     const [filterDepartment, setFilterDepartment] = useState<number | null>(null);
     const [selectAllEmployees, setSelectAllEmployees] = useState(false);
+    
+    // Ref để track trạng thái trước đó và tránh infinite loop
+    const prevSelectAllRef = useRef(false);
+    const isUpdatingRef = useRef(false);
 
     const availableTargets = [
         ...defaultTargetOptions.filter((opt) =>
@@ -126,6 +141,15 @@ function TaskTargetSelector({
     const currentTarget = availableTargets.find(
         (t) => t.id === selectedTargetType
     );
+
+    // Kiểm tra xem target hiện tại có cho phép chọn nhiều không
+    const isMultipleAllowed = () => {
+        if (currentTarget?.type === "employee") return true;
+        if (currentTarget?.type === "position") return allowMultiplePositions;
+        if (currentTarget?.type === "department") return allowMultipleDepartments;
+        if (currentTarget?.type === "level") return allowMultipleLevels;
+        return false;
+    };
 
     useEffect(() => {
         if (
@@ -144,35 +168,47 @@ function TaskTargetSelector({
         }
     }, [searchText, filterPosition, filterDepartment, currentTarget?.type, selectAllEmployees]);
 
-    useEffect(() => {
+useEffect(() => {
+        // Chỉ thực hiện khi selectAllEmployees thay đổi thực sự
+        if (prevSelectAllRef.current === selectAllEmployees) {
+            return;
+        }
+        
+        // Tránh gọi nhiều lần khi đang update
+        if (isUpdatingRef.current) {
+            return;
+        }
+        
+        prevSelectAllRef.current = selectAllEmployees;
+        
         if (
             selectAllEmployees &&
             currentTarget?.type === "employee" &&
             employees.length > 0
         ) {
+            isUpdatingRef.current = true;
             const allIds = employees.map((emp) => emp.id);
             onSelectionChange(allIds);
+            // Reset flag sau khi update hoàn tất
+            requestAnimationFrame(() => {
+                isUpdatingRef.current = false;
+            });
         } else if (!selectAllEmployees && currentTarget?.type === "employee") {
-            // Không reset về [], giữ nguyên giá trị hiện tại
-            if (Array.isArray(selectedValues) && selectedValues.length === employees.length && employees.length > 0) {
-                // Nếu đang chọn tất cả, reset về []
-                onSelectionChange([]);
-            }
+            isUpdatingRef.current = true;
+            onSelectionChange([]);
+            requestAnimationFrame(() => {
+                isUpdatingRef.current = false;
+            });
         }
-    }, [selectAllEmployees, employees, currentTarget?.type]);
+    }, [selectAllEmployees, currentTarget?.type, employees.length, onSelectionChange]);
 
     const handleTargetTypeChange = (targetId: number) => {
-        const target = availableTargets.find((t) => t.id === targetId);
-        
-        // Chỉ reset khi chuyển sang target type mới
+        // Chỉ clear filters và reset selectAll
+        // KHÔNG tự động reset selectedValues để tương thích ngược
+        // User sẽ tự xử lý reset trong onTargetTypeChange callback
         if (targetId !== selectedTargetType) {
-            if (target?.type === "employee") {
-                onSelectionChange([]);
-                setSelectAllEmployees(false);
-            } else {
-                onSelectionChange("");
-            }
             clearFilters();
+            setSelectAllEmployees(false);
         }
         
         onTargetTypeChange(targetId);
@@ -199,6 +235,20 @@ function TaskTargetSelector({
         onErrorClear?.();
     };
 
+    // Hàm mới để toggle item khi cho phép chọn nhiều
+    const toggleItemSelection = (itemId: number) => {
+        const current = Array.isArray(selectedValues) ? selectedValues : [];
+        const isSelected = current.includes(itemId);
+        
+        onSelectionChange(
+            isSelected
+                ? current.filter((id) => id !== itemId)
+                : [...current, itemId]
+        );
+        
+        onErrorClear?.();
+    };
+
     const clearFilters = () => {
         setSearchText("");
         setFilterPosition(null);
@@ -210,15 +260,13 @@ function TaskTargetSelector({
             if (selectAllEmployees) return employees.length;
             return Array.isArray(selectedValues) ? selectedValues.length : 0;
         }
-        if (
-            (currentTarget?.type === "position" ||
-                currentTarget?.type === "department" ||
-                currentTarget?.type === "custom") &&
-            selectedValues
-        ) {
-            return 1;
+        
+        // Cho các loại khác
+        if (isMultipleAllowed()) {
+            return Array.isArray(selectedValues) ? selectedValues.length : 0;
+        } else {
+            return selectedValues ? 1 : 0;
         }
-        return 0;
     };
 
     const getColorClasses = (color: string, isActive: boolean) => {
@@ -425,43 +473,65 @@ function TaskTargetSelector({
         </>
     );
 
-    const renderItemList = (items: Item[], iconColor: string, IconComponent: React.ComponentType<any>) => (
-        <div className="space-y-2 overflow-y-auto pr-2" style={{ maxHeight }}>
-            {items.map((item) => {
-                const isSelected = selectedValues === item.id;
-                const displayName = item.name || item.title || "Không rõ";
-                
-                return (
-                    <div
-                        key={item.id}
-                        onClick={() => selectItem(item.id)}
-                        className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
-                            isSelected
-                                ? "border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20"
-                                : "border-slate-700 bg-slate-900 hover:border-slate-600 hover:bg-slate-800"
-                        }`}
-                    >
+    const renderItemList = (items: Item[], iconColor: string, IconComponent: React.ComponentType<any>) => {
+        const multipleAllowed = isMultipleAllowed();
+        
+        return (
+            <div className="space-y-2 overflow-y-auto pr-2" style={{ maxHeight }}>
+                {items.map((item) => {
+                    const isSelected = multipleAllowed 
+                        ? (Array.isArray(selectedValues) && selectedValues.includes(item.id))
+                        : selectedValues === item.id;
+                    const displayName = item.name || item.title || "Không rõ";
+                    
+                    return (
                         <div
-                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition ${
-                                isSelected ? "border-blue-500 bg-blue-500" : "border-slate-600"
+                            key={item.id}
+                            onClick={() => multipleAllowed ? toggleItemSelection(item.id) : selectItem(item.id)}
+                            className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
+                                isSelected
+                                    ? "border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20"
+                                    : "border-slate-700 bg-slate-900 hover:border-slate-600 hover:bg-slate-800"
                             }`}
                         >
-                            {isSelected && <div className="w-3 h-3 bg-white rounded-full" />}
+                            {multipleAllowed ? (
+                                // Checkbox cho chế độ chọn nhiều
+                                <div
+                                    className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition ${
+                                        isSelected
+                                            ? "border-blue-500 bg-blue-500"
+                                            : "border-slate-600"
+                                    }`}
+                                >
+                                    {isSelected && (
+                                        <CheckCircle2 size={14} className="text-white" />
+                                    )}
+                                </div>
+                            ) : (
+                                // Radio button cho chế độ chọn đơn
+                                <div
+                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition ${
+                                        isSelected ? "border-blue-500 bg-blue-500" : "border-slate-600"
+                                    }`}
+                                >
+                                    {isSelected && <div className="w-3 h-3 bg-white rounded-full" />}
+                                </div>
+                            )}
+                            <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${iconColor} flex items-center justify-center flex-shrink-0`}>
+                                <IconComponent className="text-white" size={20} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <span className="text-base font-semibold text-white truncate block">
+                                    {displayName}
+                                </span>
+                                <span className="text-xs text-slate-400">ID: {item.id}</span>
+                            </div>
                         </div>
-                        <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${iconColor} flex items-center justify-center flex-shrink-0`}>
-                            <IconComponent className="text-white" size={20} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <span className="text-base font-semibold text-white truncate block">
-                                {displayName}
-                            </span>
-                            <span className="text-xs text-slate-400">ID: {item.id}</span>
-                        </div>
-                    </div>
-                );
-            })}
-        </div>
-    );
+                    );
+                })}
+            </div>
+        );
+    };
 
     return (
         <div className="space-y-4">

@@ -164,10 +164,13 @@ function TaskDetail({
                 result = await dispatch(uploadFileTask(payload) as any);
             }
 
-            if (result?.payload.data.success && !result?.error) {
+            
+
+            if (result?.payload?.data?.status === 200 || result?.payload?.data?.status === 201 || result?.payload?.data?.success) {
+                toast.success("Tải file thành công.")
                 setIsUploaded(true);
             } else {
-                toast.error("tải file thất bại")
+                toast.error("Tải file thất bại. File tải quá nặng")
             }
         } catch (error: any) {
             console.error("Upload error:", error);
@@ -175,7 +178,7 @@ function TaskDetail({
             setIsUploading(false);
         }
     };
-
+    
 
     const handleSave = async () => {
         if (selectedStatus === 4 && !isUploaded) {
@@ -206,7 +209,7 @@ function TaskDetail({
                 date_start: task.task.date_start,
 
             };
-            
+
             const result = await dispatch(updateProgressTask(updatePayload) as any);
             
             if (result?.payload.data.success && !result?.error) {

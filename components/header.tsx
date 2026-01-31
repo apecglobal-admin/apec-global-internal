@@ -1,7 +1,7 @@
 "use client";
 
 import { logout } from "@/src/features/user/userSlice";
-import { fetchUserInfo } from "@/src/services/api";
+import { fetchUserInfo, getPermissonManager } from "@/src/services/api";
 import {
     Bell,
     ChevronDown,
@@ -38,20 +38,29 @@ const menuItems = [
 ];
 
 export default function Header() {
+    const dispatch = useDispatch();
+    const { userInfo, permission  } = useProfileData();
+
     const pathname = usePathname();
     const profifle = pathname === "/profile";
     const searchPath = pathname === "/project" || pathname === "/event" || pathname === "/policy" || pathname === "/compet"
     const router = useRouter();
-    const dispatch = useDispatch();
-    const { userInfo } = useProfileData();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const sidebarRef = useRef<HTMLDivElement>(null);
     const currentMenu = menuItems.find((item) => item.href === pathname);
     const [searchQuery, setSearchQuery] = useState<string>("");
-
     
+    useEffect(() => {
+        const token = localStorage.getItem("userToken");
+        const loadPermission = async () => {
+            const res = await dispatch(getPermissonManager({token }) as any)
+
+        }
+        loadPermission();
+    }, []);
+
     useEffect(() => {
         const token = localStorage.getItem("userToken");
         if (token) {
@@ -81,12 +90,12 @@ export default function Header() {
             document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         localStorage.removeItem("userToken");
-        dispatch(logout());
-        setIsDropdownOpen(false);
-        setIsSidebarOpen(false);
         router.push("/login");
+        // await dispatch(logout());
+        // setIsDropdownOpen(false);
+        // setIsSidebarOpen(false);
     };
 
     const icons: any = {

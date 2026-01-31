@@ -81,7 +81,8 @@ interface FilterOption {
 function TasksTab() {
   const dispatch = useDispatch();
   const { tasks: tasksResponse, typeTask, detailTask } = useProfileData();
-
+  console.log(typeTask);
+  
   const {
     priorityTask,
     childKpi,
@@ -96,7 +97,7 @@ function TasksTab() {
   const [statusFilter, setStatusFilter] = useState<string>("2");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
 
-
+  
 
   const [currentUserRole] = useState(2);
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
@@ -108,8 +109,8 @@ function TasksTab() {
   const currentPage = tasksResponse?.page || 1;
 
   useEffect(() => {
+    dispatch(listTypeTask() as any);
     if(!typeTask){
-      dispatch(listTypeTask() as any);
     }
     if(!listProject){
       dispatch(getListProject() as any);

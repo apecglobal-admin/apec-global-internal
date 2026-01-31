@@ -321,6 +321,7 @@ export const updateProgressTask = createAsyncThunk(
                 status, 
                 value, 
                 token,
+                prove,
                 date_end,
                 date_start
             }: any = payload;
@@ -331,6 +332,7 @@ export const updateProgressTask = createAsyncThunk(
                     task_id, 
                     status, 
                     value, 
+                    prove,
                     date_end,
                     date_start
                 },
@@ -590,6 +592,320 @@ export const updateTaskAssign = createAsyncThunk(
       }
     }
 );
+
+export const getSupportTaskTypes = createAsyncThunk(
+    "task/getSupportTaskTypes",
+    async (_, thunkAPI) => {
+        try {
+
+            const response = await apiAxiosInstance.get("/support/tasks/types");
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+export const createSupportTask = createAsyncThunk(
+    "task/createSupportTask",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {
+                name, 
+                description, 
+                type_id, 
+                target_department_id, 
+                employees,
+                departments,
+                token
+            } = payload
+            const response = await apiAxiosInstance.post("/support/tasks/create", {
+                name, 
+                description, 
+                type_id, 
+                target_department_id, 
+                employees,
+                departments
+            },{
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+            });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+//lấy danh sách support của người tạo
+export const getSupportTask = createAsyncThunk(
+    "task/getSupportTask",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {id, limit, page, filter, token} = payload;
+            const params = Object.fromEntries(
+                Object.entries({ limit, page, id, filter }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/support/tasks", {
+                params,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+// lấy danh sách support cho quản lý check
+export const getSupportTaskManager  = createAsyncThunk(
+    "task/getSupportTaskManager",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {id, limit, page, filter, token} = payload;
+            const params = Object.fromEntries(
+                Object.entries({ limit, page, id, filter }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/support/tasks/manager", {
+                params,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+export const getSupportTaskEmployee  = createAsyncThunk(
+    "task/getSupportTaskEmployee",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {id, limit, page, filter, token} = payload;
+            const params = Object.fromEntries(
+                Object.entries({ limit, page, id, filter }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/support/tasks/employees", {
+                params,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+
+export const supportTaskAccept  = createAsyncThunk(
+    "task/supportTaskAccept",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {id, token} = payload;
+            const response = await apiAxiosInstance.put("/support/tasks/accept", {ids: id}, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+export const supportTaskReject  = createAsyncThunk(
+    "task/supportTaskReject",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {id, token, reason} = payload;
+            const response = await apiAxiosInstance.put("/support/tasks/reject", {ids: id, reason}, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+export const supportTaskConfirm  = createAsyncThunk(
+    "task/supportTaskConfirm",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {id, prove, token} = payload;
+            const response = await apiAxiosInstance.put("/support/tasks/confirm/success", {id, prove}, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+
+// do người tạo xác nhận đã hoàn thành
+export const supportTaskChecked  = createAsyncThunk(
+    "task/supportTaskChecked",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {id,  token} = payload;
+            const response = await apiAxiosInstance.put("/support/tasks/checked", {ids: id}, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+
+
+
+export const supportTaskDelete  = createAsyncThunk(
+    "task/supportTaskDelete",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {id, token} = payload;
+            const response = await apiAxiosInstance.delete("/support/tasks/delete", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                data: {
+                    id: id,
+                },
+            });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+// lấy danh sách đang chờ thực hiện cho người tạo
+export const getSupportTaskPending  = createAsyncThunk(
+    "task/getSupportTaskPending",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {id, limit, page, filter, token} = payload;
+            const params = Object.fromEntries(
+                Object.entries({ limit, page, id, filter }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/support/tasks/confirm/pending", {
+                params,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
   

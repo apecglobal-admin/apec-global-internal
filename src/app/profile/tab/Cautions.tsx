@@ -205,7 +205,6 @@ function Cautions() {
         token
       };
 
-      console.log(payload);
 
       const result = await dispatch(createCaution(payload) as any);
 
@@ -464,7 +463,6 @@ function Cautions() {
         onUploadFile={handleUploadFile}
       />
 
-      <PersonalCautions />
     </>
   );
 }

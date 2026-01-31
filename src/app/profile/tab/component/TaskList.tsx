@@ -94,7 +94,7 @@ const TaskListAssign: React.FC = () => {
 
                     closePopup();
                 }else{
-                    toast.error(res.payload.message)
+                    toast.error(res.payload.message || res.payload.data.message || "Xóa thất bại")
                     closePopup();
                 }
                 
