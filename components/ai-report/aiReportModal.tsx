@@ -11,6 +11,7 @@ import {
   GenericReportItem,
 } from "@/src/hooks/aiReportHook";
 import { toast } from "react-toastify";
+import { ReportInstructionButton } from "./reportInstructions";
 
 interface AIReportModalProps {
   isOpen: boolean;
@@ -384,7 +385,6 @@ export const AIReportModal = ({
                     <p>{error}</p>
                   </div>
                 )}
-
                 {/* Input State: Show only if NO result yet */}
                 {!reportResult && (
                   <div className="w-full text-left">
@@ -394,7 +394,8 @@ export const AIReportModal = ({
                       className="w-full bg-slate-800/50 text-slate-200 text-sm leading-relaxed p-3 rounded-lg border border-slate-700/50 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none resize-none min-h-[200px] theme-scrollbar"
                       placeholder="Nhập nội dung báo cáo hoặc nhấn giữ mic để nói..."
                     />
-                    <div className="mt-4 pt-3 border-t border-slate-700 flex justify-end items-center gap-2">
+                    <div className="mt-4 pt-3 border-t border-slate-700 flex justify-between items-center">
+                      <ReportInstructionButton />
                       <button
                         className={cn(
                           "px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-md transition-colors font-medium cursor-pointer",
@@ -415,7 +416,6 @@ export const AIReportModal = ({
                     </div>
                   </div>
                 )}
-
                 {/* Preview State */}
                 {reportResult && (
                   <div className="w-full text-left space-y-8">
@@ -435,7 +435,8 @@ export const AIReportModal = ({
                       </div>
                     )}
 
-                    <div className="mt-4 pt-3 border-t border-slate-700 flex justify-end items-center gap-2">
+                    <div className="mt-4 pt-3 border-t border-slate-700 flex justify-between items-center">
+                      <ReportInstructionButton />
                       <button
                         className={cn(
                           "px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-md transition-colors font-medium cursor-pointer",
