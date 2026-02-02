@@ -31,7 +31,9 @@ export async function POST(req: NextRequest) {
     const base64Audio = Buffer.from(arrayBuffer).toString("base64");
 
     const prompt = `
-      Transcribe the speech into Vietnamese text with high accuracy. If no speech or any part is unclear or inaudible output . (a dot). Output only the transcript, no timestamps, no explanations.
+      Transcribe the speech into Vietnamese text with high accuracy.
+      The speech may mention the following projects: Apec Global, Ion Bạc (Ion Ag+), Queency, Nam Thiên Long, Life Care, Apec Space, Apec BCI, Ecoop, CLB Sinh viên khởi nghiệp, Phở cô Ba Sài Gòn.
+      If no speech or any part is unclear or inaudible output . (a dot). Output only the transcript, no timestamps, no explanations.
     `;
 
     const result = await model.generateContent([

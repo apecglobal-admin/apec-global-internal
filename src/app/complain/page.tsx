@@ -4,9 +4,20 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { User, Phone, Briefcase, MapPin, Send, MessageSquare, UserCircle } from "lucide-react";
+import {
+  User,
+  Phone,
+  Briefcase,
+  MapPin,
+  Send,
+  MessageSquare,
+  UserCircle,
+  ImagePlus,
+  X,
+} from "lucide-react";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
+import { uploadImage } from "./actions"; // Import server action
 
 // Redux & API
 import { getListProject } from "@/src/features/project/api/api";
@@ -69,8 +80,19 @@ interface FieldConfig {
 }
 
 const CONTENT_FIELDS: FieldConfig[] = [
-  { name: "subject", label: "Người / Sự việc / Đối tượng bị phản ảnh", type: "input", placeholder: "VD: Quy trình X, Bộ phận Y,..." },
-  { name: "content", label: "Nội dung chi tiết", type: "textarea", required: true, placeholder: "Mô tả chi tiết sự việc..." },
+  {
+    name: "subject",
+    label: "Người / Sự việc / Đối tượng bị phản ảnh",
+    type: "input",
+    placeholder: "VD: Quy trình X, Bộ phận Y,...",
+  },
+  {
+    name: "content",
+    label: "Nội dung chi tiết",
+    type: "textarea",
+    required: true,
+    placeholder: "Mô tả chi tiết sự việc...",
+  },
 ];
 
 export default function ComplainPage() {
@@ -84,23 +106,103 @@ export default function ComplainPage() {
     // Based on userSlice/projectSlice behavior, we might want to check if it's already loaded.
     // Here we strictly follow the plan to dispatch it.
     dispatch(getListProject({ search: "", project_status: null }) as any);
+    dispatch(getListProject({ search: "", project_status: null }) as any);
   }, [dispatch]);
+
+  // Image Upload State
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+
+  const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) {
+      return;
+    }
+    const files = Array.from(e.target.files);
+
+    // Create previews
+    const newPreviews = files.map((file) => URL.createObjectURL(file));
+    setPreviews((prev) => [...prev, ...newPreviews]);
+    setSelectedFiles((prev) => [...prev, ...files]);
+
+    // Cleanup input value to allow selecting same file again if needed
+    e.target.value = "";
+  };
+
+  const removeFile = (index: number) => {
+    const newFiles = [...selectedFiles];
+    newFiles.splice(index, 1);
+    setSelectedFiles(newFiles);
+
+    const newPreviews = [...previews];
+    URL.revokeObjectURL(newPreviews[index]); // Cleanup memory
+    newPreviews.splice(index, 1);
+    setPreviews(newPreviews);
+  };
+
+  useEffect(() => {
+    // Cleanup object URLs on unmount
+    return () => {
+      previews.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
 
   // Construct dynamic fields
   // Prepare project options from the fetched list
-  const projectOptions = Array.from(new Set(listProject?.map((p: any) => p.name) || []));
+  const projectOptions = Array.from(
+    new Set(listProject?.map((p: any) => p.name) || []),
+  );
 
   const reporterFields: FieldConfig[] = [
-    { name: "name", label: "Họ và Tên", type: "input", required: true, icon: User, placeholder: "Nguyễn Văn A" },
-    { name: "phone", label: "Số điện thoại", type: "input", required: true, icon: Phone, placeholder: "09xxxxxxx" },
-    { name: "employeeId", label: "Mã số nhân viên / Số hiệu", type: "input", required: true, icon: Briefcase, placeholder: "VD: 12345" },
-    { name: "position", label: "Chức vụ", type: "select", options: POSITIONS, placeholder: "Chọn chức vụ" },
-    { name: "project", label: "Dự án / Công ty", type: "select", options: projectOptions.length > 0 ? projectOptions : ["Khác"], placeholder: "Chọn dự án/công ty" },
-    { name: "area", label: "Khu vực", type: "input", icon: MapPin, placeholder: "VD: Dĩ An" },
+    {
+      name: "name",
+      label: "Họ và Tên",
+      type: "input",
+      required: true,
+      icon: User,
+      placeholder: "Nguyễn Văn A",
+    },
+    {
+      name: "phone",
+      label: "Số điện thoại",
+      type: "input",
+      required: true,
+      icon: Phone,
+      placeholder: "09xxxxxxx",
+    },
+    {
+      name: "employeeId",
+      label: "Mã số nhân viên / Số hiệu",
+      type: "input",
+      required: true,
+      icon: Briefcase,
+      placeholder: "VD: 12345",
+    },
+    {
+      name: "position",
+      label: "Chức vụ",
+      type: "select",
+      options: POSITIONS,
+      placeholder: "Chọn chức vụ",
+    },
+    {
+      name: "project",
+      label: "Dự án / Công ty",
+      type: "select",
+      options: projectOptions.length > 0 ? projectOptions : ["Khác"],
+      placeholder: "Chọn dự án/công ty",
+    },
+    {
+      name: "area",
+      label: "Khu vực",
+      type: "input",
+      icon: MapPin,
+      placeholder: "VD: Dĩ An",
+    },
   ];
 
   // Placeholder URL
-  const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycby-xWKwp0zSqBdGZ2yCnqrNzFrbAqkOmbyn05KEnjzsCPLyJkhcddZOjws0WOIfARfB/exec";
+  const GOOGLE_SHEET_WEBHOOK_URL =
+    "https://script.google.com/macros/s/AKfycby-xWKwp0zSqBdGZ2yCnqrNzFrbAqkOmbyn05KEnjzsCPLyJkhcddZOjws0WOIfARfB/exec";
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -119,18 +221,44 @@ export default function ComplainPage() {
   const onSubmit = async (data: FormValues) => {
     setLoading(true);
     try {
-      // Mock submission or keep existing webhook logic
+      // 1. Upload images if any
+      const imageUrls: string[] = [];
+      if (selectedFiles.length > 0) {
+        // Upload concurrently
+        const uploadPromises = selectedFiles.map((file) => {
+          const formData = new FormData();
+          formData.append("file", file);
+          return uploadImage(formData);
+        });
+
+        const results = await Promise.all(uploadPromises);
+        results.forEach((res) => {
+          if (res && res.url) imageUrls.push(res.url);
+        });
+      }
+
+      // 2. Prepare payload
+      const payload = {
+        ...data,
+        images: imageUrls.join("\n"), // Add images as a newline-separated string
+      };
+
+      // 3. Submit to Google Sheet
       await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
         method: "POST",
         mode: "no-cors",
         headers: {
           "Content-Type": "text/plain",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
-      toast.success("Cảm ơn bạn đã gửi phản ảnh! Chúng tôi sẽ ghi nhận sớm nhất.");
+      toast.success(
+        "Cảm ơn bạn đã gửi phản ảnh! Chúng tôi sẽ ghi nhận sớm nhất.",
+      );
       form.reset();
+      setSelectedFiles([]);
+      setPreviews([]);
     } catch (error) {
       console.error("Error submitting complain:", error);
       toast.error("Có lỗi xảy ra khi gửi phản ảnh. Vui lòng thử lại sau.");
@@ -148,17 +276,25 @@ export default function ComplainPage() {
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-slate-900 font-semibold">
-              {config.label} {config.required && <span className="text-red-600">*</span>}
+              {config.label}{" "}
+              {config.required && <span className="text-red-600">*</span>}
             </FormLabel>
             <FormControl>
               {config.type === "select" ? (
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <SelectTrigger className="text-slate-900 w-full min-w-0 border-slate-600 [&>[data-slot=select-value]]:truncate [&>[data-slot=select-value]]:min-w-0 [&>[data-slot=select-value]]:flex-1 [&>[data-slot=select-value]]:text-left">
                     <SelectValue placeholder={config.placeholder} />
                   </SelectTrigger>
                   <SelectContent className="max-w-[var(--radix-select-trigger-width)]">
                     {config.options?.map((opt) => (
-                      <SelectItem key={opt} value={opt} className="text-slate-200 whitespace-normal h-auto py-2">
+                      <SelectItem
+                        key={opt}
+                        value={opt}
+                        className="text-slate-200 whitespace-normal h-auto py-2"
+                      >
                         {opt}
                       </SelectItem>
                     ))}
@@ -204,15 +340,19 @@ export default function ComplainPage() {
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 sm:space-y-8">
-            
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-6 sm:space-y-8"
+          >
             {/* SECTION 1: Reporter Information */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="bg-blue-100/50 px-4 py-3 sm:px-6 sm:py-4 border-b border-blue-100 flex items-center gap-3">
                 <UserCircle className="w-5 h-5 sm:w-6 sm:h-6 text-blue-700" />
-                <h2 className="text-base sm:text-lg font-bold text-blue-900">Thông tin người phản ảnh</h2>
+                <h2 className="text-base sm:text-lg font-bold text-blue-900">
+                  Thông tin người phản ảnh
+                </h2>
               </div>
-              
+
               <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 {reporterFields.map(renderField)}
               </div>
@@ -220,9 +360,11 @@ export default function ComplainPage() {
 
             {/* SECTION 2: Complain Content */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-               <div className="bg-amber-100/50 px-4 py-3 sm:px-6 sm:py-4 border-b border-amber-100 flex items-center gap-3">
+              <div className="bg-amber-100/50 px-4 py-3 sm:px-6 sm:py-4 border-b border-amber-100 flex items-center gap-3">
                 <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-amber-700" />
-                <h2 className="text-base sm:text-lg font-bold text-amber-900">Nội dung phản ảnh</h2>
+                <h2 className="text-base sm:text-lg font-bold text-amber-900">
+                  Nội dung phản ảnh
+                </h2>
               </div>
 
               <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
@@ -230,15 +372,80 @@ export default function ComplainPage() {
               </div>
             </div>
 
+            {/* SECTION 3: Evidence (Images) */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="bg-slate-100/50 px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-100 flex items-center gap-3">
+                <ImagePlus className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700" />
+                <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                  Minh chứng (Hình ảnh/Video)
+                </h2>
+              </div>
+
+              <div className="p-4 sm:p-6 space-y-4">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-4">
+                    <label
+                      htmlFor="image-upload"
+                      className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
+                      bg-slate-900 text-slate-50 hover:bg-slate-900/90 h-10 px-4 py-2"
+                    >
+                      <ImagePlus className="w-4 h-4 mr-2" />
+                      Chọn ảnh
+                    </label>
+                    <input
+                      id="image-upload"
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      className="hidden"
+                      onChange={onSelectFile}
+                    />
+                    <span className="text-sm text-slate-500 italic">
+                      {selectedFiles.length > 0
+                        ? `Đã chọn ${selectedFiles.length} file`
+                        : "Chưa có file nào được chọn"}
+                    </span>
+                  </div>
+
+                  {/* Previews */}
+                  {previews.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-2">
+                      {previews.map((url, idx) => (
+                        <div
+                          key={idx}
+                          className="relative group rounded-lg overflow-hidden border border-slate-200 aspect-square"
+                        >
+                          <img
+                            src={url}
+                            alt={`preview-${idx}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeFile(idx)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-90 hover:opacity-100 transition shadow-sm"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Submit Actions */}
             <div className="flex justify-center pt-2 md:pt-0">
-               <Button 
-                type="submit" 
-                size="lg" 
+              <Button
+                type="submit"
+                size="lg"
                 disabled={loading}
                 className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 min-w-[200px] font-bold text-white shadow-md hover:shadow-lg transition-all"
               >
-                {loading ? "Đang gửi..." : (
+                {loading ? (
+                  "Đang gửi..."
+                ) : (
                   <>
                     <Send className="w-4 h-4 mr-2" />
                     Gửi phản ảnh
@@ -246,7 +453,6 @@ export default function ComplainPage() {
                 )}
               </Button>
             </div>
-
           </form>
         </Form>
       </div>
