@@ -99,10 +99,7 @@ interface PersonalTabProps {
 function PersonalTab({ userInfo }: PersonalTabProps) {
   const dispatch = useDispatch();
   const { typePersonal, personals, listStatusPersonal } = useProfileData();
-  const { imageTask, fileTask } = useTaskData();
 
-  
-  
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [showNewRequestModal, setShowNewRequestModal] = useState<boolean>(false);
@@ -488,44 +485,6 @@ const getAcceptedFileTypes = () => {
   return "";
 };
 
-// Placeholder upload functions - bạn cần implement logic upload thực tế
-const handleUploadImage = async (file: File): Promise<string> => {
-  const formData = new FormData();
-  formData.append('file', file);
-  const token = localStorage.getItem("userToken");
-  const payload = {
-    formData,
-    token
-  };
-
-  const result = await dispatch(uploadImageTask(payload) as any);
-  
-  if (result?.payload?.data?.success && !result?.error) {
-    return imageTask || "";
-  } else {
-    toast.error("Tải ảnh thất bại");
-    throw new Error("Upload failed");
-  }
-};
-
-const handleUploadFile = async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    const token = localStorage.getItem("userToken");
-    const payload = {
-      formData,
-      token
-    };
-
-    const result = await dispatch(uploadFileTask(payload) as any);
-    
-    if (result?.payload?.data?.success && !result?.error) {
-      return fileTask || "";
-    } else {
-      toast.error("Tải file thất bại");
-      throw new Error("Upload failed");
-    }
-};
 
 const handleUpload = async () => {
   if (!selectedFile) {

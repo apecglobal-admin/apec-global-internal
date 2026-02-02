@@ -604,7 +604,7 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                     </label>
                                     <div className="relative">
                                         <Calendar
-                                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+                                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 mr-5"
                                             size={16}
                                         />
                                         <input

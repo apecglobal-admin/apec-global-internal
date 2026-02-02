@@ -73,12 +73,14 @@ function CreateCautionModal({
     setIsUploading(true);
     try {
       let uploadedUrl = "";
+      
       if (uploadType === "image") {
         uploadedUrl = await onUploadImage(selectedFile);
       } else if (uploadType === "document") {
         uploadedUrl = await onUploadFile(selectedFile);
       }
       setUploadedProve(uploadedUrl);
+      
     } catch (error) {
       console.error("Upload error:", error);
     } finally {
