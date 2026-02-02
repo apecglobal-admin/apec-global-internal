@@ -175,7 +175,6 @@ export const listTypeTask = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await apiAxiosInstance.get("/tasks/types");
-      console.log(response);
       
       return {
         data: response.data,

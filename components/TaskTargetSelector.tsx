@@ -307,17 +307,17 @@ useEffect(() => {
         <>
             {showSelectAll && (
                 <div className="mb-4 space-y-3">
-                    <div className="flex items-center gap-2 p-3 bg-slate-900 border border-slate-700 rounded-lg">
-                        <input
-                            type="checkbox"
-                            id="selectAll"
-                            checked={selectAllEmployees}
-                            onChange={(e) => setSelectAllEmployees(e.target.checked)}
-                            className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900"
-                        />
+                    <div 
+                        onClick={() => setSelectAllEmployees(!selectAllEmployees)}
+                        className={`p-3 rounded-lg border cursor-pointer transition-all md:p-4 ${
+                            selectAllEmployees
+                                ? "border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20"
+                                : "border-slate-700 bg-slate-900 hover:border-slate-600"
+                        }`}
+                    >
                         <label
                             htmlFor="selectAll"
-                            className="text-sm font-semibold text-white cursor-pointer"
+                            className="text-xs md:text-sm font-semibold text-white cursor-pointer"
                         >
                             Chọn tất cả nhân viên ({employees.length})
                         </label>
@@ -328,22 +328,22 @@ useEffect(() => {
                             <div className="relative">
                                 <Search
                                     className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
-                                    size={16}
+                                    size={14}
                                 />
                                 <input
                                     type="text"
                                     value={searchText}
                                     onChange={(e) => setSearchText(e.target.value)}
-                                    placeholder="Tìm theo tên, email, số điện thoại..."
-                                    className="w-full pl-10 pr-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+                                    placeholder="Tìm theo tên..."
+                                    className="w-full pl-10 pr-3 py-2 md:py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-xs md:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
                                 />
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-400 mb-2 flex items-center gap-1">
+                                    <label className="block text-xs font-semibold text-slate-400 mb-1.5 md:mb-2 flex items-center gap-1">
                                         <Filter size={12} />
-                                        Lọc theo vị trí
+                                        Vị trí
                                     </label>
                                     <select
                                         value={filterPosition || ""}
@@ -352,9 +352,9 @@ useEffect(() => {
                                                 e.target.value ? parseInt(e.target.value) : null
                                             )
                                         }
-                                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500 transition"
+                                        className="w-full px-2.5 py-2 md:px-3 bg-slate-900 border border-slate-700 rounded-lg text-xs md:text-sm text-white focus:outline-none focus:border-blue-500 transition"
                                     >
-                                        <option value="">-- Tất cả vị trí --</option>
+                                        <option value="">Tất cả</option>
                                         {positions.map((position) => (
                                             <option key={position.id} value={position.id}>
                                                 {position.title || position.name}
@@ -364,9 +364,9 @@ useEffect(() => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-400 mb-2 flex items-center gap-1">
+                                    <label className="block text-xs font-semibold text-slate-400 mb-1.5 md:mb-2 flex items-center gap-1">
                                         <Filter size={12} />
-                                        Lọc theo phòng ban
+                                        Phòng ban
                                     </label>
                                     <select
                                         value={filterDepartment || ""}
@@ -375,9 +375,9 @@ useEffect(() => {
                                                 e.target.value ? parseInt(e.target.value) : null
                                             )
                                         }
-                                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500 transition"
+                                        className="w-full px-2.5 py-2 md:px-3 bg-slate-900 border border-slate-700 rounded-lg text-xs md:text-sm text-white focus:outline-none focus:border-blue-500 transition"
                                     >
-                                        <option value="">-- Tất cả phòng ban --</option>
+                                        <option value="">Tất cả</option>
                                         {departments.map((department) => (
                                             <option key={department.id} value={department.id}>
                                                 {department.name || department.title}
@@ -412,60 +412,46 @@ useEffect(() => {
                                 <div
                                     key={employee.id}
                                     onClick={() => toggleEmployeeSelection(employee.id)}
-                                    className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
+                                    className={`p-2.5 md:p-3 rounded-lg border cursor-pointer transition-all ${
                                         isSelected
                                             ? "border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20"
                                             : "border-slate-700 bg-slate-900 hover:border-slate-600 hover:bg-slate-800"
                                     }`}
                                 >
-                                    <div
-                                        className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition ${
-                                            isSelected
-                                                ? "border-blue-500 bg-blue-500"
-                                                : "border-slate-600"
-                                        }`}
-                                    >
-                                        {isSelected && (
-                                            <CheckCircle2 size={14} className="text-white" />
-                                        )}
-                                    </div>
-                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                                        {employee.name.charAt(0)}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <span className="text-base font-semibold text-white truncate block">
-                                            {employee.name}
-                                        </span>
-                                        <div className="flex flex-col gap-0.5 text-xs text-slate-400">
-                                            {employee.email && (
-                                                <span className="truncate">
-                                                    Email: {employee.email}
-                                                </span>
-                                            )}
-                                            {employee.phone && (
-                                                <span>SĐT: {employee.phone}</span>
-                                            )}
+                                    <div className="flex items-start gap-2 md:gap-3">
+                                        <div className="hidden md:flex w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                                            {employee.name.charAt(0)}
                                         </div>
-                                    </div>
-                                    <div className="flex flex-col gap-1 text-right text-xs flex-shrink-0">
-                                        {employee.department && (
-                                            <span className="px-2 py-1 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                                                {employee.department.name}
-                                            </span>
-                                        )}
-                                        {employee.position && (
-                                            <span className="px-2 py-1 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                                                {employee.position.name}
-                                            </span>
-                                        )}
+                                        <div className="flex-1 space-y-1">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <span className="text-xs md:text-sm font-semibold text-white line-clamp-2">
+                                                    {employee.name}
+                                                </span>
+                                                {isSelected && (
+                                                    <div className="w-4 h-4 md:w-5 md:h-5 rounded-full border-2 border-blue-500 bg-blue-500 flex-shrink-0 mt-0.5" />
+                                                )}
+                                            </div>
+                                            <div className="flex flex-wrap gap-1 text-xs text-slate-400">
+                                                {employee.department && (
+                                                    <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                                        {employee.department.name}
+                                                    </span>
+                                                )}
+                                                {employee.position && employee.position?.name && (
+                                                    <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                                        {employee.position.name}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             );
                         })
                     ) : (
-                        <div className="text-center py-8 text-slate-400">
-                            <Users size={32} className="mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">Không tìm thấy nhân viên</p>
+                        <div className="text-center py-6 md:py-8 text-slate-400">
+                            <Users size={24} className="mx-auto mb-2 opacity-50" />
+                            <p className="text-xs md:text-sm">Không tìm thấy nhân viên</p>
                         </div>
                     )}
                 </div>
@@ -488,43 +474,24 @@ useEffect(() => {
                         <div
                             key={item.id}
                             onClick={() => multipleAllowed ? toggleItemSelection(item.id) : selectItem(item.id)}
-                            className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
+                            className={`p-2.5 md:p-3 rounded-lg border cursor-pointer transition-all ${
                                 isSelected
                                     ? "border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20"
                                     : "border-slate-700 bg-slate-900 hover:border-slate-600 hover:bg-slate-800"
                             }`}
                         >
-                            {multipleAllowed ? (
-                                // Checkbox cho chế độ chọn nhiều
-                                <div
-                                    className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition ${
-                                        isSelected
-                                            ? "border-blue-500 bg-blue-500"
-                                            : "border-slate-600"
-                                    }`}
-                                >
+                            <div className="flex items-start gap-2 md:gap-3">
+                                <div className={`hidden md:flex w-10 h-10 rounded-full bg-gradient-to-br ${iconColor} items-center justify-center flex-shrink-0`}>
+                                    <IconComponent className="text-white" size={18} />
+                                </div>
+                                <div className="flex-1 flex items-start justify-between gap-2">
+                                    <span className="text-xs md:text-sm font-semibold text-white truncate flex-1 line-clamp-2">
+                                        {displayName}
+                                    </span>
                                     {isSelected && (
-                                        <CheckCircle2 size={14} className="text-white" />
+                                        <div className="w-4 h-4 md:w-5 md:h-5 rounded-full border-2 border-blue-500 bg-blue-500 flex-shrink-0 mt-0.5" />
                                     )}
                                 </div>
-                            ) : (
-                                // Radio button cho chế độ chọn đơn
-                                <div
-                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition ${
-                                        isSelected ? "border-blue-500 bg-blue-500" : "border-slate-600"
-                                    }`}
-                                >
-                                    {isSelected && <div className="w-3 h-3 bg-white rounded-full" />}
-                                </div>
-                            )}
-                            <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${iconColor} flex items-center justify-center flex-shrink-0`}>
-                                <IconComponent className="text-white" size={20} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <span className="text-base font-semibold text-white truncate block">
-                                    {displayName}
-                                </span>
-                                <span className="text-xs text-slate-400">ID: {item.id}</span>
                             </div>
                         </div>
                     );

@@ -81,7 +81,6 @@ interface FilterOption {
 function TasksTab() {
   const dispatch = useDispatch();
   const { tasks: tasksResponse, typeTask, detailTask } = useProfileData();
-  console.log(typeTask);
   
   const {
     priorityTask,

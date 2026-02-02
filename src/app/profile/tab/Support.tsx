@@ -210,6 +210,7 @@ function Support() {
                 prove: uploadedProve,
                 token
             };
+            
 
             const result = await dispatch(supportTaskConfirm(payload) as any);
 
@@ -397,7 +398,7 @@ function Support() {
                                         onClick={(e) => handleOpenConfirmModal(e, Number(task.id))}
                                         className="gap-1  px-2.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-md transition-all duration-200 shadow-sm hover:shadow-md"
                                     >
-                                        Hoàn thành
+                                        Xác nhận
                                     </button>
                                 )}
                         </Card>

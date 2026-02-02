@@ -33,13 +33,17 @@ function SkillsTab({ userInfo }: any) {
 
     // Kỹ năng cứng từ props
     const hardSkills = userInfo.map((skill: any) => ({
-        id: skill.id,
+        id: Number(skill.id),
         icon: skill.icon || "💼",
         name: skill.kpi.name,
         description: skill.kpi.description,
         value: parseFloat(skill.score),
         kpiItems: skill.kpi_items || [],
+        count: skill.total_count
     }));
+
+    console.log(hardSkills);
+    
     
 
     // Lấy thông tin từ API
@@ -240,6 +244,7 @@ function SkillsTab({ userInfo }: any) {
                                                 <HelpCircle className="w-4 h-4 lg:w-4.5 lg:h-4.5" color="yellow"/>
                                             </button>
                                             {/* Description Tooltip */}
+
                                             {showDescription && (
                                                 <div className="absolute left-0 top-full mt-2 z-10 w-64 p-3 bg-slate-700 rounded-lg border border-slate-600 shadow-xl">
                                                     <button
@@ -255,7 +260,21 @@ function SkillsTab({ userInfo }: any) {
                                             )}
                                         </div>
                                     </div>
+                                    <div>
+                                        <div className="">
+                                            <span className="text-xs">Tổng: </span>
+                                            <span className="text-sm">{skill.count}/tháng</span>
+                                        </div>
+                                        {/* {(skill.id === 656 || skill.id === 659) ? (
+                                        ) : (
+                                            <div className="">
+                                                <span className="text-xs">Tổng: </span>
+                                                <span className="text-sm">{skill.count}/tháng</span>
+                                            </div>
+                                        )} */}
+                                    </div>
                                     <div className="flex items-center gap-2">
+
                                         <span className="text-xs lg:text-sm font-bold text-blue-400 group-hover:text-blue-300 transition-colors">
                                             {skill.value}%
                                         </span>
@@ -287,7 +306,7 @@ function SkillsTab({ userInfo }: any) {
                                                 {skill.kpiItems.map((item: any, itemIndex: number) => (
                                                     <div
                                                         key={itemIndex}
-                                                        className="p-2 lg:p-2.5 bg-slate-800/50 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors"
+                                                        className="flex justify-between items-center p-2 lg:p-2.5 bg-slate-800/50 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors"
                                                     >
                                                         <div className="flex items-start gap-2">
                                                             <span className="text-blue-400 text-xs mt-0.5">•</span>
@@ -302,6 +321,18 @@ function SkillsTab({ userInfo }: any) {
                                                                 )}
                                                             </div>
                                                         </div>
+
+                                                        {(skill.id === 656 || skill.id === 659) ? (
+                                                                <div className="">
+                                                                    <span className="text-xs">Bị xử lý: </span>
+                                                                    <span className="text-sm">{item.total}</span>
+                                                                </div>
+                                                        ) : (
+                                                            <div className="">
+                                                                <span className="text-xs">Tổng: </span>
+                                                                <span className="text-sm">{item.total}</span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>
