@@ -100,6 +100,12 @@ function ProfilePage() {
         }
     }, [showUploadModal, userInfo]);
 
+    useEffect(() => {
+        if (activeTab === "career") {
+          window.open("https://lotrinh.apecglobal.net/", "_blank");
+        }
+    }, [activeTab]);
+
     // Show loading state if userInfo is not available
     //if (isLoadingUser == true || isLoadingDepartments == true || isLoadingPositions == true) {
     if (!userInfo || !positions || !departments) {
@@ -222,11 +228,15 @@ function ProfilePage() {
         setShowInfoModal(true);
     }
 
+<<<<<<< HEAD
     // useEffect(() => {
     //     if (activeTab === "career") {
     //       window.open("https://lotrinh.apecglobal.net/", "_blank");
     //     }
     // }, [activeTab]);
+=======
+
+>>>>>>> main
 
     
 
