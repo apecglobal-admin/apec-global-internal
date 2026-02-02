@@ -38,13 +38,13 @@ const menuItems = [
 ];
 
 export default function Header() {
-    const dispatch = useDispatch();
-    const { userInfo, permission  } = useProfileData();
-
+    const { permission } = useProfileData();
     const pathname = usePathname();
     const profifle = pathname === "/profile";
     const searchPath = pathname === "/project" || pathname === "/event" || pathname === "/policy" || pathname === "/compet"
     const router = useRouter();
+    const dispatch = useDispatch();
+    const { userInfo } = useProfileData();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -90,12 +90,12 @@ export default function Header() {
             document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleLogout = async () => {
+    const handleLogout = () => {
         localStorage.removeItem("userToken");
+        dispatch(logout());
+        setIsDropdownOpen(false);
+        setIsSidebarOpen(false);
         router.push("/login");
-        // await dispatch(logout());
-        // setIsDropdownOpen(false);
-        // setIsSidebarOpen(false);
     };
 
     const icons: any = {
@@ -254,7 +254,7 @@ export default function Header() {
 
             {/* Mobile Sidebar */}
             <div
-                className={`hidden show-over-1200 fixed top-0 right-0 h-full z-50 transform ${
+                className={`hidden show-over-1200 fixed top-0 right-0 ${profifle ? ` h-[91%]` : `h-full`} z-50 transform ${
                     isSidebarOpen ? "translate-x-0" : "translate-x-full"
                 } transition-transform duration-300 ease-in-out bg-white w-64 sm:w-80 border-l border-black flex flex-col`}
                 ref={sidebarRef}

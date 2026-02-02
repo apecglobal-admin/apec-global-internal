@@ -60,7 +60,6 @@ function Cautions() {
   const dispatch = useDispatch();
   const { listCaution, listCautionKPI, caution } = useCautionData();
   const { listEmployeeDepartment } = useProfileData();
-  const { imageTask, fileTask } = useTaskData();
 
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -151,7 +150,7 @@ function Cautions() {
     const result = await dispatch(uploadImageTask(payload) as any);
     
     if (result?.payload?.data?.success && !result?.error) {
-      return imageTask || "";
+      return result?.payload?.data?.url || "";
     } else {
       toast.error("Tải ảnh thất bại");
       throw new Error("Upload failed");
@@ -170,7 +169,7 @@ function Cautions() {
     const result = await dispatch(uploadFileTask(payload) as any);
     
     if (result?.payload?.data?.success && !result?.error) {
-      return fileTask || "";
+      return  result?.payload?.data?.url || "";
     } else {
       toast.error("Tải file thất bại");
       throw new Error("Upload failed");

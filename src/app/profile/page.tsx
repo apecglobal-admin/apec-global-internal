@@ -222,11 +222,11 @@ function ProfilePage() {
         setShowInfoModal(true);
     }
 
-    useEffect(() => {
-        if (activeTab === "career") {
-          window.open("https://lotrinh.apecglobal.net/", "_blank");
-        }
-    }, [activeTab]);
+    // useEffect(() => {
+    //     if (activeTab === "career") {
+    //       window.open("https://lotrinh.apecglobal.net/", "_blank");
+    //     }
+    // }, [activeTab]);
 
     
 
