@@ -30,7 +30,8 @@ import {
     supportTaskDelete,
     getSupportTaskPending,
     supportTaskConfirm,
-    supportTaskChecked
+    supportTaskChecked,
+    getSupportTaskStatus
 } from "./api";
 import { createAsyncReducer, createAsyncReducerDynamic } from "@/src/utils/createAsyncReducer";
 import { initState } from "@/src/services/interface";
@@ -63,6 +64,8 @@ interface TaskState {
     detailSupportTaskEmployee: initState<any[]>;
     supportTaskPending: initState<any[]>;
     detailSupportTaskPending: initState<any[]>;
+    supportTaskStatus:  initState<any[]>;
+
 }
 
 const createInitState = () => ({ data: [], loading: false, error: null, status: null });
@@ -93,6 +96,7 @@ const initialState: TaskState = {
     detailSupportTaskEmployee: createInitState(),
     supportTaskPending: createInitState(),
     detailSupportTaskPending: createInitState(),
+    supportTaskStatus:  createInitState(),
 };
 
 const taskSlice = createSlice({
@@ -120,7 +124,6 @@ const taskSlice = createSlice({
         
         
         
-        
         createAsyncReducer(builder, getTypeTask, "typeTask");
         createAsyncReducer(builder, getPriorityTask, "priorityTask");
         createAsyncReducer(builder, getListProject, "listProject");
@@ -139,6 +142,10 @@ const taskSlice = createSlice({
         createAsyncReducerDynamic(builder, getSupportTaskManager);
         createAsyncReducerDynamic(builder, getSupportTaskEmployee);
         createAsyncReducerDynamic(builder, getSupportTaskPending);
+
+        createAsyncReducer(builder, getSupportTaskStatus, "supportTaskStatus");
+        
+        
 
         
 

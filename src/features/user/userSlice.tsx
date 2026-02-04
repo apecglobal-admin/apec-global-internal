@@ -24,7 +24,8 @@ import {
   personalRequestReject,
   updatePassword,
   personalTarget,
-  getPermissonManager
+  getPermissonManager,
+  personalRequestStatus
 } from "../../services/api";
 import { createAsyncReducer, createAsyncReducerDynamic } from "@/src/utils/createAsyncReducer";
 
@@ -60,7 +61,7 @@ interface UserState {
   listStatusPersonal: InitState<any[]>;
   listPersonalTarget: InitState<any[]>;
   detailPersonalTarget: InitState<any[]>;
-
+  listPersonalRequestStatus: InitState<any[]>;
   
 }
 
@@ -88,6 +89,8 @@ const initialState: UserState = {
   listStatusPersonal: { data: [], loading: false, error: null, status: null },
   listPersonalTarget: { data: [], loading: false, error: null, status: null },
   detailPersonalTarget: { data: [], loading: false, error: null, status: null },
+  listPersonalRequestStatus: { data: [], loading: false, error: null, status: null },
+
 };
 
 const userSlice = createSlice({
@@ -151,7 +154,9 @@ const userSlice = createSlice({
     createAsyncReducerDynamic(builder, personalRequestAssign);
     createAsyncReducerDynamic(builder, personalTarget);
     createAsyncReducer(builder, getPermissonManager, "permission");
+    createAsyncReducer(builder, personalRequestStatus, "listPersonalRequestStatus");
 
+    
     
   },
 });

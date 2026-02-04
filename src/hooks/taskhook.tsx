@@ -28,6 +28,9 @@ export const useTaskData = () => {
     detailSupportTaskEmployee: task.detailSupportTaskEmployee.data.data,
     supportTaskPending: task.supportTaskPending.data.data,
     detailSupportTaskPending: task.detailSupportTaskPending.data.data,
+    supportTaskStatus: task.supportTaskStatus.data.data,
+
+    
 
     // Loading states
 

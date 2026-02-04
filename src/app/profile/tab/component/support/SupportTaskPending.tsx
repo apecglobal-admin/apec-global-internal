@@ -157,7 +157,7 @@ function SupportTaskPending({ tasks, pagination, onPageChange }: SupportTaskPend
     }
 
     return (
-        <div className="max-w-7xl mx-auto p-4 space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6">
             <PopupComponent isOpen={isOpen} onClose={closePopup} {...popupProps} />
 
             {/* Header / Toolbar */}
@@ -180,26 +180,26 @@ function SupportTaskPending({ tasks, pagination, onPageChange }: SupportTaskPend
                 ) : (
                     <>
                         <div className="flex items-center gap-3">
-                            <Badge className="bg-emerald-500">
+                            <Badge className="bg-emerald-500 ">
                                 Đang chọn để hoàn thành
                             </Badge>
-                            <span className="text-sm text-slate-300 font-medium">
-                                Đã chọn: <span className="text-white text-lg">{selectedIds.length}</span>
+                            <span className="text-xs text-slate-300 font-medium">
+                                Đã chọn: <span className="text-white text-sm">{selectedIds.length}</span>
                             </span>
                         </div>
                         <div className="flex gap-2 w-full sm:w-auto">
-                            <Button variant="ghost" onClick={exitSelectMode} className="text-slate-400 hover:text-white">
+                            <Button variant="ghost" onClick={exitSelectMode} className="bg-black text-white hover:text-white">
                                 Hủy bỏ
                             </Button>
                             <Button 
                                 onClick={handleCompleteMultiple}
                                 disabled={selectedIds.length === 0 || isProcessing}
-                                className="bg-emerald-600 hover:bg-emerald-700"
+                                className="md:text-md text-xs bg-emerald-600 hover:bg-emerald-700"
                             >
                                 {isProcessing ? (
-                                    <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                                    <Loader2 className="animate-spin h-4 w-4" />
                                 ) : (
-                                    <Check className="h-4 w-4 mr-2" />
+                                    <Check className="h-4 w-4" />
                                 )}
                                 Xác nhận hoàn thành ({selectedIds.length})
                             </Button>

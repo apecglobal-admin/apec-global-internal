@@ -38,18 +38,21 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate })
     const [hasCompletedEmployee, setHasCompletedEmployee] = useState(false);
 
     useEffect(() => {
+        const token = localStorage.getItem("userToken");
+
         if (!statusTask) {
             dispatch(getStatusTask() as any);
         }
         dispatch(getTypeTask() as any);
         dispatch(getPriorityTask() as any);
-        dispatch(getListProject() as any);
+        dispatch(getListProject({}) as any);
         dispatch(getChildKpi() as any);
         dispatch(
             getListEmployee({
                 position_id: null,
                 department_id: null,
                 filter: null,
+                token
             }) as any
         );
     }, [dispatch]);

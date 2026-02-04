@@ -51,10 +51,16 @@ interface TaskTargetSelectorProps {
     selectedValues: number[] | number | string;
     onTargetTypeChange: (type: number) => void;
     onSelectionChange: (values: number[] | number | string) => void;
-    onFilterChange?: (filters: {
+    onFilterChangeUser?: (filters: {
         search?: string;
         position?: number | null;
         department?: number | null;
+    }) => void;
+    onFilterChangeDepartment?: (filters: {
+        search?: string;
+    }) => void;
+    onFilterChangeLevel?: (filters: {
+        search?: string;
     }) => void;
     error?: string;
     onErrorClear?: () => void;
@@ -62,7 +68,6 @@ interface TaskTargetSelectorProps {
     showFilters?: boolean;
     maxHeight?: string;
     placeholder?: string;
-    // Tham số mới để cho phép chọn nhiều
     allowMultiplePositions?: boolean;
     allowMultipleDepartments?: boolean;
     allowMultipleLevels?: boolean;
@@ -111,7 +116,9 @@ function TaskTargetSelector({
     selectedValues,
     onTargetTypeChange,
     onSelectionChange,
-    onFilterChange,
+    onFilterChangeUser,
+    onFilterChangeDepartment,
+    onFilterChangeLevel,
     error,
     onErrorClear,
     showSelectAll = true,
@@ -122,12 +129,15 @@ function TaskTargetSelector({
     allowMultipleDepartments = false,
     allowMultipleLevels = false,
 }: TaskTargetSelectorProps) {
-const [searchText, setSearchText] = useState("");
+    const [searchText, setSearchText] = useState("");
     const [filterPosition, setFilterPosition] = useState<number | null>(null);
     const [filterDepartment, setFilterDepartment] = useState<number | null>(null);
     const [selectAllEmployees, setSelectAllEmployees] = useState(false);
+
+    const [searchPosition, setSearchPosition] = useState("");
+    const [searchDepartment, setSearchDepartment] = useState("");
+    const [searchLevel, setSearchLevel] = useState("");
     
-    // Ref để track trạng thái trước đó và tránh infinite loop
     const prevSelectAllRef = useRef(false);
     const isUpdatingRef = useRef(false);
 
@@ -142,7 +152,6 @@ const [searchText, setSearchText] = useState("");
         (t) => t.id === selectedTargetType
     );
 
-    // Kiểm tra xem target hiện tại có cho phép chọn nhiều không
     const isMultipleAllowed = () => {
         if (currentTarget?.type === "employee") return true;
         if (currentTarget?.type === "position") return allowMultiplePositions;
@@ -151,14 +160,15 @@ const [searchText, setSearchText] = useState("");
         return false;
     };
 
+    // Filter cho Employee (giữ nguyên)
     useEffect(() => {
         if (
             currentTarget?.type === "employee" &&
-            onFilterChange &&
+            onFilterChangeUser &&
             !selectAllEmployees
         ) {
             const timer = setTimeout(() => {
-                onFilterChange({
+                onFilterChangeUser({
                     search: searchText || undefined,
                     position: filterPosition,
                     department: filterDepartment,
@@ -168,13 +178,41 @@ const [searchText, setSearchText] = useState("");
         }
     }, [searchText, filterPosition, filterDepartment, currentTarget?.type, selectAllEmployees]);
 
-useEffect(() => {
-        // Chỉ thực hiện khi selectAllEmployees thay đổi thực sự
+    // Filter cho Department
+    useEffect(() => {
+        if (
+            currentTarget?.type === "department" &&
+            onFilterChangeDepartment
+        ) {
+            const timer = setTimeout(() => {
+                onFilterChangeDepartment({
+                    search: searchDepartment || undefined,
+                });
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, [searchDepartment, currentTarget?.type]);
+
+    // Filter cho Level
+    useEffect(() => {
+        if (
+            currentTarget?.type === "level" &&
+            onFilterChangeLevel
+        ) {
+            const timer = setTimeout(() => {
+                onFilterChangeLevel({
+                    search: searchLevel || undefined,
+                });
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, [searchLevel, currentTarget?.type]);
+
+    useEffect(() => {
         if (prevSelectAllRef.current === selectAllEmployees) {
             return;
         }
         
-        // Tránh gọi nhiều lần khi đang update
         if (isUpdatingRef.current) {
             return;
         }
@@ -189,7 +227,6 @@ useEffect(() => {
             isUpdatingRef.current = true;
             const allIds = employees.map((emp) => emp.id);
             onSelectionChange(allIds);
-            // Reset flag sau khi update hoàn tất
             requestAnimationFrame(() => {
                 isUpdatingRef.current = false;
             });
@@ -203,9 +240,6 @@ useEffect(() => {
     }, [selectAllEmployees, currentTarget?.type, employees.length, onSelectionChange]);
 
     const handleTargetTypeChange = (targetId: number) => {
-        // Chỉ clear filters và reset selectAll
-        // KHÔNG tự động reset selectedValues để tương thích ngược
-        // User sẽ tự xử lý reset trong onTargetTypeChange callback
         if (targetId !== selectedTargetType) {
             clearFilters();
             setSelectAllEmployees(false);
@@ -235,7 +269,6 @@ useEffect(() => {
         onErrorClear?.();
     };
 
-    // Hàm mới để toggle item khi cho phép chọn nhiều
     const toggleItemSelection = (itemId: number) => {
         const current = Array.isArray(selectedValues) ? selectedValues : [];
         const isSelected = current.includes(itemId);
@@ -253,6 +286,9 @@ useEffect(() => {
         setSearchText("");
         setFilterPosition(null);
         setFilterDepartment(null);
+        setSearchPosition("");
+        setSearchDepartment("");
+        setSearchLevel("");
     };
 
     const getSelectedCount = () => {
@@ -261,7 +297,6 @@ useEffect(() => {
             return Array.isArray(selectedValues) ? selectedValues.length : 0;
         }
         
-        // Cho các loại khác
         if (isMultipleAllowed()) {
             return Array.isArray(selectedValues) ? selectedValues.length : 0;
         } else {
@@ -459,44 +494,89 @@ useEffect(() => {
         </>
     );
 
-    const renderItemList = (items: Item[], iconColor: string, IconComponent: React.ComponentType<any>) => {
+    // THÊM MỚI: Render item list với search box
+    const renderItemList = (
+        items: Item[], 
+        iconColor: string, 
+        IconComponent: React.ComponentType<any>,
+        searchValue: string,
+        onSearchChange: (value: string) => void,
+        placeholderText: string
+    ) => {
         const multipleAllowed = isMultipleAllowed();
         
         return (
-            <div className="space-y-2 overflow-y-auto pr-2" style={{ maxHeight }}>
-                {items.map((item) => {
-                    const isSelected = multipleAllowed 
-                        ? (Array.isArray(selectedValues) && selectedValues.includes(item.id))
-                        : selectedValues === item.id;
-                    const displayName = item.name || item.title || "Không rõ";
-                    
-                    return (
-                        <div
-                            key={item.id}
-                            onClick={() => multipleAllowed ? toggleItemSelection(item.id) : selectItem(item.id)}
-                            className={`p-2.5 md:p-3 rounded-lg border cursor-pointer transition-all ${
-                                isSelected
-                                    ? "border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20"
-                                    : "border-slate-700 bg-slate-900 hover:border-slate-600 hover:bg-slate-800"
-                            }`}
-                        >
-                            <div className="flex items-start gap-2 md:gap-3">
-                                <div className={`hidden md:flex w-10 h-10 rounded-full bg-gradient-to-br ${iconColor} items-center justify-center flex-shrink-0`}>
-                                    <IconComponent className="text-white" size={18} />
-                                </div>
-                                <div className="flex-1 flex items-start justify-between gap-2">
-                                    <span className="text-xs md:text-sm font-semibold text-white truncate flex-1 line-clamp-2">
-                                        {displayName}
-                                    </span>
-                                    {isSelected && (
-                                        <div className="w-4 h-4 md:w-5 md:h-5 rounded-full border-2 border-blue-500 bg-blue-500 flex-shrink-0 mt-0.5" />
-                                    )}
-                                </div>
-                            </div>
+            <>
+                {/* Search box */}
+                {showFilters && (
+                    <div className="mb-3 space-y-2">
+                        <div className="relative">
+                            <Search
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+                                size={14}
+                            />
+                            <input
+                                type="text"
+                                value={searchValue}
+                                onChange={(e) => onSearchChange(e.target.value)}
+                                placeholder={placeholderText}
+                                className="w-full pl-10 pr-10 py-2 md:py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-xs md:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+                            />
+                            {searchValue && (
+                                <button
+                                    onClick={() => onSearchChange("")}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition"
+                                >
+                                    <X size={14} />
+                                </button>
+                            )}
                         </div>
-                    );
-                })}
-            </div>
+                    </div>
+                )}
+
+                {/* Item list */}
+                <div className="space-y-2 overflow-y-auto pr-2" style={{ maxHeight }}>
+                    {items.length > 0 ? (
+                        items.map((item) => {
+                            const isSelected = multipleAllowed 
+                                ? (Array.isArray(selectedValues) && selectedValues.includes(item.id))
+                                : selectedValues === item.id;
+                            const displayName = item.name || item.title || "Không rõ";
+                            
+                            return (
+                                <div
+                                    key={item.id}
+                                    onClick={() => multipleAllowed ? toggleItemSelection(item.id) : selectItem(item.id)}
+                                    className={`p-2.5 md:p-3 rounded-lg border cursor-pointer transition-all ${
+                                        isSelected
+                                            ? "border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20"
+                                            : "border-slate-700 bg-slate-900 hover:border-slate-600 hover:bg-slate-800"
+                                    }`}
+                                >
+                                    <div className="flex items-start gap-2 md:gap-3">
+                                        <div className={`hidden md:flex w-10 h-10 rounded-full bg-gradient-to-br ${iconColor} items-center justify-center flex-shrink-0`}>
+                                            <IconComponent className="text-white" size={18} />
+                                        </div>
+                                        <div className="flex-1 flex items-start justify-between gap-2">
+                                            <span className="text-xs md:text-sm font-semibold text-white truncate flex-1 line-clamp-2">
+                                                {displayName}
+                                            </span>
+                                            {isSelected && (
+                                                <div className="w-4 h-4 md:w-5 md:h-5 rounded-full border-2 border-blue-500 bg-blue-500 flex-shrink-0 mt-0.5" />
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    ) : (
+                        <div className="text-center py-6 md:py-8 text-slate-400">
+                            <AlertCircle size={24} className="mx-auto mb-2 opacity-50" />
+                            <p className="text-xs md:text-sm">Không tìm thấy kết quả</p>
+                        </div>
+                    )}
+                </div>
+            </>
         );
     };
 
@@ -556,16 +636,44 @@ useEffect(() => {
             {currentTarget?.type === "employee" && renderEmployeeList()}
             
             {currentTarget?.type === "position" &&
-                renderItemList(positions, "from-purple-500 to-pink-500", Briefcase)}
+                renderItemList(
+                    positions, 
+                    "from-purple-500 to-pink-500", 
+                    Briefcase,
+                    searchPosition,
+                    setSearchPosition,
+                    "Tìm theo tên vị trí..."
+                )}
             
             {currentTarget?.type === "department" &&
-                renderItemList(departments, "from-green-500 to-teal-500", Building)}
+                renderItemList(
+                    departments, 
+                    "from-green-500 to-teal-500", 
+                    Building,
+                    searchDepartment,
+                    setSearchDepartment,
+                    "Tìm theo tên phòng ban..."
+                )}
             
             {currentTarget?.type === "level" &&
-                renderItemList(levels, "from-orange-500 to-amber-500", Award)}
+                renderItemList(
+                    levels, 
+                    "from-orange-500 to-amber-500", 
+                    Award,
+                    searchLevel,
+                    setSearchLevel,
+                    "Tìm theo cấp bậc..."
+                )}
             
             {currentTarget?.type === "custom" && currentTarget.id && customData[currentTarget.id] &&
-                renderItemList(customData[currentTarget.id], "from-orange-500 to-red-500", currentTarget.icon)}
+                renderItemList(
+                    customData[currentTarget.id], 
+                    "from-orange-500 to-red-500", 
+                    currentTarget.icon,
+                    "",
+                    () => {},
+                    "Tìm kiếm..."
+                )}
 
             {getSelectedCount() > 0 && (
                 <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">

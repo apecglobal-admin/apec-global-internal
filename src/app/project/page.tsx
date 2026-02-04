@@ -73,7 +73,7 @@ export default function ProjectsPage() {
     const [searchQuery, setSearchQuery] = useState<string>("");
 
     useEffect(() => {
-        // dispatch(getListProject() as any);
+        // dispatch(getListProject({}) as any);
         dispatch(getStatProject() as any);
         dispatch(getStatusProject() as any);
     }, []);

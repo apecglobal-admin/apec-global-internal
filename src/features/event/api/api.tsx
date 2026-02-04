@@ -195,10 +195,10 @@ export const getListInternalEvent = createAsyncThunk(
     async (payload: any, thunkAPI) => {
         try {
 
-            const { limit, page, id, token }: any = payload;
+            const { limit, page, id, token, internal_event_type_id, search }: any = payload;
 
             const params = Object.fromEntries(
-                Object.entries({ limit, page, id }).filter(
+                Object.entries({ limit, page, id, internal_event_type_id, search }).filter(
                     ([key, value]) => value != null
                 )
             );
@@ -251,9 +251,16 @@ export const getListInternalEventEmployee = createAsyncThunk(
 
 export const getlevels = createAsyncThunk(
     "event/getlevels",
-    async (_, thunkAPI) => {
+    async (payload: any, thunkAPI) => {
         try {
-            const response = await apiAxiosInstance.get("/levels");
+            const { filter }: any = payload;
+
+            const params = Object.fromEntries(
+                Object.entries({ filter }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/levels/select/options", {params});
             return {
                 data: response.data,
                 status: response.status,

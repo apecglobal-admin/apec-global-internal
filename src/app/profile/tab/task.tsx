@@ -58,25 +58,11 @@ interface TasksResponse {
   total_pages: number;
 }
 
-interface TypeTask {
+interface TypeProps{
   id: string;
   name: string;
 }
 
-interface StatusTask {
-  id: string;
-  name: string;
-}
-
-interface PriorityTask {
-  id: string;
-  name: string;
-}
-
-interface FilterOption {
-  id: number;
-  name: string;
-}
 
 function TasksTab() {
   const dispatch = useDispatch();
@@ -108,11 +94,11 @@ function TasksTab() {
   const currentPage = tasksResponse?.page || 1;
 
   useEffect(() => {
-    dispatch(listTypeTask() as any);
     if(!typeTask){
+      dispatch(listTypeTask() as any);
     }
     if(!listProject){
-      dispatch(getListProject() as any);
+      dispatch(getListProject({}) as any);
     }
     if(!childKpi){
       dispatch(getChildKpi() as any);
@@ -129,7 +115,7 @@ function TasksTab() {
     const token = localStorage.getItem("userToken");
     if (token) {
       const payload = {
-        page,
+        page: 1,
         token,
         filter: taskFilter === "all" ? null : parseInt(taskFilter),
         projectFilter: projectFilter === "all" ? null : parseInt(projectFilter),
@@ -146,27 +132,22 @@ function TasksTab() {
 
   const handleFilterChange = (filter: string) => {
     setTaskFilter(filter);
-    setPage(1);
   };
 
   const handleProjectFilterChange = (filter: string) => {
     setProjectFilter(filter);
-    setPage(1);
   };
 
   const handleKpiFilterChange = (filter: string) => {
     setKpiFilter(filter);
-    setPage(1);
   };
 
   const handleStatusFilterChange = (filter: string) => {
     setStatusFilter(filter);
-    setPage(1);
   };
 
   const handlePriorityFilterChange = (filter: string) => {
     setPriorityFilter(filter);
-    setPage(1);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -205,7 +186,7 @@ function TasksTab() {
     if (!statusTask) return null;
     
 
-    const status = statusTask.find((s: StatusTask) => parseInt(s.id) === statusId);
+    const status = statusTask.find((s: TypeProps) => parseInt(s.id) === statusId);
     if (!status) return null;
 
     switch (statusId) {
@@ -257,7 +238,7 @@ function TasksTab() {
     if (!priorityTask) return null;
 
     const priority = priorityTask.find(
-      (p: PriorityTask) => parseInt(p.id) === priorityId
+      (p: TypeProps) => parseInt(p.id) === priorityId
     );
     if (!priority) return null;
 
@@ -380,7 +361,7 @@ function TasksTab() {
                       </SelectItem>
                       {typeTask &&
                         Array.isArray(typeTask) &&
-                        typeTask.map((type: TypeTask) => (
+                        typeTask.map((type: TypeProps) => (
                           <SelectItem 
                             key={type.id} 
                             value={type.id}
@@ -408,7 +389,7 @@ function TasksTab() {
                       </SelectItem>
                       {listProject &&
                         Array.isArray(listProject) &&
-                        listProject.map((project: FilterOption) => (
+                        listProject.map((project: TypeProps) => (
                           <SelectItem 
                             key={project.id} 
                             value={project.id.toString()}
@@ -436,7 +417,7 @@ function TasksTab() {
                       </SelectItem>
                       {childKpi &&
                         Array.isArray(childKpi) &&
-                        childKpi.map((kpi: FilterOption) => (
+                        childKpi.map((kpi: TypeProps) => (
                           <SelectItem 
                             key={kpi.id} 
                             value={kpi.id.toString()}
@@ -463,7 +444,7 @@ function TasksTab() {
                       </SelectItem>
                       {statusTask &&
                         Array.isArray(statusTask) &&
-                        statusTask.map((kpi: FilterOption) => (
+                        statusTask.map((kpi: TypeProps) => (
                           <SelectItem 
                             key={kpi.id} 
                             value={kpi.id.toString()}
@@ -489,7 +470,7 @@ function TasksTab() {
                       </SelectItem>
                       {priorityTask &&
                         Array.isArray(priorityTask) &&
-                        priorityTask.map((kpi: FilterOption) => (
+                        priorityTask.map((kpi: TypeProps) => (
                           <SelectItem 
                             key={kpi.id} 
                             value={kpi.id.toString()}
