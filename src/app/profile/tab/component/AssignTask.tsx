@@ -23,6 +23,7 @@ import { useTaskData } from "@/src/hooks/taskhook";
 import { toast } from "react-toastify";
 import { useProfileData } from "@/src/hooks/profileHook";
 import TaskTargetSelector from "@/components/TaskTargetSelector";
+import FilterableSelector from "@/components/FilterableSelector";
 
 interface AssignFormData {
     name: string;
@@ -107,6 +108,8 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
     
 
     useEffect(() => {
+        const token = localStorage.getItem("userToken");
+
         if (!statusTask) {
             dispatch(getStatusTask() as any);
         }
@@ -117,7 +120,7 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
             dispatch(getPriorityTask() as any);
         }
         if(!listProject){
-            dispatch(getListProject() as any);
+            dispatch(getListProject({}) as any);
         }
         if(!childKpi){
             dispatch(getChildKpi() as any);
@@ -126,14 +129,17 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
             dispatch(getListPosition() as any);
         }
         if(!listDepartment){
-            dispatch(getListDepartment() as any);
+            dispatch(getListDepartment({}) as any);
         }
+
+
 
         dispatch(
             getListEmployee({
                 position_id: null,
                 department_id: null,
                 filter: null,
+                token
             }) as any
         );
     }, [dispatch]);
@@ -160,14 +166,15 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
             }));
         }
     }, [childKpi]);
-
-    const handleProjectChange = (projectId: number) => {
-        const project = listProject?.find((p: any) => p.id === projectId);
+    
+    const handleProjectChange = (projectId: any) => {
+        if(!projectId) return;
+        const project = listProject?.find((p: any) => p.id === projectId.id);
         setSelectedProject(project || null);
 
         setAssignForm((prev) => ({
             ...prev,
-            project_id: projectId,
+            project_id: projectId.id,
             date_start: project?.date_start || "",
             date_end: project?.date_end || "",
         }));
@@ -176,6 +183,10 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
             setErrors((prev) => ({ ...prev, project_id: undefined }));
         }
     };
+
+    const handleFilterChange = (filter: any) => {
+        dispatch(getListProject({filter}) as any);
+    }
 
     const validateForm = (): boolean => {
         const newErrors: ValidationErrors = {};
@@ -283,7 +294,6 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                 taskData.employees = null;
                 taskData.position_id = null;
             }
-
 
             const result = await dispatch(createTask(taskData) as any);
 
@@ -505,29 +515,17 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                     Dự án{" "}
                                     <span className="text-red-400">*</span>
                                 </label>
-                                <select
-                                    value={assignForm.project_id}
-                                    onChange={(e) =>
-                                        handleProjectChange(
-                                            parseInt(e.target.value)
-                                        )
-                                    }
-                                    className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white focus:outline-none transition ${
-                                        errors.project_id
-                                            ? "border-red-500 focus:border-red-500"
-                                            : "border-slate-700 focus:border-blue-500"
-                                    }`}
-                                >
-                                    <option value={0}>-- Chọn dự án --</option>
-                                    {listProject?.map((project: any) => (
-                                        <option
-                                            key={project.id}
-                                            value={project.id}
-                                        >
-                                            {project.name}
-                                        </option>
-                                    ))}
-                                </select>
+
+                                <FilterableSelector
+                                    data={listProject}
+                                    onFilter={(filter) =>  handleFilterChange(filter)}
+                                    onSelect={(filter) =>  handleProjectChange(filter)}
+                                    value={selectedProject}
+                                    placeholder="Chọn dự án"
+                                    displayField="name"
+                                    emptyMessage="Không có dự án"
+                                    // isLoading={isLoading}
+                                />
                                 {errors.project_id && (
                                     <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
                                         <AlertCircle size={12} />
@@ -781,9 +779,8 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
 
                         <div className="pt-4 sm:pt-6 border-t border-slate-800">
                             <TaskTargetSelector
-                                enabledTargets={["employee", "position", "department"]}
+                                enabledTargets={["employee", "department"]}
                                 employees={listEmployee}
-                                positions={listPosition}
                                 departments={listDepartment}
                                 selectedTargetType={assignForm.target_type}
                                 selectedValues={assignForm.employees}
@@ -800,14 +797,23 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                         employees: values,
                                     });
                                 }}
-                                onFilterChange={(filters) => {
+                                onFilterChangeUser={(filters) => {
+                                    const token = localStorage.getItem("userToken");
+                                    
                                     dispatch(
                                         getListEmployee({
                                             position_id: filters.position,
                                             department_id: filters.department,
                                             filter: filters.search || null,
+                                            token
                                         }) as any
                                     );
+                                }}
+                                onFilterChangeDepartment={(filters) => {
+                                    dispatch(getListDepartment({filter: filters.search}) as any);
+                                }}
+                                onFilterChangeLevel={(filters) => {
+                                    dispatch(getListDepartment({filter: filters.search}) as any);
                                 }}
                                 error={errors.employees}
                                 onErrorClear={() =>

@@ -243,9 +243,9 @@ export const personalTarget = createAsyncThunk(
   "user/personalTarget",
   async (payload: any, thunkAPI) => {
     try {
-      const { id, page, limit, token }: any = payload;
+      const { id, page, limit, token, status_request_id, search }: any = payload;
       const params = Object.fromEntries(
-        Object.entries({ id, page, limit }).filter(
+        Object.entries({ id, page, limit, status_request_id, search }).filter(
             ([key, value]) => value != null
         )
     );
@@ -268,16 +268,35 @@ export const personalTarget = createAsyncThunk(
   }
 );
 
+export const personalRequestStatus = createAsyncThunk(
+  "user/personalRequestStatus",
+  async (_, thunkAPI) => {
+    try {
+
+      const response = await apiAxiosInstance.get(`/personal-requests/status`,);
+      return {
+        data: response.data,
+        status: response.status
+      };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
+
+
+
 
 
 export const personalRequestAssign = createAsyncThunk(
   "user/personalRequestAssign",
   async (payload: any, thunkAPI) => {
     try {
-      const { page, limit, id, token }: any = payload;
+      
+      const { page, limit, id, token, status_request_id, search }: any = payload;
 
       const params = Object.fromEntries(
-        Object.entries({ limit,page,id }).filter(
+        Object.entries({ limit, page, id, status_request_id, search }).filter(
             ([key, value]) => value != null
         )
     );

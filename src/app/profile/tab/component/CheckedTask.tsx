@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getListTaskAssign, checkedTask, rejectTask, getDetailListTaskAssign } from "@/src/features/task/api";
+import { getListTaskAssign, checkedTask, rejectTask, getDetailListTaskAssign, getListProject, getStatusTask, getPriorityTask } from "@/src/features/task/api";
 import { useDispatch } from "react-redux";
 import { useTaskData } from "@/src/hooks/taskhook";
 import { 
@@ -12,7 +12,9 @@ import {
     AlertCircle,
     CheckCheck,
     XCircle,
-    X
+    X,
+    Search,
+    Info
 } from "lucide-react";
 import { toast } from "react-toastify";
 import {
@@ -25,6 +27,21 @@ import {
     PaginationPrevious,
 } from "@/components/ui/pagination";
 
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { useProfileData } from "@/src/hooks/profileHook";
+import { listTypeTask } from '@/src/services/api';
+import FilterableSelector from "@/components/FilterableSelector";
+
+interface Props{
+    id: number;
+    name: string;
+}
 interface Task {
     id: string;
     prove: string;
@@ -38,26 +55,26 @@ interface Task {
         date_start: string;
         date_end: string;
     };
-    status: {
-        id: number;
-        name: string;
-    };
-    employee: {
-        id: number;
-        name: string;
-    };
+    status: Props;
+    employee: Props;
+    project_priorities: Props;
+    project: Props;
+
 }
 
 interface PaginationData {
     total: number;
-    limit: number;
     totalPages: number;
+}
+interface TypeProps{
+    id: string;
+    name: string;
 }
 
 function CheckedTask() {
     const dispatch = useDispatch();
-    const { listTaskAssign, listDetailTaskAssign, loadingListDetailTaskAssign, detailTaskAssign } = useTaskData();
-
+    const { listTaskAssign, listDetailTaskAssign, loadingListDetailTaskAssign, detailTaskAssign, listProject, statusTask, priorityTask } = useTaskData();
+    const { typeTask } = useProfileData();
     
     
     const [currentPage, setCurrentPage] = useState(1);
@@ -67,7 +84,6 @@ function CheckedTask() {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [pagination, setPagination] = useState<PaginationData>({
         total: 0,
-        limit: 6,
         totalPages: 1
     });
 
@@ -78,9 +94,51 @@ function CheckedTask() {
     const [newDateEnd, setNewDateEnd] = useState("");
     const [previewImage, setPreviewImage] = useState<string | null>(null);
 
+    const [taskFilter, setTaskFilter] = useState<string>("all");
+    const [projectFilter, setProjectFilter] = useState<any>(null);
+    const [statusFilter, setStatusFilter] = useState<string>("all");
+    const [priorityFilter, setPriorityFilter] = useState<string>("all");
+    const [searchFilter, setSearchFilter] = useState<string>("");
+    const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
+
     useEffect(() => {
         loadTasks(currentPage);
     }, [currentPage]);
+
+    useEffect(() => {
+        if(!typeTask){
+            dispatch(listTypeTask() as any);
+        }
+        if(!listProject){
+            dispatch(getListProject({}) as any);
+        }
+        if (!statusTask) {
+            dispatch(getStatusTask() as any);
+        }
+        if (!priorityTask) {
+            dispatch(getPriorityTask() as any);
+        }
+    }, []);
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            const token = localStorage.getItem("userToken");
+            if (token) {
+                const payload = {
+                    token,
+                    task_status: statusFilter === "all" ? null : parseInt(statusFilter),  
+                    type_task: taskFilter === "all" ? null : parseInt(taskFilter), 
+                    project_id: projectFilter?.id  ? projectFilter?.id : null, 
+                    search: searchFilter === "" ? null : searchFilter,
+                    task_priority: priorityFilter === "all" ? null : parseInt(priorityFilter), 
+                };
+
+                dispatch(getListTaskAssign(payload) as any);
+                    
+            }
+        }, 300)
+        return () => clearTimeout(timeout);
+    }, [statusFilter, taskFilter, projectFilter, searchFilter, priorityFilter]);
 
     useEffect(() => {
         if (listTaskAssign?.data) {
@@ -98,7 +156,6 @@ function CheckedTask() {
             const token = localStorage.getItem("userToken");
             const payload = {
                 token,
-                limit: 6,
                 page
             };
             await dispatch(getListTaskAssign(payload) as any);
@@ -223,6 +280,16 @@ function CheckedTask() {
                 {status.name}
             </span>
         );
+    };
+
+    const getPriorityColor =  (statusId: number) => {
+        const colors: { [key: number]: string } = {
+            4: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
+            3: 'bg-green-500/20 text-green-400 border border-green-500/30',
+            2: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
+            1: 'bg-red-500/20 text-red-400 border border-red-500/30',
+        };
+        return colors[statusId] || 'bg-gray-500/20 text-gray-400 border border-gray-500/30';
     };
 
     const getDeadlineBadge = (deadline: string) => {
@@ -389,7 +456,181 @@ function CheckedTask() {
         );
     };
 
+    const handleFilterChange = (filter: string) => {
+        setTaskFilter(filter);
+    };
+    const handleProjectFilterChange = (filter: any) => {
+        setProjectFilter(filter);
+    };
+    const handleStatusFilterChange = (filter: string) => {
+        setStatusFilter(filter);
+    };
+    const handlePriorityFilterChange = (filter: string) => {
+        setPriorityFilter(filter);
+    };
     
+    const handleFilterProject = (filter: string) => {
+        if (!listProject) return;
+    
+        if (!filter || filter.trim() === "") {
+            // Nếu không có filter, hiển thị tất cả
+            setFilteredProjects(listProject);
+        } else {
+            // Lọc danh sách project theo tên
+            const filtered = listProject.filter((project: any) => 
+                project.name.toLowerCase().includes(filter.toLowerCase())
+            );
+            setFilteredProjects(filtered);
+        }
+    }
+
+    const renderFilter = () => {
+        return(
+            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4 mb-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    {/* Task Type Filter */}
+                    <div className="space-y-1.5 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                        Loại nhiệm vụ
+                        </label>
+                        <Select value={taskFilter} onValueChange={handleFilterChange}>
+                        <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                            <SelectValue placeholder="Chọn loại nhiệm vụ" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-slate-700">
+                            <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                            Tất cả
+                            </SelectItem>
+                            {typeTask &&
+                            Array.isArray(typeTask) &&
+                            typeTask.map((type: TypeProps) => (
+                                <SelectItem 
+                                key={type.id} 
+                                value={type.id}
+                                className="text-white text-xs sm:text-sm"
+                                >
+                                {type.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                    </div>
+
+
+                    <div className="space-y-1.5 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                        Trạng thái
+                        </label>
+                        <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+                        <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                            <SelectValue placeholder="Chọn Status" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-slate-700">
+                            <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                            Tất cả
+                            </SelectItem>
+                            {statusTask &&
+                            Array.isArray(statusTask) &&
+                            statusTask.map((kpi: TypeProps) => (
+                                <SelectItem 
+                                key={kpi.id} 
+                                value={kpi.id.toString()}
+                                className="text-white text-xs sm:text-sm"
+                                >
+                                {kpi.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-1.5 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                        Loại mức độ
+                        </label>
+                        <Select value={priorityFilter} onValueChange={handlePriorityFilterChange}>
+                        <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                            <SelectValue placeholder="Chọn mức độ" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-slate-700">
+                            <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                            Tất cả
+                            </SelectItem>
+                            {priorityTask &&
+                            Array.isArray(priorityTask) &&
+                            priorityTask.map((kpi: TypeProps) => (
+                                <SelectItem 
+                                key={kpi.id} 
+                                value={kpi.id.toString()}
+                                className="text-white text-xs sm:text-sm"
+                                >
+                                {kpi.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Project Filter */}
+                    <div className="space-y-1.5 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                        Dự án
+                        </label>
+                        <FilterableSelector
+                            data={filteredProjects}
+                            onFilter={handleFilterProject}
+                            onSelect={(value) => handleProjectFilterChange(value)}
+                            value={projectFilter}
+                            placeholder="Chọn dự án"
+                            displayField="name"
+                            emptyMessage="Không có dự án"
+                        />
+                    </div>
+
+                </div>
+                <div className="space-y-1.5 sm:space-y-2">
+                    <div className="grid grid-cols-1 mt-4">
+                        <div className="relative">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                        <input
+                            type="text"
+                            value={searchFilter}
+                            onChange={(e) => {
+                                setSearchFilter(e.target.value)
+                            }}
+                            placeholder={"Tìm kiếm tên..."}
+                            className="
+                            w-full rounded-md
+                            bg-slate-900 border border-slate-700
+                            pl-9 pr-8 py-2 text-sm text-white
+                            placeholder:text-slate-500
+                            focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent
+                            disabled:opacity-50 disabled:cursor-not-allowed
+                            transition-colors duration-150
+                            "
+                        />
+                        {searchFilter  && (
+                            <button
+                            type="button"
+                            onClick={() => setSearchFilter("")}
+                            aria-label="Xóa tìm kiếm"
+                            className="
+                                absolute right-2.5 top-1/2 -translate-y-1/2
+                                text-slate-500 hover:text-white
+                                transition-colors duration-150
+                            "
+                            >
+                            <X className="h-4 w-4" />
+                            </button>
+                        )}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        )
+    }
+
     return (
         <>
         <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6">
@@ -398,7 +639,7 @@ function CheckedTask() {
                 <div className="mb-4 sm:mb-6">
                     <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
                         <FileCheck className="text-blue-400 flex-shrink-0" size={24} />
-                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">
+                        <h1 className="text-xl sm:text-2xl font-bold text-white">
                             Duyệt nhiệm vụ
                         </h1>
                     </div>
@@ -406,6 +647,8 @@ function CheckedTask() {
                         Danh sách nhiệm vụ đã giao - Tổng: {pagination.total} nhiệm vụ
                     </p>
                 </div>
+
+                {renderFilter()}
 
                 {/* Loading State */}
                 {isLoading && tasks.length === 0 ? (
@@ -436,8 +679,7 @@ function CheckedTask() {
                                                 {task.task.name}
                                             </h3>
                                             <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-slate-300">
-                                                <User size={14} className="text-slate-500 flex-shrink-0 sm:hidden" />
-                                                <User size={16} className="text-slate-500 flex-shrink-0 hidden sm:block" />
+                                                <User size={14} className="text-slate-500 flex-shrink-0" />
                                                 <span className="truncate">{task.employee.name}</span>
                                             </div>
                                         </div>
@@ -457,13 +699,11 @@ function CheckedTask() {
                                                     <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                                 ) : task.checked ? (
                                                     <>
-                                                        <CheckCheck size={16} className="sm:hidden" />
-                                                        <CheckCheck size={20} className="hidden sm:block" />
+                                                        <CheckCheck size={16} className="" />
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <CheckCircle2 size={16} className="sm:hidden" />
-                                                        <CheckCircle2 size={20} className="hidden sm:block" />
+                                                        <CheckCircle2 size={16} className="" />
                                                     </>
                                                 )}
                                             </button>
@@ -478,36 +718,44 @@ function CheckedTask() {
                                                 } disabled:opacity-50`}
                                                 title={task.checked ? "Không thể từ chối" : "Từ chối nhiệm vụ"}
                                             >
-                                                <XCircle size={16} className="sm:hidden" />
-                                                <XCircle size={20} className="hidden sm:block" />
+                                                <XCircle size={16} className="" />
                                             </button>
                                         </div>
                                     </div>
 
                                     {/* Task Info */}
                                     <div className="space-y-1.5 sm:space-y-2 mb-2 sm:mb-3">
+                                        <div className="flex items-center gap-1.5 sm:gap-2">
+                                            <Info size={14} className="text-slate-500 flex-shrink-0" />
+                                            <span className="text-sm">
+                                                {task.project.name}
+
+                                            </span>
+                                        </div>
                                         <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm flex-wrap">
-                                            <Calendar size={14} className="text-slate-500 flex-shrink-0 sm:hidden" />
-                                            <Calendar size={16} className="text-slate-500 flex-shrink-0 hidden sm:block" />
+                                            <Calendar size={14} className="text-slate-500 flex-shrink-0" />
                                             <span className="text-slate-400">Ngày làm:</span>
                                             <span className="text-white font-medium">
                                                 {formatDate(task.task.date_start)} - {formatDate(task.task.date_end)}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
-                                            <Calendar size={14} className="text-slate-500 flex-shrink-0 sm:hidden" />
-                                            <Calendar size={16} className="text-slate-500 flex-shrink-0 hidden sm:block" />
+                                            <Calendar size={14} className="text-slate-500 flex-shrink-0" />
                                             <span className="text-slate-400">Hoàn thành:</span>
                                             <span className="text-white font-medium">
                                                 {formatDate(task.completed_date)}
                                             </span>
                                         </div>
-                                        
                                         <div className="flex items-center gap-1.5 sm:gap-2">
-                                            <Clock size={14} className="text-slate-500 flex-shrink-0 sm:hidden" />
-                                            <Clock size={16} className="text-slate-500 flex-shrink-0 hidden sm:block" />
+                                            <Info size={14} className="text-slate-500 flex-shrink-0" />
+
+                                            <span className={`text-xs ${getPriorityColor(task.project_priorities.id)} px-2 py-1 rounded-lg`}>{task.project_priorities.name}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 sm:gap-2">
+                                            <Clock size={14} className="text-slate-500 flex-shrink-0" />
                                             {getDeadlineBadge(task.deadline)}
                                         </div>
+
                                     </div>
 
                                     {/* Status and Progress */}
@@ -516,8 +764,7 @@ function CheckedTask() {
                                             {getStatusBadge(task.status)}
                                             {task.checked && (
                                                 <span className="px-2 py-0.5 sm:py-1 bg-green-500/20 text-green-400 rounded-md text-xs font-semibold border border-green-500/30 flex items-center gap-1">
-                                                    <CheckCheck size={12} className="sm:hidden" />
-                                                    <CheckCheck size={14} className="hidden sm:block" />
+                                                    <CheckCheck size={12} className="" />
                                                     Đã duyệt
                                                 </span>
                                             )}

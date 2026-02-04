@@ -16,7 +16,9 @@ import {
   Plus, 
   Calendar,
   FileWarning,
-  TrendingDown
+  TrendingDown,
+  Search,
+  X
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import {
@@ -28,6 +30,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useCautionData } from '@/src/hooks/cautionHook';
 import PersonalCautions from './component/PersonalCautions';
 import CreateCautionModal from './component/Createcautionmodal'; 
@@ -58,9 +67,9 @@ interface PaginationData {
 
 function Cautions() {
   const dispatch = useDispatch();
-  const { listCaution, listCautionKPI, caution } = useCautionData();
+  const { listCaution, listCautionKPI } = useCautionData();
   const { listEmployeeDepartment } = useProfileData();
-
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [cautions, setCautions] = useState<Caution[]>([]);
@@ -74,6 +83,9 @@ function Cautions() {
   // Modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [kpiFilter, setKpiFilter] = useState<string>("all");
+  const [searchFilter, setSearchFilter] = useState<string>("");
+
 
   useEffect(() => {
     loadCautionKPIs();
@@ -92,6 +104,19 @@ function Cautions() {
       }
     }
   }, [listCaution]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const token = localStorage.getItem("userToken");
+      const payload = {
+        token,
+        kpi_item_id: kpiFilter === "all" ? null : kpiFilter, 
+        search: searchFilter === "" ? null : searchFilter 
+      };
+      dispatch(getListCaution(payload) as any);
+    }, 300)
+    return () => clearTimeout(timeout);
+  }, [kpiFilter, searchFilter]);
 
   const loadCautions = async (page: number) => {
     setIsLoading(true);
@@ -314,6 +339,81 @@ function Cautions() {
     return items;
   };
 
+  const handleKpiFilterChange = (filter: string) => {
+    setKpiFilter(filter)
+  }
+
+  const renderFilter = () => {
+      return(
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4 mb-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                  <div className="space-y-1.5 sm:space-y-2">
+                  <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                      Phân loại
+                  </label>
+                  <Select value={kpiFilter} onValueChange={handleKpiFilterChange}>
+                      <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                      <SelectValue placeholder="Chọn loại sự kiện" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-900 border-slate-700">
+                      <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                          Tất cả
+                      </SelectItem>
+                      {listCautionKPI &&
+                          Array.isArray(listCautionKPI) &&
+                          listCautionKPI.map((type: any) => (
+                          <SelectItem 
+                              key={type.id} 
+                              value={type.id}
+                              className="text-white text-xs sm:text-sm"
+                          >
+                              {type.name}
+                          </SelectItem>
+                          ))}
+                      </SelectContent>
+                  </Select>
+                  </div>
+              </div>
+              <div className="grid grid-cols-1 mt-4">
+                  <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                  <input
+                      type="text"
+                      value={searchFilter}
+                      onChange={(e) => {
+                          setSearchFilter(e.target.value)
+                      }}
+                      placeholder={"Tìm kiếm tên, mô tả..."}
+                      className="
+                      w-full rounded-md
+                      bg-slate-900 border border-slate-700
+                      pl-9 pr-8 py-2 text-sm text-white
+                      placeholder:text-slate-500
+                      focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent
+                      disabled:opacity-50 disabled:cursor-not-allowed
+                      transition-colors duration-150
+                      "
+                  />
+                  {searchFilter  && (
+                      <button
+                      type="button"
+                      onClick={() => setSearchFilter("")}
+                      aria-label="Xóa tìm kiếm"
+                      className="
+                          absolute right-2.5 top-1/2 -translate-y-1/2
+                          text-slate-500 hover:text-white
+                          transition-colors duration-150
+                      "
+                      >
+                      <X className="h-4 w-4" />
+                      </button>
+                  )}
+                  </div>
+              </div>
+          </div>
+      )
+  }
+
   return (
     <>
       <div className="min-h-screen p-4 sm:p-6 lg:p-8">
@@ -323,7 +423,7 @@ function Cautions() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <AlertTriangle className="text-yellow-400" size={32} />
-                <h1 className="text-2xl sm:text-3xl font-bold text-white">
+                <h1 className="text-xl sm:text-2xl font-bold text-white">
                   Quản lý nhắc nhở
                 </h1>
               </div>
@@ -340,6 +440,8 @@ function Cautions() {
               Nhắc nhở mới
             </button>
           </div>
+
+          {renderFilter()}
 
           {/* Loading State */}
           {isLoading && cautions.length === 0 ? (
