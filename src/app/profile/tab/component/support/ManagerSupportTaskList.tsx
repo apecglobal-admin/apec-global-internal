@@ -128,7 +128,7 @@ function ManagerSupportTaskList({ tasks, pagination, onPageChange }: ManagerSupp
     }
 
     return (
-        <div className="max-w-7xl mx-auto p-4 space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6">
             <PopupComponent isOpen={isOpen} onClose={closePopup} {...popupProps} />
 
             {/* Header / Toolbar */}
@@ -139,42 +139,46 @@ function ManagerSupportTaskList({ tasks, pagination, onPageChange }: ManagerSupp
                             <div className="p-2 bg-blue-500/10 rounded-lg">
                                 <ClipboardList className="h-5 w-5 text-blue-500" />
                             </div>
-                            <h2 className="font-bold text-white">Danh sách yêu cầu hỗ trợ</h2>
+                            <h2 className="font-bold text-white text-sm sm:text-base">
+                                Danh sách yêu cầu hỗ trợ
+                            </h2>
                         </div>
-                        <div className="flex gap-2 w-full sm:w-auto">
+                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                             <Button 
                                 variant="outline" 
                                 onClick={() => enterSelectMode('reject')}
-                                className="flex-1 sm:flex-none border-rose-500/50 text-rose-500 hover:bg-rose-500 hover:text-white"
+                                className="w-full sm:w-auto border-rose-500/50 text-rose-500 hover:bg-rose-500 hover:text-white"
                             >
-                                <Ban className="mr-2 h-4 w-4" /> Từ chối nhiều
+                                <Ban className="mr-2 h-4 w-4" /> 
+                                <span className="text-sm">Từ chối nhiều</span>
                             </Button>
                             <Button 
                                 onClick={() => enterSelectMode('accept')}
-                                className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white"
+                                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white"
                             >
-                                <CheckSquare className="mr-2 h-4 w-4" /> Duyệt nhiều
+                                <CheckSquare className="mr-2 h-4 w-4" /> 
+                                <span className="text-sm">Duyệt nhiều</span>
                             </Button>
                         </div>
                     </>
                 ) : (
                     <>
                         <div className="flex items-center gap-3">
-                            <Badge className={currentAction === 'accept' ? "bg-emerald-500" : "bg-rose-500"}>
+                            <Badge className={currentAction === 'accept' ? "bg-emerald-500" : "bg-rose-500" }>
                                 Đang chọn để {currentAction === 'accept' ? "Duyệt" : "Từ chối"}
                             </Badge>
-                            <span className="text-sm text-slate-300 font-medium">
-                                Đã chọn: <span className="text-white text-lg">{selectedIds.length}</span>
+                            <span className="md:text-md text-xs text-slate-300 font-medium ">
+                                Đã chọn: <span className="text-white text-lg md:text-md text-sm">{selectedIds.length}</span>
                             </span>
                         </div>
                         <div className="flex gap-2 w-full sm:w-auto">
-                            <Button variant="ghost" onClick={exitSelectMode} className="text-slate-400 hover:text-white">
+                            <Button variant="ghost" onClick={exitSelectMode} className="bg-black text-white hover:text-white">
                                 Hủy bỏ
                             </Button>
                             <Button 
                                 onClick={handleCommitAction}
                                 disabled={selectedIds.length === 0 || isProcessing}
-                                className={currentAction === 'accept' ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700"}
+                                className={currentAction === 'accept' ? "md:text-md text-xs bg-emerald-600 hover:bg-emerald-700" : "md:text-md text-xs bg-rose-600 hover:bg-rose-700"}
                             >
                                 {isProcessing ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Check className="h-4 w-4 mr-2" />}
                                 Xác nhận {currentAction === 'accept' ? "Duyệt" : "Từ chối"} ({selectedIds.length})

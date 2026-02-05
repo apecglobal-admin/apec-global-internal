@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getSupportTaskEmployee, supportTaskConfirm, uploadImageTask, uploadFileTask } from '@/src/features/task/api';
+import { getSupportTaskEmployee, supportTaskConfirm, uploadImageTask, uploadFileTask, getSupportTaskStatus, getSupportTaskTypes, getListDepartment } from '@/src/features/task/api';
 import { useTaskData } from '@/src/hooks/taskhook';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
@@ -15,6 +15,13 @@ import {
     PaginationNext,
     PaginationEllipsis,
 } from '@/components/ui/pagination';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from "@/components/ui/select";
 import {
     Dialog,
     DialogContent,
@@ -38,18 +45,25 @@ import {
     Upload,
     ImageIcon,
     X,
-    ExternalLink
+    ExternalLink,
+    Search
 } from 'lucide-react';
+import FilterableSelector from '@/components/FilterableSelector';
 
 
 function Support() {
-    
     const dispatch = useDispatch();
-    const { supportTaskEmployee, detailSupportTaskEmployee, imageTask, fileTask } = useTaskData();
+    const { 
+        supportTaskEmployee, 
+        detailSupportTaskEmployee, 
+        imageTask, 
+        fileTask, 
+        supportTaskStatus, 
+        supportTaskTypes,
+        listDepartment
+    } = useTaskData();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-
-    
     
     // Confirm Modal State
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -61,6 +75,14 @@ function Support() {
     const [uploadedProve, setUploadedProve] = useState<string>("");
     const [isConfirming, setIsConfirming] = useState(false);
     const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+    const [statusFilter , setStatusFilter ] = useState<string>("all");
+    const [typesFilter , setTypesFilter ] = useState<string>("all");
+    const [departmentFilter , setDepartmentFilter ] = useState<any>(null);
+    const [checkedFilter , setCheckedFilter ] = useState<string>("all");
+    const [searchFilter, setSearchFilter] = useState<string>("");
+
+
+
 
     useEffect(() => {
         const token = localStorage.getItem("userToken");
@@ -71,6 +93,71 @@ function Support() {
             limit: 6 
         }) as any);
     }, [currentPage, dispatch]);
+
+    useEffect(() => {
+
+        const timeout = setTimeout(() => {
+            const token = localStorage.getItem("userToken");
+            if (token) {
+                const payload = {
+                    page: currentPage,
+                    token,
+                    type_id: typesFilter === "all" ? null : parseInt(typesFilter),  
+                    department_id: departmentFilter?.id ? departmentFilter?.id : null,  
+                    status_id: statusFilter === "all" ? null : parseInt(statusFilter), 
+                    checked: checkedFilter === "all" ? null : String(checkedFilter),
+                    search: searchFilter === "" ? null : searchFilter,
+
+                    key: "supportTaskEmployee"
+                };
+
+                    dispatch(getSupportTaskEmployee(payload) as any);
+                    
+            }
+        }, 300)
+        return () => clearTimeout(timeout);
+    }, [statusFilter, typesFilter, departmentFilter, checkedFilter, searchFilter]);
+
+    useEffect(() => {
+        if(!supportTaskStatus){
+            dispatch(getSupportTaskStatus() as any);
+        }
+        if(!supportTaskTypes){
+            dispatch(getSupportTaskTypes() as any);
+        }
+        if(!listDepartment){
+            dispatch(getListDepartment({}) as any);
+        }
+    }, []);
+
+    const handleStatusFilterChange = (filter: string) => {
+        
+        setStatusFilter(filter);
+        setCurrentPage(1);
+    };
+
+    const handleTypeFilterChange = (filter: string) => {
+        setTypesFilter(filter);
+        setCurrentPage(1);
+    };
+
+    const handleCheckedFilterChange = (filter: string) => {
+        setCheckedFilter(filter);
+        setCurrentPage(1);
+    };
+
+    
+
+    const handleDepartmentFilterChange = (filter: any) => {
+        setDepartmentFilter(filter);
+        setCurrentPage(1);
+    };
+
+    const handleFilterTargetDept = (filter: string) => {
+		dispatch(getListDepartment({filter}) as any);
+	};
+    
+    
 
     const handleShowDetail = (id: number) => {
         const token = localStorage.getItem("userToken");
@@ -284,32 +371,179 @@ function Support() {
         );
     };
 
-    if (!supportTaskEmployee?.rows || supportTaskEmployee.rows.length === 0) {
-        return (
-            <div className="max-w-7xl mx-auto p-6">
-                <div className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50">
-                    <div className="w-16 h-16 rounded-full bg-slate-200 flex items-center justify-center mb-4">
-                        <ClipboardList className="h-8 w-8 text-slate-400" />
+    const renderFilter = () => {
+        return(
+            <>
+                <div className="mb-6">
+                    <h1 className="text-2xl font-bold text-white">Nhiệm vụ hỗ trợ của tôi</h1>
+                    <p className="text-sm text-white mt-1">
+                        Tổng số: {supportTaskEmployee?.pagination?.total || 0} nhiệm vụ
+                    </p>
+                </div>
+                <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        {/* Task Type Filter */}
+                        <div className="space-y-1.5 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                            Trạng thái
+                        </label>
+                        <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+                            <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                            <SelectValue placeholder="Chọn loại nhiệm vụ" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-900 border-slate-700">
+                            <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                                Tất cả
+                            </SelectItem>
+                            {supportTaskStatus &&
+                                Array.isArray(supportTaskStatus) &&
+                                supportTaskStatus.map((type: any) => (
+                                <SelectItem 
+                                    key={type.id} 
+                                    value={type.id}
+                                    className="text-white text-xs sm:text-sm"
+                                >
+                                    {type.name}
+                                </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        </div>
+
+
+                        <div className="space-y-1.5 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                            Loại Hỗ trợ
+                        </label>
+                        <Select value={typesFilter} onValueChange={handleTypeFilterChange}>
+                            <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                            <SelectValue placeholder="Chọn loại nhiệm vụ" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-900 border-slate-700">
+                            <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                                Tất cả
+                            </SelectItem>
+                            {supportTaskTypes &&
+                                Array.isArray(supportTaskTypes) &&
+                                supportTaskTypes.map((type: any) => (
+                                <SelectItem 
+                                    key={type.id} 
+                                    value={type.id}
+                                    className="text-white text-xs sm:text-sm"
+                                >
+                                    {type.name}
+                                </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        </div>
+
+                        <div className="space-y-1.5 sm:space-y-2">
+                            <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                                Loại xác nhận
+                            </label>
+                            <Select value={checkedFilter} onValueChange={handleCheckedFilterChange}>
+                                <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                                    <SelectValue placeholder="Chọn loại xác nhận" />
+                                </SelectTrigger>
+
+                                <SelectContent className="bg-slate-900 border-slate-700">
+                                    <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                                    Tất cả
+                                    </SelectItem>
+
+                                    <SelectItem value="true" className="text-white text-xs sm:text-sm">
+                                    Đã xác nhận
+                                    </SelectItem>
+
+                                    <SelectItem value="false" className="text-white text-xs sm:text-sm">
+                                    Chưa xác nhận
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-1.5 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                            Phòng ban
+                        </label>
+                            <FilterableSelector
+                                data={listDepartment}
+                                onFilter={handleFilterTargetDept}
+                                onSelect={(value) => handleDepartmentFilterChange(value)}
+                                value={departmentFilter}
+                                placeholder="Chọn dự án"
+                                displayField="name"
+                                emptyMessage="Không có dự án"
+                            />
+                        </div>
+
                     </div>
-                    <p className="text-lg font-semibold text-slate-700 text-center">Chưa có nhiệm vụ hỗ trợ nào</p>
-                    <p className="text-sm text-slate-500 mt-2 text-center">Các nhiệm vụ được giao sẽ xuất hiện tại đây</p>
+                    <div className="grid grid-cols-1 mt-4">
+                        <div className="relative">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                        <input
+                            type="text"
+                            value={searchFilter}
+                            onChange={(e) => {
+                                setSearchFilter(e.target.value)
+                                setCurrentPage(1)
+                            }}
+                            placeholder={"Tìm kiếm tên..."}
+                            className="
+                            w-full rounded-md
+                            bg-slate-900 border border-slate-700
+                            pl-9 pr-8 py-2 text-sm text-white
+                            placeholder:text-slate-500
+                            focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent
+                            disabled:opacity-50 disabled:cursor-not-allowed
+                            transition-colors duration-150
+                            "
+                        />
+                        {searchFilter  && (
+                            <button
+                            type="button"
+                            onClick={() => setSearchFilter("")}
+                            aria-label="Xóa tìm kiếm"
+                            className="
+                                absolute right-2.5 top-1/2 -translate-y-1/2
+                                text-slate-500 hover:text-white
+                                transition-colors duration-150
+                            "
+                            >
+                            <X className="h-4 w-4" />
+                            </button>
+                        )}
+                        </div>
+                    </div>
+                </div>
+            </>
+        )
+    }
+
+    if(!supportTaskEmployee?.rows || supportTaskEmployee.rows.length === 0){
+        return(
+            <div className='max-w-7xl mx-auto p-5'>
+                {renderFilter()}
+                <div className="mt-4">
+                    <div className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-slate-300 rounded-lg bg-slate-800">
+                        <div className="w-16 h-16 rounded-full bg-black flex items-center justify-center mb-4">
+                            <ClipboardList className="h-8 w-8 text-white" />
+                        </div>
+                        <p className="text-lg font-semibold text-white text-center">Chưa có nhiệm vụ hỗ trợ nào</p>
+                        <p className="text-sm text-white mt-2 text-center">Các nhiệm vụ được giao sẽ xuất hiện tại đây</p>
+                    </div>
                 </div>
             </div>
-        );
+        )
     }
 
     return (
         <div className="max-w-7xl mx-auto p-6">
-            {/* Header */}
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold text-white">Nhiệm vụ hỗ trợ của tôi</h1>
-                <p className="text-sm text-white mt-1">
-                    Tổng số: {supportTaskEmployee.pagination?.total || 0} nhiệm vụ
-                </p>
-            </div>
+            {renderFilter()}
 
             {/* Grid Layout Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
                 {supportTaskEmployee.rows.map((task: any) => {
                     const isChecked = task.checked === true;
                     return(
@@ -408,6 +642,7 @@ function Support() {
 
             {/* Pagination */}
             {renderPagination()}
+                
 
             {/* Modal Chi Tiết */}
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

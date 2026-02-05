@@ -8,10 +8,10 @@ export const getCaution = createAsyncThunk(
     "task/getCaution",
     async (payload: any, thunkAPI) => {
         try {
-            const {limit,page,id, token} = payload;
+            const {limit,page,id, token, kpi_item_id, search} = payload;
 
             const params = Object.fromEntries(
-                Object.entries({ limit,page,id }).filter(
+                Object.entries({ limit,page,id, kpi_item_id, search }).filter(
                     ([key, value]) => value != null
                 )
             );
@@ -88,9 +88,9 @@ export const getListCaution = createAsyncThunk(
     "task/getListCaution",
     async (payload: any, thunkAPI) => {
         try {
-            const {limit,page,id, token} = payload;
+            const {limit,page,id, token, kpi_item_id, search} = payload;
             const params = Object.fromEntries(
-                Object.entries({ limit,page,id }).filter(
+                Object.entries({ limit,page,id, kpi_item_id, search }).filter(
                     ([key, value]) => value != null
                 )
             );

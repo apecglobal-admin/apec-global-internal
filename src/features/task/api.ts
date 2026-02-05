@@ -151,10 +151,15 @@ export const getPriorityTask = createAsyncThunk(
 
 export const getListProject = createAsyncThunk(
     "task/getListProject",
-    async (_, thunkAPI) => {
+    async (payload: any, thunkAPI) => {
         try {
-
-            const response = await apiAxiosInstance.get("/projects/select/option");
+            const {filter} = payload;
+            const params = Object.fromEntries(
+                Object.entries({ filter }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/projects/select/option", {params});
             return {
                 data: response.data,
             };
@@ -188,13 +193,19 @@ export const getListEmployee = createAsyncThunk(
     "task/getListEmployee",
     async (payload: any, thunkAPI) => {
         try {
-            const {position_id, department_id, filter} = payload;
+            const {position_id, department_id, filter, token} = payload;
             const params = Object.fromEntries(
                 Object.entries({ position_id, department_id, filter }).filter(
                     ([key, value]) => value != null
                 )
             );
-            const response = await apiAxiosInstance.get("/employees/select/options", {params});
+            const response = await apiAxiosInstance.get("/employees/tasks/select/options", {
+                params,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                
+            });
             return {
                 data: response.data,
             };
@@ -225,10 +236,15 @@ export const getStatusTask = createAsyncThunk(
 
 export const getListDepartment = createAsyncThunk(
     "task/getListDepartment",
-    async (_, thunkAPI) => {
+    async (payload: any, thunkAPI) => {
         try {
-
-            const response = await apiAxiosInstance.get("/cms/select/options/departments");
+            const {filter} = payload;
+            const params = Object.fromEntries(
+                Object.entries({  filter }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/departments/select/options", {params});
             return {
                 data: response.data,
             };
@@ -393,9 +409,9 @@ export const getListTaskAssign = createAsyncThunk(
     "task/getListTaskAssign",
     async (payload: any, thunkAPI) => {
         try {
-            const {limit, page, id, token} = payload;
+            const {limit, page, id, token, task_status, type_task, project_id, task_priority, search} = payload;
             const params = Object.fromEntries(
-                Object.entries({ limit,page,id }).filter(
+                Object.entries({ limit,page,id, task_status, type_task, project_id, task_priority, search }).filter(
                     ([key, value]) => value != null
                 )
             );
@@ -482,9 +498,10 @@ export const getDetailListTaskAssign = createAsyncThunk(
     "task/getDetailListTaskAssign",
     async (payload: any, thunkAPI) => {
         try {
-            const {limit, page, id, token} = payload;
+            
+            const {limit, page, id, token, task_status, type_task, project_id, search, task_priority} = payload;
             const params = Object.fromEntries(
-                Object.entries({ limit, page, id }).filter(
+                Object.entries({ limit, page, id, task_status, type_task, project_id, search, task_priority }).filter(
                     ([key, value]) => value != null
                 )
             );
@@ -652,9 +669,9 @@ export const getSupportTask = createAsyncThunk(
     "task/getSupportTask",
     async (payload: any, thunkAPI) => {
         try {
-            const {id, limit, page, filter, token} = payload;
+            const {id, limit, page, token, type_id, department_id, search} = payload;
             const params = Object.fromEntries(
-                Object.entries({ limit, page, id, filter }).filter(
+                Object.entries({ limit, page, id, type_id, department_id, search }).filter(
                     ([key, value]) => value != null
                 )
             );
@@ -681,9 +698,9 @@ export const getSupportTaskManager  = createAsyncThunk(
     "task/getSupportTaskManager",
     async (payload: any, thunkAPI) => {
         try {
-            const {id, limit, page, filter, token} = payload;
+            const {id, limit, page, token, type_id, department_id, search} = payload;
             const params = Object.fromEntries(
-                Object.entries({ limit, page, id, filter }).filter(
+                Object.entries({ limit, page, id, type_id, department_id, search }).filter(
                     ([key, value]) => value != null
                 )
             );
@@ -709,9 +726,9 @@ export const getSupportTaskEmployee  = createAsyncThunk(
     "task/getSupportTaskEmployee",
     async (payload: any, thunkAPI) => {
         try {
-            const {id, limit, page, filter, token} = payload;
+            const {id, limit, page, filter, token, type_id, department_id, status_id, checked, search} = payload;
             const params = Object.fromEntries(
-                Object.entries({ limit, page, id, filter }).filter(
+                Object.entries({ limit, page, id, filter, type_id, department_id, status_id, checked, search }).filter(
                     ([key, value]) => value != null
                 )
             );
@@ -721,6 +738,23 @@ export const getSupportTaskEmployee  = createAsyncThunk(
                     Authorization: `Bearer ${token}`,
                 },
             });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+export const getSupportTaskStatus  = createAsyncThunk(
+    "task/getSupportTaskStatus",
+    async (_, thunkAPI) => {
+        try {
+            const response = await apiAxiosInstance.get("/support/tasks/status");
             return {
                 data: response.data,
                 status: response.status,
@@ -857,9 +891,9 @@ export const getSupportTaskPending  = createAsyncThunk(
     "task/getSupportTaskPending",
     async (payload: any, thunkAPI) => {
         try {
-            const {id, limit, page, filter, token} = payload;
+            const {id, limit, page, token, type_id, department_id, search} = payload;
             const params = Object.fromEntries(
-                Object.entries({ limit, page, id, filter }).filter(
+                Object.entries({ limit, page, id, type_id, department_id, search }).filter(
                     ([key, value]) => value != null
                 )
             );

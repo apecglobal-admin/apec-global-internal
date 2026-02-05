@@ -3,7 +3,8 @@ import {
     personalRequestAssign, 
     personalRequestHonor,   
     personalRequestApply,
-    personalRequestReject, 
+    personalRequestReject,
+    personalRequestStatus, 
 } from "@/src/services/api";
 import { useProfileData } from '@/src/hooks/profileHook';
 import { useDispatch } from 'react-redux';
@@ -16,11 +17,18 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from "@/components/ui/select";
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Award, Check, X } from 'lucide-react';
+import { ArrowLeft, Award, Check, Search, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import {
   Dialog,
@@ -471,18 +479,39 @@ const RequestDetail = ({
 // Component chính
 function Request() {
     const dispatch = useDispatch();
-    const { listPersonalRequestAssign, detailPersonalRequestAssign } = useProfileData();
+    const { listPersonalRequestAssign, detailPersonalRequestAssign, listPersonalRequestStatus } = useProfileData();
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [statusFilter, setStatusFilter] = useState<string>("all");
+    const [searchFilter, setSearchFilter] = useState<string>("");
 
-    const limit = 6;
 
     useEffect(() => {
         const token = localStorage.getItem("userToken");
+        const timer = setTimeout(() => {
+            if (token) {
+                dispatch(personalRequestAssign({
+                    token: token,
+                    key: "listPersonalRequestAssign",
+                    status_request_id: statusFilter === "all" ? null : statusFilter, 
+                    search: searchFilter === "" ? null : searchFilter
+                }) as any);
+            }
+
+        }, 300)
+
+        return () => clearTimeout(timer);
+        
+    }, [statusFilter, searchFilter]);
+
+    useEffect(() => {
+        const token = localStorage.getItem("userToken");
+        if(!listPersonalRequestStatus){
+            dispatch(personalRequestStatus() as any)
+        }
         if (token) {
             dispatch(personalRequestAssign({
                 page: currentPage,
-                limit,
                 token: token,
                 key: "listPersonalRequestAssign"
             }) as any);
@@ -527,7 +556,6 @@ function Request() {
                 // Refresh danh sách
                 dispatch(personalRequestAssign({
                     page: currentPage,
-                    limit,
                     token: token,
                     key: "listPersonalRequestAssign"
                 }) as any);
@@ -561,7 +589,6 @@ function Request() {
                 // Refresh danh sách
                 dispatch(personalRequestAssign({
                     page: currentPage,
-                    limit,
                     token: token,
                     key: "listPersonalRequestAssign"
                 }) as any);
@@ -596,7 +623,6 @@ function Request() {
                 // Refresh danh sách
                 dispatch(personalRequestAssign({
                     page: currentPage,
-                    limit,
                     token: token,
                     key: "listPersonalRequestAssign"
                 }) as any);
@@ -619,6 +645,82 @@ function Request() {
             day: '2-digit'
         });
     };
+
+    const handleStatusFilterChange = (filter: string) => {
+        setStatusFilter(filter)
+    }
+
+
+    const renderFilter = () => {
+        return(
+            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4 mb-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div className="space-y-1.5 sm:space-y-2">
+                    <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                        Trạng thái
+                    </label>
+                    <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+                        <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                        <SelectValue placeholder="Chọn loại nhiệm vụ" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-slate-700">
+                        <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                            Tất cả
+                        </SelectItem>
+                        {listPersonalRequestStatus &&
+                            Array.isArray(listPersonalRequestStatus) &&
+                            listPersonalRequestStatus.map((type: any) => (
+                            <SelectItem 
+                                key={type.id} 
+                                value={type.id}
+                                className="text-white text-xs sm:text-sm"
+                            >
+                                {type.name}
+                            </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 mt-4">
+                    <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                    <input
+                        type="text"
+                        value={searchFilter}
+                        onChange={(e) => {
+                            setSearchFilter(e.target.value)
+                        }}
+                        placeholder={"Tìm kiếm tên..."}
+                        className="
+                        w-full rounded-md
+                        bg-slate-900 border border-slate-700
+                        pl-9 pr-8 py-2 text-sm text-white
+                        placeholder:text-slate-500
+                        focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent
+                        disabled:opacity-50 disabled:cursor-not-allowed
+                        transition-colors duration-150
+                        "
+                    />
+                    {searchFilter  && (
+                        <button
+                        type="button"
+                        onClick={() => setSearchFilter("")}
+                        aria-label="Xóa tìm kiếm"
+                        className="
+                            absolute right-2.5 top-1/2 -translate-y-1/2
+                            text-slate-500 hover:text-white
+                            transition-colors duration-150
+                        "
+                        >
+                        <X className="h-4 w-4" />
+                        </button>
+                    )}
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     const renderPaginationItems = () => {
         if (!listPersonalRequestAssign?.pagination) return null;
@@ -724,9 +826,11 @@ function Request() {
     return (
         <div className="min-h-screen bg-slate-900">
             <div className="max-w-7xl mx-auto p-4 sm:p-6">
-                <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-white">
+                <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white">
                     Danh sách yêu cầu
                 </h1>
+
+                {renderFilter()}
 
                 {/* Request List */}
                 <div className="grid gap-4 mb-6">

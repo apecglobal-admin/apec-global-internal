@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { deleteTaskAssign, getDetailListTaskAssign } from '@/src/features/task/api';
+import { deleteTaskAssign, getDetailListTaskAssign, getListProject, getPriorityTask, getStatusTask } from '@/src/features/task/api';
 import { useTaskData } from '@/src/hooks/taskhook';
-import { Plus, XCircle } from 'lucide-react';
+import { Plus, Search, X, XCircle } from 'lucide-react';
 import PopupComponent, { usePopup } from "@/components/PopupComponent";
 import { toast } from 'react-toastify';
 import {
@@ -14,16 +14,64 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from "@/components/ui/select";
 import TaskDetailAssign from './TaskDetailAsign'; 
 import AssignTask from './AssignTask';
+import { useProfileData } from '@/src/hooks/profileHook';
+import { listTypeTask } from '@/src/services/api';
+import FilterableSelector from '@/components/FilterableSelector';
+
+interface TypeProps{
+    id: string;
+    name: string;
+}
 
 const TaskListAssign: React.FC = () => {
     const dispatch = useDispatch();
-    const { listDetailTaskAssign, detailTaskAssign, loadingListDetailTaskAssign, errorListDetailTaskAssign } = useTaskData();
+    const { typeTask } = useProfileData();
+    const { listDetailTaskAssign, detailTaskAssign, loadingListDetailTaskAssign, errorListDetailTaskAssign, listProject, statusTask, priorityTask } = useTaskData();
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
     const { isOpen, openPopup, closePopup, popupProps } = usePopup();
     const [showAssignTask, setShowAssignTask] = useState(false);
+
+    const [taskFilter, setTaskFilter] = useState<string>("all");
+    const [projectFilter, setProjectFilter] = useState<any>(null);
+    const [statusFilter, setStatusFilter] = useState<string>("all");
+    const [priorityFilter, setPriorityFilter] = useState<string>("all");
+
+    const [searchFilter, setSearchFilter] = useState<string>("");
+    const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
+
+    useEffect(() => {
+
+        const timeout = setTimeout(() => {
+            const token = localStorage.getItem("userToken");
+            if (token) {
+                const payload = {
+                    page: currentPage,
+                    token,
+                    task_status: statusFilter === "all" ? null : parseInt(statusFilter),  
+                    type_task: taskFilter === "all" ? null : parseInt(taskFilter), 
+                    project_id: projectFilter?.id  ? projectFilter?.id : null, 
+                    search: searchFilter === "" ? null : searchFilter,
+                    task_priority: priorityFilter === "all" ? null : parseInt(priorityFilter), 
+                    key: "listDetailTaskAssign"
+                };
+
+                dispatch(getDetailListTaskAssign(payload) as any);
+                    
+            }
+        }, 300)
+        return () => clearTimeout(timeout);
+    }, [statusFilter, taskFilter, projectFilter, searchFilter, priorityFilter]);
+
     
     useEffect(() => {
         const token = localStorage.getItem("userToken");
@@ -34,6 +82,27 @@ const TaskListAssign: React.FC = () => {
             key: "listDetailTaskAssign"
         }) as any);
     }, [dispatch, currentPage]);
+
+    useEffect(() => {
+        if (listProject) {
+            setFilteredProjects(listProject);
+        }
+    }, [listProject]);
+    
+    useEffect(() => {
+        if(!typeTask){
+            dispatch(listTypeTask() as any);
+        }
+        if(!listProject){
+            dispatch(getListProject({}) as any);
+        }
+        if (!statusTask) {
+            dispatch(getStatusTask() as any);
+        }
+        if (!priorityTask) {
+            dispatch(getPriorityTask() as any);
+        }
+    }, []);
     
     const handleTaskClick = (taskId: string) => {
         const token = localStorage.getItem("userToken");
@@ -67,6 +136,18 @@ const TaskListAssign: React.FC = () => {
         };
         return colors[statusId] || 'bg-gray-500/20 text-gray-400 border border-gray-500/30';
     };
+
+    const getPriorityColor =  (statusId: number) => {
+        const colors: { [key: number]: string } = {
+            4: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
+            3: 'bg-green-500/20 text-green-400 border border-green-500/30',
+            2: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
+            1: 'bg-red-500/20 text-red-400 border border-red-500/30',
+        };
+        return colors[statusId] || 'bg-gray-500/20 text-gray-400 border border-gray-500/30';
+    };
+
+    
 
     const handleDeleteTask = async (e: React.MouseEvent, task: any) => {
         e.stopPropagation();
@@ -204,11 +285,186 @@ const TaskListAssign: React.FC = () => {
         );
     }
 
+    const handleFilterChange = (filter: string) => {
+        setTaskFilter(filter);
+    };
+    const handleProjectFilterChange = (filter: any) => {
+        setProjectFilter(filter);
+    };
+    const handleStatusFilterChange = (filter: string) => {
+        setStatusFilter(filter);
+    };
+    const handlePriorityFilterChange = (filter: string) => {
+        setPriorityFilter(filter);
+    };
+    
+    const handleFilterProject = (filter: string) => {
+        if (!listProject) return;
+    
+        if (!filter || filter.trim() === "") {
+            // Nếu không có filter, hiển thị tất cả
+            setFilteredProjects(listProject);
+        } else {
+            // Lọc danh sách project theo tên
+            const filtered = listProject.filter((project: any) => 
+                project.name.toLowerCase().includes(filter.toLowerCase())
+            );
+            setFilteredProjects(filtered);
+        }
+    }
+    
+    const renderFilter = () => {
+        return(
+            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4 mb-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    {/* Task Type Filter */}
+                    <div className="space-y-1.5 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                        Loại nhiệm vụ
+                        </label>
+                        <Select value={taskFilter} onValueChange={handleFilterChange}>
+                        <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                            <SelectValue placeholder="Chọn loại nhiệm vụ" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-slate-700">
+                            <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                            Tất cả
+                            </SelectItem>
+                            {typeTask &&
+                            Array.isArray(typeTask) &&
+                            typeTask.map((type: TypeProps) => (
+                                <SelectItem 
+                                key={type.id} 
+                                value={type.id}
+                                className="text-white text-xs sm:text-sm"
+                                >
+                                {type.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                    </div>
+
+
+                    <div className="space-y-1.5 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                        Trạng thái
+                        </label>
+                        <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+                        <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                            <SelectValue placeholder="Chọn Status" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-slate-700">
+                            <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                            Tất cả
+                            </SelectItem>
+                            {statusTask &&
+                            Array.isArray(statusTask) &&
+                            statusTask.map((kpi: TypeProps) => (
+                                <SelectItem 
+                                key={kpi.id} 
+                                value={kpi.id.toString()}
+                                className="text-white text-xs sm:text-sm"
+                                >
+                                {kpi.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-1.5 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                        Loại mức độ
+                        </label>
+                        <Select value={priorityFilter} onValueChange={handlePriorityFilterChange}>
+                        <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                            <SelectValue placeholder="Chọn mức độ" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-slate-700">
+                            <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                            Tất cả
+                            </SelectItem>
+                            {priorityTask &&
+                            Array.isArray(priorityTask) &&
+                            priorityTask.map((kpi: TypeProps) => (
+                                <SelectItem 
+                                key={kpi.id} 
+                                value={kpi.id.toString()}
+                                className="text-white text-xs sm:text-sm"
+                                >
+                                {kpi.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Project Filter */}
+                    <div className="space-y-1.5 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                        Dự án
+                        </label>
+                        <FilterableSelector
+                            data={filteredProjects}
+                            onFilter={handleFilterProject}
+                            onSelect={(value) => handleProjectFilterChange(value)}
+                            value={projectFilter}
+                            placeholder="Chọn dự án"
+                            displayField="name"
+                            emptyMessage="Không có dự án"
+                        />
+                    </div>
+
+                </div>
+                <div className="space-y-1.5 sm:space-y-2">
+                    <div className="grid grid-cols-1 mt-4">
+                        <div className="relative">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                        <input
+                            type="text"
+                            value={searchFilter}
+                            onChange={(e) => {
+                                setSearchFilter(e.target.value)
+                            }}
+                            placeholder={"Tìm kiếm tên..."}
+                            className="
+                            w-full rounded-md
+                            bg-slate-900 border border-slate-700
+                            pl-9 pr-8 py-2 text-sm text-white
+                            placeholder:text-slate-500
+                            focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent
+                            disabled:opacity-50 disabled:cursor-not-allowed
+                            transition-colors duration-150
+                            "
+                        />
+                        {searchFilter  && (
+                            <button
+                            type="button"
+                            onClick={() => setSearchFilter("")}
+                            aria-label="Xóa tìm kiếm"
+                            className="
+                                absolute right-2.5 top-1/2 -translate-y-1/2
+                                text-slate-500 hover:text-white
+                                transition-colors duration-150
+                            "
+                            >
+                            <X className="h-4 w-4" />
+                            </button>
+                        )}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        )
+    }
+
     // Hiển thị danh sách task
     return (
-        <div className="max-w-7xl mx-auto p-6">
+        <div className="max-w-7xl mx-auto">
             <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-5'>
-                <h1 className="text-3xl font-bold text-white mb-6">Công việc đã giao</h1>
+                <h1 className="md:text-2xl text-xl  font-bold text-white mb-6">Công việc đã giao</h1>
                 <button
                     onClick={() => setShowAssignTask(true)}
                     className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition shadow-lg shadow-blue-500/30 w-full sm:w-auto"
@@ -216,9 +472,11 @@ const TaskListAssign: React.FC = () => {
                     <Plus size={18} />
                     Giao nhiệm vụ
                 </button>
-
             </div>
             <PopupComponent isOpen={isOpen} onClose={closePopup} {...popupProps} />
+
+            {renderFilter()}
+
             {loadingListDetailTaskAssign ? (
                 <div className="flex justify-center items-center h-64">
                     <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-600 border-t-blue-500"></div>
@@ -250,11 +508,11 @@ const TaskListAssign: React.FC = () => {
                                             </button>
                                         </div>
 
-                                        <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center justify-between mb-4 ">
                                             <span className={`text-xs px-2.5 py-1 rounded-lg ${getStatusColor(task.status.id)}`}>
                                                 {task.status.name}
                                             </span>
-                                            <span className="text-xs text-slate-500">{task.target_type.name}</span>
+                                            <span className={`text-xs ${getPriorityColor(task.priority.id)} px-2 py-1 rounded-lg`}>{task.priority.name}</span>
                                         </div>
 
                                         <div className="space-y-2 mb-4">

@@ -82,7 +82,7 @@ function TaskManager() {
         </svg>
       ),
     },
-  ]
+  ] 
 
   return (
     <div className="min-h-screen bg-slate-900 p-4">
@@ -127,7 +127,7 @@ function TaskManager() {
               >
                 <div className="flex items-center justify-center gap-2">
                   {/* {tab.icon} */}
-                  <span>{tab.label}</span>
+                  <span className='text-sm'>{tab.label}</span>
                 </div>
               </button>
             ))}

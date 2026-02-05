@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Pagination,
@@ -9,6 +9,13 @@ import {
     PaginationNext,
     PaginationEllipsis,
 } from '@/components/ui/pagination';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from "@/components/ui/select";
 import {
     Dialog,
     DialogContent,
@@ -22,7 +29,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useDispatch } from 'react-redux';
 import { useTaskData } from '@/src/hooks/taskhook';
-import { getSupportTask, supportTaskDelete } from '@/src/features/task/api';
+import { getListDepartment, getSupportTask, getSupportTaskTypes, supportTaskDelete } from '@/src/features/task/api';
 import PopupComponent, { usePopup } from "@/components/PopupComponent";
 import { 
     CalendarDays, 
@@ -36,34 +43,44 @@ import {
     Tag,
     Trash2,
     AlertTriangle,
-    XCircle
+    XCircle,
+    Search,
+    X
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import FilterableSelector from '@/components/FilterableSelector';
 
 interface SupportTaskListProps {
     tasks: any[];
+    listDepartment: any[];
     pagination?: {
         page: number;
         totalPages: number;
     };
     onPageChange: (page: number) => void;
     onTaskDeleted?: () => void; // Callback để refresh danh sách sau khi xóa
+
 }
 
-function SupportTaskList({ tasks, pagination, onPageChange, onTaskDeleted }: SupportTaskListProps) {
+function SupportTaskList({ tasks, listDepartment, pagination, onPageChange, onTaskDeleted }: SupportTaskListProps) {
     const dispatch = useDispatch();
-    const { detailSupportTask } = useTaskData();
+    const { 
+        detailSupportTask,            
+        supportTaskTypes,
+    } = useTaskData();
     const { isOpen, openPopup, closePopup, popupProps } = usePopup();
 
-    
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+
 
     const handleShowDetail = (id: number) => {
         const token = localStorage.getItem("userToken");
         dispatch(getSupportTask({ token, key: "detailSupportTask", id }) as any);
         setIsModalOpen(true);
     };
+
+
 
     const handleDeleteClick = (e: React.MouseEvent, id: number) => {
         e.stopPropagation();
@@ -104,18 +121,21 @@ function SupportTaskList({ tasks, pagination, onPageChange, onTaskDeleted }: Sup
 
     if (!tasks || tasks.length === 0) {
         return (
-            <div className="flex flex-col bg-slate-800 items-center justify-center py-8 sm:py-12 px-4 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-800 flex items-center justify-center mb-3 sm:mb-4">
-                    <ClipboardList className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+            <>
+                <div className="flex flex-col bg-slate-800 items-center justify-center py-8 sm:py-12 px-4 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-800 flex items-center justify-center mb-3 sm:mb-4">
+                        <ClipboardList className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                    </div>
+                    <p className="text-base sm:text-lg font-bold text-white text-center">Chưa có yêu cầu hỗ trợ nào</p>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1 text-center">Các yêu cầu mới sẽ xuất hiện tại đây</p>
                 </div>
-                <p className="text-base sm:text-lg font-bold text-white text-center">Chưa có yêu cầu hỗ trợ nào</p>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1 text-center">Các yêu cầu mới sẽ xuất hiện tại đây</p>
-            </div>
+            </>
         );
     }
 
     return (
-        <div className="max-w-7xl mx-auto p-6 md:p-0">
+        <div className="max-w-7xl mx-auto md:p-0">
+
             {/* Grid Layout Cards - More Compact */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3">
                 {tasks.map((task: any) => (

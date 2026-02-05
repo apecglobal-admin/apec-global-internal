@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,8 @@ import {
 import { ArrowLeft, FileText, Building, UserCheck } from "lucide-react";
 import TaskTargetSelector from "@/components/TaskTargetSelector";
 import { useDispatch } from "react-redux";
-import { getListEmployee } from "@/src/features/task/api";
+import { getListDepartment, getListEmployee, getListProject } from "@/src/features/task/api";
+import FilterableSelector from "@/components/FilterableSelector";
 
 interface CreateSupportTaskFormProps {
 	supportTaskTypes: any[];
@@ -50,6 +51,9 @@ function CreateSupportTaskForm({
 	onSubmit,
 }: CreateSupportTaskFormProps) {
 	const dispatch = useDispatch();
+	const [targetDeptList, setTargetDeptList] = useState(listDepartment || []);
+	const [assigneeDeptList, setAssigneeDeptList] = useState(listDepartment || []);
+
 	const [formData, setFormData] = useState<SupportTaskFormData>({
 		name: "",
 		description: "",
@@ -59,8 +63,28 @@ function CreateSupportTaskForm({
 		selectedEmployees: [],
 		selectedDepartments: [],
 	});
-
 	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	useEffect(() => {
+		setTargetDeptList(listDepartment || []);
+		setAssigneeDeptList(listDepartment || []);
+	}, [listDepartment]);
+
+	const handleFilterTargetDept = (filter: string) => {
+		const filtered = (listDepartment || []).filter((dept: any) =>
+			dept.name.toLowerCase().includes((filter || "").toLowerCase())
+		);
+		setTargetDeptList(filtered);
+
+		// dispatch(getListDepartment({filter}) as any);
+	};
+	
+	const handleFilterAssigneeDept = (filter: { search?: string }) => {
+		const filtered = (listDepartment || []).filter((dept: any) =>
+			dept.name.toLowerCase().includes((filter?.search || "").toLowerCase())
+		);
+		setAssigneeDeptList(filtered);
+	};
 
 	const selectedType = supportTaskTypes?.find(
 		(t: any) => t.id === parseInt(formData.type_id),
@@ -103,10 +127,10 @@ function CreateSupportTaskForm({
 				position_id: filters.position || null,
 				department_id: filters.department || null,
 				filter: filters.search || null,
+				token
 			}) as any);
 		}
 	};
-
 
 
 	const handleSelectionChange = (values: number[] | number | string) => {
@@ -166,12 +190,6 @@ function CreateSupportTaskForm({
 		phone: emp.phone,
 		department: emp.department,
 		position: emp.position,
-	}));
-
-	// Transform departments for TaskTargetSelector
-	const transformedDepartments = listDepartment?.map((dept: any) => ({
-		id: dept.id,
-		name: dept.name,
 	}));
 
 	return (
@@ -282,33 +300,22 @@ function CreateSupportTaskForm({
 										htmlFor="target_dept"
 										className="text-sm font-semibold text-slate-300"
 									>
-										Phòng ban cần hỗ trợ{" "}
+										Phòng ban cần hỗ trợ
 										{requiresTargetDept && (
 											<span className="text-red-400">*</span>
 										)}
 									</Label>
-									<Select
-										value={formData.target_department_id}
-										onValueChange={(value) =>
-											setFormData({ ...formData, target_department_id: value })
+									<FilterableSelector
+										data={targetDeptList}
+										onFilter={handleFilterTargetDept}
+										onSelect={(value) =>
+											setFormData({ ...formData, target_department_id: value?.id })
 										}
-										disabled={isSubmitting}
-									>
-										<SelectTrigger className="bg-slate-900 border-slate-700 text-white ">
-											<SelectValue placeholder="Chọn phòng ban" />
-										</SelectTrigger>
-										<SelectContent className="bg-slate-900 border-slate-700">
-											{listDepartment?.map((dept: any) => (
-												<SelectItem
-													key={dept.id}
-													value={dept.id.toString()}
-													className="text-white hover:bg-slate-800 focus:bg-slate-800"
-												>
-													{dept.name}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
+										placeholder="Chọn dự án"
+										displayField="name"
+										emptyMessage="Không có dự án"
+										// isLoading={isLoading}
+									/>
 									{requiresTargetDept && (
 										<p className="text-xs text-red-500">
 											Bắt buộc phải chọn phòng ban với loại yêu cầu này
@@ -324,14 +331,19 @@ function CreateSupportTaskForm({
 						<TaskTargetSelector
 							enabledTargets={["employee", "department"]}
 							employees={transformedEmployees || []}
-							departments={transformedDepartments || []}
+							departments={assigneeDeptList?.map((dept: any) => ({
+								id: dept.id,
+								name: dept.name,
+							})) || []}
+							onFilterChangeDepartment={handleFilterAssigneeDept}
 							positions={[]}
 							levels={[]}
 							selectedTargetType={selectedTargetType}
 							selectedValues={selectedValues}
 							onTargetTypeChange={handleTargetTypeChange}
 							onSelectionChange={handleSelectionChange}
-							onFilterChange={handleFilterChange}
+							onFilterChangeUser={handleFilterChange}
+
 							showSelectAll={true}
 							showFilters={true}
 							maxHeight="20rem"

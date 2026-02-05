@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useTaskData } from '@/src/hooks/taskhook';
 import { 
@@ -11,17 +11,25 @@ import {
     getSupportTaskPending 
 } from '@/src/features/task/api';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from "@/components/ui/select";
+import {
     getListEmployee,
     getListDepartment,
 } from "@/src/features/task/api";
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus } from 'lucide-react';
+import { Plus, Search, X } from 'lucide-react';
 
 import SupportTaskList from './support/SupportTaskList';
 import CreateSupportTaskForm, { SupportTaskFormData } from './support/CreateSupportTaskForm';
 import ManagerSupportTaskList from './support/ManagerSupportTaskList';
 import SupportTaskPending from './support/SupportTaskPending';
+import FilterableSelector from '@/components/FilterableSelector';
 
 function Support() {
     const dispatch = useDispatch();
@@ -37,6 +45,12 @@ function Support() {
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [activeTab, setActiveTab] = useState('need-support');
+    const filterTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const [typesFilter , setTypesFilter ] = useState<string>("all");
+    const [departmentFilter , setDepartmentFilter ] = useState<any>(null);
+    const [searchFilter, setSearchFilter] = useState<string>("");
+
+    
     
     useEffect(() => {
         const token = localStorage.getItem("userToken");
@@ -44,22 +58,83 @@ function Support() {
             if (!supportTaskTypes) {
                 dispatch(getSupportTaskTypes() as any);
             }
-            
-            dispatch(getSupportTaskManager({ token, key: "supportTaskManager", page: currentPage }) as any);
-            dispatch(getSupportTask({ token, key: "supportTask", page: currentPage }) as any);
-            dispatch(getSupportTaskPending({token, key: "supportTaskPending"}) as any)
+            if(activeTab === "need-support"){
+                dispatch(getSupportTask({ token, key: "supportTask", page: currentPage }) as any);
+            }
+            if(activeTab === "supporting"){
+                dispatch(getSupportTaskManager({ token, key: "supportTaskManager", page: currentPage }) as any);
+            }
+            if(activeTab === "supported"){
+                dispatch(getSupportTaskPending({token, key: "supportTaskPending"}) as any)
+            }
             if (!listEmployee) {
                 dispatch(getListEmployee({
                     position_id: null,
                     department_id: null,
                     filter: null,
+                    token
                 }) as any);
             }
-            if (!listDepartment) {
-                dispatch(getListDepartment() as any);
-            }
+
         }
-    }, [dispatch, currentPage]);
+    }, [dispatch, currentPage, activeTab]);
+
+    useEffect(() => {
+        const token = localStorage.getItem("userToken");
+
+        if(!token) return;
+
+        const timer = setTimeout(() => { 
+            if(activeTab === "need-support"){
+                dispatch(getSupportTask({ 
+                    token, 
+                    key: "supportTask", 
+                    type_id: typesFilter === "all" ? null : typesFilter, 
+                    department_id: departmentFilter?.id ? departmentFilter?.id : null, 
+                    search: searchFilter === "" ? null : searchFilter
+                }) as any);
+            }
+
+            if(activeTab === "supporting"){
+                dispatch(getSupportTaskManager({ 
+                    token, 
+                    key: "supportTaskManager", 
+                    type_id: typesFilter === "all" ? null : typesFilter, 
+                    department_id: departmentFilter?.id ? departmentFilter?.id : null, 
+                    search: searchFilter === "" ? null : searchFilter
+                }) as any);
+
+            }
+            
+            if(activeTab === "supported"){
+                dispatch(getSupportTaskPending({
+                    token, 
+                    key: "supportTaskPending",
+                    type_id: typesFilter === "all" ? null : typesFilter, 
+                    department_id: departmentFilter?.id ? departmentFilter?.id : null, 
+                    search: searchFilter === "" ? null : searchFilter
+                }) as any)
+            }
+
+
+
+        }, 300)
+        return () => clearTimeout(timer);
+
+
+
+    }, [typesFilter, departmentFilter, searchFilter]);
+
+    // Reset filters khi chuyển tab
+    useEffect(() => {
+        setTypesFilter("all");
+        setDepartmentFilter("");
+        setSearchFilter("");
+        setCurrentPage(1);
+    }, [activeTab]);
+
+
+    
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -111,7 +186,107 @@ function Support() {
         }
     };
 
+    const handleTypeFilterChange = (filter: string) => {
+        setTypesFilter(filter);
+    };
 
+    const handleFilterTargetDept = (filter: string) => {
+        dispatch(getListDepartment({filter}) as any);
+    };
+
+    const handleDepartmentFilterChange = (filter: any) => {
+        setDepartmentFilter(filter);
+    };
+
+    const renderFilter = () => {
+        return(
+            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div className="space-y-1.5 sm:space-y-2">
+                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                            Loại Hỗ trợ
+                        </label>
+                        <Select value={typesFilter} onValueChange={handleTypeFilterChange}>
+                            <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                            <SelectValue placeholder="Chọn loại nhiệm vụ" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-900 border-slate-700">
+                            <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                                Tất cả
+                            </SelectItem>
+                            {supportTaskTypes &&
+                                Array.isArray(supportTaskTypes) &&
+                                supportTaskTypes.map((type: any) => (
+                                <SelectItem 
+                                    key={type.id} 
+                                    value={type.id}
+                                    className="text-white text-xs sm:text-sm"
+                                >
+                                    {type.name}
+                                </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-1.5 sm:space-y-2">
+                    <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                        Phòng ban
+                    </label>
+                        <FilterableSelector
+                            data={listDepartment}
+                            onFilter={handleFilterTargetDept}
+                            onSelect={(value) => handleDepartmentFilterChange(value)}
+                            value={departmentFilter}
+                            
+                            placeholder="Chọn dự án"
+                            displayField="name"
+                            emptyMessage="Không có dự án"
+                        />
+                    </div>
+
+                </div>
+                <div className="grid grid-cols-1 mt-4">
+                    <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                    <input
+                        type="text"
+                        value={searchFilter}
+                        onChange={(e) => {
+                            setSearchFilter(e.target.value)
+                        }}
+                        placeholder={"Tìm kiếm tên..."}
+                        className="
+                        w-full rounded-md
+                        bg-slate-900 border border-slate-700
+                        pl-9 pr-8 py-2 text-sm text-white
+                        placeholder:text-slate-500
+                        focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent
+                        disabled:opacity-50 disabled:cursor-not-allowed
+                        transition-colors duration-150
+                        "
+                    />
+                    {searchFilter  && (
+                        <button
+                        type="button"
+                        onClick={() => setSearchFilter("")}
+                        aria-label="Xóa tìm kiếm"
+                        className="
+                            absolute right-2.5 top-1/2 -translate-y-1/2
+                            text-slate-500 hover:text-white
+                            transition-colors duration-150
+                        "
+                        >
+                        <X className="h-4 w-4" />
+                        </button>
+                    )}
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    
     return (
         <div className="container mx-auto py-3 sm:py-6 px-3 sm:px-4 space-y-4 sm:space-y-6">
             {showCreateForm ? (
@@ -162,10 +337,13 @@ function Support() {
                         </div>
                     </div>
 
+                    {renderFilter()}
+
                     {/* Tab Contents */}
                     <TabsContent value="need-support" className="space-y-4 mt-4">
                         <SupportTaskList
                             tasks={supportTask?.data || []}
+                            listDepartment={listDepartment || []}
                             pagination={supportTask?.pagination}
                             onPageChange={handlePageChange}
                             onTaskDeleted={handleTaskSupportDeleted}

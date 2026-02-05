@@ -25,7 +25,14 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { Calendar, Clock, MapPin, Plus, Users, ArrowLeft, Edit2, Trash2, X, Eye, CheckCircle2, Circle } from 'lucide-react';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from "@/components/ui/select";
+import { Calendar, Clock, MapPin, Plus, Users, ArrowLeft, Edit2, Trash2, X, Eye, CheckCircle2, Circle, Search } from 'lucide-react';
 import { toast } from 'react-toastify';
 import TaskTargetSelector from '@/components/TaskTargetSelector';
 
@@ -43,6 +50,8 @@ function EventManager() {
     const [targetError, setTargetError] = useState('');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deletingEventId, setDeletingEventId] = useState<number | null>(null);
+    const [typeFilter, setTypeFilter] = useState<string>("all");
+    const [searchFilter, setSearchFilter] = useState<string>("");
     
     const [formData, setFormData] = useState({
         name: '',
@@ -58,23 +67,36 @@ function EventManager() {
     const [selectedTargetType, setSelectedTargetType] = useState<number>(3);
     const [selectedTargetValues, setSelectedTargetValues] = useState<number[] | number | string>([]);
 
-    const limit = 6;
 
     useEffect(() => {
         const token = localStorage.getItem("userToken");
         if (token) {
-            dispatch(getListInternalEvent({ page: currentPage, limit, token, key: "listInternalEvent" }) as any);
+            dispatch(getListInternalEvent({ page: currentPage, token, key: "listInternalEvent" }) as any);
             dispatch(getInternalTypeEvent() as any);
-            dispatch(getlevels() as any);
+            dispatch(getlevels({}) as any);
             dispatch(getListPosition() as any);
-            dispatch(getListDepartment() as any);
+            dispatch(getListDepartment({}) as any);
             dispatch(getListEmployee({
                 position_id: null,
                 department_id: null,
                 filter: null,
+                token
             }) as any);
         }
     }, [dispatch, currentPage]);
+
+    useEffect(() => {
+        
+        const token = localStorage.getItem("userToken");
+        if (token) {
+            dispatch(getListInternalEvent({ 
+                token, 
+                key: "listInternalEvent",
+                internal_event_type_id: typeFilter === "all" ? null : typeFilter,
+                search: searchFilter === "" ? null : searchFilter 
+            }) as any);
+        }
+    }, [typeFilter, searchFilter]);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -115,7 +137,7 @@ function EventManager() {
         setTargetError('');
     };
 
-    const handleFilterChange = (filters: {
+    const handleFilterChangeUser = (filters: {
         search?: string;
         position?: number | null;
         department?: number | null;
@@ -126,9 +148,24 @@ function EventManager() {
                 position_id: filters.position || null,
                 department_id: filters.department || null,
                 filter: filters.search || null,
+                token
             }) as any);
         }
     };
+
+    const handleFilterChangeDepartment = (filters: {
+        search?: string;
+    }) => {
+        dispatch(getListDepartment({filter: filters.search}) as any);
+    };
+
+    const handleFilterChangeLevel = (filters: {
+        search?: string;
+    }) => {
+        dispatch(getlevels({filter: filters.search}) as any);
+    };
+
+    
 
     const handleViewDetail = async (eventId: number) => {
         const token = localStorage.getItem("userToken");
@@ -225,7 +262,7 @@ function EventManager() {
                 toast.success('Xóa sự kiện thành công!');
                 setShowDeleteModal(false);
                 setDeletingEventId(null);
-                dispatch(getListInternalEvent({ page: currentPage, limit, token, key: "listInternalEvent" }) as any);
+                dispatch(getListInternalEvent({ page: currentPage, token, key: "listInternalEvent" }) as any);
             } else {
                 toast.error(result.payload?.data?.message || 'Có lỗi xảy ra khi xóa');
             }
@@ -295,7 +332,7 @@ function EventManager() {
                     setShowEditForm(false);
                     setEditingEventId(null);
                     resetForm();
-                    dispatch(getListInternalEvent({ page: currentPage, limit, token, key: "listInternalEvent" }) as any);
+                    dispatch(getListInternalEvent({ page: currentPage, token, key: "listInternalEvent" }) as any);
                 } else {
                     toast.error(result.payload?.data?.message || 'Có lỗi xảy ra');
                 }
@@ -306,7 +343,7 @@ function EventManager() {
                     toast.success('Tạo sự kiện thành công!');
                     setShowCreateForm(false);
                     resetForm();
-                    dispatch(getListInternalEvent({ page: currentPage, limit, token, key: "listInternalEvent" }) as any);
+                    dispatch(getListInternalEvent({ page: currentPage, token, key: "listInternalEvent" }) as any);
                 } else {
                     toast.error(result.payload?.data?.message || 'Có lỗi xảy ra');
                 }
@@ -409,11 +446,86 @@ function EventManager() {
 
     const isFormView = showCreateForm || showEditForm;
 
+    const handleTypeFilterChange = (filter: string) => {
+        setTypeFilter(filter)
+    }
+
+    const renderFilter = () => {
+        return(
+            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4 mb-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div className="space-y-1.5 sm:space-y-2">
+                    <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                        Loại sự kiện
+                    </label>
+                    <Select value={typeFilter} onValueChange={handleTypeFilterChange}>
+                        <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                        <SelectValue placeholder="Chọn loại sự kiện" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-slate-700">
+                        <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                            Tất cả
+                        </SelectItem>
+                        {internalTypeEvent &&
+                            Array.isArray(internalTypeEvent) &&
+                            internalTypeEvent.map((type: any) => (
+                            <SelectItem 
+                                key={type.id} 
+                                value={type.id}
+                                className="text-white text-xs sm:text-sm"
+                            >
+                                {type.name}
+                            </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 mt-4">
+                    <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                    <input
+                        type="text"
+                        value={searchFilter}
+                        onChange={(e) => {
+                            setSearchFilter(e.target.value)
+                        }}
+                        placeholder={"Tìm kiếm tên..."}
+                        className="
+                        w-full rounded-md
+                        bg-slate-900 border border-slate-700
+                        pl-9 pr-8 py-2 text-sm text-white
+                        placeholder:text-slate-500
+                        focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent
+                        disabled:opacity-50 disabled:cursor-not-allowed
+                        transition-colors duration-150
+                        "
+                    />
+                    {searchFilter  && (
+                        <button
+                        type="button"
+                        onClick={() => setSearchFilter("")}
+                        aria-label="Xóa tìm kiếm"
+                        className="
+                            absolute right-2.5 top-1/2 -translate-y-1/2
+                            text-slate-500 hover:text-white
+                            transition-colors duration-150
+                        "
+                        >
+                        <X className="h-4 w-4" />
+                        </button>
+                    )}
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="min-h-screen bg-slate-900">
             <div className="max-w-7xl mx-auto p-3 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-4 sm:mb-5">
-                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">
+                    <h1 className="text-xl sm:text-2xl font-bold text-white">
                         {showEditForm ? 'Chỉnh sửa sự kiện' : showCreateForm ? 'Tạo sự kiện mới' : 'Quản lý sự kiện nội bộ'}
                     </h1>
                     {!isFormView && (
@@ -436,6 +548,8 @@ function EventManager() {
                         </button>
                     )}
                 </div>
+
+                {renderFilter()}
 
                 {isFormView ? (
                     <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 sm:p-6">
@@ -544,16 +658,18 @@ function EventManager() {
 
                             <div className="border-t border-slate-700 pt-4 sm:pt-6">
                                 <TaskTargetSelector
-                                    enabledTargets={['employee', 'position', 'department', 'level']}
+                                    enabledTargets={['employee', 'department', 'level']}
                                     employees={listEmployee}
-                                    positions={listPosition}
                                     departments={listDepartment}
                                     levels={levels}
                                     selectedTargetType={selectedTargetType}
                                     selectedValues={selectedTargetValues}
                                     onTargetTypeChange={handleTargetTypeChange}
                                     onSelectionChange={handleSelectionChange}
-                                    onFilterChange={handleFilterChange}
+                                    onFilterChangeUser={handleFilterChangeUser}
+                                    onFilterChangeDepartment={handleFilterChangeDepartment}
+                                    onFilterChangeLevel={handleFilterChangeLevel}
+
                                     error={targetError}
                                     onErrorClear={() => setTargetError('')}
                                     showSelectAll={true}
@@ -602,7 +718,10 @@ function EventManager() {
                                             </div>
                                             <div className="flex gap-1.5 sm:gap-2 ml-2 flex-shrink-0">
                                                 <button
-                                                    onClick={(e) => handleEdit(e, event)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleEdit(e, event)
+                                                    }}
                                                     className="p-1.5 sm:p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
                                                     title="Chỉnh sửa"
                                                 >

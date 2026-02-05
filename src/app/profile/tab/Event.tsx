@@ -117,7 +117,7 @@ function Event() {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Sự kiện của tôi</h1>
+      <h1 className="text-xl sm:text-2xl font-bold mb-6">Sự kiện của tôi</h1>
       
       {events.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
