@@ -7,16 +7,8 @@ import {
 } from "@/src/features/announcement/api/api";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
 
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
-    DialogClose,
-} from "@/components/ui/dialog";
 import {
     Select,
     SelectContent,
@@ -44,6 +36,7 @@ type AnnouncementItem = {
 
 export default function AnnouncementSection() {
     const dispatch = useDispatch();
+    const router = useRouter();
 
     const { departments, isLoadingDepartments, userInfo } = useProfileData();
     const { typeAnnouncements, listAnnouncement, isLoadingListAnnoucement } =
@@ -55,13 +48,11 @@ export default function AnnouncementSection() {
         number | "all"
     >("all");
 
+    console.log(listAnnouncement);
     
     
 
     const [userToken, setUserToken] = useState<string | null>(null);
-    const [openDialog, setOpenDialog] = useState(false);
-    const [selectedAnnouncement, setSelectedAnnouncement] =
-        useState<AnnouncementItem | null>(null);
 
     const [openCategorySelect, setOpenCategorySelect] = useState(false);
     const [openDepartmentSelect, setOpenDepartmentSelect] = useState(false);
@@ -74,15 +65,14 @@ export default function AnnouncementSection() {
     
     
     useEffect(() => {
-        // if(!searchQuery) return;
-
         const type_id = activeCategory === "all" ? null : activeCategory;
         const department_id = selectedDepartment === "all" ? null : selectedDepartment;
         const payload = {
             token: userToken,
             search: searchQuery,
             type_id,
-            department_id
+            department_id,
+            key: "listAnnouncement"
         };
 
         dispatch(getListAnnouncement(payload) as any);
@@ -93,27 +83,6 @@ export default function AnnouncementSection() {
         dispatch(listDepartments() as any);
     }, []);
 
-    // useEffect(() => {
-    //     if (listAnnouncement.length === 0) return;
-    //     setAnnouncements(listAnnouncement);
-    // }, [listAnnouncement]);
-
-    // 🟦 Lọc theo loại & phòng ban
-    // const filtered = useMemo(() => {
-    //     return announcements.filter((item) => {
-    //         // Lọc theo category
-    //         const categoryMatch =
-    //             activeCategory === "all" ||
-    //             item.notification_type?.id === activeCategory;
-
-    //         // Lọc theo phòng ban
-    //         const departmentMatch =
-    //             selectedDepartment === "all" ||
-    //             item.departments?.id === selectedDepartment;
-
-    //         return categoryMatch && departmentMatch;
-    //     });
-    // }, [announcements, activeCategory, selectedDepartment]);
 
     // ✅ Hàm bật/tắt đánh dấu đọc
     const toggleRead = async (id: number) => {
@@ -136,7 +105,8 @@ export default function AnnouncementSection() {
                 token: userToken,
                 search: searchQuery,
                 type_id,
-                department_id
+                department_id,
+                key: "listAnnouncement"
             };
             dispatch(getListAnnouncement(payload) as any);
         } else {
@@ -144,26 +114,11 @@ export default function AnnouncementSection() {
         }
     };
 
-    const handleShowDetail = (id: number) => {        
-        const found = listAnnouncement.find((a: any) => Number(a.id) === id);
+    const handleShowDetail = (id: number) => {
 
-        if (found) {
-            
-            setSelectedAnnouncement(found);
-            setOpenDialog(true);
-        }
+        router.push(`/announcement/${id}`);
     };
 
-    // if (isLoadingListAnnoucement) {
-    //     return (
-    //         <section
-    //             style={{ boxShadow: "inset 0 0 7px rgba(0, 0, 0, 0.5)" }}
-    //             className="rounded-3xl bg-white p-6 sm:p-7 lg:p-8"
-    //         >
-    //             <Spinner />
-    //         </section>
-    //     );
-    // }
 
     const handleChange = (value: string) => {
         setSearchQuery(value);
@@ -238,7 +193,6 @@ export default function AnnouncementSection() {
                                     open={openCategorySelect}
                                     onOpenChange={setOpenCategorySelect}
                                 >
-                                    {/* ⬇️ UI giống Department */}
                                     <SelectTrigger className="h-auto border-none p-0 text-sm font-medium text-gray-800 hover:text-indigo-600">
                                         <SelectValue placeholder="Chọn loại thông báo" />
                                     </SelectTrigger>
@@ -351,45 +305,12 @@ export default function AnnouncementSection() {
                 </div>
             </div>
 
-            {/* Nút category */}
-            {/* <div className="mt-5 flex flex-wrap gap-2 sm:mt-6 sm:gap-3">
-                <button
-                    onClick={() => setActiveCategory(0)}
-                    className={`rounded-full px-4 py-2 text-xs font-semibold uppercase  transition sm:px-5 sm:text-sm ${
-                        activeCategory === 0
-                            ? "bg-active-blue-metallic text-white"
-                            : "border border-gray-300 bg-white text-gray-600/50 hover:border-teal-300/80 hover:text-black/30"
-                    }`}
-                >
-                    all thông báo
-                </button>
-                {typeAnnouncements &&
-                    typeAnnouncements.map((item: any) => (
-                        <button
-                            key={item.id}
-                            onClick={() => setActiveCategory(Number(item.id))}
-                            className={`rounded-full px-4 py-2 text-xs font-semibold uppercase  transition sm:px-5 sm:text-sm ${
-                                activeCategory === Number(item.id)
-                                    ? "bg-active-blue-metallic text-white"
-                                    : "border border-gray-300 bg-white text-gray-600/50 hover:border-teal-300/80 hover:text-black/30"
-                            }`}
-                        >
-                            {item.name}
-                        </button>
-                    ))}
-            </div> */}
 
             {/* Danh sách thông báo */}
             <div
                 className="mt-7 sm:mt-8 space-y-4 overflow-y-auto pr-4 py-3"
                 style={{ maxHeight: "420px" }}
             >
-                {/* {isLoading && (
-                    <div className="rounded-2xl border border-dashed border-slate-700 bg-gray-300 px-5 py-10 text-center text-slate-400 sm:px-6 sm:py-12">
-                        Đang tải dữ liệu...
-                    </div>
-                )} */}
-
                 {listAnnouncement?.length === 0 && (
                     <div className="rounded-2xl border border-dashed border-slate-700 bg-blue-gradiant-main px-5 py-10 text-center text-slate-400 sm:px-6 sm:py-12">
                         Không có thông báo nào cho bộ lọc hiện tại.
@@ -400,7 +321,7 @@ export default function AnnouncementSection() {
                     <div
                         onClick={() => handleShowDetail(item.id)}
                         key={item.id}
-                        className="flex flex-col gap-4 rounded-2xl bg-box-shadow-inset bg-blue-gradiant-main p-4 sm:p-4 md:flex-row md:items-center md:justify-between"
+                        className="flex flex-col gap-4 rounded-2xl bg-box-shadow-inset bg-blue-gradiant-main p-4 sm:p-4 md:flex-row md:items-center md:justify-between cursor-pointer hover:shadow-lg transition-shadow"
                     >
                         <div>
                             <div className="flex flex-wrap items-center gap-3 text-xs uppercase  text-white">
@@ -428,7 +349,7 @@ export default function AnnouncementSection() {
                             <h3 className="mt-3 text-lg font-semibold text-black sm:text-xl">
                                 {item.title}
                             </h3>
-                            <p className="mt-2 text-sm text-black/80">
+                            <p className="mt-2 text-sm text-black/80 line-clamp-1">
                                 {item.content}
                             </p>
                         </div>
@@ -452,151 +373,13 @@ export default function AnnouncementSection() {
                                         className="rounded-full px-4 py-2 text-sm font-semibold transition-all duration-300 border
                    bg-blue-600 text-white border-blue-700 hover:bg-blue-700 hover:border-blue-800"
                                     >
-                                        Đánh dấu đã đọc
+                                        Đọc
                                     </button>
                                 )}
                             </div>
                         )}
                     </div>
                 ))}
-                <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-                    <DialogContent className="bg-white ">
-                        {selectedAnnouncement && (
-                            <>
-                                <DialogHeader>
-                                    <DialogTitle className="text-xl font-semibold text-black">
-                                        {selectedAnnouncement.title}
-                                    </DialogTitle>
-                                    <DialogDescription className="text-sm text-gray-500 flex items-center gap-2 mt-2">
-                                        <span>
-                                            {selectedAnnouncement.created_at}
-                                        </span>
-                                        <span>•</span>
-                                        <span>
-                                            {
-                                                selectedAnnouncement.departments
-                                                    ?.name
-                                            }
-                                        </span>
-                                        <span>•</span>
-                                        <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs">
-                                            {
-                                                selectedAnnouncement
-                                                    .notification_type.name
-                                            }
-                                        </span>
-                                    </DialogDescription>
-                                </DialogHeader>
-
-                                <div className="mt-6 space-y-4">
-                                    {/* Nội dung thông báo */}
-                                    <div className="text-sm text-gray-700 leading-relaxed">
-                                        <p>{selectedAnnouncement.content}</p>
-                                    </div>
-
-                                    {/* Hiển thị documents nếu có */}
-                                    {selectedAnnouncement.documents?.length >
-                                        0 && (
-                                        <div className="border-t pt-4 mt-4">
-                                            <h4 className="text-sm font-semibold text-gray-900 mb-3">
-                                                Tài liệu đính kèm (
-                                                {
-                                                    selectedAnnouncement
-                                                        .documents.length
-                                                }
-                                                )
-                                            </h4>
-                                            <div className="space-y-2">
-                                                {selectedAnnouncement.documents.map(
-                                                    (doc: any) => (
-                                                        <a
-                                                            key={doc.id}
-                                                            href={doc.file_url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors group"
-                                                        >
-                                                            <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                                                                <svg
-                                                                    className="w-6 h-6 text-green-600"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24"
-                                                                >
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        strokeWidth={
-                                                                            2
-                                                                        }
-                                                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                                                    />
-                                                                </svg>
-                                                            </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600">
-                                                                    {doc.name}
-                                                                </p>
-                                                                <p className="text-xs text-gray-500">
-                                                                    {doc.name
-                                                                        .split(
-                                                                            "."
-                                                                        )
-                                                                        .pop()
-                                                                        ?.toUpperCase()}{" "}
-                                                                    file
-                                                                </p>
-                                                            </div>
-                                                            <svg
-                                                                className="w-5 h-5 text-gray-400 group-hover:text-blue-600"
-                                                                fill="none"
-                                                                stroke="currentColor"
-                                                                viewBox="0 0 24 24"
-                                                            >
-                                                                <path
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
-                                                                    strokeWidth={
-                                                                        2
-                                                                    }
-                                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                                                                />
-                                                            </svg>
-                                                        </a>
-                                                    )
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <DialogFooter className="mt-6">
-                                    <DialogClose asChild>
-                                        {!selectedAnnouncement.isRead && (
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation(); // Ngăn sự kiện nổi bọt lên parent
-                                                    toggleRead(
-                                                        selectedAnnouncement.id
-                                                    );
-                                                }}
-                                                className="rounded-full px-4 py-2 text-sm font-semibold transition-all duration-300 border
-                   bg-blue-600 text-white border-blue-700 hover:bg-blue-700 hover:border-blue-800"
-                                            >
-                                                Đánh dấu đã đọc
-                                            </button>
-                                        )}
-                                    </DialogClose>
-                                    <DialogClose asChild>
-                                        <button className="px-6 py-2 bg-black text-white rounded-lg hover:bg-black/80 transition-colors">
-                                            Đóng
-                                        </button>
-                                    </DialogClose>
-                                </DialogFooter>
-                            </>
-                        )}
-                    </DialogContent>
-                </Dialog>
             </div>
         </section>
     );

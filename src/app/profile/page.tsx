@@ -100,11 +100,11 @@ function ProfilePage() {
         }
     }, [showUploadModal, userInfo]);
 
-    useEffect(() => {
-        if (activeTab === "career") {
-          window.open("https://lotrinh.apecglobal.net/", "_blank");
-        }
-    }, [activeTab]);
+    // useEffect(() => {
+    //     if (activeTab === "career") {
+    //       window.open("https://lotrinh.apecglobal.net/", "_blank");
+    //     }
+    // }, [activeTab]);
 
     // Show loading state if userInfo is not available
     //if (isLoadingUser == true || isLoadingDepartments == true || isLoadingPositions == true) {

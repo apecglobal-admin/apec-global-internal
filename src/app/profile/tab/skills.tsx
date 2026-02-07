@@ -42,7 +42,6 @@ function SkillsTab({ userInfo }: any) {
         count: skill.total_count
     }));
 
-    console.log(hardSkills);
     
     
 

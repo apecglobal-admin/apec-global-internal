@@ -26,6 +26,7 @@ import AssignTask from './AssignTask';
 import { useProfileData } from '@/src/hooks/profileHook';
 import { listTypeTask } from '@/src/services/api';
 import FilterableSelector from '@/components/FilterableSelector';
+import DashboardTaskManager from './dashboard/DashboardTaskManager';
 
 interface TypeProps{
     id: string;
@@ -45,6 +46,8 @@ const TaskListAssign: React.FC = () => {
     const [projectFilter, setProjectFilter] = useState<any>(null);
     const [statusFilter, setStatusFilter] = useState<string>("all");
     const [priorityFilter, setPriorityFilter] = useState<string>("all");
+    const [showFilter, setShowFilter] = useState(true);
+
 
     const [searchFilter, setSearchFilter] = useState<string>("");
     const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
@@ -462,7 +465,8 @@ const TaskListAssign: React.FC = () => {
 
     // Hiển thị danh sách task
     return (
-        <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6">
+            <DashboardTaskManager />
             <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-5'>
                 <h1 className="md:text-2xl text-xl  font-bold text-white mb-6">Công việc đã giao</h1>
                 <button
@@ -475,7 +479,24 @@ const TaskListAssign: React.FC = () => {
             </div>
             <PopupComponent isOpen={isOpen} onClose={closePopup} {...popupProps} />
 
-            {renderFilter()}
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={() => setShowFilter(!showFilter)}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition border border-slate-700"
+              >
+                {showFilter ? "Ẩn bộ lọc" : "Hiện bộ lọc"}
+                <svg 
+                  className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+
+            {showFilter && renderFilter()}
 
             {loadingListDetailTaskAssign ? (
                 <div className="flex justify-center items-center h-64">
@@ -496,17 +517,20 @@ const TaskListAssign: React.FC = () => {
                                         onClick={() => handleTaskClick(task.id)}
                                         className="bg-slate-800 border border-slate-700 hover:border-blue-500/50 rounded-lg shadow-lg hover:shadow-xl transition-all cursor-pointer p-4 group"
                                     >
-                                        <div className="flex items-start justify-between mb-4">
-                                            <h3 className="text-lg font-bold text-white flex-1 group-hover:text-blue-400 transition-colors">{task.name}</h3>
-                                            <button
-                                                onClick={(e) => handleDeleteTask(e,task)}
-                                                className={`p-2 rounded-lg transition-all 
-                                                bg-red-600 hover:bg-red-700 text-white cursor-pointer
-                                                disabled:opacity-50`}
-                                            >
-                                                <XCircle size={20} />
-                                            </button>
-                                        </div>
+                                            <div className="flex items-start justify-between mb-4">
+                                                <h3 className="text-lg font-bold text-white flex-1 group-hover:text-blue-400 transition-colors">{task.name}</h3>
+                                                {task.status.id !== 4 && (
+                                                    <button
+                                                        onClick={(e) => handleDeleteTask(e,task)}
+                                                        className={`p-2 rounded-lg transition-all 
+                                                        bg-red-600 hover:bg-red-700 text-white cursor-pointer
+                                                        disabled:opacity-50`}
+                                                    >
+                                                        <XCircle size={20} />
+                                                    </button>
+                                                )}
+                                            </div>
+
 
                                         <div className="flex items-center justify-between mb-4 ">
                                             <span className={`text-xs px-2.5 py-1 rounded-lg ${getStatusColor(task.status.id)}`}>
