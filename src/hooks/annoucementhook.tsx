@@ -8,6 +8,7 @@ export const useAnnouncementData = () => {
     typeAnnouncements: announcement.typeAnnouncements.data,
     listAnnouncement: announcement.listAnnouncement.data,
     slider: announcement.slider.data,
+    detailAnnouncement: announcement.detailAnnouncement.data,
 
     // Loading states
     isLoadingListAnnoucement: announcement.listAnnouncement.loading,

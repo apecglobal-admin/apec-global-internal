@@ -5,7 +5,7 @@ import {
     readAnnoucement,
     getSlider
 } from "./api/api";
-import { createAsyncReducer } from "@/src/utils/createAsyncReducer";
+import { createAsyncReducer, createAsyncReducerDynamic } from "@/src/utils/createAsyncReducer";
 import { initState } from "@/src/services/interface";
 
 interface EventMessage{
@@ -17,6 +17,7 @@ interface AnnouncementState {
     typeAnnouncements: initState<any[]>;
     listAnnouncement: initState<any[]>;
     annoucement: initState<EventMessage>;
+    detailAnnouncement: initState<any[]>;
 }
 
 const createInitState = () => ({ data: [], loading: false, error: null, status: null });
@@ -28,6 +29,7 @@ const initialState: AnnouncementState = {
     typeAnnouncements: createInitState(),
     listAnnouncement: createInitState(),
     annoucement: { data: { message: null }, loading: false, error: null, status: null },
+    detailAnnouncement: createInitState(),
 };
 
 const announcementSlice = createSlice({
@@ -39,10 +41,10 @@ const announcementSlice = createSlice({
     },
     extraReducers: (builder) => {
         createAsyncReducer(builder, getTypeAnnouncement, "typeAnnouncements");
-        createAsyncReducer(builder, getListAnnouncement, "listAnnouncement");
+        // createAsyncReducer(builder, getListAnnouncement, "listAnnouncement");
         createAsyncReducer(builder, readAnnoucement, "annoucement");
         createAsyncReducer(builder, getSlider, "slider");
-
+        createAsyncReducerDynamic(builder, getListAnnouncement)
         
         
     },

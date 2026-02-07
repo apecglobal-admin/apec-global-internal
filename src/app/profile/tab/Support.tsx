@@ -80,6 +80,7 @@ function Support() {
     const [departmentFilter , setDepartmentFilter ] = useState<any>(null);
     const [checkedFilter , setCheckedFilter ] = useState<string>("all");
     const [searchFilter, setSearchFilter] = useState<string>("");
+    const [showFilter, setShowFilter] = useState(true);
 
 
 
@@ -380,143 +381,162 @@ function Support() {
                         Tổng số: {supportTaskEmployee?.pagination?.total || 0} nhiệm vụ
                     </p>
                 </div>
-                <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                        {/* Task Type Filter */}
-                        <div className="space-y-1.5 sm:space-y-2">
-                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
-                            Trạng thái
-                        </label>
-                        <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-                            <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
-                            <SelectValue placeholder="Chọn loại nhiệm vụ" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-900 border-slate-700">
-                            <SelectItem value="all" className="text-white text-xs sm:text-sm">
-                                Tất cả
-                            </SelectItem>
-                            {supportTaskStatus &&
-                                Array.isArray(supportTaskStatus) &&
-                                supportTaskStatus.map((type: any) => (
-                                <SelectItem 
-                                    key={type.id} 
-                                    value={type.id}
-                                    className="text-white text-xs sm:text-sm"
-                                >
-                                    {type.name}
-                                </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        </div>
 
-
-                        <div className="space-y-1.5 sm:space-y-2">
-                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
-                            Loại Hỗ trợ
-                        </label>
-                        <Select value={typesFilter} onValueChange={handleTypeFilterChange}>
-                            <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
-                            <SelectValue placeholder="Chọn loại nhiệm vụ" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-900 border-slate-700">
-                            <SelectItem value="all" className="text-white text-xs sm:text-sm">
-                                Tất cả
-                            </SelectItem>
-                            {supportTaskTypes &&
-                                Array.isArray(supportTaskTypes) &&
-                                supportTaskTypes.map((type: any) => (
-                                <SelectItem 
-                                    key={type.id} 
-                                    value={type.id}
-                                    className="text-white text-xs sm:text-sm"
-                                >
-                                    {type.name}
-                                </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        </div>
-
-                        <div className="space-y-1.5 sm:space-y-2">
+                <div className="flex items-center justify-between mb-4">
+                    <button
+                        onClick={() => setShowFilter(!showFilter)}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition border border-slate-700"
+                    >
+                        {showFilter ? "Ẩn bộ lọc" : "Hiện bộ lọc"}
+                        <svg 
+                        className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                        >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                </div>
+                {showFilter && (
+                    <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                            {/* Task Type Filter */}
+                            <div className="space-y-1.5 sm:space-y-2">
                             <label className="text-xs sm:text-sm font-semibold text-slate-300">
-                                Loại xác nhận
+                                Trạng thái
                             </label>
-                            <Select value={checkedFilter} onValueChange={handleCheckedFilterChange}>
+                            <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
                                 <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
-                                    <SelectValue placeholder="Chọn loại xác nhận" />
+                                <SelectValue placeholder="Chọn loại nhiệm vụ" />
                                 </SelectTrigger>
-
                                 <SelectContent className="bg-slate-900 border-slate-700">
-                                    <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                                <SelectItem value="all" className="text-white text-xs sm:text-sm">
                                     Tất cả
+                                </SelectItem>
+                                {supportTaskStatus &&
+                                    Array.isArray(supportTaskStatus) &&
+                                    supportTaskStatus.map((type: any) => (
+                                    <SelectItem 
+                                        key={type.id} 
+                                        value={type.id}
+                                        className="text-white text-xs sm:text-sm"
+                                    >
+                                        {type.name}
                                     </SelectItem>
-
-                                    <SelectItem value="true" className="text-white text-xs sm:text-sm">
-                                    Đã xác nhận
-                                    </SelectItem>
-
-                                    <SelectItem value="false" className="text-white text-xs sm:text-sm">
-                                    Chưa xác nhận
-                                    </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
-                        </div>
+                            </div>
 
-                        <div className="space-y-1.5 sm:space-y-2">
-                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
-                            Phòng ban
-                        </label>
-                            <FilterableSelector
-                                data={listDepartment}
-                                onFilter={handleFilterTargetDept}
-                                onSelect={(value) => handleDepartmentFilterChange(value)}
-                                value={departmentFilter}
-                                placeholder="Chọn dự án"
-                                displayField="name"
-                                emptyMessage="Không có dự án"
-                            />
-                        </div>
 
-                    </div>
-                    <div className="grid grid-cols-1 mt-4">
-                        <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
-                        <input
-                            type="text"
-                            value={searchFilter}
-                            onChange={(e) => {
-                                setSearchFilter(e.target.value)
-                                setCurrentPage(1)
-                            }}
-                            placeholder={"Tìm kiếm tên..."}
-                            className="
-                            w-full rounded-md
-                            bg-slate-900 border border-slate-700
-                            pl-9 pr-8 py-2 text-sm text-white
-                            placeholder:text-slate-500
-                            focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent
-                            disabled:opacity-50 disabled:cursor-not-allowed
-                            transition-colors duration-150
-                            "
-                        />
-                        {searchFilter  && (
-                            <button
-                            type="button"
-                            onClick={() => setSearchFilter("")}
-                            aria-label="Xóa tìm kiếm"
-                            className="
-                                absolute right-2.5 top-1/2 -translate-y-1/2
-                                text-slate-500 hover:text-white
+                            <div className="space-y-1.5 sm:space-y-2">
+                            <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                                Loại Hỗ trợ
+                            </label>
+                            <Select value={typesFilter} onValueChange={handleTypeFilterChange}>
+                                <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                                <SelectValue placeholder="Chọn loại nhiệm vụ" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-900 border-slate-700">
+                                <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                                    Tất cả
+                                </SelectItem>
+                                {supportTaskTypes &&
+                                    Array.isArray(supportTaskTypes) &&
+                                    supportTaskTypes.map((type: any) => (
+                                    <SelectItem 
+                                        key={type.id} 
+                                        value={type.id}
+                                        className="text-white text-xs sm:text-sm"
+                                    >
+                                        {type.name}
+                                    </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            </div>
+
+                            <div className="space-y-1.5 sm:space-y-2">
+                                <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                                    Loại xác nhận
+                                </label>
+                                <Select value={checkedFilter} onValueChange={handleCheckedFilterChange}>
+                                    <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                                        <SelectValue placeholder="Chọn loại xác nhận" />
+                                    </SelectTrigger>
+
+                                    <SelectContent className="bg-slate-900 border-slate-700">
+                                        <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                                        Tất cả
+                                        </SelectItem>
+
+                                        <SelectItem value="true" className="text-white text-xs sm:text-sm">
+                                        Đã xác nhận
+                                        </SelectItem>
+
+                                        <SelectItem value="false" className="text-white text-xs sm:text-sm">
+                                        Chưa xác nhận
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-1.5 sm:space-y-2">
+                            <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                                Phòng ban
+                            </label>
+                                <FilterableSelector
+                                    data={listDepartment}
+                                    onFilter={handleFilterTargetDept}
+                                    onSelect={(value) => handleDepartmentFilterChange(value)}
+                                    value={departmentFilter}
+                                    placeholder="Chọn dự án"
+                                    displayField="name"
+                                    emptyMessage="Không có dự án"
+                                />
+                            </div>
+
+                        </div>
+                        <div className="grid grid-cols-1 mt-4">
+                            <div className="relative">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                            <input
+                                type="text"
+                                value={searchFilter}
+                                onChange={(e) => {
+                                    setSearchFilter(e.target.value)
+                                    setCurrentPage(1)
+                                }}
+                                placeholder={"Tìm kiếm tên..."}
+                                className="
+                                w-full rounded-md
+                                bg-slate-900 border border-slate-700
+                                pl-9 pr-8 py-2 text-sm text-white
+                                placeholder:text-slate-500
+                                focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent
+                                disabled:opacity-50 disabled:cursor-not-allowed
                                 transition-colors duration-150
-                            "
-                            >
-                            <X className="h-4 w-4" />
-                            </button>
-                        )}
+                                "
+                            />
+                            {searchFilter  && (
+                                <button
+                                type="button"
+                                onClick={() => setSearchFilter("")}
+                                aria-label="Xóa tìm kiếm"
+                                className="
+                                    absolute right-2.5 top-1/2 -translate-y-1/2
+                                    text-slate-500 hover:text-white
+                                    transition-colors duration-150
+                                "
+                                >
+                                <X className="h-4 w-4" />
+                                </button>
+                            )}
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
             </>
         )
     }
@@ -525,6 +545,7 @@ function Support() {
         return(
             <div className='max-w-7xl mx-auto p-5'>
                 {renderFilter()}
+
                 <div className="mt-4">
                     <div className="flex flex-col items-center justify-center py-12 px-4 border-2 border-dashed border-slate-300 rounded-lg bg-slate-800">
                         <div className="w-16 h-16 rounded-full bg-black flex items-center justify-center mb-4">

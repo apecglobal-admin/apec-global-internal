@@ -14,6 +14,10 @@ import {
   Target,
   Pause,
   XCircle,
+  Search,
+  X,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -48,6 +52,8 @@ import { useTaskData } from "@/src/hooks/taskhook";
 import CheckedTask from "./component/CheckedTask";
 import { Task } from "@/src/services/interface";
 import { formatNumber } from "@/src/utils/formatNumber";
+import { getDashboardTasks } from "@/src/features/dashboard/api/api";
+import { useDashboardData } from "@/src/hooks/dashboardhook";
 
 interface TasksResponse {
   data: Task[];
@@ -67,7 +73,9 @@ interface TypeProps{
 function TasksTab() {
   const dispatch = useDispatch();
   const { tasks: tasksResponse, typeTask, detailTask } = useProfileData();
+  const {listDashboardTasks } = useDashboardData();
   
+
   const {
     priorityTask,
     childKpi,
@@ -81,12 +89,12 @@ function TasksTab() {
   const [kpiFilter, setKpiFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("2");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [searchFilter, setSearchFilter] = useState<string>("");
+  const [showFilter, setShowFilter] = useState(true);
 
-  
-
-  const [currentUserRole] = useState(2);
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+  const [isVisible, setIsVisible] = useState(true);
 
   const tasks: Task[] = tasksResponse?.data || [];
   const totalPages = tasksResponse?.total_pages || 1;
@@ -94,6 +102,10 @@ function TasksTab() {
   const currentPage = tasksResponse?.page || 1;
 
   useEffect(() => {
+    const token = localStorage.getItem("userToken");
+    if(!listDashboardTasks){
+      dispatch(getDashboardTasks({token }) as any)
+    }
     if(!typeTask){
       dispatch(listTypeTask() as any);
     }
@@ -109,45 +121,60 @@ function TasksTab() {
     if (!priorityTask) {
       dispatch(getPriorityTask() as any);
     }
-  }, [dispatch, statusTask, priorityTask]);
+  }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem("userToken");
-    if (token) {
-      const payload = {
-        page: 1,
-        token,
-        filter: taskFilter === "all" ? null : parseInt(taskFilter),
-        projectFilter: projectFilter === "all" ? null : parseInt(projectFilter),
-        kpiFilter: kpiFilter === "all" ? null : parseInt(kpiFilter),
-        statusFilter: statusFilter === "all" ? null : parseInt(statusFilter),
-        priorityFilter: priorityFilter === "all" ? null : parseInt(priorityFilter),
-        key: "tasks"
-      };
-      dispatch(personTasks(payload as any) as any);
-    }
-  }, [dispatch, page, taskFilter, projectFilter, kpiFilter, statusFilter, priorityFilter]);
+    const timer = setTimeout(() => {
+      const token = localStorage.getItem("userToken");
+      if (token) {
+        const payload = {
+          page: page,
+          token,
+          filter: taskFilter === "all" ? null : parseInt(taskFilter),
+          projectFilter: projectFilter === "all" ? null : parseInt(projectFilter),
+          kpiFilter: kpiFilter === "all" ? null : parseInt(kpiFilter),
+          statusFilter: statusFilter === "all" ? null : parseInt(statusFilter),
+          priorityFilter: priorityFilter === "all" ? null : parseInt(priorityFilter),
+          search: searchFilter === "" ? null : searchFilter,
+          key: "tasks"
+        };
 
-  
+        dispatch(personTasks(payload as any) as any);
+        console.log(1231231);
+        
+        
+      }
+    }, 300)
+    return () => clearTimeout(timer);
+  }, [dispatch, page, taskFilter, projectFilter, kpiFilter, statusFilter, priorityFilter, searchFilter]);
+
 
   const handleFilterChange = (filter: string) => {
     setTaskFilter(filter);
+    setPage(1);
   };
 
   const handleProjectFilterChange = (filter: string) => {
     setProjectFilter(filter);
+    setPage(1);
+
   };
 
   const handleKpiFilterChange = (filter: string) => {
     setKpiFilter(filter);
+    setPage(1);
+
   };
 
   const handleStatusFilterChange = (filter: string) => {
     setStatusFilter(filter);
+    setPage(1);
+
   };
 
   const handlePriorityFilterChange = (filter: string) => {
     setPriorityFilter(filter);
+    setPage(1);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -325,11 +352,404 @@ function TasksTab() {
     return items;
   };
 
+  const renderDashboard = () => {
+    return(
+      <div>
+        {listDashboardTasks && (
+          <div className="space-y-2">
+            {/* Toggle Button */}
+            <button
+              onClick={() => setIsVisible(!isVisible)}
+              className="w-full flex items-center justify-between bg-slate-800 hover:bg-slate-700 rounded-lg px-4 py-2 transition-all duration-200"
+            >
+              <span className="text-white font-semibold text-sm">Dashboard Tổng Quan</span>
+              {isVisible ? (
+                <ChevronUp className="h-5 w-5 text-slate-400" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-slate-400" />
+              )}
+            </button>
+
+            {/* Dashboard Content */}
+            {isVisible && (
+              <div className="space-y-2">
+                {/* Row 1: Tổng số công việc & Quá hạn */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Tổng số công việc */}
+                  <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-3 shadow-md hover:shadow-lg transition-all duration-300">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="p-1.5 bg-white/20 rounded-md">
+                        <ClipboardList className="h-4 w-4 text-white" />
+                      </div>
+                      <p className="text-blue-100 text-xs font-medium">
+                        {listDashboardTasks.total_task_assignments?.label}
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <p className="text-2xl font-bold text-white">
+                          {listDashboardTasks.total_task_assignments?.value || 0}
+                        </p>
+                        <p className="text-blue-200 text-xs">nhiệm vụ</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Công việc quá hạn */}
+                  <div className="relative overflow-hidden bg-gradient-to-br from-red-600 to-red-700 rounded-lg p-3 shadow-md hover:shadow-lg transition-all duration-300">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="p-1.5 bg-white/20 rounded-md animate-pulse">
+                        <AlertCircle className="h-4 w-4 text-white" />
+                      </div>
+                      <p className="text-red-100 text-xs font-medium">
+                        {listDashboardTasks.overdue_tasks?.label}
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <p className="text-2xl font-bold text-white">
+                          {listDashboardTasks.overdue_tasks?.value || 0}
+                        </p>
+                        <p className="text-red-200 text-xs">cần xử lý</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 2: Theo trạng thái & Theo ưu tiên */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                  {/* Công việc theo trạng thái */}
+                  <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg p-3 shadow-md">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 bg-purple-600/20 rounded">
+                          <CheckCircle2 className="h-4 w-4 text-purple-400" />
+                        </div>
+                        <h3 className="text-xs font-bold text-white">
+                          {listDashboardTasks.tasks_by_status?.label}
+                        </h3>
+                      </div>
+                      <div className="px-2 py-0.5 bg-purple-600/20 rounded-full">
+                        <span className="text-purple-300 text-xs font-semibold">
+                          {listDashboardTasks.tasks_by_status?.items?.reduce((sum: any, item: any) => sum + item.total, 0) || 0}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      {listDashboardTasks.tasks_by_status?.items && 
+                      listDashboardTasks.tasks_by_status.items.length > 0 ? (
+                        listDashboardTasks.tasks_by_status.items.map((item: any, index: any) => {
+                          const colorMap: any = {
+                            "2": { bg: "bg-blue-500", text: "text-blue-400" },
+                            "3": { bg: "bg-orange-500", text: "text-orange-400" },
+                            "4": { bg: "bg-green-500", text: "text-green-400" },
+                            "5": { bg: "bg-red-500", text: "text-red-400" },
+                          };
+                          const colors = colorMap[item.task_status] || { bg: "bg-slate-500", text: "text-slate-400" };
+
+                          return (
+                            <div key={index}>
+                              <div className="flex items-center justify-between">
+                                <span className={`text-xs font-medium ${colors.text}`}>{item.label}</span>
+                                <span className={`text-sm font-bold px-2 py-0.5 ${colors.text} rounded`}>
+                                  {item.total}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="text-center py-4">
+                          <CheckCircle2 className="h-6 w-6 text-slate-500 mx-auto mb-1" />
+                          <p className="text-xs text-slate-400">Chưa có dữ liệu</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Công việc theo mức độ ưu tiên */}
+                  <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg p-3 shadow-md">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 bg-orange-600/20 rounded">
+                          <Star className="h-4 w-4 text-orange-400" />
+                        </div>
+                        <h3 className="text-xs font-bold text-white">
+                          {listDashboardTasks.tasks_by_priority?.label}
+                        </h3>
+                      </div>
+                      <div className="px-2 py-0.5 bg-orange-600/20 rounded-full">
+                        <span className="text-orange-300 text-xs font-semibold">
+                          {listDashboardTasks.tasks_by_priority?.items?.reduce((sum: any, item: any) => sum + item.total, 0) || 0}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      {listDashboardTasks.tasks_by_priority?.items && 
+                      listDashboardTasks.tasks_by_priority.items.length > 0 ? (
+                        listDashboardTasks.tasks_by_priority.items.map((item: any, index: any) => {
+                          const colorMap: any = {
+                            "1": { bg: "bg-red-600", text: "text-red-400" },
+                            "2": { bg: "bg-orange-500", text: "text-orange-400" },
+                            "3": { bg: "bg-yellow-500", text: "text-yellow-400" },
+                            "4": { bg: "bg-green-500", text: "text-green-400" },
+                          };
+                          const colors = colorMap[item.task_priority] || { bg: "bg-slate-500", text: "text-slate-400" };
+
+                          return (
+                            <div key={index}>
+                              <div className="flex items-center justify-between">
+                                <span className={`text-xs font-medium ${colors.text}`}>{item.label}</span>
+                                <span className={`text-sm font-bold px-2 py-0.5 ${colors.text} rounded`}>
+                                  {item.total}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="text-center py-4">
+                          <Star className="h-6 w-6 text-slate-500 mx-auto mb-1" />
+                          <p className="text-xs text-slate-400">Chưa có dữ liệu</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const renderFilter = () => {
+    return(
+      <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {/* Task Type Filter */}
+          <div className="space-y-1.5 sm:space-y-2">
+            <label className="text-xs sm:text-sm font-semibold text-slate-300">
+              Loại nhiệm vụ
+            </label>
+            <Select value={taskFilter} onValueChange={handleFilterChange}>
+              <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                <SelectValue placeholder="Chọn loại nhiệm vụ" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-slate-700">
+                <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                  Tất cả
+                </SelectItem>
+                {typeTask &&
+                  Array.isArray(typeTask) &&
+                  typeTask.map((type: TypeProps) => (
+                    <SelectItem 
+                      key={type.id} 
+                      value={type.id}
+                      className="text-white text-xs sm:text-sm"
+                    >
+                      {type.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Project Filter */}
+          <div className="space-y-1.5 sm:space-y-2">
+            <label className="text-xs sm:text-sm font-semibold text-slate-300">
+              Dự án
+            </label>
+            <Select value={projectFilter} onValueChange={handleProjectFilterChange}>
+              <SelectTrigger className="w-full max-w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10SSSSSSSSSSSS">
+                <SelectValue placeholder="Chọn dự án" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-slate-700 max-w-[330px]">
+                <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                  Tất cả
+                </SelectItem>
+                {listProject &&
+                  Array.isArray(listProject) &&
+                  listProject.map((project: TypeProps) => (
+                    <SelectItem 
+                      key={project.id} 
+                      value={project.id.toString()}
+                      className="text-white text-xs sm:text-sm"
+                    >
+                      {project.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* KPI Filter */}
+          <div className="space-y-1.5 sm:space-y-2">
+            <label className="text-xs sm:text-sm font-semibold text-slate-300">
+              KPI
+            </label>
+            <Select value={kpiFilter} onValueChange={handleKpiFilterChange}>
+              <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                <SelectValue placeholder="Chọn KPI" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-slate-700">
+                <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                  Tất cả
+                </SelectItem>
+                {childKpi &&
+                  Array.isArray(childKpi) &&
+                  childKpi.map((kpi: TypeProps) => (
+                    <SelectItem 
+                      key={kpi.id} 
+                      value={kpi.id.toString()}
+                      className="text-white text-xs sm:text-sm"
+                    >
+                      {kpi.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5 sm:space-y-2">
+            <label className="text-xs sm:text-sm font-semibold text-slate-300">
+              Trạng thái
+            </label>
+            <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+              <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                <SelectValue placeholder="Chọn Status" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-slate-700">
+                <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                  Tất cả
+                </SelectItem>
+                {statusTask &&
+                  Array.isArray(statusTask) &&
+                  statusTask.map((kpi: TypeProps) => (
+                    <SelectItem 
+                      key={kpi.id} 
+                      value={kpi.id.toString()}
+                      className="text-white text-xs sm:text-sm"
+                    >
+                      {kpi.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5 sm:space-y-2">
+            <label className="text-xs sm:text-sm font-semibold text-slate-300">
+              Mức độ
+            </label>
+            <Select value={priorityFilter} onValueChange={handlePriorityFilterChange}>
+              <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                <SelectValue placeholder="Chọn Status" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-slate-700">
+                <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                  Tất cả
+                </SelectItem>
+                {priorityTask &&
+                  Array.isArray(priorityTask) &&
+                  priorityTask.map((kpi: TypeProps) => (
+                    <SelectItem 
+                      key={kpi.id} 
+                      value={kpi.id.toString()}
+                      className="text-white text-xs sm:text-sm"
+                    >
+                      {kpi.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+
+          {/* View Mode Toggle */}
+          <div className="space-y-1.5 sm:space-y-2">
+            <label className="text-xs sm:text-sm font-semibold text-slate-300">
+              Chế độ xem
+            </label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`flex-1 p-2 rounded-lg transition text-xs sm:text-sm font-medium ${
+                  viewMode === "grid"
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700"
+                }`}
+                title="Xem dạng lưới"
+              >
+                <LayoutGrid size={16} className="mx-auto sm:hidden" />
+                <span className="hidden sm:inline">Lưới</span>
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`flex-1 p-2 rounded-lg transition text-xs sm:text-sm font-medium ${
+                  viewMode === "list"
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700"
+                }`}
+                title="Xem dạng danh sách"
+              >
+                <LayoutList size={16} className="mx-auto sm:hidden" />
+                <span className="hidden sm:inline">Danh sách</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 mt-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
+            <input
+                type="text"
+                value={searchFilter}
+                onChange={(e) => {
+                    setSearchFilter(e.target.value)
+                    setPage(1)
+                }}
+                placeholder={"Tìm kiếm tên, mô tả..."}
+                className="
+                w-full rounded-md
+                bg-slate-900 border border-slate-700
+                pl-9 pr-8 py-2 text-sm text-white
+                placeholder:text-slate-500
+                focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent
+                disabled:opacity-50 disabled:cursor-not-allowed
+                transition-colors duration-150
+                "
+            />
+            {searchFilter  && (
+                <button
+                type="button"
+                onClick={() => setSearchFilter("")}
+                aria-label="Xóa tìm kiếm"
+                className="
+                    absolute right-2.5 top-1/2 -translate-y-1/2
+                    text-slate-500 hover:text-white
+                    transition-colors duration-150
+                "
+                >
+                <X className="h-4 w-4" />
+                </button>
+            )}
+            </div>
+        </div>
+      </div>
+    )
+  }
+
 
       
   return (
     <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6">
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        {renderDashboard()}
         {selectedTask === null ? (
           <>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
@@ -343,181 +763,24 @@ function TasksTab() {
               </div>
             </div>
 
-            {/* Filters Section */}
-            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                {/* Task Type Filter */}
-                <div className="space-y-1.5 sm:space-y-2">
-                  <label className="text-xs sm:text-sm font-semibold text-slate-300">
-                    Loại nhiệm vụ
-                  </label>
-                  <Select value={taskFilter} onValueChange={handleFilterChange}>
-                    <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
-                      <SelectValue placeholder="Chọn loại nhiệm vụ" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-700">
-                      <SelectItem value="all" className="text-white text-xs sm:text-sm">
-                        Tất cả
-                      </SelectItem>
-                      {typeTask &&
-                        Array.isArray(typeTask) &&
-                        typeTask.map((type: TypeProps) => (
-                          <SelectItem 
-                            key={type.id} 
-                            value={type.id}
-                            className="text-white text-xs sm:text-sm"
-                          >
-                            {type.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Project Filter */}
-                <div className="space-y-1.5 sm:space-y-2">
-                  <label className="text-xs sm:text-sm font-semibold text-slate-300">
-                    Dự án
-                  </label>
-                  <Select value={projectFilter} onValueChange={handleProjectFilterChange}>
-                    <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
-                      <SelectValue placeholder="Chọn dự án" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-700">
-                      <SelectItem value="all" className="text-white text-xs sm:text-sm">
-                        Tất cả
-                      </SelectItem>
-                      {listProject &&
-                        Array.isArray(listProject) &&
-                        listProject.map((project: TypeProps) => (
-                          <SelectItem 
-                            key={project.id} 
-                            value={project.id.toString()}
-                            className="text-white text-xs sm:text-sm"
-                          >
-                            {project.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* KPI Filter */}
-                <div className="space-y-1.5 sm:space-y-2">
-                  <label className="text-xs sm:text-sm font-semibold text-slate-300">
-                    KPI
-                  </label>
-                  <Select value={kpiFilter} onValueChange={handleKpiFilterChange}>
-                    <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
-                      <SelectValue placeholder="Chọn KPI" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-700">
-                      <SelectItem value="all" className="text-white text-xs sm:text-sm">
-                        Tất cả
-                      </SelectItem>
-                      {childKpi &&
-                        Array.isArray(childKpi) &&
-                        childKpi.map((kpi: TypeProps) => (
-                          <SelectItem 
-                            key={kpi.id} 
-                            value={kpi.id.toString()}
-                            className="text-white text-xs sm:text-sm"
-                          >
-                            {kpi.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5 sm:space-y-2">
-                  <label className="text-xs sm:text-sm font-semibold text-slate-300">
-                    Trạng thái
-                  </label>
-                  <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-                    <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
-                      <SelectValue placeholder="Chọn Status" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-700">
-                      <SelectItem value="all" className="text-white text-xs sm:text-sm">
-                        Tất cả
-                      </SelectItem>
-                      {statusTask &&
-                        Array.isArray(statusTask) &&
-                        statusTask.map((kpi: TypeProps) => (
-                          <SelectItem 
-                            key={kpi.id} 
-                            value={kpi.id.toString()}
-                            className="text-white text-xs sm:text-sm"
-                          >
-                            {kpi.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5 sm:space-y-2">
-                  <label className="text-xs sm:text-sm font-semibold text-slate-300">
-                    Mức độ
-                  </label>
-                  <Select value={priorityFilter} onValueChange={handlePriorityFilterChange}>
-                    <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
-                      <SelectValue placeholder="Chọn Status" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-700">
-                      <SelectItem value="all" className="text-white text-xs sm:text-sm">
-                        Tất cả
-                      </SelectItem>
-                      {priorityTask &&
-                        Array.isArray(priorityTask) &&
-                        priorityTask.map((kpi: TypeProps) => (
-                          <SelectItem 
-                            key={kpi.id} 
-                            value={kpi.id.toString()}
-                            className="text-white text-xs sm:text-sm"
-                          >
-                            {kpi.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-
-                {/* View Mode Toggle */}
-                <div className="space-y-1.5 sm:space-y-2">
-                  <label className="text-xs sm:text-sm font-semibold text-slate-300">
-                    Chế độ xem
-                  </label>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setViewMode("grid")}
-                      className={`flex-1 p-2 rounded-lg transition text-xs sm:text-sm font-medium ${
-                        viewMode === "grid"
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700"
-                      }`}
-                      title="Xem dạng lưới"
-                    >
-                      <LayoutGrid size={16} className="mx-auto sm:hidden" />
-                      <span className="hidden sm:inline">Lưới</span>
-                    </button>
-                    <button
-                      onClick={() => setViewMode("list")}
-                      className={`flex-1 p-2 rounded-lg transition text-xs sm:text-sm font-medium ${
-                        viewMode === "list"
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700"
-                      }`}
-                      title="Xem dạng danh sách"
-                    >
-                      <LayoutList size={16} className="mx-auto sm:hidden" />
-                      <span className="hidden sm:inline">Danh sách</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={() => setShowFilter(!showFilter)}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition border border-slate-700"
+              >
+                {showFilter ? "Ẩn bộ lọc" : "Hiện bộ lọc"}
+                <svg 
+                  className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
             </div>
+
+            {showFilter && renderFilter()}
 
             {tasks.length === 0 ? (
               <div className="text-center py-12 sm:py-16 bg-slate-800/50 border border-slate-700 rounded-lg">
