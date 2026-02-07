@@ -28,3 +28,67 @@ export const getDashboard = createAsyncThunk(
         }
     }
 );
+
+export const getDashboardTasks = createAsyncThunk(
+    "dashboard/getDashboardTasks",
+    async (payload: any, thunkAPI) => {
+        try {
+            const { task_status, task_priority, token } = payload;
+
+            const params = Object.fromEntries(
+                Object.entries({ task_status, task_priority }).filter(
+                    ([_, value]) => value != null
+                )
+            );
+
+            const response = await apiAxiosInstance.get("/tasks/statistical/employees", { 
+                params,
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
+            });
+
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue({
+                key: payload.key, // <-- giữ lại key cho rejected
+                ...(error?.response?.data || { message: error?.message }),
+            });
+        }
+    }
+);
+
+export const getDashboardManagerTasks = createAsyncThunk(
+    "dashboard/getDashboardManagerTasks",
+    async (payload: any, thunkAPI) => {
+        try {
+            const { task_status, task_priority, token } = payload;
+
+            const params = Object.fromEntries(
+                Object.entries({ task_status, task_priority }).filter(
+                    ([_, value]) => value != null
+                )
+            );
+
+            const response = await apiAxiosInstance.get("/tasks/statistical/managers", { 
+                params,
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
+            });
+
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue({
+                key: payload.key, // <-- giữ lại key cho rejected
+                ...(error?.response?.data || { message: error?.message }),
+            });
+        }
+    }
+);

@@ -37,6 +37,7 @@ import {
 import { useProfileData } from "@/src/hooks/profileHook";
 import { listTypeTask } from '@/src/services/api';
 import FilterableSelector from "@/components/FilterableSelector";
+import DashboardTaskManager from "./dashboard/DashboardTaskManager";
 
 interface Props{
     id: number;
@@ -100,6 +101,7 @@ function CheckedTask() {
     const [priorityFilter, setPriorityFilter] = useState<string>("all");
     const [searchFilter, setSearchFilter] = useState<string>("");
     const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
+    const [showFilter, setShowFilter] = useState(true);
 
     useEffect(() => {
         loadTasks(currentPage);
@@ -634,6 +636,7 @@ function CheckedTask() {
     return (
         <>
         <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6">
+            <DashboardTaskManager />
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-4 sm:mb-6">
@@ -648,7 +651,24 @@ function CheckedTask() {
                     </p>
                 </div>
 
-                {renderFilter()}
+                <div className="flex items-center justify-between mb-4">
+                    <button
+                        onClick={() => setShowFilter(!showFilter)}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition border border-slate-700"
+                    >
+                        {showFilter ? "Ẩn bộ lọc" : "Hiện bộ lọc"}
+                        <svg 
+                        className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                        >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                </div>
+
+                {showFilter && renderFilter()}
 
                 {/* Loading State */}
                 {isLoading && tasks.length === 0 ? (

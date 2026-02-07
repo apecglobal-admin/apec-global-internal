@@ -11,6 +11,9 @@ export const useDashboardData = () => {
     listAchievement: dashboard.listAchievement.data,
     listGrowth: dashboard.listGrowth.data,
     listTopProduct: dashboard.listTopProduct.data,
+    listDashboardTasks: dashboard.listDashboardTasks.data.data,
+    listDashboardManagerTasks: dashboard.listDashboardManagerTasks.data.data
+
     // Loading states
 
 

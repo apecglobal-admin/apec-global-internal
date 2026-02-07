@@ -144,10 +144,10 @@ export const personTasks = createAsyncThunk(
   "user/personTasks",
   async (payload, thunkAPI) => {
     try {
-      const { page, limit, token, id, filter, kpiFilter, projectFilter, statusFilter, priorityFilter }: any = payload;
+      const { page, limit, token, id, filter, kpiFilter, projectFilter, statusFilter, priorityFilter, search }: any = payload;
 
       const params = Object.fromEntries(
-        Object.entries({ page, limit, id, filter, kpiFilter, projectFilter, statusFilter, priorityFilter }).filter(
+        Object.entries({ page, limit, id, filter, kpiFilter, projectFilter, statusFilter, priorityFilter, search }).filter(
             ([key, value]) => value != null
         )
     );

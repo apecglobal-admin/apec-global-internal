@@ -46,9 +46,9 @@ export const getListAnnouncement = createAsyncThunk(
     "announcement/getListAnnouncement",
     async (payload: any, thunkAPI) => {
         try {
-            const { token, search, type_id, department_id }: any = payload;
+            const { token, search, type_id, department_id, id }: any = payload;
             const params = Object.fromEntries(
-                Object.entries({ search, type_id, department_id }).filter(
+                Object.entries({ search, type_id, department_id, id }).filter(
                     ([key, value]) => value != null
                 )
             );
