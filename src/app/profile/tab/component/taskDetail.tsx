@@ -38,8 +38,8 @@ interface StatusTask {
 interface TaskDetailProps {
     task: Task;
     onBack: () => void;
-    getTaskStatusBadge: (statusId: number) => JSX.Element | null;
-    getPriorityBadge: (priorityId: number) => JSX.Element | null;
+    getTaskStatusBadge: (statusId: number) =>  any;
+    getPriorityBadge: (priorityId: number) => any;
     formatDate: (dateString: string) => string;
     calculateProgress: (task: Task) => number;
     statusTask?: StatusTask[];
@@ -181,10 +181,10 @@ function TaskDetail({
     
 
     const handleSave = async () => {
-        if (selectedStatus === 4 && !isUploaded) {
-            toast.warning("Vui lòng tải lên minh chứng (ảnh hoặc tài liệu) khi hoàn thành nhiệm vụ")
-            return;
-        }
+        // if (selectedStatus === 4 && !isUploaded) {
+        //     toast.warning("Vui lòng tải lên minh chứng (ảnh hoặc tài liệu) khi hoàn thành nhiệm vụ")
+        //     return;
+        // }
 
         setIsSaving(true);
         try {
@@ -727,7 +727,7 @@ function TaskDetail({
                                             className="text-yellow-400"
                                         />
                                         <span className="text-sm font-semibold text-yellow-400">
-                                            Minh chứng hoàn thành (bắt buộc)
+                                            Minh chứng hoàn thành
                                         </span>
                                     </div>
 

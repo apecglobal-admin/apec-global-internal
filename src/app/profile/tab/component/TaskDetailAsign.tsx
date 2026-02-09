@@ -95,7 +95,7 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate })
             const payload: any = {
                 id: task.id,
                 token,
-                ...changedData // Spread các field đã thay đổi
+                ...changedData
             };
 
             const response = await dispatch(updateTaskAssign(payload) as any);
@@ -149,27 +149,29 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate })
             </div>
         );
     }
+    const formatNumber = (value: number) => {
+        if (!value) return "";
+        return new Intl.NumberFormat("en-US").format(value);
+    };
 
     return (
         <div className="max-w-7xl mx-auto p-3 sm:p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-4 sm:mb-6">
                 <button
                     onClick={onBack}
-                    className="px-3 sm:px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg flex items-center gap-2 transition-colors text-sm sm:text-base order-2 sm:order-1"
+                    className="px-3 sm:px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg flex justify-center items-center gap-2 transition-colors text-sm  order-2 sm:order-1"
                 >
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
-                    <span className="hidden sm:inline"></span>
-                    <span className="sm:hidden">Quay lại</span>
+                    <span className="text-xs">Quay lại</span>
                 </button>
 
                 <button
                     onClick={() => setIsEditing(true)}
-                    className="px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center gap-2 transition-colors text-sm sm:text-base order-1 sm:order-2"
+                    className="px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center gap-2 transition-colors text-xs order-1 sm:order-2"
                 >
-                    <Edit2 size={16} className="sm:hidden" />
-                    <Edit2 size={18} className="hidden sm:block" />
+                    <Edit2 size={16} className="" />
                     Chỉnh sửa
                 </button>
             </div>
@@ -204,7 +206,10 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate })
                             <label className="text-xs sm:text-sm font-semibold text-slate-400">KPI</label>
                             <p className="text-white mt-1 text-sm sm:text-base truncate">{task.kpi_item.name}</p>
                         </div>
-
+                        <div className="bg-slate-900/50 p-2.5 sm:p-3 rounded-lg">
+                            <label className="text-xs sm:text-sm font-semibold text-slate-400">Mục tiêu</label>
+                            <p className="text-white mt-1 text-sm sm:text-base truncate">{formatNumber(task.target_value)} {task.unit.name}</p>
+                        </div>
                         <div className="bg-slate-900/50 p-2.5 sm:p-3 rounded-lg">
                             <label className="text-xs sm:text-sm font-semibold text-slate-400">Loại đối tượng</label>
                             <p className="text-white mt-1 text-sm sm:text-base truncate">{task.target_type.name}</p>
@@ -221,7 +226,6 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate })
                             <label className="text-xs sm:text-sm font-semibold text-slate-400">Ngày kết thúc</label>
                             <p className="text-white mt-1 text-sm sm:text-base">{formatDate(task.date_end)}</p>
                         </div>
-
                         <div className="bg-slate-900/50 p-2.5 sm:p-3 rounded-lg">
                             <label className="text-xs sm:text-sm font-semibold text-slate-400">Từ chối tối thiểu</label>
                             <p className="text-white mt-1 text-sm sm:text-base">{task.min_count_reject}</p>
@@ -294,11 +298,42 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate })
                                             </div>
                                         </div>
                                         <div className="text-right flex-shrink-0">
-                                            <p className="text-xs sm:text-sm text-slate-400">Tiến độ</p>
+                                            {(task.is_overdue || task.is_due) ? (
+                                                <div className="flex items-center gap-3">
+                                                    {/* Label */}
+                                                    <span className="text-xs sm:text-sm font-medium text-white">
+                                                        Tiến độ
+                                                    </span>
+                                                    
+                                                    {/* Status badges */}
+                                                        <div className="flex items-center gap-2">
+                                                            {task.is_overdue && (
+                                                                <span className="inline-flex items-center gap-1 text-[10px] px-2.5 py-1 rounded-full bg-red-500 text-white font-medium shadow-sm">
+                                                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                                                    </svg>
+                                                                    Trễ hạn
+                                                                </span>
+                                                            )}
+                                                            {task.is_due && !task.is_overdue && (
+                                                                <span className="inline-flex items-center gap-1 text-[10px] px-2.5 py-1 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium shadow-sm animate-pulse">
+                                                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                                                                    </svg>
+                                                                    Gần deadline
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs sm:text-sm font-medium text-white">
+                                                    Tiến độ
+                                                </span>
+                                            )}
                                             <p className="font-bold text-blue-400 text-base sm:text-lg">{assignment.process}%</p>
                                             {assignment.completed_date && (
                                                 <p className="text-xs text-slate-500 mt-1 hidden sm:block">
-                                                    Hoàn thành: {formatDate(assignment.completed_date)}
+                                                    deadline: {formatDate(assignment.completed_date)}
                                                 </p>
                                             )}
                                         </div>
