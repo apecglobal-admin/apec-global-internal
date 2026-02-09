@@ -100,7 +100,8 @@ function TasksTab() {
   const totalPages = tasksResponse?.total_pages || 1;
   const totalItems = tasksResponse?.total_items || 0;
   const currentPage = tasksResponse?.page || 1;
-
+  console.log(tasks);
+  
   useEffect(() => {
     const token = localStorage.getItem("userToken");
     if(!listDashboardTasks){
@@ -140,7 +141,6 @@ function TasksTab() {
         };
 
         dispatch(personTasks(payload as any) as any);
-        console.log(1231231);
         
         
       }
@@ -356,7 +356,7 @@ function TasksTab() {
     return(
       <div>
         {listDashboardTasks && (
-          <div className="space-y-2">
+          <div className="space-y-1">
             {/* Toggle Button */}
             <button
               onClick={() => setIsVisible(!isVisible)}
@@ -372,10 +372,9 @@ function TasksTab() {
 
             {/* Dashboard Content */}
             {isVisible && (
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {/* Row 1: Tổng số công việc & Quá hạn */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {/* Tổng số công việc */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
                   <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-3 shadow-md hover:shadow-lg transition-all duration-300">
                     <div className="flex items-center justify-between mb-2">
                       <div className="p-1.5 bg-white/20 rounded-md">
@@ -419,7 +418,7 @@ function TasksTab() {
                 </div>
 
                 {/* Row 2: Theo trạng thái & Theo ưu tiên */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-1">
                   {/* Công việc theo trạng thái */}
                   <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg p-3 shadow-md">
                     <div className="flex items-center justify-between mb-3">
@@ -830,6 +829,16 @@ function TasksTab() {
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-1 sm:gap-1.5 flex-shrink-0">
+                          {task.is_overdue && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-600 text-white font-semibold">
+                              Trễ hạn
+                            </span>
+                          )}
+                          {task.is_due && !task.is_overdue && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-600 text-white font-semibold animate-pulse">
+                              Gần deadline
+                            </span>
+                          )}
                           {getTaskStatusBadge(task.status.id)}
                           {getPriorityBadge(task.priority.id)}
                         </div>

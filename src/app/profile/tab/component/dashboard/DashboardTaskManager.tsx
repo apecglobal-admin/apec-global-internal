@@ -26,7 +26,7 @@ function DashboardTaskManager() {
     return(
         <div>
           {listDashboardManagerTasks && (
-            <div className="space-y-2 mb-4">
+            <div className="space-y-1 mb-4">
               <button
                 onClick={() => setIsVisible(!isVisible)}
                 className="w-full flex items-center justify-between bg-slate-800 hover:bg-slate-700 rounded-lg px-4 py-2 transition-all duration-200"
@@ -40,8 +40,8 @@ function DashboardTaskManager() {
               </button>
   
               {isVisible && (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
                     <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-3 shadow-md hover:shadow-lg transition-all duration-300">
                       <div className="flex items-center justify-between mb-2">
                         <div className="p-1.5 bg-white/20 rounded-md">
@@ -83,7 +83,7 @@ function DashboardTaskManager() {
                     </div>
                   </div>
   
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-1">
                     <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg p-3 shadow-md">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">

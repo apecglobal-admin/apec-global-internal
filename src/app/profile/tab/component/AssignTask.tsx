@@ -17,6 +17,7 @@ import {
     getStatusTask,
     getListDepartment,
     getListPosition,
+    getDetailListTaskAssign,
 } from "@/src/features/task/api";
 import { useDispatch } from "react-redux";
 import { useTaskData } from "@/src/hooks/taskhook";
@@ -50,6 +51,7 @@ interface ValidationErrors {
     employees?: string;
     project_id?: string;
     reject?: string;
+    value?: any;
 }
 
 interface AssignTaskProps {
@@ -191,6 +193,10 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
     const validateForm = (): boolean => {
         const newErrors: ValidationErrors = {};
 
+        if(!assignForm.process){
+            newErrors.value = "Vui lòng nhập giá trị";
+        }
+
         if (!assignForm.name.trim()) {
             newErrors.name = "Vui lòng nhập tên nhiệm vụ";
         }
@@ -318,6 +324,10 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                     target: 0,
                     value: 0,
                 });
+                dispatch(getDetailListTaskAssign({
+                    token: token,
+                    key: "listDetailTaskAssign"
+                }) as any);
                 setErrors({});
                 onBack();
             } else {
@@ -349,12 +359,12 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
     const formatNumber = (value: number) => {
         if (!value) return "";
         return new Intl.NumberFormat("en-US").format(value);
-      };
+    };
       
 
-      const handleProcessChange = (
+    const handleProcessChange = (
         e: React.ChangeEvent<HTMLInputElement>
-      ) => {
+    ) => {
         // Bỏ hết dấu phẩy
         const rawValue = e.target.value.replace(/,/g, "");
       
@@ -370,7 +380,7 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
           ...prev,
           process: value,
         }));
-      };
+    };
       
     
 
@@ -717,12 +727,23 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                         inputMode="numeric"
                                         value={formatNumber(assignForm.process)}
                                         onChange={handleProcessChange}
-                                        className="w-full px-3 py-2.5 sm:px-4 sm:py-3
-                                            bg-slate-900 border border-slate-700 rounded-lg
+                                        className={`w-full px-3 py-2.5 sm:px-4 sm:py-3
+                                            bg-slate-900 border rounded-lg
                                             text-sm sm:text-base text-white
-                                            focus:outline-none focus:border-blue-500 transition"
+                                            focus:outline-none
+                                            ${
+                                                errors.name
+                                                    ? "border-red-500 focus:border-red-500"
+                                                    : "border-slate-700 focus:border-blue-500"
+                                            }
+                                            transition`}
                                     />
-
+                                    {errors.value && (
+                                        <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                                            <AlertCircle size={12} />
+                                            {errors.value}
+                                        </p>
+                                    )}
 
                                 </div>
                             </div>

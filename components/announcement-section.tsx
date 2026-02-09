@@ -48,7 +48,6 @@ export default function AnnouncementSection() {
         number | "all"
     >("all");
 
-    console.log(listAnnouncement);
     
     
 

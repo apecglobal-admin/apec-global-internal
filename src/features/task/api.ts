@@ -463,6 +463,33 @@ export const checkedTask = createAsyncThunk(
     }
 );
 
+export const checkedManyTask = createAsyncThunk(
+    "task/checkedManyTask",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {ids, token} = payload;
+
+            const response = await apiAxiosInstance.put("/tasks/many/checked",
+                {
+                    ids, 
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`
+                  },
+                }
+            );
+            return {
+                data: response.data,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
 export const rejectTask = createAsyncThunk(
     "task/rejectTask",
     async (payload: any, thunkAPI) => {
@@ -573,6 +600,7 @@ export const updateTaskAssign = createAsyncThunk(
             max_count_reject,
             employees,
             token,
+            target_value
         } = payload;
   
         const response = await apiAxiosInstance.put(
@@ -590,6 +618,7 @@ export const updateTaskAssign = createAsyncThunk(
             min_count_reject,
             max_count_reject,
             employees,
+            target_value
           },
           {
             headers: {
@@ -914,6 +943,31 @@ export const getSupportTaskPending  = createAsyncThunk(
         }
     }
 );
+
+export const exportTemplate  = createAsyncThunk(
+    "task/exportTemplate",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {token} = payload;
+
+            const response = await apiAxiosInstance.get("/tasks/export/template", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                responseType: "blob"
+            });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
 
 
 
