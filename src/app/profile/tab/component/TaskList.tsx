@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { deleteTaskAssign, getDetailListTaskAssign, getListProject, getPriorityTask, getStatusTask } from '@/src/features/task/api';
+import { deleteTaskAssign, exportTemplate, getDetailListTaskAssign, getListProject, getPriorityTask, getStatusTask } from '@/src/features/task/api';
 import { useTaskData } from '@/src/hooks/taskhook';
-import { Plus, Search, X, XCircle } from 'lucide-react';
+import { Download, Plus, Search, Upload, X, XCircle } from 'lucide-react';
 import PopupComponent, { usePopup } from "@/components/PopupComponent";
 import { toast } from 'react-toastify';
 import {
@@ -48,7 +48,7 @@ const TaskListAssign: React.FC = () => {
     const [priorityFilter, setPriorityFilter] = useState<string>("all");
     const [showFilter, setShowFilter] = useState(true);
 
-
+    
     const [searchFilter, setSearchFilter] = useState<string>("");
     const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
 
@@ -315,6 +315,35 @@ const TaskListAssign: React.FC = () => {
             setFilteredProjects(filtered);
         }
     }
+
+    const handleExport = async () => {
+        const token = localStorage.getItem("userToken");
+        
+        try {
+            const result = await dispatch(exportTemplate({ token }) as any).unwrap();
+            
+            const blob = new Blob([result.data], { 
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+            });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `task_template_${new Date().getTime()}.xlsx`; // Tên file
+            document.body.appendChild(link);
+            link.click();
+            
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            
+        } catch (error) {
+            toast.error("Tải file thất bại")
+        }
+    };
+
+    const handleImport = () => {
+
+    }
     
     const renderFilter = () => {
         return(
@@ -469,13 +498,35 @@ const TaskListAssign: React.FC = () => {
             <DashboardTaskManager />
             <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-5'>
                 <h1 className="md:text-2xl text-xl  font-bold text-white mb-6">Công việc đã giao</h1>
-                <button
-                    onClick={() => setShowAssignTask(true)}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition shadow-lg shadow-blue-500/30 w-full sm:w-auto"
-                >
-                    <Plus size={18} />
-                    Giao nhiệm vụ
-                </button>
+                <div className='flex items-center gap-1'>
+                    <button
+                        onClick={() => handleExport()}
+                        className="flex items-center justify-center gap-2 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition shadow-lg shadow-blue-500/30 w-full sm:w-auto"
+                    >
+                        <Download size={18} />
+                        Export
+                    </button>
+                    {/* <button
+                        onClick={() => handleImport()}
+                        className="flex items-center justify-center gap-2 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition shadow-lg shadow-blue-500/30 w-full sm:w-auto"
+                    >
+                        <Upload size={18} />
+                        Import
+                    </button> */}
+
+                    <button
+                        onClick={() => setShowAssignTask(true)}
+                        className="flex items-center justify-center gap-2 px-2.5 py-1.5 
+                                    bg-blue-600 hover:bg-blue-700 text-white text-xs 
+                                    font-semibold rounded-lg transition 
+                                    shadow-lg shadow-blue-500/30 w-full sm:w-auto"
+                    >
+                        <Plus size={18} />
+                        <span className="hidden sm:inline">
+                            Giao nhiệm vụ
+                        </span>
+                    </button>
+                </div>
             </div>
             <PopupComponent isOpen={isOpen} onClose={closePopup} {...popupProps} />
 
@@ -517,19 +568,31 @@ const TaskListAssign: React.FC = () => {
                                         onClick={() => handleTaskClick(task.id)}
                                         className="bg-slate-800 border border-slate-700 hover:border-blue-500/50 rounded-lg shadow-lg hover:shadow-xl transition-all cursor-pointer p-4 group"
                                     >
-                                            <div className="flex items-start justify-between mb-4">
-                                                <h3 className="text-lg font-bold text-white flex-1 group-hover:text-blue-400 transition-colors">{task.name}</h3>
-                                                {task.status.id !== 4 && (
-                                                    <button
-                                                        onClick={(e) => handleDeleteTask(e,task)}
-                                                        className={`p-2 rounded-lg transition-all 
-                                                        bg-red-600 hover:bg-red-700 text-white cursor-pointer
-                                                        disabled:opacity-50`}
-                                                    >
-                                                        <XCircle size={20} />
-                                                    </button>
-                                                )}
-                                            </div>
+                                        <div className='mb-3'>
+                                            {task.is_overdue && (
+                                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-600 text-white font-semibold">
+                                                Trễ hạn
+                                                </span>
+                                            )}
+                                            {task.is_due && !task.is_overdue && (
+                                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-600 text-white font-semibold animate-pulse">
+                                                Gần deadline
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-start justify-between mb-4">
+                                            <h3 className="text-lg font-bold text-white flex-1 group-hover:text-blue-400 transition-colors">{task.name}</h3>
+                                            {task.status.id !== 4 && (
+                                                <button
+                                                    onClick={(e) => handleDeleteTask(e,task)}
+                                                    className={`p-2 rounded-lg transition-all 
+                                                    bg-red-600 hover:bg-red-700 text-white cursor-pointer
+                                                    disabled:opacity-50`}
+                                                >
+                                                    <XCircle size={20} />
+                                                </button>
+                                            )}
+                                        </div>
 
 
                                         <div className="flex items-center justify-between mb-4 ">

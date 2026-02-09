@@ -14,7 +14,8 @@ import {
     XCircle,
     X,
     Search,
-    Info
+    Info,
+    Check
 } from "lucide-react";
 import { toast } from "react-toastify";
 import {
@@ -102,6 +103,9 @@ function CheckedTask() {
     const [searchFilter, setSearchFilter] = useState<string>("");
     const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
     const [showFilter, setShowFilter] = useState(true);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [isSelectMode, setIsSelectMode] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     useEffect(() => {
         loadTasks(currentPage);
@@ -265,6 +269,73 @@ function CheckedTask() {
             toast.error("Có lỗi xảy ra khi từ chối nhiệm vụ");
         } finally {
             setRejectingTaskId(null);
+        }
+    };
+
+    const enterSelectMode = () => {
+        setIsSelectMode(true);
+        setSelectedIds([]);
+    };
+
+    const exitSelectMode = () => {
+        setIsSelectMode(false);
+        setSelectedIds([]);
+    };
+
+    const toggleSelect = (id: string, checked: boolean) => {
+        if (checked) {
+            setSelectedIds(prev => [...prev, id]);
+        } else {
+            setSelectedIds(prev => prev.filter(taskId => taskId !== id));
+        }
+    };
+
+    const handleBulkApprove = async () => {
+        if (selectedIds.length === 0) {
+            toast.warn("Vui lòng chọn ít nhất một nhiệm vụ");
+            return;
+        }
+
+        setIsProcessing(true);
+        let successCount = 0;
+        let failCount = 0;
+
+        try {
+            const token = localStorage.getItem("userToken");
+
+            for (const taskId of selectedIds) {
+                const task = tasks.find(t => t.id === taskId);
+                if (!task || task.checked) continue;
+
+                const payload = {
+                    id: parseInt(taskId),
+                    task_id: task.task.id,
+                    token
+                };
+
+                const result = await dispatch(checkedTask(payload) as any);
+
+                if (result?.payload?.data?.success && !result?.error) {
+                    successCount++;
+                } else {
+                    failCount++;
+                }
+            }
+
+            if (successCount > 0) {
+                toast.success(`Đã duyệt thành công ${successCount} nhiệm vụ`);
+            }
+            if (failCount > 0) {
+                toast.error(`Có ${failCount} nhiệm vụ duyệt thất bại`);
+            }
+
+            exitSelectMode();
+            loadTasks(currentPage);
+        } catch (error) {
+            console.error("Error bulk approving tasks:", error);
+            toast.error("Có lỗi xảy ra khi duyệt nhiều nhiệm vụ");
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -640,30 +711,86 @@ function CheckedTask() {
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-4 sm:mb-6">
-                    <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
-                        <FileCheck className="text-blue-400 flex-shrink-0" size={24} />
-                        <h1 className="text-xl sm:text-2xl font-bold text-white">
-                            Duyệt nhiệm vụ
-                        </h1>
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+                        {!isSelectMode ? (
+                            <>
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                    <div className="p-2 bg-blue-500/10 rounded-lg">
+                                        <FileCheck className="text-blue-400 flex-shrink-0" size={20} />
+                                    </div>
+                                    <div>
+                                        <h1 className="text-xl sm:text-2xl font-bold text-white">
+                                            Duyệt nhiệm vụ
+                                        </h1>
+                                        <p className="text-slate-400 text-xs sm:text-sm">
+                                            Tổng: {pagination.total} nhiệm vụ
+                                        </p>
+                                    </div>
+                                </div>
+                                {/* <div className="flex gap-2 w-full sm:w-auto">
+                                    <button
+                                        onClick={enterSelectMode}
+                                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition text-sm font-medium"
+                                    >
+                                        <CheckCheck className="h-4 w-4" />
+                                        <span className="hidden sm:inline">Duyệt nhiều</span>
+                                        <span className="sm:hidden">Duyệt nhiều</span>
+                                    </button>
+                                </div> */}
+                            </>
+                        ) : (
+                            <>
+                                <div className="flex items-center gap-3">
+                                    <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-semibold rounded-full">
+                                        Đang chọn để Duyệt
+                                    </span>
+                                    <span className="text-xs sm:text-sm text-slate-300 font-medium">
+                                        Đã chọn: <span className="text-white text-base sm:text-lg">{selectedIds.length}</span>
+                                    </span>
+                                </div>
+                                <div className="flex gap-2 w-full sm:w-auto">
+                                    <button
+                                        onClick={exitSelectMode}
+                                        className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition text-sm"
+                                    >
+                                        Hủy bỏ
+                                    </button>
+                                    <button
+                                        onClick={handleBulkApprove}
+                                        disabled={selectedIds.length === 0 || isProcessing}
+                                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                    >
+                                        {isProcessing ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                Đang xử lý...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Check className="h-4 w-4" />
+                                                Xác nhận Duyệt ({selectedIds.length})
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
-                    <p className="text-slate-400 text-xs sm:text-sm lg:text-base">
-                        Danh sách nhiệm vụ đã giao - Tổng: {pagination.total} nhiệm vụ
-                    </p>
                 </div>
 
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-end mb-4">
                     <button
                         onClick={() => setShowFilter(!showFilter)}
                         className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition border border-slate-700"
                     >
                         {showFilter ? "Ẩn bộ lọc" : "Hiện bộ lọc"}
                         <svg 
-                        className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`}
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
+                            className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`}
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
                         >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
                 </div>
@@ -690,10 +817,34 @@ function CheckedTask() {
                             {tasks.map((task) => (
                                 <div
                                     key={task.id}
-                                    className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4 hover:border-slate-600 transition-all"
+                                    className={`bg-slate-800/50 border rounded-lg p-3 sm:p-4 hover:border-slate-600 transition-all ${
+                                        selectedIds.includes(task.id) && isSelectMode
+                                            ? 'ring-2 ring-emerald-500/20 border-emerald-500'
+                                            : 'border-slate-700'
+                                    } ${isSelectMode && !task.checked ? 'cursor-pointer' : ''}`}
+                                    onClick={() => {
+                                        if (isSelectMode && !task.checked) {
+                                            toggleSelect(task.id, !selectedIds.includes(task.id));
+                                        }
+                                    }}
                                 >
                                     {/* Task Header */}
-                                    <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
+                                    <div className="flex items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
+                                        {/* Checkbox - chỉ hiện khi đang ở chế độ chọn và task chưa được duyệt */}
+                                        {isSelectMode && !task.checked && (
+                                            <div className="mt-1">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.includes(task.id)}
+                                                    onChange={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleSelect(task.id, e.target.checked);
+                                                    }}
+                                                    className="w-4 h-4 rounded border-slate-600 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-slate-900 bg-slate-700 cursor-pointer"
+                                                />
+                                            </div>
+                                        )}
+                                        
                                         <div className="flex-1 min-w-0">
                                             <h3 className="text-white font-semibold text-sm sm:text-base lg:text-lg mb-1.5 sm:mb-2 line-clamp-2">
                                                 {task.task.name}
@@ -704,43 +855,42 @@ function CheckedTask() {
                                             </div>
                                         </div>
                                         
-                                        <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
-                                            <button
-                                                onClick={() => handleCheckTask(task)}
-                                                disabled={task.checked || checkingTaskId === task.id}
-                                                className={`p-1.5 sm:p-2 rounded-lg transition-all ${
-                                                    task.checked
-                                                        ? "bg-green-500/20 text-green-400 cursor-not-allowed"
-                                                        : "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-                                                } disabled:opacity-50 disabled:cursor-not-allowed`}
-                                                title={task.checked ? "Đã duyệt" : "Duyệt nhiệm vụ"}
-                                            >
-                                                {checkingTaskId === task.id ? (
-                                                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                ) : task.checked ? (
-                                                    <>
-                                                        <CheckCheck size={16} className="" />
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <CheckCircle2 size={16} className="" />
-                                                    </>
-                                                )}
-                                            </button>
+                                        {/* Buttons - ẩn khi đang ở chế độ chọn */}
+                                        {!isSelectMode && (
+                                            <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
+                                                <button
+                                                    onClick={() => handleCheckTask(task)}
+                                                    disabled={task.checked || checkingTaskId === task.id}
+                                                    className={`p-1.5 sm:p-2 rounded-lg transition-all ${
+                                                        task.checked
+                                                            ? "bg-green-500/20 text-green-400 cursor-not-allowed"
+                                                            : "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                                    title={task.checked ? "Đã duyệt" : "Duyệt nhiệm vụ"}
+                                                >
+                                                    {checkingTaskId === task.id ? (
+                                                        <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                    ) : task.checked ? (
+                                                        <CheckCheck size={16} />
+                                                    ) : (
+                                                        <CheckCircle2 size={16} />
+                                                    )}
+                                                </button>
 
-                                            <button
-                                                onClick={() => handleOpenRejectModal(task)}
-                                                disabled={task.checked}
-                                                className={`p-1.5 sm:p-2 rounded-lg transition-all ${
-                                                    task.checked
-                                                        ? "bg-gray-500/20 text-gray-500 cursor-not-allowed"
-                                                        : "bg-red-600 hover:bg-red-700 text-white cursor-pointer"
-                                                } disabled:opacity-50`}
-                                                title={task.checked ? "Không thể từ chối" : "Từ chối nhiệm vụ"}
-                                            >
-                                                <XCircle size={16} className="" />
-                                            </button>
-                                        </div>
+                                                <button
+                                                    onClick={() => handleOpenRejectModal(task)}
+                                                    disabled={task.checked}
+                                                    className={`p-1.5 sm:p-2 rounded-lg transition-all ${
+                                                        task.checked
+                                                            ? "bg-gray-500/20 text-gray-500 cursor-not-allowed"
+                                                            : "bg-red-600 hover:bg-red-700 text-white cursor-pointer"
+                                                    } disabled:opacity-50`}
+                                                    title={task.checked ? "Không thể từ chối" : "Từ chối nhiệm vụ"}
+                                                >
+                                                    <XCircle size={16} />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Task Info */}
@@ -981,4 +1131,3 @@ function CheckedTask() {
 }
 
 export default CheckedTask;
-

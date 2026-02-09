@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, X, Save } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 interface TaskEditFormProps {
     task: any;
@@ -26,6 +27,7 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
     onCancel,
     isLoading
 }) => {
+    
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -38,6 +40,7 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
         min_count_reject: 0,
         max_count_reject: 0,
         employees: [] as number[],
+        value: 0,
     });
 
     const [dropdownStates, setDropdownStates] = useState({
@@ -47,7 +50,7 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
         kpi: false,
         employees: false,
     });
-
+    
     useEffect(() => {
         if (task) {
             setFormData({
@@ -62,10 +65,11 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                 min_count_reject: task.min_count_reject || 0,
                 max_count_reject: task.max_count_reject || 0,
                 employees: task.task_assignment?.map((a: any) => a.employee.id) || [],
+                value: task.target_value,
             });
         }
     }, [task]);
-
+    
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('vi-VN');
     };
@@ -87,7 +91,39 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
         }));
     };
 
+    
+
     const handleInputChange = (field: string, value: any) => {
+        setFormData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+
+        if(field === 'kpi_item_id'){
+            setFormData(prev => ({
+                ...prev,
+                value: 0,
+            }));
+        }
+    };
+
+    const handleProcessChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        field: string,
+    ) => {
+        const unit = childKpi?.find((k: any) => Number(k.id) === Number(formData.kpi_item_id))?.unit_name
+        // Bỏ hết dấu phẩy
+        const rawValue = e.target.value.replace(/,/g, "");
+
+        
+        let value = Number(rawValue);
+        if (Number.isNaN(value)) value = 0;
+      
+        if (unit === "%") {
+          if (value > 100) value = 100;
+          if (value < 0) value = 0;
+        }
+      
         setFormData(prev => ({
             ...prev,
             [field]: value
@@ -102,7 +138,7 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                 : [...prev.employees, employeeId]
         }));
     };
-
+    
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
@@ -119,7 +155,13 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
             min_count_reject: task.min_count_reject || 0,
             max_count_reject: task.max_count_reject || 0,
             employees: task.task_assignment?.map((a: any) => a.employee.id) || [],
+            value: task.target_value,
         };
+
+        if(formData.value === 0){
+            toast.warning("Bạn chưa nhập mục tiêu đạt được")
+            return
+        }
 
         // So sánh và chỉ lấy những field thay đổi
         const changedData: any = {};
@@ -164,6 +206,10 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
             if (formData.max_count_reject !== originalData.max_count_reject) {
                 changedData.max_count_reject = formData.max_count_reject;
             }
+
+            if (formData.value !== originalData.value) {
+                changedData.target_value = formData.value;
+            }
             
             // So sánh mảng employees
             const employeesChanged = 
@@ -175,10 +221,15 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                 changedData.employees = formData.employees;
             }
         }
-        
+
         onSave(changedData);
     };
 
+    const formatNumber = (value: number) => {
+        if (!value) return "";
+        return new Intl.NumberFormat("en-US").format(value);
+    };
+    
     return (
         <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-6">
             {hasCompletedEmployee && (
@@ -284,7 +335,7 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                                         onClick={() => toggleDropdown('kpi')}
                                         className="w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-2 flex items-center justify-between focus:outline-none focus:border-blue-500"
                                     >
-                                        <span>{childKpi?.find((k: any) => k.id === formData.kpi_item_id)?.name || 'Chọn KPI'}</span>
+                                        <span>{childKpi?.find((k: any) => Number(k.id) === Number(formData.kpi_item_id))?.name || 'Chọn KPI'}</span>
                                         <ChevronDown size={16} />
                                     </button>
                                     {dropdownStates.kpi && (
@@ -306,6 +357,23 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                                 </div>
                             ) : (
                                 <p className="text-white mt-1">{task.kpi_item.name}</p>
+                            )}
+                        </div>
+
+                        <div className="bg-slate-900/50 p-3 rounded-lg">
+                            <label className="text-sm font-semibold text-slate-400">
+                                Mục tiêu ({childKpi?.find((k: any) => Number(k.id) === Number(formData.kpi_item_id))?.unit_name})
+                            </label>
+                            {!hasCompletedEmployee ? (
+                                <input
+                                type="text"
+                                inputMode="numeric"
+                                value={formatNumber(formData.value)}
+                                onChange={(e) => handleProcessChange(e, 'value')}
+                                className={`w-full mt-1 bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500`}
+                            />
+                            ) : (
+                                <p className="text-white mt-1">{formatNumber(task.target_value)}</p>
                             )}
                         </div>
 

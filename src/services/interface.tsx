@@ -75,6 +75,8 @@ export interface Task {
     last_reject_date: any;
 
     completed_date: string;
+    is_overdue: boolean,
+    is_due: boolean,
 
     task_logs: TaskLog[];
 
