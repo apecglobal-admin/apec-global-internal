@@ -22,7 +22,6 @@ interface TaskDetailProps {
 }
 
 const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate }) => {
-    console.log(task);
     
     const dispatch = useDispatch();
     const {

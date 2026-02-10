@@ -38,12 +38,12 @@ interface StatusTask {
 interface TaskDetailProps {
     task: Task;
     onBack: () => void;
-    getTaskStatusBadge: (statusId: number) =>  any;
+    getTaskStatusBadge: any;
     getPriorityBadge: (priorityId: number) => any;
     formatDate: (dateString: string) => string;
     calculateProgress: (task: Task) => number;
     statusTask?: StatusTask[];
-    onUpdateSuccess?: () => void;
+    onUpdateSuccess?: (id: any) => void;
 }
 
 interface SubTask {
@@ -217,7 +217,7 @@ function TaskDetail({
                 resetForm();
                 toast.success("Cập nhật tiến độ thành công!")
                 if (onUpdateSuccess) {
-                    onUpdateSuccess();
+                    onUpdateSuccess(task.id);
                 }
             } else {
                 toast.error(result?.payload.data?.message || "Cập nhật tiến độ thất bại")

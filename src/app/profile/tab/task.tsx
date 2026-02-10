@@ -100,7 +100,6 @@ function TasksTab() {
   const totalPages = tasksResponse?.total_pages || 1;
   const totalItems = tasksResponse?.total_items || 0;
   const currentPage = tasksResponse?.page || 1;
-  console.log(tasks);
   
   useEffect(() => {
     const token = localStorage.getItem("userToken");
@@ -148,6 +147,14 @@ function TasksTab() {
     return () => clearTimeout(timer);
   }, [dispatch, page, taskFilter, projectFilter, kpiFilter, statusFilter, priorityFilter, searchFilter]);
 
+  const refreshFilter = () => {
+    setTaskFilter("all");
+    setProjectFilter("all");
+    setKpiFilter("all");
+    setStatusFilter("2");
+    setPriorityFilter("all");
+    setSearchFilter("");
+  }
 
   const handleFilterChange = (filter: string) => {
     setTaskFilter(filter);
@@ -186,30 +193,41 @@ function TasksTab() {
 
   const handleTaskClick = async (taskId: string) => {
     const token = localStorage.getItem("userToken");
-    const payload = {
+    const payload1 = {
       token,
       id: taskId,
       key: "detailTasks"
     }
 
-    await dispatch(personTasks(payload as any) as any);
+    await dispatch(personTasks(payload1 as any) as any);
     setSelectedTask(taskId);
+
+    const payload2 = {
+      page: page,
+      token,
+      statusFilter: 2,
+      key: "tasks"
+    };
+
+    dispatch(personTasks(payload2 as any) as any);
   };
 
-  const refreshTasks = () => {
+
+  const refreshTasks = (id: any) => {
     const token = localStorage.getItem("userToken");
     if (token) {
-      const payload = {
-        page,
+      const payload1 = {
+        id,
         token,
-        filter: taskFilter === "all" ? null : parseInt(taskFilter),
-        key: "tasks"
+        key: "detailTasks"
       };
-      dispatch(personTasks(payload as any) as any);
+      dispatch(personTasks(payload1 as any) as any);
+
+      refreshFilter()
     }
   };
 
-  const getTaskStatusBadge = (statusId: number) => {
+  const getTaskStatusBadge = (statusId: number, checked: boolean) => {
     if (!statusTask) return null;
     
 
@@ -221,41 +239,41 @@ function TasksTab() {
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-500/20 text-slate-400 border border-slate-500/30">
             <AlertCircle size={12} />
-            <span className="hidden sm:inline">{status.name}</span>
+            <span className="text-xs">{status.name}</span>
           </span>
         );
       case 2:
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
             <Clock size={12} />
-            <span className="hidden sm:inline">{status.name}</span>
+            <span className="text-xs">{status.name}</span>
           </span>
         );
       case 3:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-500/20 text-orange-400 border border-orange-500/30">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-500/20 text-gray-400 border border-gray-500/30">
             <Pause size={12} />
-            <span className="hidden sm:inline">{status.name}</span>
+            <span className="text-xs">{status.name}</span>
           </span>
         );
       case 4:
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
             <CheckCircle2 size={12} />
-            <span className="hidden sm:inline">{status.name}</span>
+            <span className="text-xs">{checked ? "Đã Duyệt" : "Chờ Duyệt"}</span>
           </span>
         );
       case 5:
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
             <XCircle size={12} />
-            <span className="hidden sm:inline">{status.name}</span>
+            <span className="text-xs">{status.name}</span>
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-500/20 text-slate-400 border border-slate-500/30">
-            <span className="hidden sm:inline">{status.name}</span>
+            <span className="text-xs">{status.name}</span>
           </span>
         );
     }
@@ -839,7 +857,7 @@ function TasksTab() {
                               Gần deadline
                             </span>
                           )}
-                          {getTaskStatusBadge(task.status.id)}
+                          {getTaskStatusBadge(task.status.id, task.checked)}
                           {getPriorityBadge(task.priority.id)}
                         </div>
                       </div>
@@ -1006,7 +1024,7 @@ function TasksTab() {
             formatDate={formatDate}
             calculateProgress={calculateProgress}
             statusTask={statusTask}
-            onUpdateSuccess={refreshTasks}
+            onUpdateSuccess={(id) => refreshTasks(id)}
           />
         )}
       </div>
