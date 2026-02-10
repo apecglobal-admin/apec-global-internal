@@ -49,92 +49,76 @@ function Support() {
     const [typesFilter , setTypesFilter ] = useState<string>("all");
     const [departmentFilter , setDepartmentFilter ] = useState<any>(null);
     const [searchFilter, setSearchFilter] = useState<string>("");
+    const [statusFilter, setStatusFilter] = useState<string>("false");
 
-    
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [typesFilter, departmentFilter, searchFilter, statusFilter]);
     
     useEffect(() => {
         const token = localStorage.getItem("userToken");
-        if (token) {
-            if (!supportTaskTypes) {
-                dispatch(getSupportTaskTypes() as any);
-            }
-            if(activeTab === "need-support"){
-                dispatch(getSupportTask({ token, key: "supportTask", page: currentPage }) as any);
-            }
-            if(activeTab === "supporting"){
-                dispatch(getSupportTaskManager({ token, key: "supportTaskManager", page: currentPage }) as any);
-            }
-            if(activeTab === "supported"){
-                dispatch(getSupportTaskPending({token, key: "supportTaskPending"}) as any)
-            }
-            if (!listEmployee) {
-                dispatch(getListEmployee({
-                    position_id: null,
-                    department_id: null,
-                    filter: null,
-                    token
-                }) as any);
-            }
-
+        
+        if (!token) return;
+    
+        // Load static data once
+        if (!supportTaskTypes) {
+            dispatch(getSupportTaskTypes() as any);
         }
-    }, [dispatch, currentPage, activeTab]);
-
-    useEffect(() => {
-        const token = localStorage.getItem("userToken");
-
-        if(!token) return;
-
-        const timer = setTimeout(() => { 
-            if(activeTab === "need-support"){
-                dispatch(getSupportTask({ 
-                    token, 
-                    key: "supportTask", 
-                    type_id: typesFilter === "all" ? null : typesFilter, 
-                    department_id: departmentFilter?.id ? departmentFilter?.id : null, 
-                    search: searchFilter === "" ? null : searchFilter
+        if (!listEmployee) {
+            dispatch(getListEmployee({
+                position_id: null,
+                department_id: null,
+                filter: null,
+                token
+            }) as any);
+        }
+    
+        // Debounce filter changes
+        const timer = setTimeout(() => {
+            const commonParams = {
+                token,
+                type_id: typesFilter === "all" ? null : typesFilter,
+                department_id: departmentFilter?.id ? departmentFilter?.id : null,
+                search: searchFilter === "" ? null : searchFilter,
+            };
+    
+            if (activeTab === "need-support") {
+                dispatch(getSupportTask({
+                    ...commonParams,
+                    key: "supportTask",
+                    page: currentPage
                 }) as any);
             }
-
-            if(activeTab === "supporting"){
-                dispatch(getSupportTaskManager({ 
-                    token, 
-                    key: "supportTaskManager", 
-                    type_id: typesFilter === "all" ? null : typesFilter, 
-                    department_id: departmentFilter?.id ? departmentFilter?.id : null, 
-                    search: searchFilter === "" ? null : searchFilter
+    
+            if (activeTab === "supporting") {
+                dispatch(getSupportTaskManager({
+                    ...commonParams,
+                    key: "supportTaskManager",
+                    page: currentPage
                 }) as any);
-
             }
-            
-            if(activeTab === "supported"){
+    
+            if (activeTab === "supported") {
                 dispatch(getSupportTaskPending({
-                    token, 
+                    ...commonParams,
                     key: "supportTaskPending",
-                    type_id: typesFilter === "all" ? null : typesFilter, 
-                    department_id: departmentFilter?.id ? departmentFilter?.id : null, 
-                    search: searchFilter === "" ? null : searchFilter
-                }) as any)
+                    checked: statusFilter
+                }) as any);
             }
-
-
-
-        }, 300)
+        }, 300);
+    
         return () => clearTimeout(timer);
+    }, [dispatch, currentPage, activeTab, typesFilter, departmentFilter, searchFilter, statusFilter]);
 
 
 
-    }, [typesFilter, departmentFilter, searchFilter]);
-
-    // Reset filters khi chuyển tab
     useEffect(() => {
         setTypesFilter("all");
-        setDepartmentFilter("");
+        setDepartmentFilter(null);
         setSearchFilter("");
+        setStatusFilter("false");
         setCurrentPage(1);
     }, [activeTab]);
-
-
-    
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -156,7 +140,6 @@ function Support() {
             token,
         };
 
-        // Nếu type_id = 1 thì phải có target_department_id
         if (parseInt(formData.type_id) === 1) {
             if (!formData.target_department_id) {
                 alert('Vui lòng chọn phòng ban cần hỗ trợ');
@@ -167,7 +150,6 @@ function Support() {
             payload.target_department_id = parseInt(formData.target_department_id);
         }
 
-        // Chỉ truyền employees hoặc departments
         if (formData.assigneeType === 'employees' && formData.selectedEmployees.length > 0) {
             payload.employees = formData.selectedEmployees;
         } else if (formData.assigneeType === 'departments' && formData.selectedDepartments.length > 0) {
@@ -177,7 +159,6 @@ function Support() {
         try {
             await dispatch(createSupportTask(payload) as any);
             setShowCreateForm(false);
-            // Refresh list
             dispatch(getSupportTask({ token, key: "supportTask", page: 1 }) as any);
             setCurrentPage(1);
         } catch (error) {
@@ -197,6 +178,9 @@ function Support() {
     const handleDepartmentFilterChange = (filter: any) => {
         setDepartmentFilter(filter);
     };
+    const handleStatusFilterChange = (filter: string) => {
+        setStatusFilter(filter);
+    };
 
     const renderFilter = () => {
         return(
@@ -208,78 +192,111 @@ function Support() {
                         </label>
                         <Select value={typesFilter} onValueChange={handleTypeFilterChange}>
                             <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
-                            <SelectValue placeholder="Chọn loại nhiệm vụ" />
+                                <SelectValue placeholder="Chọn loại nhiệm vụ" />
                             </SelectTrigger>
                             <SelectContent className="bg-slate-900 border-slate-700">
-                            <SelectItem value="all" className="text-white text-xs sm:text-sm">
-                                Tất cả
-                            </SelectItem>
-                            {supportTaskTypes &&
-                                Array.isArray(supportTaskTypes) &&
-                                supportTaskTypes.map((type: any) => (
-                                <SelectItem 
-                                    key={type.id} 
-                                    value={type.id}
-                                    className="text-white text-xs sm:text-sm"
-                                >
-                                    {type.name}
+                                <SelectItem value="all" className="text-white text-xs sm:text-sm">
+                                    Tất cả
                                 </SelectItem>
-                                ))}
+                                {supportTaskTypes &&
+                                    Array.isArray(supportTaskTypes) &&
+                                    supportTaskTypes.map((type: any) => (
+                                        <SelectItem 
+                                            key={type.id} 
+                                            value={type.id}
+                                            className="text-white text-xs sm:text-sm"
+                                        >
+                                            {type.name}
+                                        </SelectItem>
+                                    ))}
                             </SelectContent>
                         </Select>
                     </div>
-
+    
                     <div className="space-y-1.5 sm:space-y-2">
-                    <label className="text-xs sm:text-sm font-semibold text-slate-300">
-                        Phòng ban
-                    </label>
+                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                            Phòng ban
+                        </label>
                         <FilterableSelector
                             data={listDepartment}
                             onFilter={handleFilterTargetDept}
                             onSelect={(value) => handleDepartmentFilterChange(value)}
                             value={departmentFilter}
-                            
                             placeholder="Chọn dự án"
                             displayField="name"
                             emptyMessage="Không có dự án"
                         />
                     </div>
+    
+                    {/* Thêm filter trạng thái chỉ khi tab là "supported" */}
+                    {activeTab === "supported" && (
+                        <div className="space-y-1.5 sm:space-y-2">
+                            <label className="text-xs sm:text-sm font-semibold text-slate-300">
+                                Trạng thái
+                            </label>
 
+                            <Select
+                                value={statusFilter}
+                                onValueChange={handleStatusFilterChange}
+                            >
+                                <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                                <SelectValue placeholder="Chọn trạng thái" />
+                                </SelectTrigger>
+
+                                <SelectContent className="bg-slate-900 border-slate-700">
+                                <SelectItem
+                                    value="true"
+                                    className="text-white text-xs sm:text-sm"
+                                >
+                                    Đã duyệt
+                                </SelectItem>
+
+                                <SelectItem
+                                    value="false"
+                                    className="text-white text-xs sm:text-sm"
+                                >
+                                    Chưa duyệt
+                                </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
                 </div>
+    
                 <div className="grid grid-cols-1 mt-4">
                     <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
-                    <input
-                        type="text"
-                        value={searchFilter}
-                        onChange={(e) => {
-                            setSearchFilter(e.target.value)
-                        }}
-                        placeholder={"Tìm kiếm tên..."}
-                        className="
-                        w-full rounded-md
-                        bg-slate-900 border border-slate-700
-                        pl-9 pr-8 py-2 text-sm text-white
-                        placeholder:text-slate-500
-                        focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent
-                        disabled:opacity-50 disabled:cursor-not-allowed
-                        transition-colors duration-150
-                        "
-                    />
-                    {searchFilter  && (
-                        <button
-                        type="button"
-                        onClick={() => setSearchFilter("")}
-                        aria-label="Xóa tìm kiếm"
-                        className="
-                            absolute right-2.5 top-1/2 -translate-y-1/2
-                            text-slate-500 hover:text-white
-                            transition-colors duration-150
-                        "
-                        >
-                        <X className="h-4 w-4" />
-                        </button>
-                    )}
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                        <input
+                            type="text"
+                            value={searchFilter}
+                            onChange={(e) => {
+                                setSearchFilter(e.target.value)
+                            }}
+                            placeholder={"Tìm kiếm tên..."}
+                            className="
+                                w-full rounded-md
+                                bg-slate-900 border border-slate-700
+                                pl-9 pr-8 py-2 text-sm text-white
+                                placeholder:text-slate-500
+                                focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent
+                                disabled:opacity-50 disabled:cursor-not-allowed
+                                transition-colors duration-150
+                            "
+                        />
+                        {searchFilter && (
+                            <button
+                                type="button"
+                                onClick={() => setSearchFilter("")}
+                                aria-label="Xóa tìm kiếm"
+                                className="
+                                    absolute right-2.5 top-1/2 -translate-y-1/2
+                                    text-slate-500 hover:text-white
+                                    transition-colors duration-150
+                                "
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -363,6 +380,7 @@ function Support() {
                             tasks={supportTaskPending?.rows || []}
                             pagination={supportTaskManager?.pagination}
                             onPageChange={handlePageChange}
+                            statusFilter={statusFilter}
                         />
                     </TabsContent>
                 </Tabs>

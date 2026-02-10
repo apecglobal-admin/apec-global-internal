@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getListTaskAssign, checkedTask, rejectTask, getDetailListTaskAssign, getListProject, getStatusTask, getPriorityTask } from "@/src/features/task/api";
+import { getListTaskAssign, checkedTask, rejectTask, getDetailListTaskAssign, getListProject, getStatusTask, getPriorityTask, checkedManyTask } from "@/src/features/task/api";
 import { useDispatch } from "react-redux";
 import { useTaskData } from "@/src/hooks/taskhook";
 import { 
@@ -14,8 +14,7 @@ import {
     XCircle,
     X,
     Search,
-    Info,
-    Check
+    Info
 } from "lucide-react";
 import { toast } from "react-toastify";
 import {
@@ -98,18 +97,75 @@ function CheckedTask() {
 
     const [taskFilter, setTaskFilter] = useState<string>("all");
     const [projectFilter, setProjectFilter] = useState<any>(null);
-    const [statusFilter, setStatusFilter] = useState<string>("all");
+    const [statusFilter, setStatusFilter] = useState<string>("false");
+
     const [priorityFilter, setPriorityFilter] = useState<string>("all");
     const [searchFilter, setSearchFilter] = useState<string>("");
     const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
     const [showFilter, setShowFilter] = useState(true);
+
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isSelectMode, setIsSelectMode] = useState(false);
+    const [currentAction, setCurrentAction] = useState<'accept' | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
-    useEffect(() => {
-        loadTasks(currentPage);
-    }, [currentPage]);
+    // Bật chế độ chọn
+    const enterSelectMode = (action: 'accept') => {
+        setIsSelectMode(true);
+        setCurrentAction(action);
+        setSelectedIds([]);
+    };
+
+    // Thoát chế độ chọn
+    const exitSelectMode = () => {
+        setIsSelectMode(false);
+        setCurrentAction(null);
+        setSelectedIds([]);
+    };
+
+    // Chọn/bỏ chọn task
+    const toggleSelect = (id: string) => {
+        
+        console.log('isSelectMode:', isSelectMode); // Thêm dòng này
+        console.log('Toggle select called with id:', id);
+        setSelectedIds(prev => {
+            const newIds = prev.includes(id) 
+                ? prev.filter(i => i !== id) 
+                : [...prev, id];
+            console.log('New selectedIds:', newIds);
+            return newIds;
+        });
+    };
+
+    // Xử lý duyệt nhiều
+    const handleBulkApprove = async () => {
+        if (selectedIds.length === 0) {
+            toast.warn("Vui lòng chọn ít nhất một nhiệm vụ");
+            return;
+        }
+
+        setIsProcessing(true);
+
+        try {
+            const token = localStorage.getItem("userToken");
+            const res = await dispatch(checkedManyTask({token, ids: selectedIds}) as any)
+            if(res.payload.data.success){
+                toast.success(`Đã duyệt thành công nhiệm vụ`);
+            }else{
+                toast.error(`duyệt nhiệm vụ duyệt thất bại`);
+            }
+
+            exitSelectMode();
+            loadTasks(currentPage);
+            setStatusFilter("true")
+        } catch (error) {
+            console.error("Error bulk approving tasks:", error);
+            toast.error("Có lỗi xảy ra khi duyệt nhiều nhiệm vụ");
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
 
     useEffect(() => {
         if(!typeTask){
@@ -132,7 +188,8 @@ function CheckedTask() {
             if (token) {
                 const payload = {
                     token,
-                    task_status: statusFilter === "all" ? null : parseInt(statusFilter),  
+                    page: currentPage,
+                    checked: statusFilter,  
                     type_task: taskFilter === "all" ? null : parseInt(taskFilter), 
                     project_id: projectFilter?.id  ? projectFilter?.id : null, 
                     search: searchFilter === "" ? null : searchFilter,
@@ -144,7 +201,7 @@ function CheckedTask() {
             }
         }, 300)
         return () => clearTimeout(timeout);
-    }, [statusFilter, taskFilter, projectFilter, searchFilter, priorityFilter]);
+    }, [statusFilter, taskFilter, projectFilter, searchFilter, priorityFilter, currentPage]);
 
     useEffect(() => {
         if (listTaskAssign?.data) {
@@ -193,6 +250,8 @@ function CheckedTask() {
             if (result?.payload?.data?.success && !result?.error) {
                 toast.success(`Đã duyệt nhiệm vụ "${task.task.name}"`);
                 loadTasks(currentPage);
+                setStatusFilter("true")
+
             } else {
                 toast.error("Duyệt nhiệm vụ thất bại");
             }
@@ -269,73 +328,6 @@ function CheckedTask() {
             toast.error("Có lỗi xảy ra khi từ chối nhiệm vụ");
         } finally {
             setRejectingTaskId(null);
-        }
-    };
-
-    const enterSelectMode = () => {
-        setIsSelectMode(true);
-        setSelectedIds([]);
-    };
-
-    const exitSelectMode = () => {
-        setIsSelectMode(false);
-        setSelectedIds([]);
-    };
-
-    const toggleSelect = (id: string, checked: boolean) => {
-        if (checked) {
-            setSelectedIds(prev => [...prev, id]);
-        } else {
-            setSelectedIds(prev => prev.filter(taskId => taskId !== id));
-        }
-    };
-
-    const handleBulkApprove = async () => {
-        if (selectedIds.length === 0) {
-            toast.warn("Vui lòng chọn ít nhất một nhiệm vụ");
-            return;
-        }
-
-        setIsProcessing(true);
-        let successCount = 0;
-        let failCount = 0;
-
-        try {
-            const token = localStorage.getItem("userToken");
-
-            for (const taskId of selectedIds) {
-                const task = tasks.find(t => t.id === taskId);
-                if (!task || task.checked) continue;
-
-                const payload = {
-                    id: parseInt(taskId),
-                    task_id: task.task.id,
-                    token
-                };
-
-                const result = await dispatch(checkedTask(payload) as any);
-
-                if (result?.payload?.data?.success && !result?.error) {
-                    successCount++;
-                } else {
-                    failCount++;
-                }
-            }
-
-            if (successCount > 0) {
-                toast.success(`Đã duyệt thành công ${successCount} nhiệm vụ`);
-            }
-            if (failCount > 0) {
-                toast.error(`Có ${failCount} nhiệm vụ duyệt thất bại`);
-            }
-
-            exitSelectMode();
-            loadTasks(currentPage);
-        } catch (error) {
-            console.error("Error bulk approving tasks:", error);
-            toast.error("Có lỗi xảy ra khi duyệt nhiều nhiệm vụ");
-        } finally {
-            setIsProcessing(false);
         }
     };
 
@@ -531,20 +523,26 @@ function CheckedTask() {
 
     const handleFilterChange = (filter: string) => {
         setTaskFilter(filter);
+        setCurrentPage(1)
     };
     const handleProjectFilterChange = (filter: any) => {
         setProjectFilter(filter);
+        setCurrentPage(1)
+
     };
-    const handleStatusFilterChange = (filter: string) => {
-        setStatusFilter(filter);
+    const handleStatusFilterChange = (value: string) => {
+        setStatusFilter(value);
+        setCurrentPage(1)
+
     };
     const handlePriorityFilterChange = (filter: string) => {
         setPriorityFilter(filter);
+        setCurrentPage(1)
     };
     
     const handleFilterProject = (filter: string) => {
         if (!listProject) return;
-    
+        setCurrentPage(1)
         if (!filter || filter.trim() === "") {
             // Nếu không có filter, hiển thị tất cả
             setFilteredProjects(listProject);
@@ -589,33 +587,38 @@ function CheckedTask() {
                         </Select>
                     </div>
 
-
                     <div className="space-y-1.5 sm:space-y-2">
                         <label className="text-xs sm:text-sm font-semibold text-slate-300">
-                        Trạng thái
+                            Trạng thái
                         </label>
-                        <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-                        <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
-                            <SelectValue placeholder="Chọn Status" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-700">
-                            <SelectItem value="all" className="text-white text-xs sm:text-sm">
-                            Tất cả
-                            </SelectItem>
-                            {statusTask &&
-                            Array.isArray(statusTask) &&
-                            statusTask.map((kpi: TypeProps) => (
-                                <SelectItem 
-                                key={kpi.id} 
-                                value={kpi.id.toString()}
+
+                        <Select
+                            value={statusFilter}
+                            onValueChange={handleStatusFilterChange}
+                        >
+                            <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                            <SelectValue placeholder="Chọn trạng thái" />
+                            </SelectTrigger>
+
+                            <SelectContent className="bg-slate-900 border-slate-700">
+                            <SelectItem
+                                value="true"
                                 className="text-white text-xs sm:text-sm"
-                                >
-                                {kpi.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
+                            >
+                                Đã duyệt
+                            </SelectItem>
+
+                            <SelectItem
+                                value="false"
+                                className="text-white text-xs sm:text-sm"
+                            >
+                                Chưa duyệt
+                            </SelectItem>
+                            </SelectContent>
                         </Select>
                     </div>
+
+
 
                     <div className="space-y-1.5 sm:space-y-2">
                         <label className="text-xs sm:text-sm font-semibold text-slate-300">
@@ -669,6 +672,7 @@ function CheckedTask() {
                             type="text"
                             value={searchFilter}
                             onChange={(e) => {
+                                setCurrentPage(1)
                                 setSearchFilter(e.target.value)
                             }}
                             placeholder={"Tìm kiếm tên..."}
@@ -727,16 +731,16 @@ function CheckedTask() {
                                         </p>
                                     </div>
                                 </div>
-                                {/* <div className="flex gap-2 w-full sm:w-auto">
+                                <div className="flex gap-2 w-full sm:w-auto">
                                     <button
-                                        onClick={enterSelectMode}
+                                        onClick={() => enterSelectMode('accept')}
                                         className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition text-sm font-medium"
                                     >
                                         <CheckCheck className="h-4 w-4" />
                                         <span className="hidden sm:inline">Duyệt nhiều</span>
                                         <span className="sm:hidden">Duyệt nhiều</span>
                                     </button>
-                                </div> */}
+                                </div>
                             </>
                         ) : (
                             <>
@@ -767,7 +771,7 @@ function CheckedTask() {
                                             </>
                                         ) : (
                                             <>
-                                                <Check className="h-4 w-4" />
+                                                <CheckCheck className="h-4 w-4" />
                                                 Xác nhận Duyệt ({selectedIds.length})
                                             </>
                                         )}
@@ -778,19 +782,19 @@ function CheckedTask() {
                     </div>
                 </div>
 
-                <div className="flex items-center justify-end mb-4">
+                <div className="flex items-center justify-between mb-4">
                     <button
                         onClick={() => setShowFilter(!showFilter)}
                         className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition border border-slate-700"
                     >
                         {showFilter ? "Ẩn bộ lọc" : "Hiện bộ lọc"}
                         <svg 
-                            className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`}
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24"
+                        className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
                         >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
                 </div>
@@ -814,154 +818,160 @@ function CheckedTask() {
                     <>
                         {/* Tasks Grid */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
-                            {tasks.map((task) => (
-                                <div
-                                    key={task.id}
-                                    className={`bg-slate-800/50 border rounded-lg p-3 sm:p-4 hover:border-slate-600 transition-all ${
-                                        selectedIds.includes(task.id) && isSelectMode
-                                            ? 'ring-2 ring-emerald-500/20 border-emerald-500'
-                                            : 'border-slate-700'
-                                    } ${isSelectMode && !task.checked ? 'cursor-pointer' : ''}`}
-                                    onClick={() => {
-                                        if (isSelectMode && !task.checked) {
-                                            toggleSelect(task.id, !selectedIds.includes(task.id));
-                                        }
-                                    }}
-                                >
-                                    {/* Task Header */}
-                                    <div className="flex items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
-                                        {/* Checkbox - chỉ hiện khi đang ở chế độ chọn và task chưa được duyệt */}
-                                        {isSelectMode && !task.checked && (
-                                            <div className="mt-1">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedIds.includes(task.id)}
-                                                    onChange={(e) => {
-                                                        e.stopPropagation();
-                                                        toggleSelect(task.id, e.target.checked);
-                                                    }}
-                                                    className="w-4 h-4 rounded border-slate-600 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-slate-900 bg-slate-700 cursor-pointer"
-                                                />
+                            {tasks.map((task) => {
+                                const isSelected = selectedIds.includes(task.id);
+                                return(
+                                    <div
+                                        key={task.id}
+                                        onClick={() => {
+                                            if (isSelectMode && !task.checked) {
+                                                toggleSelect(task.id);
+                                            }
+                                        }}
+                                        className={`bg-slate-800/50 border rounded-lg p-3 sm:p-4 hover:border-slate-600 transition-all ${
+                                            isSelected && isSelectMode
+                                                ? 'ring-2 ring-emerald-500/20 border-emerald-500'
+                                                : 'border-slate-700'
+                                        } ${isSelectMode && !task.checked ? 'cursor-pointer' : ''}`}
+                                    >
+                                        {/* Task Header */}
+                                        <div className="flex items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
+                                            {/* Checkbox */}
+                                            {isSelectMode && !task.checked && (
+                                                <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={() => toggleSelect(task.id)}
+                                                        className="w-4 h-4 rounded border-slate-600 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-slate-900 bg-slate-700 cursor-pointer"
+                                                    />
+                                                </div>
+                                            )}
+                                            
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="text-white font-semibold text-sm sm:text-base lg:text-lg mb-1.5 sm:mb-2 line-clamp-2">
+                                                    {task.task.name}
+                                                </h3>
+                                                <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-slate-300">
+                                                    <User size={14} className="text-slate-500 flex-shrink-0" />
+                                                    <span className="truncate">{task.employee.name}</span>
+                                                </div>
                                             </div>
-                                        )}
-                                        
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="text-white font-semibold text-sm sm:text-base lg:text-lg mb-1.5 sm:mb-2 line-clamp-2">
-                                                {task.task.name}
-                                            </h3>
-                                            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-slate-300">
-                                                <User size={14} className="text-slate-500 flex-shrink-0" />
-                                                <span className="truncate">{task.employee.name}</span>
-                                            </div>
-                                        </div>
-                                        
-                                        {/* Buttons - ẩn khi đang ở chế độ chọn */}
-                                        {!isSelectMode && (
-                                            <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
-                                                <button
-                                                    onClick={() => handleCheckTask(task)}
-                                                    disabled={task.checked || checkingTaskId === task.id}
-                                                    className={`p-1.5 sm:p-2 rounded-lg transition-all ${
-                                                        task.checked
-                                                            ? "bg-green-500/20 text-green-400 cursor-not-allowed"
-                                                            : "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-                                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
-                                                    title={task.checked ? "Đã duyệt" : "Duyệt nhiệm vụ"}
-                                                >
-                                                    {checkingTaskId === task.id ? (
-                                                        <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                    ) : task.checked ? (
-                                                        <CheckCheck size={16} />
-                                                    ) : (
-                                                        <CheckCircle2 size={16} />
-                                                    )}
-                                                </button>
+                                            
+                                            {/* Buttons - ẩn khi đang ở chế độ chọn */}
+                                            {!isSelectMode && (
+                                                <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleCheckTask(task);
+                                                        }}
+                                                        disabled={task.checked || checkingTaskId === task.id}
+                                                        className={`p-1.5 sm:p-2 rounded-lg transition-all ${
+                                                            task.checked
+                                                                ? "bg-green-500/20 text-green-400 cursor-not-allowed"
+                                                                : "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                                                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                                        title={task.checked ? "Đã duyệt" : "Duyệt nhiệm vụ"}
+                                                    >
+                                                        {checkingTaskId === task.id ? (
+                                                            <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                        ) : task.checked ? (
+                                                            <CheckCheck size={16} />
+                                                        ) : (
+                                                            <CheckCircle2 size={16} />
+                                                        )}
+                                                    </button>
 
-                                                <button
-                                                    onClick={() => handleOpenRejectModal(task)}
-                                                    disabled={task.checked}
-                                                    className={`p-1.5 sm:p-2 rounded-lg transition-all ${
-                                                        task.checked
-                                                            ? "bg-gray-500/20 text-gray-500 cursor-not-allowed"
-                                                            : "bg-red-600 hover:bg-red-700 text-white cursor-pointer"
-                                                    } disabled:opacity-50`}
-                                                    title={task.checked ? "Không thể từ chối" : "Từ chối nhiệm vụ"}
-                                                >
-                                                    <XCircle size={16} />
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Task Info */}
-                                    <div className="space-y-1.5 sm:space-y-2 mb-2 sm:mb-3">
-                                        <div className="flex items-center gap-1.5 sm:gap-2">
-                                            <Info size={14} className="text-slate-500 flex-shrink-0" />
-                                            <span className="text-sm">
-                                                {task.project.name}
-
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm flex-wrap">
-                                            <Calendar size={14} className="text-slate-500 flex-shrink-0" />
-                                            <span className="text-slate-400">Ngày làm:</span>
-                                            <span className="text-white font-medium">
-                                                {formatDate(task.task.date_start)} - {formatDate(task.task.date_end)}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
-                                            <Calendar size={14} className="text-slate-500 flex-shrink-0" />
-                                            <span className="text-slate-400">Hoàn thành:</span>
-                                            <span className="text-white font-medium">
-                                                {formatDate(task.completed_date)}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 sm:gap-2">
-                                            <Info size={14} className="text-slate-500 flex-shrink-0" />
-
-                                            <span className={`text-xs ${getPriorityColor(task.project_priorities.id)} px-2 py-1 rounded-lg`}>{task.project_priorities.name}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 sm:gap-2">
-                                            <Clock size={14} className="text-slate-500 flex-shrink-0" />
-                                            {getDeadlineBadge(task.deadline)}
-                                        </div>
-
-                                    </div>
-
-                                    {/* Status and Progress */}
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 pt-2 sm:pt-3 border-t border-slate-700">
-                                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                                            {getStatusBadge(task.status)}
-                                            {task.checked && (
-                                                <span className="px-2 py-0.5 sm:py-1 bg-green-500/20 text-green-400 rounded-md text-xs font-semibold border border-green-500/30 flex items-center gap-1">
-                                                    <CheckCheck size={12} className="" />
-                                                    Đã duyệt
-                                                </span>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleOpenRejectModal(task);
+                                                        }}
+                                                        disabled={task.checked}
+                                                        className={`p-1.5 sm:p-2 rounded-lg transition-all ${
+                                                            task.checked
+                                                                ? "bg-gray-500/20 text-gray-500 cursor-not-allowed"
+                                                                : "bg-red-600 hover:bg-red-700 text-white cursor-pointer"
+                                                        } disabled:opacity-50`}
+                                                        title={task.checked ? "Không thể từ chối" : "Từ chối nhiệm vụ"}
+                                                    >
+                                                        <XCircle size={16} />
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
-                                        
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-20 sm:w-24 h-1.5 sm:h-2 bg-slate-700 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all"
-                                                    style={{ width: `${task.process}%` }}
-                                                ></div>
+    
+                                        {/* Task Info */}
+                                        <div className="space-y-1.5 sm:space-y-2 mb-2 sm:mb-3">
+                                            <div className="flex items-center gap-1.5 sm:gap-2">
+                                                <Info size={14} className="text-slate-500 flex-shrink-0" />
+                                                <span className="text-sm">
+                                                    {task.project.name}
+    
+                                                </span>
                                             </div>
-                                            <span className="text-xs font-semibold text-blue-400 min-w-[2.5rem] sm:min-w-[3rem]">
-                                                {task.process}%
-                                            </span>
+                                            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm flex-wrap">
+                                                <Calendar size={14} className="text-slate-500 flex-shrink-0" />
+                                                <span className="text-slate-400">Ngày làm:</span>
+                                                <span className="text-white font-medium">
+                                                    {formatDate(task.task.date_start)} - {formatDate(task.task.date_end)}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
+                                                <Calendar size={14} className="text-slate-500 flex-shrink-0" />
+                                                <span className="text-slate-400">Hoàn thành:</span>
+                                                <span className="text-white font-medium">
+                                                    {formatDate(task.completed_date)}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 sm:gap-2">
+                                                <Info size={14} className="text-slate-500 flex-shrink-0" />
+    
+                                                <span className={`text-xs ${getPriorityColor(task.project_priorities.id)} px-2 py-1 rounded-lg`}>{task.project_priorities.name}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 sm:gap-2">
+                                                <Clock size={14} className="text-slate-500 flex-shrink-0" />
+                                                {getDeadlineBadge(task.deadline)}
+                                            </div>
+    
                                         </div>
+    
+                                        {/* Status and Progress */}
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 pt-2 sm:pt-3 border-t border-slate-700">
+                                            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                                                {getStatusBadge(task.status)}
+                                                {task.checked && (
+                                                    <span className="px-2 py-0.5 sm:py-1 bg-green-500/20 text-green-400 rounded-md text-xs font-semibold border border-green-500/30 flex items-center gap-1">
+                                                        <CheckCheck size={12} className="" />
+                                                        Đã duyệt
+                                                    </span>
+                                                )}
+                                            </div>
+                                            
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-20 sm:w-24 h-1.5 sm:h-2 bg-slate-700 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all"
+                                                        style={{ width: `${task.process}%` }}
+                                                    ></div>
+                                                </div>
+                                                <span className="text-xs font-semibold text-blue-400 min-w-[2.5rem] sm:min-w-[3rem]">
+                                                    {task.process}%
+                                                </span>
+                                            </div>
+                                        </div>
+    
+                                        {/* Proof Image */}
+                                        {task.prove && (
+                                            <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-slate-700">
+                                                <p className="text-xs text-slate-500 mb-1.5 sm:mb-2">Minh chứng:</p>
+                                                {renderFilePreview(task.prove)}
+                                            </div>
+                                        )}
                                     </div>
-
-                                    {/* Proof Image */}
-                                    {task.prove && (
-                                        <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-slate-700">
-                                            <p className="text-xs text-slate-500 mb-1.5 sm:mb-2">Minh chứng:</p>
-                                            {renderFilePreview(task.prove)}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
 
                         {/* Pagination */}
@@ -1131,3 +1141,4 @@ function CheckedTask() {
 }
 
 export default CheckedTask;
+
