@@ -44,7 +44,7 @@ const TaskListAssign: React.FC = () => {
 
     const [taskFilter, setTaskFilter] = useState<string>("all");
     const [projectFilter, setProjectFilter] = useState<any>(null);
-    const [statusFilter, setStatusFilter] = useState<string>("all");
+    const [statusFilter, setStatusFilter] = useState<string>("2");
     const [priorityFilter, setPriorityFilter] = useState<string>("all");
     const [showFilter, setShowFilter] = useState(true);
 
@@ -73,18 +73,9 @@ const TaskListAssign: React.FC = () => {
             }
         }, 300)
         return () => clearTimeout(timeout);
-    }, [statusFilter, taskFilter, projectFilter, searchFilter, priorityFilter]);
+    }, [statusFilter, taskFilter, projectFilter, searchFilter, priorityFilter, currentPage]);
 
     
-    useEffect(() => {
-        const token = localStorage.getItem("userToken");
-        
-        dispatch(getDetailListTaskAssign({
-            page: currentPage,
-            token: token,
-            key: "listDetailTaskAssign"
-        }) as any);
-    }, [dispatch, currentPage]);
 
     useEffect(() => {
         if (listProject) {
@@ -108,6 +99,7 @@ const TaskListAssign: React.FC = () => {
     }, []);
     
     const handleTaskClick = (taskId: string) => {
+
         const token = localStorage.getItem("userToken");
 
         setSelectedTaskId(taskId);
@@ -290,15 +282,22 @@ const TaskListAssign: React.FC = () => {
 
     const handleFilterChange = (filter: string) => {
         setTaskFilter(filter);
+        setCurrentPage(1)
     };
     const handleProjectFilterChange = (filter: any) => {
         setProjectFilter(filter);
+        setCurrentPage(1)
+
     };
     const handleStatusFilterChange = (filter: string) => {
         setStatusFilter(filter);
+        setCurrentPage(1)
+
     };
     const handlePriorityFilterChange = (filter: string) => {
         setPriorityFilter(filter);
+        setCurrentPage(1)
+
     };
     
     const handleFilterProject = (filter: string) => {
@@ -457,6 +456,7 @@ const TaskListAssign: React.FC = () => {
                             type="text"
                             value={searchFilter}
                             onChange={(e) => {
+                                setCurrentPage(1)
                                 setSearchFilter(e.target.value)
                             }}
                             placeholder={"Tìm kiếm tên..."}

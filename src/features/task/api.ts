@@ -409,9 +409,9 @@ export const getListTaskAssign = createAsyncThunk(
     "task/getListTaskAssign",
     async (payload: any, thunkAPI) => {
         try {
-            const {limit, page, id, token, task_status, type_task, project_id, task_priority, search} = payload;
+            const {limit, page, id, token, task_status, type_task, project_id, task_priority, search, checked} = payload;
             const params = Object.fromEntries(
-                Object.entries({ limit,page,id, task_status, type_task, project_id, task_priority, search }).filter(
+                Object.entries({ limit,page,id, task_status, type_task, project_id, task_priority, search, checked }).filter(
                     ([key, value]) => value != null
                 )
             );
@@ -920,9 +920,9 @@ export const getSupportTaskPending  = createAsyncThunk(
     "task/getSupportTaskPending",
     async (payload: any, thunkAPI) => {
         try {
-            const {id, limit, page, token, type_id, department_id, search} = payload;
+            const {id, limit, page, token, type_id, department_id, search, checked} = payload;
             const params = Object.fromEntries(
-                Object.entries({ limit, page, id, type_id, department_id, search }).filter(
+                Object.entries({ limit, page, id, type_id, department_id, search, checked }).filter(
                     ([key, value]) => value != null
                 )
             );

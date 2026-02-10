@@ -41,9 +41,10 @@ interface SupportTaskPendingProps {
     tasks: any[];
     pagination?: { page: number; totalPages: number; };
     onPageChange: (page: number) => void;
+    statusFilter: string
 }
 
-function SupportTaskPending({ tasks, pagination, onPageChange }: SupportTaskPendingProps) {
+function SupportTaskPending({ tasks, pagination, onPageChange, statusFilter }: SupportTaskPendingProps) {
     const dispatch = useDispatch();
     const { isOpen, openPopup, closePopup, popupProps } = usePopup();
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -53,6 +54,7 @@ function SupportTaskPending({ tasks, pagination, onPageChange }: SupportTaskPend
     const [isSelectMode, setIsSelectMode] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+    console.log(statusFilter);
     
 
     const handleShowDetail = (task: any) => {
@@ -113,6 +115,7 @@ function SupportTaskPending({ tasks, pagination, onPageChange }: SupportTaskPend
                         dispatch(getSupportTaskPending({ 
                             token, 
                             key: "supportTaskPending", 
+                            checked: "false",
                             page: pagination?.page || 1 
                         }) as any);
                     } else {
@@ -170,6 +173,7 @@ function SupportTaskPending({ tasks, pagination, onPageChange }: SupportTaskPend
                             </div>
                             <h2 className="font-bold text-white">Nhiệm vụ chờ duyệt</h2>
                         </div>
+                        
                         <Button 
                             onClick={enterSelectMode}
                             className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white"
