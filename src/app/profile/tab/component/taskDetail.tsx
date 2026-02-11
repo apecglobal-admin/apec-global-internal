@@ -406,9 +406,8 @@ function TaskDetail({
 
     const renderFilePreview = (url?: string) => {
         if (!url) return null;
-    
         const file = getFileInfo(url);
-    
+        
         if (file.isImage) {
             return (
                 <img
@@ -419,20 +418,22 @@ function TaskDetail({
                 />
             );
         }
-    
+        
         return (
             <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition text-sm text-slate-200"
-        >
-            <span className="text-lg">{file.icon}</span>
-            <span className="truncate">{file.fileName}</span>
-            <span className="ml-auto text-xs text-slate-400">
-                {file.extension}
-            </span>
-        </a>
+                href={`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(
+          url.replace("/fl_attachment", "")
+            )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition text-sm text-slate-200"
+            >
+                <span className="text-lg">{file.icon}</span>
+                <span className="truncate">{file.fileName}</span>
+                <span className="ml-auto text-xs text-slate-400">
+                    {file.extension}
+                </span>
+            </a>
         );
     };
 

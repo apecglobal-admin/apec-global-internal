@@ -7,6 +7,7 @@ import { fetchUserInfo, loginWeb } from "@/src/services/api";
 import { Eye, EyeOff, Lock } from "lucide-react";
 import { logout, setToken } from "@/src/features/user/userSlice";
 import { toast } from "react-toastify";
+import { getFcmToken } from "@/src/lib/getFCMToken";
 
 export default function LoginSection() {
     const [enableOtp, setEnableOtp] = useState(false);
@@ -22,6 +23,7 @@ export default function LoginSection() {
     // Refs để focus vào input
     const emailRef = useRef<HTMLInputElement>(null);
     const passwordRef = useRef<HTMLInputElement>(null);
+
 
     
     const clearForm = () => {
@@ -64,13 +66,15 @@ export default function LoginSection() {
         }
         
         try {
+            const fcmToken = await getFcmToken();
+
             const payload = {
                 email,
                 password,
+                fcm_token: fcmToken,
             };
 
             const res = await dispatch(loginWeb(payload) as any);
-            
             if (res.payload.status === 200) {
                 const token = res.payload.data.token;
                 dispatch(setToken(token));

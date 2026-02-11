@@ -9,10 +9,27 @@ import { usePolicyData } from "@/src/hooks/policyhook";
 import { getListPolicy, getStatPolicy } from "@/src/features/policy/api/api";
 import { Spinner } from "./ui/spinner";
 
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+    DialogClose,
+} from "@/components/ui/dialog";
+
+const IMAGE_EXTENSIONS = [
+    "jpg", "jpeg", "png", "gif",
+    "webp", "bmp", "svg", "ico",
+    "tiff", "avif"
+];
 
 export default function PolicySection() {
     const [searchQuery, setSearchQuery] = useState<string>("");
     const dispatch = useDispatch();
+
+    const [selectedPolicy, setSelectedPolicy] = useState<any | null>(null);
+    const [openDialog, setOpenDialog] = useState(false);
 
     const { statPolicy, listPolicy, isLoadingStatPolicy, isLoadingListPolicy } = usePolicyData();
 
@@ -46,6 +63,31 @@ export default function PolicySection() {
         )
     }
 
+    const handleShowDetail = (policy: any) => {
+        setSelectedPolicy(policy);
+        setOpenDialog(true);
+    };
+    
+    const getViewerUrl = (url: string, fileName: string) => {
+        const extension = fileName.split(".").pop()?.toLowerCase();
+      
+        if (!extension) return url;
+      
+        if (IMAGE_EXTENSIONS.includes(extension)) {
+          return url
+            .replace("/raw/upload/", "/image/upload/")
+            .replace("/fl_attachment", "");
+        }
+      
+        if (extension === "pdf") {
+          return url.replace("/fl_attachment", "");
+        }
+      
+        return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(
+          url.replace("/fl_attachment", "")
+        )}`;
+      };
+
     return (
         <section
             style={{ boxShadow: "inset 0 0 10px rgba(122, 122, 122, 0.5)" }}
@@ -67,18 +109,6 @@ export default function PolicySection() {
                                 đồng nhất toàn hệ thống.
                             </p>
                         </div>
-                        {/* <div className="flex flex-wrap gap-2 text-xs uppercase ">
-                            {quickLinks.map((link) => (
-                                <a
-                                    key={link.label}
-                                    href={link.href}
-                                    className="flex items-center gap-2 rounded-full border border-orange-500 bg-orange-400  font-bold text-white px-4 py-2 text-black transition  hover:bg-orange-500"
-                                >
-                                    {link.label}
-                                    <span aria-hidden>↗</span>
-                                </a>
-                            ))}
-                        </div> */}
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
                         {statPolicy.map((stat: any, index: number) => {
@@ -130,29 +160,6 @@ export default function PolicySection() {
                     placeholder="Tìm kiếm chính sách, biểu mẫu..."
                     onChange={handleChange}
                 />
-                {/* <div className="space-y-4 rounded-3xl bg-box-shadow bg-white p-5 shadow-lg shadow-blue-500/10">
-                    <button className="flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold uppercase  text-white transition hover:bg-orange-500">
-                        <Search size={16} />
-                        Tra cứu nhanh
-                    </button>
-                    <div className="space-y-3 rounded-2xl border border-slate-800 bg-[#d6e8ee] p-4 text-xs text-slate-400">
-                        <div className="text-xs font-semibold uppercase  text-blue-700">
-                            Danh mục nổi bật
-                        </div>
-                        <div className="space-y-2">
-                            {quickLinks.map((link) => (
-                                <a
-                                    key={link.label}
-                                    href={link.href}
-                                    className="flex items-center justify-between rounded-xl border border-black/20 bg-white px-3 py-2 text-black transition  hover:bg-gray-300 hover:text-black"
-                                >
-                                    {link.label}
-                                    <span aria-hidden>→</span>
-                                </a>
-                            ))}
-                        </div>
-                    </div>
-                </div> */}
 
                 {isLoadingListPolicy && (
                     <section
@@ -174,7 +181,7 @@ export default function PolicySection() {
                                     key={groupIndex}
                                     className="relative flex flex-col gap-5 overflow-hidden rounded-3xl bg-box-shadow p-6 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10"
                                 >
-                                    {/* Group Header */}
+
                                     <div className="space-y-2">
                                         <div className="flex items-start justify-between gap-4">
                                             <h2 className="text-xl font-extrabold text-blue-main capitalize sm:text-2xl">
@@ -191,31 +198,17 @@ export default function PolicySection() {
                                         </p>
                                     </div>
 
-                                    {/* <div className="flex flex-wrap items-center gap-2 text-xs uppercase  text-blue-300">
-                                        <button className="flex items-center gap-2 rounded-full bg-blue-gradiant-main bg-box-shadow px-3 py-1.5 text-xs font-semibold text-black transition hover:border-orange-600 hover:bg-orange-500 hover:text-black/40">
-                                            <FileText size={14} />
-                                            Tải PDF
-                                        </button>
-                                        <button className="flex items-center gap-2 rounded-full bg-blue-gradiant-main bg-box-shadow px-3 py-1.5 text-xs font-semibold text-black transition hover:border-orange-600 hover:bg-orange-500 hover:text-black/40">
-                                            <PenTool size={14} />
-                                            Ký xác nhận
-                                        </button>
-                                        <button className="flex items-center gap-2 rounded-full bg-blue-gradiant-main bg-box-shadow px-3 py-1.5 text-xs font-semibold text-black transition hover:border-orange-600 hover:bg-orange-500 hover:text-black/40">
-                                            <Download size={14} />
-                                            Tải tất cả
-                                        </button>
-                                    </div> */}
 
-                                    {/* Policy List */}
                                     {hasPolicies ? (
                                         <ul className="space-y-2">
                                             {group.policies.map(
                                                 (policy: any, index: number) => (
-                                                    <a
-                                                        href="#"
-                                                        key={`${groupIndex}-${index}`}
-                                                        className="flex flex-col gap-3 rounded-2xl bg-box-shadow bg-white px-4 py-3 transition hover:bg-gray-100 sm:flex-row sm:items-center sm:justify-between"
+                                                    <div
+                                                        onClick={() => handleShowDetail(policy)}
+                                                        key={policy.id || `${groupIndex}-${index}`}
+                                                        className="cursor-pointer flex flex-col gap-3 rounded-2xl bg-white px-4 py-3 bg-box-shadow transition hover:bg-gray-100 sm:flex-row sm:items-center sm:justify-between"
                                                     >
+
                                                         <div className="flex items-center gap-3">
                                                             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-600 text-xs font-semibold text-white">
                                                                 {String(
@@ -251,7 +244,7 @@ export default function PolicySection() {
                                                                 </span>
                                                             </div>
                                                         </div>
-                                                    </a>
+                                                    </div>
                                                 )
                                             )}
                                         </ul>
@@ -273,6 +266,60 @@ export default function PolicySection() {
                     </div>
                 )}
             </div>
+
+            <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+                <DialogContent className="bg-white">
+                    {selectedPolicy && (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle className="text-xl font-semibold text-black">
+                                    {selectedPolicy.title}
+                                </DialogTitle>
+                            </DialogHeader>
+
+                            <div className="mt-6 space-y-4">
+                                <div className="text-sm text-gray-700 leading-relaxed">
+                                    <p>{selectedPolicy.description}</p>
+                                </div>
+
+                                {selectedPolicy.documents?.length > 0 && (
+                                    <div className="border-t pt-4 mt-4">
+                                        <h4 className="text-sm font-semibold text-gray-900 mb-3">
+                                            Tài liệu đính kèm ({selectedPolicy.documents.length})
+                                        </h4>
+
+                                        <div className="space-y-2">
+                                            {selectedPolicy.documents.map((doc: any) => (
+                                                <a
+                                                    key={doc.id}
+                                                    href={getViewerUrl(doc.file_url, doc.name)}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition"
+                                                >
+                                                    <FileText className="w-5 h-5 text-green-600" />
+                                                    <span className="text-sm font-medium text-gray-900">
+                                                        {doc.name}
+                                                    </span>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <DialogFooter className="mt-6">
+                                <DialogClose asChild>
+                                    <button className="px-6 py-2 bg-black text-white rounded-lg hover:bg-black/80 transition-colors">
+                                        Đóng
+                                    </button>
+                                </DialogClose>
+                            </DialogFooter>
+                        </>
+                    )}
+                </DialogContent>
+            </Dialog>
+
         </section>
     );
 }

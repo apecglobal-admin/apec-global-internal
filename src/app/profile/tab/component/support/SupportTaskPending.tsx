@@ -54,8 +54,6 @@ function SupportTaskPending({ tasks, pagination, onPageChange, statusFilter }: S
     const [isSelectMode, setIsSelectMode] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-    console.log(statusFilter);
-    
 
     const handleShowDetail = (task: any) => {
         if (!isSelectMode) {
@@ -426,7 +424,7 @@ function SupportTaskPending({ tasks, pagination, onPageChange, statusFilter }: S
                                                         <FileText className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                                                     )}
                                                 </div>
-                                                <h4 className="text-xs sm:text-sm font-bold text-white">Minh chứng hoàn thành</h4>
+                                                <h4 className="text-xs sm:text-sm font-bold text-white">Minh chứng hoàn thànhss</h4>
                                             </div>
                                             <div className="bg-slate-700 p-3 sm:p-4 rounded-lg border border-slate-600">
                                                 {isImageUrl(selectedTask.prove) ? (
@@ -449,7 +447,9 @@ function SupportTaskPending({ tasks, pagination, onPageChange, statusFilter }: S
                                                     </div>
                                                 ) : (
                                                     <a
-                                                        href={selectedTask.prove}
+                                                    href={`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(
+                                                        selectedTask.prove.replace("/fl_attachment", "")
+                                                          )}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="inline-flex items-center gap-2 px-3 py-2 bg-slate-600 hover:bg-slate-500 rounded-lg transition-colors"

@@ -162,7 +162,9 @@ const TargetDetail = ({
     
         return (
             <a
-            href={url}
+            href={`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(
+                url.replace("/fl_attachment", "")
+                  )}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition text-sm text-slate-200"

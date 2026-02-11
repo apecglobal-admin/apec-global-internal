@@ -802,7 +802,9 @@ function Support() {
                                                     </div>
                                                 ) : (
                                                     <a
-                                                        href={detailSupportTaskEmployee.prove}
+                                                        href={`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(
+                                                            detailSupportTaskEmployee.prove.replace("/fl_attachment", "")
+                                                              )}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="inline-flex items-center gap-2 px-3 py-2 bg-slate-600 hover:bg-slate-500 rounded-lg transition-colors"
