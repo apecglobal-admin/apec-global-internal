@@ -33,10 +33,10 @@ export const getDashboardTasks = createAsyncThunk(
     "dashboard/getDashboardTasks",
     async (payload: any, thunkAPI) => {
         try {
-            const { task_status, task_priority, token } = payload;
+            const { task_status, task_priority, token, month } = payload;
 
             const params = Object.fromEntries(
-                Object.entries({ task_status, task_priority }).filter(
+                Object.entries({ task_status, task_priority, month }).filter(
                     ([_, value]) => value != null
                 )
             );
@@ -65,10 +65,10 @@ export const getDashboardManagerTasks = createAsyncThunk(
     "dashboard/getDashboardManagerTasks",
     async (payload: any, thunkAPI) => {
         try {
-            const { task_status, task_priority, token } = payload;
+            const { task_status, task_priority, token, month } = payload;
 
             const params = Object.fromEntries(
-                Object.entries({ task_status, task_priority }).filter(
+                Object.entries({ task_status, task_priority, month }).filter(
                     ([_, value]) => value != null
                 )
             );

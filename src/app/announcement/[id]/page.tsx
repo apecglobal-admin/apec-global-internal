@@ -38,6 +38,12 @@ type AnnouncementItem = {
     }>;
 };
 
+const IMAGE_EXTENSIONS = [
+    "jpg", "jpeg", "png", "gif",
+    "webp", "bmp", "svg", "ico",
+    "tiff", "avif"
+];
+
 export default function AnnouncementDetailPage() {
     const router = useRouter();
     const params = useParams();
@@ -137,13 +143,6 @@ export default function AnnouncementDetailPage() {
         router.push(`/announcement/${id}`);
     };
 
-    // if (isLoading) {
-    //     return (
-    //         <div className="min-h-screen flex items-center justify-center">
-    //             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-    //         </div>
-    //     );
-    // }
 
     if (!announcement) {
         return (
@@ -161,10 +160,29 @@ export default function AnnouncementDetailPage() {
         );
     }
 
+    const getViewerUrl = (url: string, fileName: string) => {
+        const extension = fileName.split(".").pop()?.toLowerCase();
+      
+        if (!extension) return url;
+      
+        if (IMAGE_EXTENSIONS.includes(extension)) {
+          return url
+            .replace("/raw/upload/", "/image/upload/")
+            .replace("/fl_attachment", "");
+        }
+      
+        if (extension === "pdf") {
+          return url.replace("/fl_attachment", "");
+        }
+      
+        return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(
+          url.replace("/fl_attachment", "")
+        )}`;
+      };
+
     return (
         <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
-                {/* Header với nút quay lại */}
                 <div className="mb-6">
                     <button
                         onClick={handleGoBack}
@@ -431,7 +449,7 @@ export default function AnnouncementDetailPage() {
                                             {announcement.documents.map((doc) => (
                                                 <a
                                                     key={doc.id}
-                                                    href={doc.file_url}
+                                                    href={getViewerUrl(doc.file_url, doc.name)}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="flex items-center gap-4 p-4 rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all group"

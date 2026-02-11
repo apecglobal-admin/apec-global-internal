@@ -26,54 +26,16 @@ import { usePolicyData } from "@/src/hooks/policyhook";
 import { Spinner } from "@/components/ui/spinner";
 import LoadingBlur from "@/components/loading";
 
-const policyStats = [
-    { value: "128", label: "Chính sách", subLabel: "Đã cập nhật 2025" },
-    { value: "36", label: "Biểu mẫu", subLabel: "Chuẩn hóa PDF" },
-    { value: "18", label: "Quy trình", subLabel: "Ký nhận điện tử" },
-    { value: "12", label: "Phòng ban", subLabel: "Phụ trách rà soát" },
-];
-
-const quickLinks = [
-    { label: "Chính sách mới cập nhật", href: "#" },
-    { label: "Biểu mẫu phổ biến", href: "#" },
-    { label: "Hướng dẫn ký nhận điện tử", href: "#" },
-];
-
-const policyGroups = [
-    {
-        name: "Chính sách nhân sự",
-        description:
-            "Quản lý toàn bộ hành trình nhân sự từ tuyển dụng, đào tạo đến phúc lợi thống nhất trên toàn hệ thống.",
-        policies: [
-            {
-                title: "Quy trình tuyển dụng nội bộ",
-                description: "Cập nhật 15/01/2025",
-                status: "active",
-            },
-            {
-                title: "Chính sách đào tạo & phát triển",
-                description: "Cập nhật 10/01/2025",
-                status: "active",
-            },
-            {
-                title: "Quy định phúc lợi ApecCare",
-                description: "Cập nhật 05/01/2025",
-                status: "new",
-            },
-        ],
-    },
-
-    {
-        name: "Chính sách vận hành – công nghệ",
-        description:
-            "Chuẩn hóa vận hành, an ninh dữ liệu và hướng dẫn nền tảng công nghệ trọng yếu của tập đoàn",
-        policies: null,
-    },
+const IMAGE_EXTENSIONS = [
+    "jpg", "jpeg", "png", "gif",
+    "webp", "bmp", "svg", "ico",
+    "tiff", "avif"
 ];
 
 export default function PoliciesPage() {
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [selectedGroup, setSelectedGroup] = useState(null);
+    const [selectedDoc, setSelectedDoc] = useState<any | null>(null);
 
     const dispatch = useDispatch();
 
@@ -84,42 +46,52 @@ export default function PoliciesPage() {
     
     useEffect(() => {
         dispatch(getStatPolicy() as any);
-    }, []);
+    }, [dispatch]);
     
     useEffect(() => {
-        const fetchApi = async () => {
-            const payload = {
-                filter: searchQuery,
-            };
-
-            await dispatch(getListPolicy(payload) as any);            
-        };
-        fetchApi();
-    }, [searchQuery]);
+        const timeout = setTimeout(() => {
+            dispatch(getListPolicy({ filter: searchQuery }) as any);
+        }, 500);
+    
+        return () => clearTimeout(timeout);
+    }, [searchQuery, dispatch]);
 
     const handleChange = (value: string) => {
         setSearchQuery(value)
     }
 
     const handleShowDetail = (item: any) => {    
-
         setSelectedPolicy(item);        
         setOpenDialog(true);
-            
-        // const found = selectedPolicy.find((a: any) => Number(a.id) === id);
-
-        // if (found) {
-            
-        // }
     };
 
-    if(statPolicy.length === 0 ){
+    if(!statPolicy || statPolicy.length === 0){
         return(
             <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
                 <LoadingBlur />
             </div>
         )
     }
+
+    const getViewerUrl = (url: string, fileName: string) => {
+        const extension = fileName.split(".").pop()?.toLowerCase();
+      
+        if (!extension) return url;
+      
+        if (IMAGE_EXTENSIONS.includes(extension)) {
+          return url
+            .replace("/raw/upload/", "/image/upload/")
+            .replace("/fl_attachment", "");
+        }
+      
+        if (extension === "pdf") {
+          return url.replace("/fl_attachment", "");
+        }
+      
+        return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(
+          url.replace("/fl_attachment", "")
+        )}`;
+      };
 
     return (
         <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
@@ -130,7 +102,7 @@ export default function PoliciesPage() {
                         Chính sách nội bộ
                     </div>
                     <div className="space-y-3">
-                        <h1 className="text-3xl font-bold text-blue-main capitallize sm:text-4xl lg:text-5xl">
+                        <h1 className="text-3xl font-bold text-blue-main capitalize sm:text-4xl lg:text-5xl">
                             Chính sách tập trung
                         </h1>
                         <p className="max-w-3xl text-sm text-black sm:text-base">
@@ -139,18 +111,7 @@ export default function PoliciesPage() {
                             đồng nhất toàn hệ thống.
                         </p>
                     </div>
-                    {/* <div className="flex flex-wrap gap-2">
-                        {quickLinks.map((link) => (
-                            <a
-                                key={link.label}
-                                href={link.href}
-                                className="flex items-center gap-2 rounded-full border border-orange-500  bg-orange-400 px-4 py-2 text-xs uppercase  text-white font-bold transition hover:border-gray-400 hover:bg-orange-500 hover:text-black/30"
-                            >
-                                {link.label}
-                                <span aria-hidden>↗</span>
-                            </a>
-                        ))}
-                    </div> */}
+
                 </div>
 
                 {/* ✅ Stats Grid cập nhật */}
@@ -204,30 +165,6 @@ export default function PoliciesPage() {
                         onChange={handleChange}
                     />
 
-                    {/* <button className="flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2.5 text-xs font-semibold uppercase  text-white transition hover:bg-blue-500 sm:w-auto">
-                        <Search size={16} />
-                        Tra cứu nhanh
-                    </button>
-
-                    <div className="space-y-3 rounded-2xl border border-gray-500 bg-[#d6e8ee] p-4">
-                        <div className="text-md font-semibold uppercase  text-blue-950">
-                            Danh mục nổi bật
-                        </div>
-                        <div className="space-y-2">
-                            {quickLinks.map((link) => (
-                                <a
-                                    key={link.label}
-                                    href={link.href}
-                                    className="flex items-center justify-between rounded-xl border border-gray-400 bg-white px-3 py-2 text-sm text-black transition hover:border-gray-400 hover:bg-gray-300 hover:text-black/30"
-                                >
-                                    {link.label}
-                                    <span aria-hidden>
-                                        <ArrowRight />
-                                    </span>
-                                </a>
-                            ))}
-                        </div>
-                    </div> */}
                 </div>
                 {isLoadingListPolicy && (
                     <section
@@ -268,21 +205,6 @@ export default function PoliciesPage() {
                                         </p>
                                     </div>
 
-                                    {/* <div className="flex flex-wrap items-center gap-2 text-xs uppercase  text-blue-300">
-                                        <button className="flex items-center gap-2 rounded-full bg-blue-gradiant-main bg-box-shadow px-3 py-1.5 text-xs font-semibold text-black transition hover:border-orange-600 hover:bg-orange-500 hover:text-black/40">
-                                            <FileText size={14} />
-                                            Tải PDF
-                                        </button>
-                                        <button className="flex items-center gap-2 rounded-full bg-blue-gradiant-main bg-box-shadow px-3 py-1.5 text-xs font-semibold text-black transition hover:border-orange-600 hover:bg-orange-500 hover:text-black/40">
-                                            <PenTool size={14} />
-                                            Ký xác nhận
-                                        </button>
-                                        <button className="flex items-center gap-2 rounded-full bg-blue-gradiant-main bg-box-shadow px-3 py-1.5 text-xs font-semibold text-black transition hover:border-orange-600 hover:bg-orange-500 hover:text-black/40">
-                                            <Download size={14} />
-                                            Tải tất cả
-                                        </button>
-                                    </div> */}
-
                                     {/* Policy List */}
                                     {hasPolicies ? (
                                         <ul className="space-y-2">
@@ -290,8 +212,8 @@ export default function PoliciesPage() {
                                                 (policy: any, index: number) => (
                                                     <div
                                                         onClick={() => handleShowDetail(policy)}
-                                                        key={`${groupIndex}-${index}`}
-                                                        className="flex flex-col gap-3 rounded-2xl bg-box-shadow bg-white px-4 py-3 transition hover:bg-gray-100 sm:flex-row sm:items-center sm:justify-between"
+                                                        key={index}
+                                                        className="cursor-pointer flex flex-col gap-3 rounded-2xl bg-box-shadow bg-white px-4 py-3 transition hover:bg-gray-100 sm:flex-row sm:items-center sm:justify-between"
                                                     >
                                                         <div className="flex items-center gap-3">
                                                             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-600 text-xs font-semibold text-white">
@@ -342,7 +264,7 @@ export default function PoliciesPage() {
                             );
                         })}
 
-                        {listPolicy.length === 0 && (
+                        {listPolicy?.length === 0 && (
                             <div className="rounded-2xl border border-dashed border-slate-700 bg-blue-gradiant-main px-5 py-10 text-center text-slate-400 sm:px-6 sm:py-12">
                                 Không có chính sách nào cho bộ lọc hiện tại.
                             </div>
@@ -403,7 +325,7 @@ export default function PoliciesPage() {
                                                     (doc: any) => (
                                                         <a
                                                             key={doc.id}
-                                                            href={doc.file_url}
+                                                             href={getViewerUrl(doc.file_url, doc.name)}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors group"
