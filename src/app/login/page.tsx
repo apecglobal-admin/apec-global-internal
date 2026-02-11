@@ -1,6 +1,7 @@
 "use client";
 
 import { setToken } from "@/src/features/user/userSlice";
+import { getFcmToken } from "@/src/lib/getFCMToken";
 import { fetchUserInfo, loginWeb } from "@/src/services/api";
 import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -20,9 +21,11 @@ export default function LoginPage() {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     try {
+      const fcmToken = await getFcmToken();
       const payload = {
         email,
         password,
+        fcm_token: fcmToken,
       };
 
       const res = await dispatch(loginWeb(payload) as any);

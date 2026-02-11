@@ -45,6 +45,7 @@ interface Caution {
   id: number;
   reason: string;
   created_at: string;
+  prove?: string;
   employee: {
     id: number;
     name: string;
@@ -85,6 +86,7 @@ function Cautions() {
   const [isCreating, setIsCreating] = useState(false);
   const [kpiFilter, setKpiFilter] = useState<string>("all");
   const [searchFilter, setSearchFilter] = useState<string>("");
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -414,6 +416,69 @@ function Cautions() {
       )
   }
 
+  const getFileInfo = (url: string) => {
+    const extension = url.split('.').pop()?.toLowerCase() || '';
+    const fileName = url.split('/').pop() || 'file';
+
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
+    const isImage = imageExtensions.includes(extension);
+
+    const fileIcons: Record<string, string> = {
+      'pdf': '📄',
+      'doc': '📝',
+      'docx': '📝',
+      'xls': '📊',
+      'xlsx': '📊',
+      'ppt': '📊',
+      'pptx': '📊',
+      'txt': '📃',
+      'zip': '🗜️',
+      'rar': '🗜️',
+    };
+
+    return {
+      isImage,
+      extension: extension.toUpperCase(),
+      fileName,
+      icon: fileIcons[extension] || '📎'
+    };
+  };
+
+  const renderFilePreview = (url?: string) => {
+    if (!url) return null;
+
+    const file = getFileInfo(url);
+
+    if (file.isImage) {
+      return (
+        <img
+          src={url}
+          alt={file.fileName}
+          className="w-full h-32 object-cover rounded-lg cursor-zoom-in hover:opacity-90 transition"
+          onClick={() => setPreviewImage(url)}
+        />
+      );
+    }
+
+    return (
+      <a
+        href={`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(
+          url.replace("/fl_attachment", "")
+            )}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2 p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition text-sm text-slate-200"
+      >
+        <span className="text-lg">{file.icon}</span>
+        <span className="truncate">{file.fileName}</span>
+        <span className="ml-auto text-xs text-slate-400">
+          {file.extension}
+        </span>
+      </a>
+    );
+  };
+  
+
   return (
     <>
       <div className="min-h-screen p-4 sm:p-6 lg:p-8">
@@ -517,6 +582,13 @@ function Cautions() {
                         {caution.reason}
                       </p>
                     </div>
+                     {/* Prove */}
+                    {caution.prove && (
+                      <div className="pt-3 border-t border-slate-700">
+                        <p className="text-xs text-slate-500 mb-2">Minh chứng:</p>
+                        {renderFilePreview(caution.prove)}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -564,6 +636,27 @@ function Cautions() {
         onUploadFile={handleUploadFile}
       />
 
+      
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setPreviewImage(null)}
+        >
+          <button
+            onClick={() => setPreviewImage(null)}
+            className="absolute top-4 right-4 text-white hover:text-slate-300 transition z-10"
+          >
+            <X size={32} />
+          </button>
+          <img
+            src={previewImage}
+            alt="Preview"
+            className="max-w-full max-h-full rounded-lg shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </>
   );
 }

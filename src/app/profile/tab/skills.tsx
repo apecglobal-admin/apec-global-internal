@@ -12,40 +12,34 @@ import { ChevronDown, ChevronUp, HelpCircle, X } from "lucide-react";
 import { useProfileData } from "@/src/hooks/profileHook";
 import { getTotalKpiSkill } from "@/src/services/api";
 import { useDispatch } from "react-redux";
+import { getDashboardTasks } from "@/src/features/dashboard/api/api";
+import { useDashboardData } from "@/src/hooks/dashboardhook";
+import { getFcmToken } from "@/src/lib/getFCMToken";
 
 function SkillsTab({ userInfo }: any) {
-
-    
     const dispatch = useDispatch();
     const { totalKpiSkill } = useProfileData();
+    const { listDashboardTasks } = useDashboardData();
     const [expandedSkills, setExpandedSkills] = useState<Set<number>>(
         new Set()
     );
     const [showDescriptions, setShowDescriptions] = useState<Set<number>>(
         new Set()
     );
+    
 
+
+    
     useEffect(() => {
         if (!userInfo) return;
+        const now = new Date();
+        const month = `${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
         const token = localStorage.getItem("userToken");
         dispatch(getTotalKpiSkill(token) as any);
+        dispatch(getDashboardTasks({token, month}) as any);
     }, [userInfo]);
-
-    // Kỹ năng cứng từ props
-    const hardSkills = userInfo.map((skill: any) => ({
-        id: Number(skill.id),
-        icon: skill.icon || "💼",
-        name: skill.kpi.name,
-        description: skill.kpi.description,
-        value: parseFloat(skill.score),
-        kpiItems: skill.kpi_items || [],
-        count: skill.total_count
-    }));
-
-    
     
 
-    // Lấy thông tin từ API
     const getRankColor = (rankName: string) => {
         const colors: Record<string, string> = {
             S: "border-yellow-400 text-yellow-400 bg-yellow-400/10",
@@ -57,14 +51,11 @@ function SkillsTab({ userInfo }: any) {
         return colors[rankName] || colors.C;
     };
 
-    // Dữ liệu cho biểu đồ radar
-    const skillsData = hardSkills.map((skill: any) => ({
-        skill: skill.name,
-        value: skill.value,
+    const skillsData = userInfo.map((skill: any) => ({
+        skill: skill.kpi.name,
+        value: parseFloat(skill.score),
         fullMark: 100,
     }));
-
-    
 
     const toggleSkill = (index: number) => {
         const newExpanded = new Set(expandedSkills);
@@ -87,11 +78,11 @@ function SkillsTab({ userInfo }: any) {
         setShowDescriptions(newShowDescriptions);
     };
 
+    
+
     return (
         <div className="flex flex-col">
-            {/* Radar Chart với Đánh giá */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-                {/* Radar Chart */}
                 <div className="lg:col-span-2 w-full h-[250px] sm:h-[400px]">
                     <ResponsiveContainer width="100%" height="100%">
                         <RadarChart data={skillsData}>
@@ -161,13 +152,11 @@ function SkillsTab({ userInfo }: any) {
                     </ResponsiveContainer>
                 </div>
 
-                {/* Bảng đánh giá tổng hợp */}
                 <div className="bg-slate-800/30 rounded-lg border border-slate-700 p-4">
                     <h3 className="text-sm font-semibold text-slate-200 mb-4">
                         📊 Đánh giá tổng hợp
                     </h3>
 
-                    {/* Overall Rating từ API */}
                     {totalKpiSkill ? (
                         <div className="p-4 bg-slate-800/50 rounded-lg border-2 border-slate-600">
                             <div className="text-center">
@@ -219,9 +208,8 @@ function SkillsTab({ userInfo }: any) {
                 </div>
             </div>
 
-            {/* Skills List */}
             <div className="grid grid-cols-2 gap-3 lg:gap-4">
-                {hardSkills.map((skill: any, index: number) => {
+                {userInfo.map((skill: any, index: number) => {
                     const isExpanded = expandedSkills.has(index);
                     const showDescription = showDescriptions.has(index);
                     return (
@@ -229,11 +217,8 @@ function SkillsTab({ userInfo }: any) {
                             <div className="group pb-3 lg:pb-4 border-b border-slate-800 transition-all duration-300">
                                 <div className="flex items-center justify-between mb-2 lg:mb-3">
                                     <div className="flex items-center gap-1.5 lg:gap-2">
-                                        <span className="text-base lg:text-xl">
-                                            {skill.icon}
-                                        </span>
                                         <span className="text-xs lg:text-sm font-medium text-slate-300 group-hover:text-slate-100 transition-colors">
-                                            {skill.name}
+                                            {skill.kpi.name}
                                         </span>
                                         <div className="relative">
                                             <button
@@ -243,7 +228,6 @@ function SkillsTab({ userInfo }: any) {
                                                 <HelpCircle className="w-4 h-4 lg:w-4.5 lg:h-4.5" color="yellow"/>
                                             </button>
                                             {/* Description Tooltip */}
-
                                             {showDescription && (
                                                 <div className="absolute left-0 top-full mt-2 z-10 w-64 p-3 bg-slate-700 rounded-lg border border-slate-600 shadow-xl">
                                                     <button
@@ -253,29 +237,38 @@ function SkillsTab({ userInfo }: any) {
                                                         <X className="w-3.5 h-3.5" />
                                                     </button>
                                                     <p className="text-xs lg:text-sm text-slate-300 pr-6">
-                                                        {skill.description || "Chưa có mô tả"}
+                                                        {skill.kpi.description || "Chưa có mô tả"}
                                                     </p>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
-                                    <div>
-                                        <div className="">
-                                            <span className="text-xs">Tổng: </span>
-                                            <span className="text-sm">{skill.count}/tháng</span>
+                                    {skill.kpi.name === "Công việc" ? (
+                                        (() => {
+                                            const statuses = listDashboardTasks?.tasks_by_status?.items || [];
+                                            const doing = statuses.find((s: any) => s.task_status === "2");
+                                            const done = statuses.find((s: any) => s.task_status === "4");
+                                            return (
+                                                <div className="flex items-center gap-1.5 text-xs">
+                                                    <span className="font-semibold text-blue-400" title="Đang thực hiện">
+                                                        {doing?.total ?? 0}
+                                                    </span>
+                                                    <span className="text-slate-500">/</span>
+                                                    <span className="font-semibold text-green-400" title="Hoàn thành">
+                                                        {done?.total ?? 0}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })()
+                                    ) : (
+                                        <div>
+                                            {/* <span className="text-xs">Tổng: </span> */}
+                                            <span className="text-sm">{skill.total_count}/tháng</span>
                                         </div>
-                                        {/* {(skill.id === 656 || skill.id === 659) ? (
-                                        ) : (
-                                            <div className="">
-                                                <span className="text-xs">Tổng: </span>
-                                                <span className="text-sm">{skill.count}/tháng</span>
-                                            </div>
-                                        )} */}
-                                    </div>
+                                    )}
                                     <div className="flex items-center gap-2">
-
                                         <span className="text-xs lg:text-sm font-bold text-blue-400 group-hover:text-blue-300 transition-colors">
-                                            {skill.value}%
+                                            {parseFloat(skill.score).toFixed(0)}%
                                         </span>
                                         <button
                                             onClick={() => toggleSkill(index)}
@@ -293,54 +286,82 @@ function SkillsTab({ userInfo }: any) {
                                 <div className="h-1 lg:h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700 group-hover:border-blue-500/30 transition-colors">
                                     <div
                                         className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full shadow-lg shadow-blue-500/50 transition-all duration-300"
-                                        style={{ width: `${skill.value}%` }}
+                                        style={{ width: `${parseFloat(skill.score)}%` }}
                                     />
                                 </div>
 
                                 {/* KPI Items List */}
                                 {isExpanded && (
                                     <div className="mt-3 max-h-40 overflow-y-auto">
-                                        {skill.kpiItems && skill.kpiItems.length > 0 ? (
-                                            <div className="space-y-2">
-                                                {skill.kpiItems.map((item: any, itemIndex: number) => (
-                                                    <div
-                                                        key={itemIndex}
-                                                        className="flex justify-between items-center p-2 lg:p-2.5 bg-slate-800/50 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors"
-                                                    >
-                                                        <div className="flex items-start gap-2">
-                                                            <span className="text-blue-400 text-xs mt-0.5">•</span>
-                                                            <div className="flex-1">
-                                                                <p className="text-xs lg:text-sm text-slate-300 font-medium">
-                                                                    {item.name}
-                                                                </p>
-                                                                {item.description && (
-                                                                    <p className="text-xs text-slate-500 mt-1">
-                                                                        {item.description}
+                                        {skill.kpi.name === "Công việc" ? (
+                                            (() => {
+                                                const kpiItems = listDashboardTasks?.tasks_by_kpi_item?.items || [];
+                                                return kpiItems.length > 0 ? (
+                                                    <div className="space-y-2">
+                                                        {kpiItems.map((item: any, itemIndex: number) => (
+                                                            <div
+                                                                key={itemIndex}
+                                                                className="flex justify-between items-center p-2 lg:p-2.5 bg-slate-800/50 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors"
+                                                            >
+                                                                <div className="flex items-start gap-2">
+                                                                    <span className="text-blue-400 text-xs mt-0.5">•</span>
+                                                                    <p className="text-xs lg:text-sm text-slate-300 font-medium">
+                                                                        {item.label}
                                                                     </p>
-                                                                )}
+                                                                </div>
+                                                                <div>
+                                                                    <span className="text-xs text-slate-400">Tổng: </span>
+                                                                    <span className="text-sm text-slate-200">{item.total}</span>
+                                                                </div>
                                                             </div>
-                                                        </div>
-
-                                                        {(skill.id === 656 || skill.id === 659) ? (
-                                                                <div className="">
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700 text-center">
+                                                        <p className="text-xs lg:text-sm text-slate-400">Chưa có dữ liệu</p>
+                                                    </div>
+                                                );
+                                            })()
+                                        ) : (
+                                            skill.kpi_items && skill.kpi_items.length > 0 ? (
+                                                <div className="space-y-2">
+                                                    {skill.kpi_items.map((item: any, itemIndex: number) => (
+                                                        <div
+                                                            key={itemIndex}
+                                                            className="flex justify-between items-center p-2 lg:p-2.5 bg-slate-800/50 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors"
+                                                        >
+                                                            <div className="flex items-start gap-2">
+                                                                <span className="text-blue-400 text-xs mt-0.5">•</span>
+                                                                <div className="flex-1">
+                                                                    <p className="text-xs lg:text-sm text-slate-300 font-medium">
+                                                                        {item.name}
+                                                                    </p>
+                                                                    {item.description && (
+                                                                        <p className="text-xs text-slate-500 mt-1">
+                                                                            {item.description}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            {(skill.id === "656" || skill.id === "659") ? (
+                                                                <div>
                                                                     <span className="text-xs">Bị xử lý: </span>
                                                                     <span className="text-sm">{item.total}</span>
                                                                 </div>
-                                                        ) : (
-                                                            <div className="">
-                                                                <span className="text-xs">Tổng: </span>
-                                                                <span className="text-sm">{item.total}</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700 text-center">
-                                                <p className="text-xs lg:text-sm text-slate-400">
-                                                    Chưa có dữ liệu KPI items
-                                                </p>
-                                            </div>
+                                                            ) : (
+                                                                <div>
+                                                                    <span className="text-xs">Tổng: </span>
+                                                                    <span className="text-sm">{item.total}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700 text-center">
+                                                    <p className="text-xs lg:text-sm text-slate-400">Chưa có dữ liệu KPI items</p>
+                                                </div>
+                                            )
                                         )}
                                     </div>
                                 )}
@@ -354,3 +375,4 @@ function SkillsTab({ userInfo }: any) {
 }
 
 export default SkillsTab;
+
