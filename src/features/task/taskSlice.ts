@@ -31,7 +31,8 @@ import {
     getSupportTaskPending,
     supportTaskConfirm,
     supportTaskChecked,
-    getSupportTaskStatus
+    getSupportTaskStatus,
+    getListEmployeeSupport
 } from "./api";
 import { createAsyncReducer, createAsyncReducerDynamic } from "@/src/utils/createAsyncReducer";
 import { initState } from "@/src/services/interface";
@@ -65,7 +66,7 @@ interface TaskState {
     supportTaskPending: initState<any[]>;
     detailSupportTaskPending: initState<any[]>;
     supportTaskStatus:  initState<any[]>;
-
+    listEmployeeSupport: initState<any[]>;
 }
 
 const createInitState = () => ({ data: [], loading: false, error: null, status: null });
@@ -97,6 +98,7 @@ const initialState: TaskState = {
     supportTaskPending: createInitState(),
     detailSupportTaskPending: createInitState(),
     supportTaskStatus:  createInitState(),
+    listEmployeeSupport: createInitState(),
 };
 
 const taskSlice = createSlice({
@@ -129,6 +131,10 @@ const taskSlice = createSlice({
         createAsyncReducer(builder, getListProject, "listProject");
         createAsyncReducer(builder, getChildKpi, "childKpi");
         createAsyncReducer(builder, getListEmployee, "listEmployee");
+        createAsyncReducer(builder, getListEmployeeSupport, "listEmployee");
+
+
+        
         createAsyncReducer(builder, getStatusTask, "statusTask");
         createAsyncReducer(builder, getListDepartment, "listDepartment");
         createAsyncReducer(builder, getListPosition, "listPosition");

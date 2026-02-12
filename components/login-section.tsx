@@ -3,7 +3,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { fetchUserInfo, loginWeb } from "@/src/services/api";
+import { apiLogout, fetchUserInfo, loginWeb } from "@/src/services/api";
 import { Eye, EyeOff, Lock } from "lucide-react";
 import { logout, setToken } from "@/src/features/user/userSlice";
 import { toast } from "react-toastify";
@@ -88,9 +88,11 @@ export default function LoginSection() {
         }
     };
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        const token = localStorage.getItem("userToken");
+        await dispatch(apiLogout({token}) as any)
+        await dispatch(logout());
         localStorage.removeItem("userToken");
-        dispatch(logout());
     };
 
     // Reset error khi user nhập lại

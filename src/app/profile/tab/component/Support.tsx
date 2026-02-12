@@ -8,7 +8,8 @@ import {
     getSupportTaskTypes, 
     getSupportTask, 
     getSupportTaskManager,
-    getSupportTaskPending 
+    getSupportTaskPending, 
+    getListEmployeeSupport
 } from '@/src/features/task/api';
 import {
     Select,
@@ -40,6 +41,7 @@ function Support() {
         supportTask, 
         supportTaskManager,
         supportTaskPending,
+        listEmployeeSupport
     } = useTaskData();
 
     const [showCreateForm, setShowCreateForm] = useState(false);
@@ -64,14 +66,14 @@ function Support() {
         if (!supportTaskTypes) {
             dispatch(getSupportTaskTypes() as any);
         }
-        if (!listEmployee) {
-            dispatch(getListEmployee({
-                position_id: null,
-                department_id: null,
-                filter: null,
-                token
-            }) as any);
-        }
+
+        dispatch(getListEmployeeSupport({
+            position_id: null,
+            department_id: null,
+            filter: null,
+            token
+        }) as any)
+
     
         // Debounce filter changes
         const timer = setTimeout(() => {
