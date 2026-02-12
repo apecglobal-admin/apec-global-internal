@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Meta Link",
-    short_name: "MetaLink",
-    description: "Hệ thống quản lý và theo dõi các dự án web",
+    short_name: "ERP",
+    name: 'ERP APEC GLOBAL',
+    description: 'APEC GLOBAL - Kiến tạo giá trị - Làm Chủ Tương Lai',
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",
