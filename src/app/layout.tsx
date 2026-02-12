@@ -10,12 +10,18 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  manifest:"/manifest.json",
   title: 'ERP APEC GLOBAL',
   description: 'APEC GLOBAL - Kiến tạo giá trị - Làm Chủ Tương Lai',
   generator: 'v0.app',
   icons: {
     icon: '/favi.png',
   },
+  appleWebApp:{
+    capable:true,
+    statusBarStyle:"default",
+    title:"NextApp"
+  }
 }
 
 export default function RootLayout({
