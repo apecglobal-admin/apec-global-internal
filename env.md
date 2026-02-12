@@ -1,0 +1,8 @@
+DATABASE_URL="postgresql://neondb_owner:npg_j3mTncOHAh5Z@ep-wispy-pine-a1vklngi-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+POSTGRES_URL="postgresql://neondb_owner:npg_j3mTncOHAh5Z@ep-wispy-pine-a1vklngi-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+NEXT_PUBLIC_API_URL="http://localhost:3000"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+CLOUDINARY_CLOUD_NAME="dbt97thds"
+CLOUDINARY_API_KEY="757163726792791"
+CLOUDINARY_API_SECRET="LvvaT7kBCpLQRT87NAceVITXWbI"
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="dbt97thds"
