@@ -5,6 +5,31 @@ import { getStatEvent } from "../features/event/api/api";
 import type {RootState} from "../lib/store";
 
 
+export const apiLogout = createAsyncThunk(
+  "user/apiLogout",
+  async (payload: any, thunkAPI) => {
+    try {
+      const { token }: any = payload;
+      const response = await apiAxiosInstance.post(`/auth/logout`,{}, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });      
+      
+      return {
+        data: response.data,
+        status: response.status
+      };
+    } catch (error: any) {
+      // toast.error(error?.response?.data.message)
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
+
+
+
+
 export const updatePassword = createAsyncThunk(
   "user/updatePassword",
   async (payload: any, thunkAPI) => {

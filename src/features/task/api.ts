@@ -217,6 +217,34 @@ export const getListEmployee = createAsyncThunk(
     }
 );
 
+export const getListEmployeeSupport = createAsyncThunk(
+    "task/getListEmployeeSupport",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {position_id, department_id, filter, token} = payload;
+            const params = Object.fromEntries(
+                Object.entries({ position_id, department_id, filter }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/employees/supports/select/options", {
+                params,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                
+            });
+            return {
+                data: response.data,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
 export const getStatusTask = createAsyncThunk(
     "task/getStatusTask",
     async (_, thunkAPI) => {

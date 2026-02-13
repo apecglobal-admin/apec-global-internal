@@ -16,7 +16,7 @@ import {
 import { ArrowLeft, FileText, Building, UserCheck } from "lucide-react";
 import TaskTargetSelector from "@/components/TaskTargetSelector";
 import { useDispatch } from "react-redux";
-import { getListDepartment, getListEmployee, getListProject } from "@/src/features/task/api";
+import { getListDepartment, getListEmployee, getListEmployeeSupport, getListProject } from "@/src/features/task/api";
 import FilterableSelector from "@/components/FilterableSelector";
 
 interface CreateSupportTaskFormProps {
@@ -123,7 +123,7 @@ function CreateSupportTaskForm({
 	}) => {
 		const token = localStorage.getItem("userToken");
 		if (token) {
-			dispatch(getListEmployee({
+			dispatch(getListEmployeeSupport({
 				position_id: filters.position || null,
 				department_id: filters.department || null,
 				filter: filters.search || null,
