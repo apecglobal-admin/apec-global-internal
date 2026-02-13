@@ -1,7 +1,7 @@
 "use client";
 
 import { logout } from "@/src/features/user/userSlice";
-import { fetchUserInfo, getPermissonManager } from "@/src/services/api";
+import { apiLogout, fetchUserInfo, getPermissonManager } from "@/src/services/api";
 import {
     Bell,
     ChevronDown,
@@ -90,11 +90,13 @@ export default function Header() {
             document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleLogout = () => {
-        localStorage.removeItem("userToken");
-        dispatch(logout());
+    const handleLogout = async () => {
+        const token = localStorage.getItem("userToken");
+        await dispatch(apiLogout({token}) as any);
+        await dispatch(logout());
         setIsDropdownOpen(false);
         setIsSidebarOpen(false);
+        localStorage.removeItem("userToken");
         router.push("/login");
     };
 

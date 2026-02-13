@@ -144,7 +144,6 @@ const userSlice = createSlice({
     createAsyncReducer(builder, listTypePersonal, "typePersonal");
     createAsyncReducer(builder, getListStatusPersonal, "listStatusPersonal");
 
-    
     createAsyncReducer(builder, listAchievements, "achievements");
     createAsyncReducer(builder, listProjects, "projects");
     createAsyncReducer(builder, listCard, "cards");
