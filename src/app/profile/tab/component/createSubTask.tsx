@@ -2,30 +2,21 @@ import { useState } from "react";
 import { Plus, Save, X } from "lucide-react";
 import { toast } from "react-toastify";
 
-import {     
+import {
     createSubTask
 } from "@/src/features/task/api";
 import { useDispatch } from "react-redux";
+import { Task } from "@/src/services/interface";
 
 interface StatusTask {
     id: string;
     name: string;
 }
 
-interface Task {
-    id: string;
-    task: {
-        id: number;
-        name: string;
-    };
-    project: {
-        id: number;
-        name: string;
-    };
-    status: {
-        id: number;
-        name: string;
-    };
+interface SubTaskForm {
+    name: string;
+    description: string;
+    target_value: number;
 }
 
 interface CreateSubTaskProps {
@@ -35,52 +26,61 @@ interface CreateSubTaskProps {
     onSuccess?: () => void;
 }
 
+const defaultSubTask: SubTaskForm = { name: "", description: "", target_value: 0 };
+
 function CreateSubTask({ task, statusTask, onClose, onSuccess }: CreateSubTaskProps) {
     const dispatch = useDispatch();
-    const [formData, setFormData] = useState({
-        name: "",
-        process: 0,
-        subtask_status: statusTask?.[0]?.id || "2",
-    });
+    const [subTasks, setSubTasks] = useState<SubTaskForm[]>([{ ...defaultSubTask }]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleInputChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-    ) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: name === "process" ? parseInt(value) || 0 : value
-        }));
+    const formatNumber = (num: number) => num.toLocaleString("vi-VN");
+
+    const handleSubTaskChange = (index: number, field: keyof SubTaskForm, value: string | number) => {
+        setSubTasks(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
+    };
+
+    const addSubTask = () => {
+        setSubTasks(prev => [...prev, { ...defaultSubTask }]);
+    };
+
+    const removeSubTask = (index: number) => {
+        if (subTasks.length === 1) return;
+        setSubTasks(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const resetForm = () => {
+        setSubTasks([{ ...defaultSubTask }]);
     };
 
     const handleSubmit = async () => {
-        if (!formData.name.trim()) {
-            toast.warning("Vui lòng nhập tên nhiệm vụ con");
+        if (subTasks.some(st => !st.name.trim())) {
+            toast.warning("Vui lòng nhập tên cho tất cả nhiệm vụ con");
             return;
         }
-
+    
         setIsSubmitting(true);
         try {
+            const token = localStorage.getItem("userToken");
             const payload = {
-                name: formData.name.trim(),
-                task_id: task.task.id,
-                task_assignment_id: parseInt(task.id),
-                subtask_status: parseInt(formData.subtask_status),
-                process: formData.process,
+                token,
+                subtasks: subTasks.map(st => ({
+                    name: st.name.trim(),
+                    description: st.description,
+                    task_id: task.task.id,
+                    task_assignment_id: parseInt(task.id),
+                    target_value: st.target_value,
+                })),
             };
 
-            // TODO: Dispatch action to create subtask
-
+    
             const result = await dispatch(createSubTask(payload) as any);
-            if (result?.payload.data.success) {
+            if (result?.payload?.data?.success) {
                 toast.success("Tạo nhiệm vụ con thành công!");
                 onSuccess?.();
                 onClose();
             } else {
-                toast.error(result?.payload?.data?.message || "Tạo thất bại")
+                toast.error(result?.payload?.data?.message || "Tạo thất bại");
             }
-            
         } catch (error) {
             console.error("Error creating subtask:", error);
             toast.error("Có lỗi xảy ra khi tạo nhiệm vụ con");
@@ -88,15 +88,6 @@ function CreateSubTask({ task, statusTask, onClose, onSuccess }: CreateSubTaskPr
             setIsSubmitting(false);
         }
     };
-
-    const resetForm = () => {
-        setFormData({
-            name: "",
-            process: 0,
-            subtask_status: statusTask?.[0]?.id || "2",
-        });
-    };
-
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
             <div className="bg-slate-950 border border-slate-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -132,86 +123,100 @@ function CreateSubTask({ task, statusTask, onClose, onSuccess }: CreateSubTaskPr
 
                     {/* Subtask Form */}
                     <div className="space-y-4">
-                        {/* Task Name */}
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-300 mb-2">
-                                Tên nhiệm vụ con <span className="text-red-400">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleInputChange}
-                                placeholder="VD: Phân tích API"
-                                className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
-                            />
-                        </div>
-
-                        {/* Status */}
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-300 mb-2">
-                                Trạng thái
-                            </label>
-                            <select
-                                name="subtask_status"
-                                value={formData.subtask_status}
-                                onChange={handleInputChange}
-                                className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition"
-                            >
-                                {statusTask && statusTask.length > 0 ? (
-                                    statusTask.map((status) => (
-                                        <option key={status.id} value={status.id}>
-                                            {status.name}
-                                        </option>
-                                    ))
-                                ) : (
-                                    <option value="2">Đang thực hiện</option>
-                                )}
-                            </select>
-                        </div>
-
-                        {/* Progress */}
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-300 mb-2">
-                                Tiến độ (%)
-                            </label>
-                            <div className="flex items-center gap-3">
-                                <input
-                                    type="range"
-                                    name="process"
-                                    min="0"
-                                    max="100"
-                                    value={formData.process}
-                                    onChange={handleInputChange}
-                                    className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                                />
-                                <input
-                                    type="number"
-                                    name="process"
-                                    min="0"
-                                    max="100"
-                                    value={formData.process}
-                                    onChange={handleInputChange}
-                                    className="w-20 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm text-center focus:outline-none focus:border-blue-500 transition"
-                                />
-                            </div>
-                            
-                            {/* Progress Preview */}
-                            <div className="mt-3">
-                                <div className="flex justify-between items-center mb-1">
-                                    <span className="text-xs text-slate-500">Xem trước</span>
-                                    <span className="text-xs font-bold text-blue-400">
-                                        {formData.process}%
-                                    </span>
+                        {subTasks.map((subTask, index) => (
+                            <div key={index} className="border border-slate-700 rounded-lg p-4 space-y-3">
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-xs font-bold text-blue-400">Nhiệm vụ con #{index + 1}</span>
+                                    {subTasks.length > 1 && (
+                                        <button
+                                            onClick={() => removeSubTask(index)}
+                                            className="text-slate-500 hover:text-red-400 transition"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    )}
                                 </div>
-                                <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full transition-all"
-                                        style={{ width: `${formData.process}%` }}
-                                    ></div>
+
+                                {/* Name */}
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-300 mb-2">
+                                        Tên nhiệm vụ con <span className="text-red-400">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={subTask.name}
+                                        onChange={e => handleSubTaskChange(index, "name", e.target.value)}
+                                        placeholder="VD: Phân tích API"
+                                        className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+                                    />
+                                </div>
+
+                                {/* Description */}
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-300 mb-2">
+                                        Mô tả
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={subTask.description}
+                                        onChange={e => handleSubTaskChange(index, "description", e.target.value)}
+                                        placeholder="Mô tả nhiệm vụ"
+                                        className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+                                    />
+                                </div>
+
+                                {/* Target Value */}
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-300 mb-2">
+                                        {task.units?.name === "%" ? `Tiến độ (${task.units?.name})` : `Giá trị cần đạt (${task.units?.name || "%"})`}
+                                    </label>
+                                    {task.units?.name === "%" || task.units?.name === null ? (
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max="100"
+                                                value={subTask.target_value}
+                                                onChange={e => handleSubTaskChange(index, "target_value", parseInt(e.target.value) || 0)}
+                                                className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                            />
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                max="100"
+                                                value={subTask.target_value}
+                                                onChange={e => handleSubTaskChange(index, "target_value", parseInt(e.target.value) || 0)}
+                                                className="w-20 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:outline-none focus:border-blue-500 transition"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                max={task.target_value}
+                                                value={subTask.target_value}
+                                                onChange={e => handleSubTaskChange(index, "target_value", parseInt(e.target.value) || 0)}
+                                                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition"
+                                                placeholder={`Nhập giá trị (tối đa ${formatNumber(Number(task.target_value))})`}
+                                            />
+                                            <div className="text-xs text-slate-400">
+                                                Mục tiêu: {formatNumber(Number(task.target_value))} {task.units?.name}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                        </div>
+                        ))}
+
+                        {/* Add button */}
+                        <button
+                            onClick={addSubTask}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-dashed border-slate-600 hover:border-blue-500 text-slate-400 hover:text-blue-400 rounded-lg transition"
+                        >
+                            <Plus size={16} />
+                            Thêm nhiệm vụ con
+                        </button>
                     </div>
                 </div>
 
@@ -225,11 +230,11 @@ function CreateSubTask({ task, statusTask, onClose, onSuccess }: CreateSubTaskPr
                     </button>
                     <button
                         onClick={handleSubmit}
-                        disabled={!formData.name.trim() || isSubmitting}
+                        disabled={subTasks.every(st => !st.name.trim()) || isSubmitting}
                         className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition"
                     >
                         <Save size={18} />
-                        {isSubmitting ? "Đang tạo..." : "Tạo nhiệm vụ con"}
+                        {isSubmitting ? "Đang tạo..." : `Tạo ${subTasks.length > 1 ? `${subTasks.length} ` : ""}nhiệm vụ con`}
                     </button>
                 </div>
             </div>

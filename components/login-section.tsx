@@ -79,7 +79,7 @@ export default function LoginSection() {
                 const token = res.payload.data.token;
                 dispatch(setToken(token));
                 await dispatch(fetchUserInfo(res.payload.data.token) as any);
-                toast.success(res.payload.data.message);
+                // toast.success(res.payload.data.message);
             } else{
                 toast.error(res.payload.message);
             }

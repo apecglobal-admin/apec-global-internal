@@ -57,20 +57,9 @@ export const createSubTask = createAsyncThunk(
     "task/createSubTask",
     async (payload: any, thunkAPI) => {
         try {
-            const { 
-                name, 
-                task_id, 
-                subtask_status,
-                process, 
-                task_assignment_id,
-                token
-            }: any = payload;
+            const { subtasks, token} : any = payload;
             const response = await apiAxiosInstance.post("/tasks/sub/create",{ 
-                name, 
-                task_id, 
-                subtask_status,
-                process, 
-                task_assignment_id
+                subtasks
             }, {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -994,6 +983,34 @@ export const exportTemplate  = createAsyncThunk(
             );
         }
     }
+);
+
+export const importTemplate  = createAsyncThunk(
+    "task/importTemplate",
+    async (payload: any, thunkAPI) => {
+        try {
+            const { formData, token }: any = payload;
+            const response = await apiAxiosInstance.post("/tasks/import/excel",
+                formData,
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "multipart/form-data",
+                  },
+                }
+            );
+            
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+
 );
 
 
