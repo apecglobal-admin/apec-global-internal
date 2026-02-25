@@ -51,6 +51,8 @@ interface SubTask {
     name: string;
     description?: string;
     process: number;
+    target_value: number;
+    value: number;
     status: {
         id: number;
         name: string;
@@ -69,7 +71,7 @@ function TaskDetail({
 }: TaskDetailProps) {
     const dispatch = useDispatch();
     const { imageTask, fileTask, listSubTask } = useTaskData();
-
+    
     const progress = calculateProgress(task);
     const [isEditing, setIsEditing] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState(task.status.id);
@@ -92,7 +94,7 @@ function TaskDetail({
     const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [showTaskLogs, setShowTaskLogs] = useState(false);
     const [actualValue, setActualValue] = useState<number>(0);
-
+    
     useEffect(() => {
         if (!task) return;
 
@@ -437,6 +439,7 @@ function TaskDetail({
         );
     };
 
+    
     return (
         <div className="space-y-4 sm:space-y-6">
             <div className="flex items-center justify-between">
@@ -572,12 +575,19 @@ function TaskDetail({
                                                         {subtask.description}
                                                     </p>
                                                 )}
-
+                                                <div className="flex items-center gap-3 mt-2">
+                                                    <div className="flex items-center gap-1.5 text-xs">
+                                                        <span className="text-slate-500">Mục tiêu:</span>
+                                                        <span className="text-blue-400 font-semibold">
+                                                        {formatNumber(Number(subtask.target_value))} {task.units?.name}
+                                                        </span>
+                                                    </div>
+                                                </div>
                                                 <div className="flex items-center gap-3 mt-2">
                                                     <div className="flex items-center gap-1.5 text-xs">
                                                         <span className="text-slate-500">Tiến độ:</span>
                                                         <span className="text-blue-400 font-semibold">
-                                                            {subtask.process}%
+                                                        {formatNumber(Number(subtask.value))} {task.units?.name}
                                                         </span>
                                                     </div>
                                                     <div className="flex-1 max-w-[100px] h-1.5 bg-slate-800 rounded-full overflow-hidden">
@@ -877,7 +887,6 @@ function TaskDetail({
                                 </div>
                             )}
 
-                            {/* Progress Input */}
                             {/* Progress Input */}
                             <div>
                                 <label className="block text-xs font-semibold text-slate-300 mb-2">

@@ -33,7 +33,7 @@ export default function LoginPage() {
         const token = res.payload.data.token
         dispatch(setToken(token));
         router.push("/");
-        toast.success(res.payload.data.message);
+        // toast.success(res.payload.data.message);
       }else{
         toast.error(res.payload.message);
 

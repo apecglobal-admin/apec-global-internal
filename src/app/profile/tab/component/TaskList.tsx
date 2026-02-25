@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { deleteTaskAssign, exportTemplate, getDetailListTaskAssign, getListProject, getPriorityTask, getStatusTask } from '@/src/features/task/api';
+import { deleteTaskAssign, exportTemplate, getDetailListTaskAssign, getListProject, getPriorityTask, getStatusTask, importTemplate } from '@/src/features/task/api';
 import { useTaskData } from '@/src/hooks/taskhook';
 import { Download, Plus, Search, Upload, X, XCircle } from 'lucide-react';
 import PopupComponent, { usePopup } from "@/components/PopupComponent";
@@ -14,6 +14,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 import {
     Select,
     SelectContent,
@@ -51,6 +58,8 @@ const TaskListAssign: React.FC = () => {
     
     const [searchFilter, setSearchFilter] = useState<string>("");
     const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     useEffect(() => {
 
@@ -341,8 +350,70 @@ const TaskListAssign: React.FC = () => {
     };
 
     const handleImport = () => {
+        fileInputRef.current?.click();
+    };
 
-    }
+    // const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     const file = e.target.files?.[0];
+    //     if (!file) return;
+    
+    //     const token = localStorage.getItem("userToken");
+    //     const formData = new FormData();
+    //     formData.append("file", file);
+    
+    //     try {
+    //         const res = await dispatch(importTemplate({ formData, token }) as any);
+            
+    //         if (res.payload?.data?.success) {
+    //             toast.success(res.payload.data.message || "Import thành công");
+    //             dispatch(getDetailListTaskAssign({
+    //                 page: currentPage,
+    //                 token,
+    //                 key: "listDetailTaskAssign"
+    //             }) as any);
+    //         } else {
+    //             toast.error(res.payload?.data?.message || res.payload?.message || "Import thất bại");
+    //         }
+    //     } catch (error) {
+    //         toast.error("Import thất bại");
+    //     } finally {
+    //         // Reset input để có thể chọn lại cùng file
+    //         e.target.value = "";
+    //     }
+    // };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setSelectedFile(file);
+        e.target.value = "";
+    };
+
+    const handleConfirmImport = async () => {
+        if (!selectedFile) return;
+    
+        const token = localStorage.getItem("userToken");
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+    
+        try {
+            const res = await dispatch(importTemplate({ formData, token }) as any);
+            
+            if (res.payload?.status === 200 || res.payload?.status === 201) {
+                toast.success(res.payload.data.message || "Import thành công");
+                dispatch(getDetailListTaskAssign({
+                    page: currentPage,
+                    token,
+                    key: "listDetailTaskAssign"
+                }) as any);
+                setSelectedFile(null);
+            } else {
+                toast.error(res.payload?.data?.message || res.payload?.message || "Import thất bại");
+            }
+        } catch (error) {
+            toast.error("Import thất bại");
+        }
+    };
     
     const renderFilter = () => {
         return(
@@ -499,20 +570,67 @@ const TaskListAssign: React.FC = () => {
             <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-5'>
                 <h1 className="md:text-2xl text-xl  font-bold text-white mb-6">Công việc đã giao</h1>
                 <div className='flex items-center gap-1'>
-                    <button
-                        onClick={() => handleExport()}
-                        className="flex items-center justify-center gap-2 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition shadow-lg shadow-blue-500/30 w-full sm:w-auto"
-                    >
-                        <Download size={18} />
-                        Export
-                    </button>
-                    {/* <button
-                        onClick={() => handleImport()}
-                        className="flex items-center justify-center gap-2 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition shadow-lg shadow-blue-500/30 w-full sm:w-auto"
-                    >
-                        <Upload size={18} />
-                        Import
-                    </button> */}
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <button className="flex items-center justify-center gap-2 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition shadow-lg shadow-blue-500/30 w-full sm:w-auto">
+                        <Plus size={18} />
+                        Giao nhiều nhiệm vụ
+                        </button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-slate-800 border-slate-700 text-white">
+                        <DialogHeader>
+                            <DialogTitle className="text-white">Tạo danh sách công việc</DialogTitle>
+                        </DialogHeader>
+                        <div className="flex flex-col sm:flex-row gap-3 mt-2">
+                            <button
+                            onClick={handleExport}
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-blue-500/30 flex-1"
+                            >
+                            <Download size={18} />
+                            Export
+                            </button>
+                            <button
+                            onClick={handleImport}
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition shadow-lg shadow-green-500/30 flex-1"
+                            >
+                            <Upload size={18} />
+                            Import
+                            </button>
+                        </div>
+
+                        {/* Hiển thị file đã chọn */}
+                        {selectedFile && (
+                            <div className="mt-3 p-3 bg-slate-700/50 border border-slate-600 rounded-lg">
+                            <p className="text-xs text-slate-400 mb-2">File đã chọn:</p>
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
+                                <div className="p-1.5 bg-green-500/20 rounded">
+                                    <Upload size={14} className="text-green-400 shrink-0" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-sm text-white font-medium truncate">{selectedFile.name}</p>
+                                    <p className="text-xs text-slate-400">
+                                    {(selectedFile.size / 1024).toFixed(1)} KB
+                                    </p>
+                                </div>
+                                </div>
+                                <button
+                                onClick={() => setSelectedFile(null)}
+                                className="text-slate-400 hover:text-red-400 transition shrink-0"
+                                >
+                                <X size={16} />
+                                </button>
+                            </div>
+                            <button
+                                onClick={handleConfirmImport}
+                                className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition"
+                            >
+                                Xác nhận Import
+                            </button>
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
 
                     <button
                         onClick={() => setShowAssignTask(true)}
@@ -528,6 +646,13 @@ const TaskListAssign: React.FC = () => {
                     </button>
                 </div>
             </div>
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                className="hidden"
+                onChange={handleFileChange}
+            />
             <PopupComponent isOpen={isOpen} onClose={closePopup} {...popupProps} />
 
             <div className="flex items-center justify-between mb-4">
