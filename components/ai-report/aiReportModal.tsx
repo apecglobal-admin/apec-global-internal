@@ -10,6 +10,7 @@ import {
   NTLReportItem,
   GenericReportItem,
 } from "@/src/hooks/aiReportHook";
+import apiAxiosInstance from "@/src/services/axios";
 import { toast } from "react-toastify";
 import { ReportInstructionButton } from "./reportInstructions";
 
@@ -19,9 +20,10 @@ interface AIReportModalProps {
   transcribedText: string;
   setTranscribedText: (text: string) => void;
   error: string | null;
+  clearError: () => void;
   isSending: boolean;
   handleFormat: () => void;
-  handleSave: (result?: AIReportResponse) => void;
+  handleSave: (result?: AIReportResponse, modalParentTasks?: any[]) => void;
   isRecording: boolean;
   isProcessing: boolean;
   isFormatting: boolean;
@@ -93,12 +95,53 @@ const ReportTextarea = ({
   </div>
 );
 
+const ReportSelect = ({
+  label,
+  value,
+  onChange,
+  options,
+  disabled = false,
+  placeholder = "Chọn...",
+}: {
+  label: string;
+  value: string;
+  onChange: (val: string) => void;
+  options: { value: string; label: string }[];
+  disabled?: boolean;
+  placeholder?: string;
+}) => (
+  <div className="space-y-1 m-0">
+    <label className="text-xs font-semibold text-blue-200">{label}</label>
+    <select
+      value={value || ""}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
+      className={cn(
+        "w-full bg-slate-800/50 text-slate-200 text-sm px-2.5 py-1.5 rounded-lg border border-slate-500/50 outline-none mt-1",
+        disabled
+          ? "opacity-50 cursor-not-allowed bg-slate-900/50"
+          : "focus:border-blue-500/50",
+      )}
+    >
+      <option value="" disabled hidden>
+        {placeholder}
+      </option>
+      {options.map((opt) => (
+        <option key={opt.value} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  </div>
+);
+
 export const AIReportModal = ({
   isOpen,
   onClose,
   transcribedText,
   setTranscribedText,
   error,
+  clearError,
   isSending,
   handleFormat,
   handleSave,
@@ -109,6 +152,8 @@ export const AIReportModal = ({
   setReportResult,
   isSuccess = false,
 }: AIReportModalProps) => {
+  const [parentTasks, setParentTasks] = useState<any[]>([]);
+
   useEffect(() => {
     if (isSuccess) {
       toast.success("Đã lưu báo cáo thành công!");
@@ -116,10 +161,31 @@ export const AIReportModal = ({
     }
   }, [isSuccess, onClose]);
 
+  useEffect(() => {
+    if (isOpen) {
+      const token = localStorage.getItem("userToken");
+      if (token) {
+        apiAxiosInstance
+          .get("/profile/tasks", {
+            params: { page: 1, limit: 1000, statusFilter: 2 },
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          .then((res) => {
+            setParentTasks(res.data?.data || []);
+          })
+          .catch((err) => {
+            console.error("Failed to fetch parent tasks:", err);
+          });
+      }
+    }
+  }, [isOpen]);
+
   // Generic Render helper for 'other' project types
   const renderOtherReport = (report: GenericReportItem, index: number) => {
+    console.log("parentTasks: ", parentTasks);
     const isUpdate = report.action === "update";
-    const canEdit = !isUpdate; // If insert, can edit all. If update, limited.
+    const isParent = report.targetType === "parent";
+    const canEditName = !isUpdate && !isParent; // If insert subtask, can edit name
 
     // Helper to update specific data field
     const updateDataField = (field: keyof typeof report.data, value: any) => {
@@ -135,12 +201,22 @@ export const AIReportModal = ({
       setReportResult({ ...reportResult, reports: newReports });
     };
 
+    const updateParentTaskId = (value: string) => {
+      if (!reportResult || reportResult.report_project !== "other") return;
+      const newReports = [...reportResult.reports];
+      newReports[index] = {
+        ...newReports[index],
+        parent_task_id: value,
+      };
+      setReportResult({ ...reportResult, reports: newReports });
+    };
+
     return (
       <div
         key={index}
         className="bg-slate-800/30 p-4 rounded-xl border border-white/40 space-y-4"
       >
-        <div className="flex items-center border-b border-white/10 pb-2">
+        <div className="flex flex-wrap items-center border-b border-white/10 pb-2 gap-y-1">
           <span
             className={cn(
               "text-xs px-2 py-0.5 mr-2 rounded-md border",
@@ -151,80 +227,79 @@ export const AIReportModal = ({
           >
             {report.action === "insert" ? "Thêm mới" : "Cập nhật"}
           </span>
+          <span
+            className={cn(
+              "text-xs px-2 py-0.5 mr-2 rounded-md border bg-blue-500/20 text-blue-300 border-blue-500/30",
+            )}
+          >
+            {isParent ? "Nhiệm vụ cha" : "Nhiệm vụ con"}
+          </span>
           <h4
             className={cn(
-              "text-xs flex items-center gap-2",
+              "text-xs flex items-center gap-2 w-full md:w-auto",
               report.action === "insert" ? "text-green-300" : "text-amber-300",
             )}
           >
-            {report.data.task_name}
+            {isParent
+              ? `ID: ${report.parent_task_id}`
+              : report.data.task_name || "Nhiệm vụ con mới"}
           </h4>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ReportInput
-            label="Dự án"
-            value={report.data.project}
-            onChange={(v) => updateDataField("project", v)}
-            disabled={!canEdit}
-          />
-          <ReportInput
-            label="Phân loại"
-            value={report.data.category}
-            onChange={(v) => updateDataField("category", v)}
-            disabled={!canEdit}
-          />
-          <ReportInput
-            label="Công việc"
-            value={report.data.task_name}
-            onChange={(v) => updateDataField("task_name", v)}
-            disabled={!canEdit}
-          />
-          <ReportInput
-            label="Số lượng"
-            value={report.data.quantity}
-            onChange={(v) => updateDataField("quantity", v)}
-            type="number"
-            disabled={!canEdit}
-          />
-        </div>
-        {/* Always Editable Fields for Update: Progress & Status */}
-        <div className="grid grid-cols-2 gap-4">
-          <ReportInput
-            label="Tiến độ"
-            value={report.data.progress}
-            onChange={(v) => updateDataField("progress", v)}
-            // Always editable
-          />
-          <ReportInput
-            label="Trạng thái"
-            value={report.data.status}
-            onChange={(v) => updateDataField("status", v)}
-            // Always editable
-          />
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
+          {!isParent && (
+            <ReportSelect
+              label="Nhiệm vụ cha"
+              value={report.parent_task_id || ""}
+              onChange={updateParentTaskId}
+              options={parentTasks.map((t: any) => ({
+                value: t?.id?.toString() || "",
+                label: t?.task?.name || "Nhiệm vụ không xác định",
+              }))}
+              placeholder="Chọn nhiệm vụ cha..."
+            />
+          )}
 
-        {/* Start/End Date */}
-        <div className="grid grid-cols-2 gap-4">
-          <ReportInput
-            label="Ngày bắt đầu"
-            value={report.data.start_date}
-            onChange={(v) => updateDataField("start_date", v)}
-            disabled={!canEdit}
+          {!isParent && (
+            <ReportInput
+              label="Tên công việc"
+              value={report.data.task_name || ""}
+              onChange={(v) => updateDataField("task_name", v)}
+              disabled={!canEditName}
+            />
+          )}
+
+          <ReportSelect
+            label="Trạng thái"
+            value={report.data.status?.toString() || ""}
+            onChange={(v) => updateDataField("status", Number(v))}
+            options={[
+              { value: "2", label: "Đang thực hiện" },
+              { value: "3", label: "Tạm dừng" },
+              { value: "4", label: "Hoàn thành" },
+              { value: "5", label: "Hủy" },
+            ]}
+            placeholder="Chọn trạng thái..."
           />
-          <ReportInput
-            label="Deadline"
-            value={report.data.deadline}
-            onChange={(v) => updateDataField("deadline", v)}
-            disabled={!canEdit}
-          />
+
+          {!isParent && (
+            <ReportInput
+              label="Tiến độ (%)"
+              value={report.data.progress ?? ""}
+              onChange={(v) => updateDataField("progress", v)}
+              type="number"
+            />
+          )}
+
+          {isParent && (
+            <ReportInput
+              label="Kết quả đạt được"
+              value={report.data.achieved_value ?? ""}
+              onChange={(v) => updateDataField("achieved_value", v)}
+              type="number"
+            />
+          )}
         </div>
-        {report.missing_deadline && (
-          <div className="text-red-400 text-xs flex items-center gap-1">
-            <AlertCircle size={12} />
-            <span>Vui lòng cập nhật deadline</span>
-          </div>
-        )}
       </div>
     );
   };
@@ -364,6 +439,9 @@ export const AIReportModal = ({
               animate={{ y: 0, scale: 1 }}
               exit={{ y: 30, scale: 0.9 }}
               className="relative z-50 bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-2xl shadow-2xl p-6 w-full pointer-events-auto max-h-[75vh] md:max-h-[85vh] overflow-y-auto theme-scrollbar"
+              onClick={() => {
+                if (error) clearError();
+              }}
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -378,13 +456,6 @@ export const AIReportModal = ({
               </div>
 
               <div className="min-h-[100px] flex flex-col items-center justify-center text-center">
-                {/* Error State */}
-                {error && error !== "Vui lòng nói ít nhất 3 giây." && (
-                  <div className="text-orange-400 space-y-2">
-                    <AlertCircle className="w-8 h-8 mx-auto" />
-                    <p>{error}</p>
-                  </div>
-                )}
                 {/* Input State: Show only if NO result yet */}
                 {!reportResult && (
                   <div className="w-full text-left">
@@ -414,11 +485,17 @@ export const AIReportModal = ({
                         )}
                       </button>
                     </div>
+                    {error && error !== "Vui lòng nói ít nhất 3 giây." && (
+                      <div className="flex items-center gap-2 text-orange-400 mt-2 text-sm">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <p>{error}</p>
+                      </div>
+                    )}
                   </div>
                 )}
                 {/* Preview State */}
                 {reportResult && (
-                  <div className="w-full text-left space-y-8">
+                  <div className="w-full text-left space-y-4">
                     {reportResult.report_project === "ntl" && (
                       <div className="space-y-6">
                         {reportResult.reports.map((report, idx) =>
@@ -435,14 +512,21 @@ export const AIReportModal = ({
                       </div>
                     )}
 
-                    <div className="mt-4 pt-3 border-t border-slate-700 flex justify-between items-center">
+                    {error && error !== "Vui lòng nói ít nhất 3 giây." && (
+                      <div className="flex items-center gap-2 text-orange-400 text-sm">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <p>{error}</p>
+                      </div>
+                    )}
+
+                    <div className="mt-2 pt-3 border-t border-slate-700 flex justify-between items-center">
                       <ReportInstructionButton />
                       <button
                         className={cn(
                           "px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-md transition-colors font-medium cursor-pointer",
                           isSending && "opacity-70 cursor-not-allowed",
                         )}
-                        onClick={() => handleSave(reportResult)}
+                        onClick={() => handleSave(reportResult, parentTasks)}
                         disabled={isSending}
                       >
                         {isSending ? (
