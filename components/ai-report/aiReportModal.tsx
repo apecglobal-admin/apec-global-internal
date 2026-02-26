@@ -20,9 +20,10 @@ interface AIReportModalProps {
   transcribedText: string;
   setTranscribedText: (text: string) => void;
   error: string | null;
+  clearError: () => void;
   isSending: boolean;
   handleFormat: () => void;
-  handleSave: (result?: AIReportResponse) => void;
+  handleSave: (result?: AIReportResponse, modalParentTasks?: any[]) => void;
   isRecording: boolean;
   isProcessing: boolean;
   isFormatting: boolean;
@@ -140,6 +141,7 @@ export const AIReportModal = ({
   transcribedText,
   setTranscribedText,
   error,
+  clearError,
   isSending,
   handleFormat,
   handleSave,
@@ -214,7 +216,7 @@ export const AIReportModal = ({
         key={index}
         className="bg-slate-800/30 p-4 rounded-xl border border-white/40 space-y-4"
       >
-        <div className="flex items-center border-b border-white/10 pb-2">
+        <div className="flex flex-wrap items-center border-b border-white/10 pb-2 gap-y-1">
           <span
             className={cn(
               "text-xs px-2 py-0.5 mr-2 rounded-md border",
@@ -234,7 +236,7 @@ export const AIReportModal = ({
           </span>
           <h4
             className={cn(
-              "text-xs flex items-center gap-2",
+              "text-xs flex items-center gap-2 w-full md:w-auto",
               report.action === "insert" ? "text-green-300" : "text-amber-300",
             )}
           >
@@ -244,7 +246,7 @@ export const AIReportModal = ({
           </h4>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
           {!isParent && (
             <ReportSelect
               label="Nhiệm vụ cha"
@@ -437,6 +439,9 @@ export const AIReportModal = ({
               animate={{ y: 0, scale: 1 }}
               exit={{ y: 30, scale: 0.9 }}
               className="relative z-50 bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-2xl shadow-2xl p-6 w-full pointer-events-auto max-h-[75vh] md:max-h-[85vh] overflow-y-auto theme-scrollbar"
+              onClick={() => {
+                if (error) clearError();
+              }}
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -451,13 +456,6 @@ export const AIReportModal = ({
               </div>
 
               <div className="min-h-[100px] flex flex-col items-center justify-center text-center">
-                {/* Error State */}
-                {error && error !== "Vui lòng nói ít nhất 3 giây." && (
-                  <div className="text-orange-400 space-y-2">
-                    <AlertCircle className="w-8 h-8 mx-auto" />
-                    <p>{error}</p>
-                  </div>
-                )}
                 {/* Input State: Show only if NO result yet */}
                 {!reportResult && (
                   <div className="w-full text-left">
@@ -487,11 +485,17 @@ export const AIReportModal = ({
                         )}
                       </button>
                     </div>
+                    {error && error !== "Vui lòng nói ít nhất 3 giây." && (
+                      <div className="flex items-center gap-2 text-orange-400 mt-2 text-sm">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <p>{error}</p>
+                      </div>
+                    )}
                   </div>
                 )}
                 {/* Preview State */}
                 {reportResult && (
-                  <div className="w-full text-left space-y-8">
+                  <div className="w-full text-left space-y-4">
                     {reportResult.report_project === "ntl" && (
                       <div className="space-y-6">
                         {reportResult.reports.map((report, idx) =>
@@ -508,14 +512,21 @@ export const AIReportModal = ({
                       </div>
                     )}
 
-                    <div className="mt-4 pt-3 border-t border-slate-700 flex justify-between items-center">
+                    {error && error !== "Vui lòng nói ít nhất 3 giây." && (
+                      <div className="flex items-center gap-2 text-orange-400 text-sm">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <p>{error}</p>
+                      </div>
+                    )}
+
+                    <div className="mt-2 pt-3 border-t border-slate-700 flex justify-between items-center">
                       <ReportInstructionButton />
                       <button
                         className={cn(
                           "px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-md transition-colors font-medium cursor-pointer",
                           isSending && "opacity-70 cursor-not-allowed",
                         )}
-                        onClick={() => handleSave(reportResult)}
+                        onClick={() => handleSave(reportResult, parentTasks)}
                         disabled={isSending}
                       >
                         {isSending ? (

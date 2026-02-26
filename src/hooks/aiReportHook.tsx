@@ -217,6 +217,7 @@ export const useAIReport = (
   // Execute actual task operations for "other" reports
   const executeTaskOperations = async (
     reports: GenericReportItem[],
+    modalParentTasks?: any[],
   ): Promise<{ successes: number; failures: number }> => {
     const token = localStorage.getItem("userToken");
     let successes = 0;
@@ -229,8 +230,13 @@ export const useAIReport = (
         continue;
       }
 
+      // Use modalParentTasks if available, otherwise fallback to Redux parentTasks
+      const tasksToUse = modalParentTasks?.length
+        ? modalParentTasks
+        : parentTasks;
+
       // Find the parent task - parent_task_id from dropdown is task_assignment_id (t.id)
-      const parentTask = parentTasks.find(
+      const parentTask = tasksToUse.find(
         (t: any) => t?.id?.toString() === report.parent_task_id,
       );
 
@@ -328,20 +334,27 @@ export const useAIReport = (
     return { successes, failures };
   };
 
-  const handleSave = async (updatedResult?: AIReportResponse) => {
+  const handleSave = async (
+    updatedResult?: AIReportResponse,
+    modalParentTasks?: any[],
+  ) => {
     const dataToSave = updatedResult || reportResult;
     if (!dataToSave) return;
 
     setIsSending(true);
+    // Force React to paint the loading state before executing heavy synchronous/asynchronous tasks
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
     try {
       if (dataToSave.report_project === "other") {
         // For "other" reports: execute actual task operations, no webhook
         const { successes, failures } = await executeTaskOperations(
           dataToSave.reports as GenericReportItem[],
+          modalParentTasks,
         );
 
         if (failures > 0 && successes === 0) {
-          setError("Tất cả thao tác task đều thất bại. Vui lòng thử lại.");
+          setError("Đã xảy ra lỗi hệ thống. Vui lòng thử lại.");
           return;
         }
 
@@ -392,6 +405,7 @@ export const useAIReport = (
     transcribedText,
     setTranscribedText,
     error,
+    setError,
     isSending,
     startRecording,
     stopRecording,
