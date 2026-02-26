@@ -241,7 +241,10 @@ export const AIReportModal = ({
             )}
           >
             {isParent
-              ? `ID: ${report.parent_task_id}`
+              ? parentTasks.find(
+                  (t: any) =>
+                    t?.id?.toString() === report.parent_task_id?.toString(),
+                )?.task?.name || `ID: ${report.parent_task_id}`
               : report.data.task_name || "Nhiệm vụ con mới"}
           </h4>
         </div>
