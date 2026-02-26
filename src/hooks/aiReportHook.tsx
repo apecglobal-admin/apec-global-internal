@@ -187,7 +187,12 @@ export const useAIReport = (
 
     setIsFormatting(true);
     try {
-      const response = await formatReport(transcribedText, userName);
+      const token = localStorage.getItem("userToken");
+      const response = await formatReport(
+        transcribedText,
+        userName,
+        token || "",
+      );
       if (
         response.data &&
         (response.data.report_project === "ntl" ||
@@ -369,6 +374,7 @@ export const useAIReport = (
           onSuccess();
         }
       } else {
+        const token = localStorage.getItem("userToken");
         // For NTL reports: send to webhook as before
         await saveReport(
           dataToSave,

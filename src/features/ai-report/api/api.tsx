@@ -15,10 +15,15 @@ export const sendAudioToGemini = async (audioBlob: Blob, context: string) => {
 };
 
 // Step 1: Format Report (Send to n8n for analysis)
-export const formatReport = async (text: string, userName: string) => {
+export const formatReport = async (
+  text: string,
+  userName: string,
+  token?: string,
+) => {
   return await axios.post("/api/webhook", {
     text: text,
     userName: userName,
+    token: token,
     timestamp: formatDateTime(new Date()),
   });
 };
@@ -29,7 +34,7 @@ export const saveReport = async (
   userName: string,
   email: string,
   department: string,
-  position: string
+  position: string,
 ) => {
   return await axios.post("/api/webhook/save", {
     reports: data,
