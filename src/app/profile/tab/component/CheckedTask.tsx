@@ -102,7 +102,7 @@ function CheckedTask() {
     const [priorityFilter, setPriorityFilter] = useState<string>("all");
     const [searchFilter, setSearchFilter] = useState<string>("");
     const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
-    const [showFilter, setShowFilter] = useState(true);
+    const [showFilter, setShowFilter] = useState(false);
 
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isSelectMode, setIsSelectMode] = useState(false);
@@ -557,7 +557,7 @@ function CheckedTask() {
     const renderFilter = () => {
         return(
             <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4 mb-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
                     {/* Task Type Filter */}
                     <div className="space-y-1.5 sm:space-y-2">
                         <label className="text-xs sm:text-sm font-semibold text-slate-300">
@@ -730,7 +730,7 @@ function CheckedTask() {
                                         </p>
                                     </div>
                                 </div>
-                                <div className="flex gap-2 w-full sm:w-auto">
+                                <div className="flex justify-center gap-2 w-full sm:w-auto">
                                     <button
                                         onClick={() => enterSelectMode('accept')}
                                         className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition text-sm font-medium"

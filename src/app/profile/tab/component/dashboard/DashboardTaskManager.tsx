@@ -24,7 +24,7 @@ const MONTH_NAMES = [
 function DashboardTaskManager() {
     const dispatch = useDispatch();
     const { listDashboardManagerTasks } = useDashboardData();
-    const [isVisible, setIsVisible] = useState(true);
+    const [isVisible, setIsVisible] = useState(false);
     const [isKpiDropdownOpen, setIsKpiDropdownOpen] = useState(false);
 
     // ── Filter state ─────────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ function DashboardTaskManager() {
 
     return (
         <div>
-            <div className="space-y-1 mb-4">
+            <div className="space-y-0.5 mb-4">
                 <button
                     onClick={() => setIsVisible(!isVisible)}
                     className="w-full flex items-center justify-between bg-slate-800 hover:bg-slate-700 rounded-lg px-4 py-2 transition-all duration-200"
@@ -88,19 +88,19 @@ function DashboardTaskManager() {
                 </button>
 
                 {isVisible && (
-                    <div className="space-y-1">
-                        <div className="flex items-center justify-between bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-2 gap-2">
+                    <div className="space-y-0.5">
+                        <div className="flex items-center justify-between bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-1.5 gap-2">
                             <div className="flex items-center gap-2 shrink-0">
                                 <div className="p-1 bg-sky-600/20 rounded">
-                                    <CalendarDays className="h-4 w-4 text-sky-400" />
+                                    <CalendarDays className="h-3.5 w-3.5 text-sky-400" />
                                 </div>
-                                <span className="text-xs font-medium text-slate-300">Lọc theo tháng</span>
+                                <span className="hidden sm:inline text-[10px] font-medium text-slate-300">Lọc theo tháng</span>
                             </div>
 
                             <div className="flex items-center gap-1.5">
                                 <button
                                     onClick={() => setSelectedMonth(null)}
-                                    className={`px-2 py-0.5 rounded text-xs font-semibold transition-colors ${
+                                    className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
                                         selectedMonth === null
                                             ? 'text-white bg-green-500'
                                             : 'bg-slate-700 text-slate-400 hover:bg-slate-600 hover:text-slate-200'
@@ -118,7 +118,7 @@ function DashboardTaskManager() {
                                             : 'hover:bg-slate-700'
                                     }`}
                                 >
-                                    <ChevronLeft className="h-4 w-4 text-slate-400" />
+                                    <ChevronLeft className="h-3.5 w-3.5 text-slate-400" />
                                 </button>
 
                                 <button
@@ -128,13 +128,13 @@ function DashboardTaskManager() {
                                             setSelectedYear(today.getFullYear());
                                         }
                                     }}
-                                    className={`min-w-[126px] text-center px-1 py-0.5 rounded transition-colors ${
+                                    className={`min-w-[110px] text-center px-1 py-0.5 rounded transition-colors ${
                                         selectedMonth === null
                                             ? 'bg-slate-700/30 cursor-pointer hover:bg-slate-700/60'
                                             : 'bg-slate-700/60'
                                     }`}
                                 >
-                                    <span className={`text-xs font-bold ${selectedMonth === null ? 'text-slate-500' : 'text-white'}`}>
+                                    <span className={`text-[10px] font-bold ${selectedMonth === null ? 'text-slate-500' : 'text-white'}`}>
                                         {selectedMonth !== null
                                             ? `${MONTH_NAMES[selectedMonth - 1]} / ${selectedYear}`
                                             : '— / —'}
@@ -150,49 +150,45 @@ function DashboardTaskManager() {
                                             : 'hover:bg-slate-700'
                                     }`}
                                 >
-                                    <ChevronRight className="h-4 w-4 text-slate-400" />
+                                    <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
                                 </button>
                             </div>
                         </div>
 
                         {listDashboardManagerTasks ? (
                             <>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
-                                    <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-3 shadow-md hover:shadow-lg transition-all duration-300">
+                                <div className="grid grid-cols-2 gap-0.5">
+                                    <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-2.5 shadow-md hover:shadow-lg transition-all duration-300">
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <div className="p-1.5 bg-white/20 rounded-md">
+                                                <ClipboardList className="h-4 w-4 text-white" />
+                                            </div>
+                                            <p className="text-2xl font-bold text-white">
+                                                {listDashboardManagerTasks.total_task_assignments?.value || 0}
+                                            </p>
+                                        </div>
                                         <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-white/20 rounded-md">
-                                                    <ClipboardList className="h-5 w-5 text-white" />
-                                                </div>
-                                                <p className="text-blue-100 text-xs font-medium">
-                                                    {listDashboardManagerTasks.total_task_assignments?.label}
-                                                </p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="sm:text-xl text-sm font-bold text-white">
-                                                    {listDashboardManagerTasks.total_task_assignments?.value || 0}
-                                                </p>
-                                                <p className="text-blue-200 text-xs">nhiệm vụ</p>
-                                            </div>
+                                            <p className="text-blue-100 text-[10px] font-medium leading-tight">
+                                                {listDashboardManagerTasks.total_task_assignments?.label}
+                                            </p>
+                                            <p className="text-blue-200 text-[10px]">nhiệm vụ</p>
                                         </div>
                                     </div>
 
-                                    <div className="relative overflow-hidden bg-gradient-to-br from-red-600 to-red-700 rounded-lg p-3 shadow-md hover:shadow-lg transition-all duration-300">
+                                    <div className="relative overflow-hidden bg-gradient-to-br from-red-600 to-red-700 rounded-lg p-2.5 shadow-md hover:shadow-lg transition-all duration-300">
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <div className="p-1.5 bg-white/20 rounded-md animate-pulse">
+                                                <AlertCircle className="h-4 w-4 text-white" />
+                                            </div>
+                                            <p className="text-2xl font-bold text-white">
+                                                {listDashboardManagerTasks.overdue_tasks?.value || 0}
+                                            </p>
+                                        </div>
                                         <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-white/20 rounded-md animate-pulse">
-                                                    <AlertCircle className="h-5 w-5 text-white" />
-                                                </div>
-                                                <p className="text-red-100 text-xs font-medium">
-                                                    {listDashboardManagerTasks.overdue_tasks?.label}
-                                                </p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="sm:text-xl text-sm font-bold text-white">
-                                                    {listDashboardManagerTasks.overdue_tasks?.value || 0}
-                                                </p>
-                                                <p className="text-red-200 text-xs">cần xử lý</p>
-                                            </div>
+                                            <p className="text-red-100 text-[10px] font-medium leading-tight">
+                                                {listDashboardManagerTasks.overdue_tasks?.label}
+                                            </p>
+                                            <p className="text-red-200 text-[10px]">cần xử lý</p>
                                         </div>
                                     </div>
                                 </div>
