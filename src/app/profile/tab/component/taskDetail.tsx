@@ -12,6 +12,8 @@ import {
     History,
     XCircle,
     Calendar,
+    CheckCheck,
+    Check,
 } from "lucide-react";
 
 import {
@@ -19,6 +21,8 @@ import {
     uploadFileTask,
     updateProgressTask,
     getSubTask,
+    deleteSubTask,
+    updateStatusSubTask
 } from "@/src/features/task/api";
 import { useEffect, useState } from "react";
 import { useTaskData } from "@/src/hooks/taskhook";
@@ -94,11 +98,14 @@ function TaskDetail({
     const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [showTaskLogs, setShowTaskLogs] = useState(false);
     const [actualValue, setActualValue] = useState<number>(0);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [currentAction, setCurrentAction] = useState<'accept' | 'reject' | null>(null);
+    const [isSelectMode, setIsSelectMode] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
     
     useEffect(() => {
         if (!task) return;
 
-        // Reset khi task thay đổi
         setSubTaskOffset(0);
         setHasMoreSubTasks(true);
         setAllSubTasks([]);
@@ -142,6 +149,27 @@ function TaskDetail({
             setActualValue(calculatedValue);
         }
     }, [task, progress]);
+
+    const enterSelectMode = (action: 'accept' | 'reject') => {
+        setIsSelectMode(true);
+        setCurrentAction(action);
+        setSelectedIds([]);
+    };
+
+    const exitSelectMode = () => {
+        setIsSelectMode(false);
+        setCurrentAction(null);
+        setSelectedIds([]);
+    };
+
+    const toggleSelect = (id: string) => {
+        setSelectedIds(prev => {
+            const newIds = prev.includes(id) 
+                ? prev.filter(i => i !== id) 
+                : [...prev, id];
+            return newIds;
+        });
+    };
 
     const handleUpload = async () => {
         if (!selectedFile) {
@@ -423,9 +451,7 @@ function TaskDetail({
         
         return (
             <a
-                href={`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(
-          url.replace("/fl_attachment", "")
-            )}`}
+                href={`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url.replace("/fl_attachment", ""))}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition text-sm text-slate-200"
@@ -438,6 +464,63 @@ function TaskDetail({
             </a>
         );
     };
+
+    const handleOptionTask = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (selectedIds.length === 0) {
+            toast.warn("Vui lòng chọn ít nhất một nhiệm vụ");
+            return;
+        }
+
+        setIsProcessing(true);
+        if(currentAction === 'accept' ){
+            try {
+                const token = localStorage.getItem("userToken");
+                const res = await dispatch(updateStatusSubTask({
+                    status: 4,
+                    token, 
+                    ids: selectedIds
+                }) as any)
+                
+                if(res.payload.data.success){
+                    toast.success(`Đã duyệt thành công nhiệm vụ`);
+                    if (onUpdateSuccess) {
+                        onUpdateSuccess(task.id);
+                    }
+                }else{
+                    toast.error(`duyệt nhiệm vụ thất bại`);
+                }
+    
+                exitSelectMode();
+            } catch (error) {
+                toast.error("Có lỗi xảy ra khi duyệt nhiều nhiệm vụ");
+            } finally {
+                setIsProcessing(false);
+            }
+        }else{
+
+            try {
+                const token = localStorage.getItem("userToken");
+                const res = await dispatch(deleteSubTask({token, ids: selectedIds}) as any)
+                
+                if(res.payload.data.success){
+                    toast.success(`Đã xóa thành công nhiệm vụ`);
+                    if (onUpdateSuccess) {
+                        onUpdateSuccess(task.id);
+                    }
+                }else{
+                    toast.error(`xóa nhiệm vụ thất bại`);
+                }
+    
+                exitSelectMode();
+            } catch (error) {
+                toast.error("Có lỗi xảy ra khi xóa nhiều nhiệm vụ");
+            } finally {
+                setIsProcessing(false);
+            }
+        }
+    }
+ 
 
     
     return (
@@ -453,12 +536,21 @@ function TaskDetail({
                     ← Quay lại
                 </button>
             </div>
-            <div className="rounded-lg border border-slate-800 bg-slate-950 p-4 sm:p-5 lg:p-6">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+            <div className="rounded-lg border border-slate-800 bg-slate-950 p-3 sm:p-5 lg:p-6">
+                <div className="gap-4 mb-4">
                     <div className="flex-1 min-w-0">
-                        <h4 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-3">
-                            {task.task.name}
-                        </h4>
+
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+                            <div>
+                                <h4 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-3">
+                                    {task.task.name}
+                                </h4>
+                            </div>
+                            <div className="flex sm:flex-col gap-2 items-start sm:items-end">
+                                {getTaskStatusBadge(task.status.id)}
+                                {getPriorityBadge(task.priority.id)}
+                            </div>
+                        </div>
                         <div className="space-y-2 mb-3">
                             {task.checked && (
                                 <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-blue-600 px-3 py-2 rounded-lg">
@@ -471,69 +563,126 @@ function TaskDetail({
                                     <span>{formatDate(task.completed_date)}</span>
                                 </div>
                             )}
-                            
+
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
-                                <Briefcase
-                                    size={16}
-                                    className="text-slate-500 flex-shrink-0"
-                                />
+                                <Briefcase size={16} className="text-slate-500 flex-shrink-0" />
                                 <span className="font-semibold">Dự án:</span>
                                 <span className="truncate">{task.project.name}</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
-                                <Target
-                                    size={16}
-                                    className="text-slate-500 flex-shrink-0"
-                                />
+                                <Target size={16} className="text-slate-500 flex-shrink-0" />
                                 <span className="font-semibold">KPI:</span>
                                 <span className="truncate">{task.kpi_item.name}</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
-                                <Target
-                                    size={16}
-                                    className="text-slate-500 flex-shrink-0"
-                                />
+                                <Target size={16} className="text-slate-500 flex-shrink-0" />
                                 <span className="font-semibold">Chỉ tiêu:</span>
                                 {task.units?.name !== "%" && task.units?.name !== null ? (
-                                <span className="">{formatNumber(Number(task.target_value))} {task.units?.name}</span>
+                                    <span>{formatNumber(Number(task.target_value))} {task.units?.name}</span>
                                 ) : (
-                                <span className="">100%</span>
-
+                                    <span>100%</span>
                                 )}
                             </div>
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
-                                <ClipboardList
-                                    size={16}
-                                    className="text-slate-500 flex-shrink-0"
-                                />
+                                <ClipboardList size={16} className="text-slate-500 flex-shrink-0" />
                                 <span className="font-semibold">Loại:</span>
                                 <span>{task.type.name}</span>
                             </div>
                         </div>
-                        <div className="flex items-center justify-between mb-2">
-                            <h5 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-                                <ClipboardList size={16} className="text-slate-400" />
-                                Nhiệm vụ con ({allSubTasks?.length || 0})
-                            </h5>
-                            <div className="flex gap-2">
-                                {allSubTasks && allSubTasks.length > 0 && (
+
+                        {!isSelectMode ? (
+                            <div className="flex items-center justify-between mb-2 gap-2">
+                                <h5 className="text-xs font-semibold text-slate-200 flex items-center gap-2 shrink-0">
+                                    <ClipboardList size={16} className="text-slate-400" />
+                                    <span className="hidden sm:inline">Nhiệm vụ con ({allSubTasks?.length || 0})</span>
+                                    <span className="sm:hidden">Nhiệm vụ con ({allSubTasks?.length || 0})</span>
+                                </h5>
+                                <div className="flex gap-1.5 sm:gap-2 items-center">
                                     <button
-                                        onClick={() => setShowUpdateSubTask(true)}
-                                        className="px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded flex items-center gap-1"
+                                        onClick={() => enterSelectMode('reject')}
+                                        className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition text-sm font-medium"
+                                        title="Xóa nhiều"
                                     >
-                                        <Edit3 size={14} />
-                                        Cập nhật
+                                        <XCircle className="h-4 w-4 shrink-0" />
+                                        <span className="hidden sm:inline">Xóa nhiều</span>
                                     </button>
-                                )}
-                                <button
-                                    onClick={() => setShowCreateSubTask(true)}
-                                    className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded flex items-center gap-1"
-                                >
-                                    <Plus size={14} />
-                                    Tạo
-                                </button>
+
+                                    <button
+                                        onClick={() => enterSelectMode('accept')}
+                                        className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition text-sm font-medium"
+                                        title="Hoàn thành"
+                                    >
+                                        <CheckCheck className="h-4 w-4 shrink-0" />
+                                        <span className="hidden sm:inline">Hoàn thành</span>
+                                    </button>
+
+                                    {allSubTasks && allSubTasks.length > 0 && (
+                                        <button
+                                            onClick={() => setShowUpdateSubTask(true)}
+                                            className="flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition"
+                                            title="Cập nhật"
+                                        >
+                                            <Edit3 size={14} className="shrink-0" />
+                                            <span className="hidden sm:inline">Cập nhật</span>
+                                        </button>
+                                    )}
+
+                                    <button
+                                        onClick={() => setShowCreateSubTask(true)}
+                                        className="flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition"
+                                        title="Tạo nhiệm vụ con"
+                                    >
+                                        <Plus size={14} className="shrink-0" />
+                                        <span className="hidden sm:inline">Tạo</span>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="flex items-center justify-between mb-2 gap-2">
+                                <h5 className="text-sm font-semibold text-slate-200 flex items-center gap-2 shrink-0">
+                                    {currentAction === 'accept' ? (
+                                        <Check size={16} className="text-emerald-500" />
+                                    ) : (
+                                        <XCircle size={16} className="text-red-500" />
+                                    )}
+                                    <span className={`text-xs sm:text-sm ${currentAction === 'accept' ? "text-emerald-500" : "text-rose-500"}`}>
+                                        Đang chọn {currentAction === 'accept' ? "Duyệt" : "Xóa"}
+                                    </span>
+                                </h5>
+                                <div className="flex gap-1.5 sm:gap-2 items-center">
+                                    <button
+                                        onClick={exitSelectMode}
+                                        className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition text-sm"
+                                        title="Hủy bỏ"
+                                    >
+                                        <XCircle className="h-4 w-4 shrink-0" />
+                                        <span className="hidden sm:inline">Hủy bỏ</span>
+                                    </button>
+
+                                    <button
+                                        onClick={(e) => handleOptionTask(e)}
+                                        disabled={selectedIds.length === 0 || isProcessing}
+                                        className="flex items-center gap-1.5 px-2 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                        title={currentAction === 'accept' ? "Hoàn thành" : "Xóa"}
+                                    >
+                                        {isProcessing ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0"></div>
+                                                <span className="hidden sm:inline">Đang xử lý...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <CheckCheck className="h-4 w-4 shrink-0" />
+                                                <span className="sm:hidden font-semibold">{selectedIds.length}</span>
+                                                <span className="hidden sm:inline">
+                                                    {currentAction === 'accept' ? "Hoàn thành" : "Xóa"} ({selectedIds.length})
+                                                </span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         {showCreateSubTask && (
                             <CreateSubTask
@@ -546,6 +695,7 @@ function TaskDetail({
 
                         {showUpdateSubTask && allSubTasks && allSubTasks.length > 0 && (
                             <UpdateSubTask
+                                unit={task.units}
                                 subtasks={allSubTasks}
                                 taskAssignmentId={task.id}
                                 statusTask={statusTask}
@@ -560,52 +710,61 @@ function TaskDetail({
                                     className="space-y-2 max-h-60 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900"
                                     onScroll={handleSubTaskScroll}
                                 >
-                                    {allSubTasks.map((subtask: SubTask) => (
-                                        <div
-                                            key={subtask.id}
-                                            className="flex items-start justify-between gap-3 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-lg px-3 py-2.5 transition"
-                                        >
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-xs sm:text-sm text-white font-medium line-clamp-1">
-                                                    {subtask.name}
-                                                </p>
-
-                                                {subtask.description && (
-                                                    <p className="text-xs text-slate-400 mt-1 line-clamp-2">
-                                                        {subtask.description}
+                                    {allSubTasks.map((subtask: SubTask) => {
+                                        const isSelected = selectedIds.includes(subtask.id);
+                                        return (
+                                            <div
+                                                key={subtask.id}
+                                                onClick={() => {
+                                                    if (isSelectMode) {
+                                                        toggleSelect(subtask.id);
+                                                    }
+                                                }}
+                                                className="flex items-start justify-between gap-3 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-lg px-3 py-2.5 transition"
+                                            >
+                                                <div className="min-w-0 flex-1">
+                                                    {isSelectMode && (
+                                                        <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                onChange={() => toggleSelect(subtask.id)}
+                                                                className="w-4 h-4 rounded border-slate-600 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-slate-900 bg-slate-700 cursor-pointer"
+                                                            />
+                                                        </div>
+                                                    )}
+                                                    <p className="text-xs sm:text-sm text-white font-medium line-clamp-1">
+                                                        {subtask.name}
                                                     </p>
-                                                )}
-                                                <div className="flex items-center gap-3 mt-2">
-                                                    <div className="flex items-center gap-1.5 text-xs">
-                                                        <span className="text-slate-500">Mục tiêu:</span>
-                                                        <span className="text-blue-400 font-semibold">
-                                                        {formatNumber(Number(subtask.target_value))} {task.units?.name}
-                                                        </span>
+                                                    {subtask.description && (
+                                                        <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+                                                            {subtask.description}
+                                                        </p>
+                                                    )}
+                                                    <div className="flex items-center gap-3 mt-2">
+                                                        <div className="flex items-center gap-1.5 text-xs">
+                                                            <span className="text-slate-500">Mục tiêu:</span>
+                                                            <span className="text-blue-400 font-semibold">
+                                                                {formatNumber(Number(subtask.target_value))} {task.units?.name}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 mt-2">
+                                                        <div className="flex items-center gap-1.5 text-xs">
+                                                            <span className="text-slate-500">Tiến độ:</span>
+                                                            <span className="text-blue-400 font-semibold">
+                                                                {formatNumber(Number(subtask.value))} {task.units?.name}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-3 mt-2">
-                                                    <div className="flex items-center gap-1.5 text-xs">
-                                                        <span className="text-slate-500">Tiến độ:</span>
-                                                        <span className="text-blue-400 font-semibold">
-                                                        {formatNumber(Number(subtask.value))} {task.units?.name}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex-1 max-w-[100px] h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                                                        <div
-                                                            className="h-full bg-blue-500 rounded-full transition-all"
-                                                            style={{ width: `${subtask.process}%` }}
-                                                        ></div>
-                                                    </div>
+                                                <div className="flex-shrink-0">
+                                                    {getTaskStatusBadge(subtask.status.id, null, true)}
                                                 </div>
                                             </div>
+                                        );
+                                    })}
 
-                                            <div className="flex-shrink-0">
-                                                {getTaskStatusBadge(subtask.status.id)}
-                                            </div>
-                                        </div>
-                                    ))}
-
-                                    {/* Loading indicator */}
                                     {isLoadingMore && (
                                         <div className="flex items-center justify-center py-3">
                                             <div className="flex items-center gap-2 text-xs text-slate-400">
@@ -615,7 +774,6 @@ function TaskDetail({
                                         </div>
                                     )}
 
-                                    {/* End of list indicator */}
                                     {!hasMoreSubTasks && allSubTasks.length >= 5 && (
                                         <div className="py-3 text-center">
                                             <p className="text-xs text-slate-500">
@@ -628,34 +786,23 @@ function TaskDetail({
                         )}
 
                     </div>
-                    
-                    <div className="flex sm:flex-col gap-2 items-start sm:items-end">
-                        {getTaskStatusBadge(task.status.id)}
-                        {getPriorityBadge(task.priority.id)}
-                    </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
                     <div className="bg-slate-900 p-3 rounded-lg">
-                        <div className="text-xs text-slate-500 mb-1">
-                            Ngày bắt đầu
-                        </div>
+                        <div className="text-xs text-slate-500 mb-1">Ngày bắt đầu</div>
                         <div className="text-xs sm:text-sm font-semibold text-white">
                             {formatDate(task.task.date_start)}
                         </div>
                     </div>
                     <div className="bg-slate-900 p-3 rounded-lg">
-                        <div className="text-xs text-slate-500 mb-1">
-                            Hạn chót
-                        </div>
+                        <div className="text-xs text-slate-500 mb-1">Hạn chót</div>
                         <div className="text-xs sm:text-sm font-semibold text-white">
                             {formatDate(task.task.date_end)}
                         </div>
                     </div>
                     <div className="bg-slate-900 p-3 rounded-lg">
-                        <div className="text-xs text-slate-500 mb-1">
-                            Tiến độ
-                        </div>
+                        <div className="text-xs text-slate-500 mb-1">Tiến độ</div>
                         <div className="text-xs sm:text-sm font-semibold text-blue-400">
                             {progress}%
                         </div>
@@ -673,14 +820,14 @@ function TaskDetail({
                                 <span className="text-sm font-bold text-blue-400">
                                     {progress}%
                                 </span>
-
                                 {task.status.id !== 4 && task.status.id !== 5 && (
                                     <button
                                         onClick={() => setIsEditing(true)}
-                                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition"
+                                        className="flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition"
+                                        title="Cập nhật tiến độ"
                                     >
-                                        <Edit3 size={14} />
-                                        Cập nhật
+                                        <Edit3 size={14} className="shrink-0" />
+                                        <span className="hidden sm:inline">Cập nhật</span>
                                     </button>
                                 )}
                             </div>
@@ -719,91 +866,59 @@ function TaskDetail({
                                 >
                                     {statusTask &&
                                         statusTask.map((status) => (
-                                            <option
-                                                key={status.id}
-                                                value={parseInt(status.id)}
-                                            >
+                                            <option key={status.id} value={parseInt(status.id)}>
                                                 {status.name}
                                             </option>
                                         ))}
                                 </select>
                             </div>
 
-                            {/* Upload Section - Only show when status is 4 (Hoàn thành) */}
+                            {/* Upload Section */}
                             {selectedStatus === 4 && (
                                 <div className="bg-slate-950 p-4 rounded-lg border border-yellow-500/30">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <Upload
-                                            size={16}
-                                            className="text-yellow-400"
-                                        />
+                                        <Upload size={16} className="text-yellow-400" />
                                         <span className="text-sm font-semibold text-yellow-400">
                                             Minh chứng hoàn thành
                                         </span>
                                     </div>
-
                                     <p className="text-xs text-slate-400 mb-3">
                                         Chọn loại minh chứng bạn muốn tải lên:
                                     </p>
-
-                                    {/* Upload Type Selection */}
                                     <div className="grid grid-cols-2 gap-3 mb-4">
                                         <button
-                                            onClick={() =>
-                                                handleUploadTypeChange("image")
-                                            }
+                                            onClick={() => handleUploadTypeChange("image")}
                                             className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition ${uploadType === "image"
-                                                    ? "border-blue-500 bg-blue-500/10 text-blue-400"
-                                                    : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
-                                                }`}
+                                                ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                                                : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
+                                            }`}
                                         >
                                             <Image size={24} />
-                                            <span className="text-sm font-semibold">
-                                                Hình ảnh
-                                            </span>
-                                            <span className="text-xs text-slate-500">
-                                                JPG, PNG, GIF
-                                            </span>
+                                            <span className="text-sm font-semibold">Hình ảnh</span>
+                                            <span className="text-xs text-slate-500">JPG, PNG, GIF</span>
                                         </button>
-
                                         <button
-                                            onClick={() =>
-                                                handleUploadTypeChange(
-                                                    "document"
-                                                )
-                                            }
+                                            onClick={() => handleUploadTypeChange("document")}
                                             className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition ${uploadType === "document"
-                                                    ? "border-blue-500 bg-blue-500/10 text-blue-400"
-                                                    : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
-                                                }`}
+                                                ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                                                : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
+                                            }`}
                                         >
                                             <FileText size={24} />
-                                            <span className="text-sm font-semibold">
-                                                Tài liệu
-                                            </span>
-                                            <span className="text-xs text-slate-500">
-                                                PDF, DOC, XLS
-                                            </span>
+                                            <span className="text-sm font-semibold">Tài liệu</span>
+                                            <span className="text-xs text-slate-500">PDF, DOC, XLS</span>
                                         </button>
                                     </div>
 
-                                    {/* File Upload Input */}
                                     {uploadType && (
                                         <div>
                                             <label className="block w-full cursor-pointer">
                                                 <div className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-750 transition">
-                                                    <Upload
-                                                        size={16}
-                                                        className="text-blue-400"
-                                                    />
+                                                    <Upload size={16} className="text-blue-400" />
                                                     <span className="text-sm text-slate-300">
                                                         {selectedFile
                                                             ? selectedFile.name
-                                                            : `Chọn ${uploadType ===
-                                                                "image"
-                                                                ? "hình ảnh"
-                                                                : "tài liệu"
-                                                            }`}
+                                                            : `Chọn ${uploadType === "image" ? "hình ảnh" : "tài liệu"}`}
                                                     </span>
                                                 </div>
                                                 <input
@@ -814,54 +929,36 @@ function TaskDetail({
                                                 />
                                             </label>
 
-                                            {/* Image Preview */}
-                                            {filePreview &&
-                                                uploadType === "image" && (
-                                                    <div className="mt-3">
-                                                        <img
-                                                            src={filePreview}
-                                                            alt="Preview"
-                                                            className="w-full h-48 object-cover rounded-lg border border-slate-700"
-                                                        />
-                                                    </div>
-                                                )}
+                                            {filePreview && uploadType === "image" && (
+                                                <div className="mt-3">
+                                                    <img
+                                                        src={filePreview}
+                                                        alt="Preview"
+                                                        className="w-full h-48 object-cover rounded-lg border border-slate-700"
+                                                    />
+                                                </div>
+                                            )}
 
-                                            {/* File Info */}
                                             {selectedFile && (
                                                 <div className="mt-3 p-3 bg-slate-800 rounded-lg">
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex items-center gap-2">
-                                                            {uploadType ===
-                                                                "image" ? (
-                                                                <Image
-                                                                    size={16}
-                                                                    className="text-blue-400"
-                                                                />
+                                                            {uploadType === "image" ? (
+                                                                <Image size={16} className="text-blue-400" />
                                                             ) : (
-                                                                <FileText
-                                                                    size={16}
-                                                                    className="text-blue-400"
-                                                                />
+                                                                <FileText size={16} className="text-blue-400" />
                                                             )}
                                                             <span className="text-xs text-slate-300 truncate">
-                                                                {
-                                                                    selectedFile.name
-                                                                }
+                                                                {selectedFile.name}
                                                             </span>
                                                         </div>
                                                         <span className="text-xs text-slate-500">
-                                                            {(
-                                                                selectedFile.size /
-                                                                1024 /
-                                                                1024
-                                                            ).toFixed(2)}{" "}
-                                                            MB
+                                                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                                                         </span>
                                                     </div>
                                                 </div>
                                             )}
 
-                                            {/* Upload Button */}
                                             {selectedFile && !isUploaded && (
                                                 <button
                                                     onClick={handleUpload}
@@ -873,7 +970,6 @@ function TaskDetail({
                                                 </button>
                                             )}
 
-                                            {/* Upload Success Message */}
                                             {isUploaded && (
                                                 <div className="mt-3 p-3 bg-green-900/30 border border-green-500/50 rounded-lg">
                                                     <p className="text-xs text-green-400 text-center">
@@ -881,7 +977,6 @@ function TaskDetail({
                                                     </p>
                                                 </div>
                                             )}
-
                                         </div>
                                     )}
                                 </div>
@@ -934,7 +1029,7 @@ function TaskDetail({
                                 )}
                                 {selectedStatus === 4 && (
                                     <p className="text-xs text-slate-500 mt-1">
-                                        {task.units?.name === "%" 
+                                        {task.units?.name === "%"
                                             ? "Tiến độ tự động đặt thành 100% khi hoàn thành"
                                             : "Giá trị sẽ được đặt bằng mục tiêu khi hoàn thành"}
                                     </p>
@@ -944,12 +1039,8 @@ function TaskDetail({
                             {/* Progress Bar Preview */}
                             <div>
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-xs font-semibold text-slate-400">
-                                        Xem trước
-                                    </span>
-                                    <span className="text-xs font-bold text-blue-400">
-                                        {progressValue}%
-                                    </span>
+                                    <span className="text-xs font-semibold text-slate-400">Xem trước</span>
+                                    <span className="text-xs font-bold text-blue-400">{progressValue}%</span>
                                 </div>
                                 <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
                                     <div
@@ -983,9 +1074,7 @@ function TaskDetail({
 
                 {task.prove && (
                     <div className="bg-slate-900 p-4 rounded-lg">
-                        <h5 className="text-sm font-bold text-white mb-2">
-                            Minh chứng
-                        </h5>
+                        <h5 className="text-sm font-bold text-white mb-2">Minh chứng</h5>
                         {renderFilePreview(task.prove)}
                     </div>
                 )}
@@ -1019,7 +1108,6 @@ function TaskDetail({
                                                     <XCircle size={16} className="text-red-400" />
                                                 </div>
                                             </div>
-
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <span className="text-xs font-semibold text-red-400">
@@ -1031,33 +1119,22 @@ function TaskDetail({
                                                         {formatDate(log.reject_date)}
                                                     </div>
                                                 </div>
-
                                                 <div className="space-y-2">
                                                     <div className="bg-slate-900 px-3 py-2 rounded">
-                                                        <p className="text-xs text-slate-500 mb-1">
-                                                            Lý do từ chối:
-                                                        </p>
-                                                        <p className="text-sm text-white">
-                                                            {log.reason}
-                                                        </p>
+                                                        <p className="text-xs text-slate-500 mb-1">Lý do từ chối:</p>
+                                                        <p className="text-sm text-white">{log.reason}</p>
                                                     </div>
-
                                                     {log.date_end && (
                                                         <div className="flex items-center gap-2 text-xs">
-                                                            <span className="text-slate-500">
-                                                                Hạn chót mới:
-                                                            </span>
+                                                            <span className="text-slate-500">Hạn chót mới:</span>
                                                             <span className="text-blue-400 font-semibold">
                                                                 {formatDate(log.date_end)}
                                                             </span>
                                                         </div>
                                                     )}
-
                                                     {log.prove && (
                                                         <div>
-                                                            <p className="text-xs text-slate-500 mb-2">
-                                                                Minh chứng đã gửi:
-                                                            </p>
+                                                            <p className="text-xs text-slate-500 mb-2">Minh chứng đã gửi:</p>
                                                             {renderFilePreview(log.prove)}
                                                         </div>
                                                     )}

@@ -251,7 +251,7 @@ function TasksTab() {
     }
   };
 
-  const getTaskStatusBadge = (statusId: number, checked: boolean) => {
+  const getTaskStatusBadge = (statusId: number, checked: boolean, normal: boolean = false) => {
     if (!statusTask) return null;
     
 
@@ -282,10 +282,18 @@ function TasksTab() {
         );
       case 4:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
-            <CheckCircle2 size={12} />
-            <span className="text-xs">{checked ? "Đã Duyệt" : "Chờ Duyệt"}</span>
-          </span>
+          normal ? (            
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
+              <CheckCircle2 size={12} />
+              <span className="text-xs">{status.name}</span>
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
+              <CheckCircle2 size={12} />
+              <span className="text-xs">{checked ? "Đã Duyệt" : "Chờ Duyệt"}</span>
+            </span>
+
+          )
         );
       case 5:
         return (
@@ -441,7 +449,7 @@ function TasksTab() {
                         <div className="p-1 bg-sky-600/20 rounded">
                             <CalendarDays className="h-4 w-4 text-sky-400" />
                         </div>
-                        <span className="text-xs font-medium text-slate-300">Lọc theo tháng</span>
+                        <span className="hidden sm:inline text-xs font-medium text-slate-300">Lọc theo tháng</span>
                     </div>
 
                     <div className="flex items-center gap-1.5">

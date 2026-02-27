@@ -13,9 +13,9 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage(function (payload) {
-  const title = payload.notification?.title || "Thông báo";
+  const title = payload.data?.title || "Thông báo";
   const options = {
-    body: payload.notification?.body || "",
+    body: payload.data?.body || "",
     icon: "/favi.png",
   };
 

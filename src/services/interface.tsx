@@ -55,7 +55,7 @@ interface TargetType {
     name: string;
 }
 
-interface Unit{
+export interface Unit{
     id: number;
     name: string;
 }

@@ -1,14 +1,17 @@
 import React, { useState } from "react";
 import { X, Save, Edit3 } from "lucide-react";
-import { updateProgressSubTask } from "@/src/features/task/api";
+import { updateProgressSubTask, updateStatusSubTask, updateSubTask } from "@/src/features/task/api";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
+import { Unit } from "@/src/services/interface";
 
 interface SubTask {
   id: string;
   name: string;
   description?: string;
   process: number;
+  target_value?: number;
+  units?: Unit;
   status: {
     id: number;
     name: string;
@@ -21,6 +24,7 @@ interface StatusTask {
 }
 
 interface UpdateSubTaskProps {
+  unit: Unit;
   subtasks: SubTask[];
   taskAssignmentId: string;
   statusTask?: StatusTask[];
@@ -28,28 +32,44 @@ interface UpdateSubTaskProps {
   onSuccess: () => void;
 }
 
+const formatNumber = (value: number) =>
+  new Intl.NumberFormat("vi-VN").format(value);
+
 function UpdateSubTask({
+  unit,
   subtasks,
   taskAssignmentId,
   statusTask,
   onClose,
   onSuccess,
 }: UpdateSubTaskProps) {
+
   const dispatch = useDispatch();
   const [selectedSubTaskId, setSelectedSubTaskId] = useState<string>("");
   const [progressValue, setProgressValue] = useState<number>(0);
-  const [selectedStatus, setSelectedStatus] = useState<number>(1);
+  const [actualValue, setActualValue] = useState<number>(0);
   const [isSaving, setIsSaving] = useState(false);
+
+  // New state for name & description editing
+  const [editName, setEditName] = useState<string>("");
+  const [editDescription, setEditDescription] = useState<string>("");
+  const [isEditingInfo, setIsEditingInfo] = useState<boolean>(false);
+
+  const selectedSubTask = subtasks.find((st) => st.id === selectedSubTaskId);
+  const isPercentUnit =
+    unit?.name === "%" || unit?.name === null || unit?.name === undefined;
 
   const handleSubTaskSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const subtaskId = e.target.value;
     setSelectedSubTaskId(subtaskId);
+    setIsEditingInfo(false);
 
-    // Auto-fill current values when selecting a subtask
-    const selectedSubTask = subtasks.find((st) => st.id === subtaskId);
-    if (selectedSubTask) {
-      setProgressValue(selectedSubTask.process);
-      setSelectedStatus(selectedSubTask.status.id);
+    const found = subtasks.find((st) => st.id === subtaskId);
+    if (found) {
+      setProgressValue(found.process);
+      setActualValue(0);
+      setEditName(found.name);
+      setEditDescription(found.description ?? "");
     }
   };
 
@@ -60,15 +80,20 @@ function UpdateSubTask({
     }
   };
 
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newStatus = parseInt(e.target.value);
-    setSelectedStatus(newStatus);
-
-    // Auto set progress to 100% when status is 4 (Hoàn thành)
-    if (newStatus === 4) {
-      setProgressValue(100);
+  const handleActualValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    if (!isNaN(value) && value >= 0) {
+      setActualValue(value);
+      if (selectedSubTask?.target_value) {
+        const percent = Math.min(
+          Math.round((value / selectedSubTask.target_value) * 100),
+          100
+        );
+        setProgressValue(percent);
+      }
     }
   };
+
 
   const handleSave = async () => {
     if (!selectedSubTaskId) {
@@ -76,30 +101,98 @@ function UpdateSubTask({
       return;
     }
 
-    setIsSaving(true);
-    try {
-      const payload = {
-        id: parseInt(selectedSubTaskId),
-        process: progressValue.toString(),
-        task_assignment_id: parseInt(taskAssignmentId),
-        status: selectedStatus,
-      };
-
-      const result = await dispatch(updateProgressSubTask(payload) as any);
-
-      if (result?.payload?.data?.success && !result?.error) {
-        toast.success("Cập nhật nhiệm vụ con thành công!");
-        onSuccess();
-        onClose();
-      } else {
-        toast.error(result?.payload?.data?.message || "Cập nhật thất bại");
-      }
-    } catch (error: any) {
-      console.error("Save error:", error);
-      toast.error("Có lỗi xảy ra khi cập nhật. Vui lòng thử lại.");
-    } finally {
-      setIsSaving(false);
+    const trimmedName = editName.trim();
+    if (isEditingInfo && !trimmedName) {
+      toast.warning("Tên nhiệm vụ con không được để trống");
+      return;
     }
+    const token = localStorage.getItem("userToken");
+    const nameChanged = isEditingInfo && trimmedName !== selectedSubTask?.name;
+    const descChanged = isEditingInfo && editDescription.trim() !== (selectedSubTask?.description ?? "");
+    const progressChanged = progressValue !== selectedSubTask?.process;
+    const actualValueChanged = !isPercentUnit && actualValue !== 0;
+
+    const shouldUpdateProgress = progressChanged || actualValueChanged;
+    const shouldUpdateInfo = nameChanged || descChanged;
+
+    if (!shouldUpdateProgress && !shouldUpdateInfo) {
+      toast.info("Không có thông tin nào thay đổi.");
+      return;
+    }
+
+    setIsSaving(true);
+
+    let progressSuccess = false;
+    let infoSuccess = false;
+
+    if (shouldUpdateProgress) {
+      try {
+        const progressPayload = {
+          id: parseInt(selectedSubTaskId),
+          value: isPercentUnit
+            ? progressValue.toString()
+            : actualValue.toString(),
+          token
+        };
+        const progressResult = await dispatch(
+          updateProgressSubTask(progressPayload) as any
+        );
+
+        if (progressResult?.payload?.data?.success && !progressResult?.error) {
+          progressSuccess = true;
+        } else {
+          toast.error(
+            progressResult?.payload?.data?.message ||
+              "Cập nhật tiến độ thất bại"
+          );
+        }
+      } catch (error: any) {
+        toast.error("Có lỗi xảy ra khi cập nhật tiến độ.");
+      }
+    }
+
+    if (shouldUpdateInfo) {
+      try {
+        const infoPayload = {
+          id: parseInt(selectedSubTaskId),
+          name: trimmedName,
+          description: editDescription.trim(),
+          token
+        };
+        const infoResult = await dispatch(updateSubTask(infoPayload) as any);
+
+        if (infoResult?.payload?.data?.success && !infoResult?.error) {
+          infoSuccess = true;
+        } else {
+          toast.error(
+            infoResult?.payload?.data?.message ||
+              "Cập nhật tên/mô tả thất bại"
+          );
+        }
+      } catch (error: any) {
+        toast.error("Có lỗi xảy ra khi cập nhật tên/mô tả.");
+      }
+    }
+
+
+    const progressResult = !shouldUpdateProgress || progressSuccess;
+    const infoResult = !shouldUpdateInfo || infoSuccess;
+    const anySuccess =
+      (shouldUpdateProgress && progressSuccess) ||
+      (shouldUpdateInfo && infoSuccess);
+
+    if (anySuccess) {
+      onSuccess();
+    }
+
+    if (progressResult && infoResult) {
+      toast.success("Cập nhật nhiệm vụ con thành công!");
+      onClose();
+    } else if (anySuccess) {
+      toast.warning("Một số thông tin chưa được cập nhật. Vui lòng thử lại.");
+    }
+
+    setIsSaving(false);
   };
 
   return (
@@ -143,73 +236,109 @@ function UpdateSubTask({
           {/* Show details only when a subtask is selected */}
           {selectedSubTaskId && (
             <>
-              {/* Current SubTask Info */}
+              {/* Current SubTask Info with inline edit toggle */}
               <div className="bg-slate-950 border border-slate-800 rounded-lg p-3">
-                <div className="text-xs text-slate-500 mb-1">
-                  Nhiệm vụ đã chọn
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs text-slate-500">Nhiệm vụ đã chọn</div>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingInfo((prev) => !prev)}
+                    className="text-xs flex items-center gap-1 text-blue-400 hover:text-blue-300 transition"
+                  >
+                    <Edit3 size={12} />
+                    {isEditingInfo ? "Hủy chỉnh sửa" : "Chỉnh sửa thông tin"}
+                  </button>
                 </div>
-                <div className="text-sm font-semibold text-white">
-                  {subtasks.find((st) => st.id === selectedSubTaskId)?.name}
-                </div>
-                {subtasks.find((st) => st.id === selectedSubTaskId)
-                  ?.description && (
-                  <div className="text-xs text-slate-400 mt-1">
-                    {
-                      subtasks.find((st) => st.id === selectedSubTaskId)
-                        ?.description
-                    }
-                  </div>
-                )}
-              </div>
 
-              {/* Status Selection */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-2">
-                  Trạng thái
-                </label>
-                <select
-                  value={selectedStatus}
-                  onChange={handleStatusChange}
-                  className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition"
-                >
-                  {statusTask &&
-                    statusTask.map((status) => (
-                      <option key={status.id} value={parseInt(status.id)}>
-                        {status.name}
-                      </option>
-                    ))}
-                </select>
+                {isEditingInfo ? (
+                  <div className="space-y-3">
+                    {/* Edit Name */}
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-400 mb-1">
+                        Tên nhiệm vụ con <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        maxLength={255}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition"
+                        placeholder="Nhập tên nhiệm vụ con"
+                      />
+                    </div>
+
+                    {/* Edit Description */}
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-400 mb-1">
+                        Mô tả
+                      </label>
+                      <textarea
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        rows={3}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition resize-none"
+                        placeholder="Nhập mô tả (tùy chọn)"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-sm font-semibold text-white">
+                      {selectedSubTask?.name}
+                    </div>
+                    {selectedSubTask?.description && (
+                      <div className="text-xs text-slate-400 mt-1">
+                        {selectedSubTask.description}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               {/* Progress Input */}
               <div>
                 <label className="block text-sm font-semibold text-slate-300 mb-2">
-                  Tiến độ (%)
+                  {isPercentUnit
+                    ? `Tiến độ (%)`
+                    : `Giá trị đạt được (${unit?.name})`}
                 </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={progressValue}
-                    onChange={handleProgressChange}
-                    disabled={selectedStatus === 4}
-                    className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={progressValue}
-                    onChange={handleProgressChange}
-                    disabled={selectedStatus === 4}
-                    className="w-20 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:outline-none focus:border-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                </div>
-                {selectedStatus === 4 && (
-                  <p className="text-xs text-slate-500 mt-2">
-                    Tiến độ tự động đặt thành 100% khi hoàn thành
-                  </p>
+                {isPercentUnit ? (
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={progressValue}
+                      onChange={handleProgressChange}
+                      className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={progressValue}
+                      onChange={handleProgressChange}
+                      className="w-20 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:outline-none focus:border-blue-500 transition"
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        min="0"
+                        max={selectedSubTask?.target_value}
+                        value={actualValue}
+                        onChange={handleActualValueChange}
+                        className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition"
+                        placeholder={`Nhập giá trị (tối đa ${formatNumber(Number(selectedSubTask?.target_value))})`}
+                      />
+                    </div>
+                    <div className="text-xs text-slate-400">
+                      Mục tiêu: {formatNumber(Number(selectedSubTask?.target_value))}{" "}
+                      {unit?.name}
+                    </div>
+                  </div>
                 )}
               </div>
 
