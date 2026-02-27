@@ -168,7 +168,7 @@ function CreateSubTask({ task, statusTask, onClose, onSuccess }: CreateSubTaskPr
                                 {/* Target Value */}
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-300 mb-2">
-                                        {task.units?.name === "%" ? `Tiến độ (${task.units?.name})` : `Giá trị cần đạt (${task.units?.name || "%"})`}
+                                        {task.units?.name === "%" ? `Tiến độ cần đạt (${task.units?.name})` : `Giá trị cần đạt (${task.units?.name || "%"})`}
                                     </label>
                                     {task.units?.name === "%" || task.units?.name === null ? (
                                         <div className="flex items-center gap-3">

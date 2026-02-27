@@ -64,6 +64,7 @@ function CreateSupportTaskForm({
 		selectedDepartments: [],
 	});
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [selectFilter, setSelectFilter] = useState(null);
 
 	useEffect(() => {
 		setTargetDeptList(listDepartment || []);
@@ -71,6 +72,7 @@ function CreateSupportTaskForm({
 	}, [listDepartment]);
 
 	const handleFilterTargetDept = (filter: string) => {
+		
 		const filtered = (listDepartment || []).filter((dept: any) =>
 			dept.name.toLowerCase().includes((filter || "").toLowerCase())
 		);
@@ -78,6 +80,11 @@ function CreateSupportTaskForm({
 
 		// dispatch(getListDepartment({filter}) as any);
 	};
+
+	const handleSelectTarget = (filter: any) => {
+		setFormData({ ...formData, target_department_id: filter?.id })
+		setSelectFilter(filter)
+	}
 	
 	const handleFilterAssigneeDept = (filter: { search?: string }) => {
 		const filtered = (listDepartment || []).filter((dept: any) =>
@@ -307,10 +314,9 @@ function CreateSupportTaskForm({
 									</Label>
 									<FilterableSelector
 										data={targetDeptList}
-										onFilter={handleFilterTargetDept}
-										onSelect={(value) =>
-											setFormData({ ...formData, target_department_id: value?.id })
-										}
+										onFilter={(filter) => handleFilterTargetDept(filter)}
+										onSelect={(filter) => handleSelectTarget(filter)}
+										value={selectFilter}
 										placeholder="Chọn dự án"
 										displayField="name"
 										emptyMessage="Không có dự án"
