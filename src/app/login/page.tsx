@@ -1,11 +1,11 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { setToken } from "@/src/features/user/userSlice";
 import { getFcmToken } from "@/src/lib/getFCMToken";
 import { fetchUserInfo, loginWeb } from "@/src/services/api";
-import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, LogIn, Phone } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
@@ -14,16 +14,33 @@ export default function LoginPage() {
   const router = useRouter();
   const { status, error } = useSelector((state: any) => state.user);
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
   const [password, setPassword] = useState("");
 
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+    setPhoneError("");
+
+    if (!phone.trim()) {
+      setPhoneError("Vui lòng nhập số điện thoại");
+      phoneRef.current?.focus();
+      return;
+    }
+    if (!phoneRegex.test(phone.trim())) {
+        setPhoneError("Số điện thoại không hợp lệ");
+        phoneRef.current?.focus();
+        return;
+    }
+
+
     try {
       const fcmToken = await getFcmToken();
       const payload = {
-        email,
+        email: phone,
         password,
         fcm_token: fcmToken,
       };
@@ -71,26 +88,31 @@ export default function LoginPage() {
 
           <div className="space-y-5">
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-semibold text-slate-700 mb-2"
-              >
-                Email
+              <label htmlFor="phone" className="block text-sm font-semibold text-slate-700 mb-2">
+                  Số điện thoại
               </label>
               <div className="relative">
-                <Mail
-                  size={18}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                />
+                <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="example@apecglobal.com"
-                  className="w-full rounded-lg border-2 border-slate-200 bg-white px-11 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition"
+                    ref={phoneRef}
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, "");
+                        setPhone(value);
+                        if (phoneError && value.trim()) setPhoneError("");
+                    }}
+                    placeholder="Nhập số điện thoại"
+                    maxLength={10}
+                    className={`w-full rounded-lg border-2 bg-white px-11 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 transition ${
+                        phoneError
+                            ? 'border-red-400 focus:border-red-500 focus:ring-red-500/10'
+                            : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500/10'
+                    }`}
                 />
               </div>
+              {phoneError && <p className="mt-1 text-xs text-red-500">{phoneError}</p>}
             </div>
 
             <div>

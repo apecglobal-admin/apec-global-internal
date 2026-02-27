@@ -80,7 +80,7 @@ function Support() {
     const [departmentFilter , setDepartmentFilter ] = useState<any>(null);
     const [checkedFilter , setCheckedFilter ] = useState<string>("all");
     const [searchFilter, setSearchFilter] = useState<string>("");
-    const [showFilter, setShowFilter] = useState(true);
+    const [showFilter, setShowFilter] = useState(false);
 
 
 
@@ -400,7 +400,7 @@ function Support() {
                 </div>
                 {showFilter && (
                     <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
                             {/* Task Type Filter */}
                             <div className="space-y-1.5 sm:space-y-2">
                             <label className="text-xs sm:text-sm font-semibold text-slate-300">

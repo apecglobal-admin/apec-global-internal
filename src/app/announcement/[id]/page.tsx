@@ -54,6 +54,7 @@ export default function AnnouncementDetailPage() {
     const [announcement, setAnnouncement] = useState<AnnouncementItem | null>(null);
     const [userToken, setUserToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [tokenReady, setTokenReady] = useState(false);
 
     // Filter states
     const [activeCategory, setActiveCategory] = useState<number | "all">("all");
@@ -64,9 +65,16 @@ export default function AnnouncementDetailPage() {
     useEffect(() => {
         const token = localStorage.getItem("userToken");
         setUserToken(token);
+        setTokenReady(true);
     }, []);
 
     useEffect(() => {
+        if (!tokenReady) return;
+        if (!userToken) {
+            router.replace("/");
+            return;
+        }
+        
         const getDetail = async () => {
             const payload = {
                 token: userToken,
@@ -75,17 +83,18 @@ export default function AnnouncementDetailPage() {
             };
     
             const res = await dispatch(getListAnnouncement(payload) as any);
-
+            
             if(res.payload.data){
                 setAnnouncement(res.payload.data);
+                setIsLoading(false);
+            }else{
                 setIsLoading(false);
             }
         };
 
-        if (userToken) {
-            getDetail();
-        }
-    }, [params.id, userToken]);
+        getDetail();
+        
+    }, [params.id, userToken, tokenReady]);
 
     // Load filter data
     useEffect(() => {
@@ -143,17 +152,57 @@ export default function AnnouncementDetailPage() {
         router.push(`/announcement/${id}`);
     };
 
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+                <div className="text-center">
+                    <div className="relative flex justify-center mb-6">
+                        <div className="w-16 h-16 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                                />
+                            </svg>
+                        </div>
+                    </div>
+                    <p className="text-sm font-semibold text-slate-700 mb-1">Đang tải thông báo</p>
+                    <p className="text-xs text-slate-400">Vui lòng chờ trong giây lát...</p>
+                </div>
+            </div>
+        );
+    }
 
     if (!announcement) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <p className="text-gray-600 mb-4">Không tìm thấy thông báo</p>
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+                <div className="text-center max-w-sm w-full">
+                    {/* Icon */}
+                    <div className="flex justify-center mb-6">
+                        <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center">
+                            <svg className="w-12 h-12 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                                />
+                            </svg>
+                        </div>
+                    </div>
+    
+                    <h2 className="text-xl font-bold text-slate-800 mb-2">
+                        Không tìm thấy thông báo
+                    </h2>
+                    <p className="text-sm text-slate-500 mb-8">
+                        Thông báo này không tồn tại hoặc đã bị xóa
+                    </p>
+    
                     <button
                         onClick={handleGoBack}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-600/40"
                     >
-                        Quay lại
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Quay lại danh sách
                     </button>
                 </div>
             </div>

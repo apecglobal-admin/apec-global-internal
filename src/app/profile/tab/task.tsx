@@ -98,11 +98,11 @@ function TasksTab() {
   const [statusFilter, setStatusFilter] = useState<string>("2");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [searchFilter, setSearchFilter] = useState<string>("");
-  const [showFilter, setShowFilter] = useState(true);
+  const [showFilter, setShowFilter] = useState(false);
 
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
 
   const tasks: Task[] = tasksResponse?.data || [];
   const totalPages = tasksResponse?.total_pages || 1;
@@ -425,37 +425,38 @@ function TasksTab() {
 
   const renderDashboard = () => {
     const [isKpiDropdownOpen, setIsKpiDropdownOpen] = useState(false);
-  
+    
     return(
       <div>
         {listDashboardTasks && (
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             <button
               onClick={() => setIsVisible(!isVisible)}
               className="w-full flex items-center justify-between bg-slate-800 hover:bg-slate-700 rounded-lg px-4 py-2 transition-all duration-200"
             >
-              <span className="text-white font-semibold text-sm">Dashboard Tổng Quan</span>
+              <span className="text-white font-semibold text-xs">Dashboard Tổng Quan</span>
               {isVisible ? (
-                <ChevronUp className="h-5 w-5 text-slate-400" />
+                <ChevronUp className="h-4 w-4 text-slate-400" />
               ) : (
-                <ChevronDown className="h-5 w-5 text-slate-400" />
+                <ChevronDown className="h-4 w-4 text-slate-400" />
               )}
             </button>
   
             {isVisible && (
-              <div className="space-y-1">
-                <div className="flex items-center justify-between bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-2 gap-2">
+              <div className="space-y-0.5">
+                {/* Filter theo tháng */}
+                <div className="flex items-center justify-between bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-1.5 gap-2">
                     <div className="flex items-center gap-2 shrink-0">
                         <div className="p-1 bg-sky-600/20 rounded">
-                            <CalendarDays className="h-4 w-4 text-sky-400" />
+                            <CalendarDays className="h-3.5 w-3.5 text-sky-400" />
                         </div>
-                        <span className="hidden sm:inline text-xs font-medium text-slate-300">Lọc theo tháng</span>
+                        <span className="hidden sm:inline text-[10px] font-medium text-slate-300">Lọc theo tháng</span>
                     </div>
 
                     <div className="flex items-center gap-1.5">
                         <button
                             onClick={() => setSelectedMonth(null)}
-                            className={`px-2 py-0.5 rounded text-xs font-semibold transition-colors ${
+                            className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
                                 selectedMonth === null
                                     ? 'text-white bg-green-500'
                                     : 'bg-slate-700 text-slate-400 hover:bg-slate-600 hover:text-slate-200'
@@ -473,7 +474,7 @@ function TasksTab() {
                                     : 'hover:bg-slate-700'
                             }`}
                         >
-                            <ChevronLeft className="h-4 w-4 text-slate-400" />
+                            <ChevronLeft className="h-3.5 w-3.5 text-slate-400" />
                         </button>
 
                         <button
@@ -483,13 +484,13 @@ function TasksTab() {
                                     setSelectedYear(today.getFullYear());
                                 }
                             }}
-                            className={`min-w-[126px] text-center px-1 py-0.5 rounded transition-colors ${
+                            className={`min-w-[110px] text-center px-1 py-0.5 rounded transition-colors ${
                                 selectedMonth === null
                                     ? 'bg-slate-700/30 cursor-pointer hover:bg-slate-700/60'
                                     : 'bg-slate-700/60'
                             }`}
                         >
-                            <span className={`text-xs font-bold ${selectedMonth === null ? 'text-slate-500' : 'text-white'}`}>
+                            <span className={`text-[10px] font-bold ${selectedMonth === null ? 'text-slate-500' : 'text-white'}`}>
                                 {selectedMonth !== null
                                     ? `${MONTH_NAMES[selectedMonth - 1]} / ${selectedYear}`
                                     : '— / —'}
@@ -505,72 +506,71 @@ function TasksTab() {
                                     : 'hover:bg-slate-700'
                             }`}
                         >
-                            <ChevronRight className="h-4 w-4 text-slate-400" />
+                            <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
                         </button>
                     </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
-                <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-3 shadow-md hover:shadow-lg transition-all duration-300">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white/20 rounded-md">
-                        <ClipboardList className="h-5 w-5 text-white" />
+
+                {/* Row 1: Tổng công việc & Quá hạn - 2 cột layout mới */}
+                <div className="grid grid-cols-2 gap-0.5">
+                  {/* Tổng công việc */}
+                  <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-2.5 shadow-md hover:shadow-lg transition-all duration-300">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="p-1.5 bg-white/20 rounded-md">
+                        <ClipboardList className="h-4 w-4 text-white" />
                       </div>
-                      <p className="text-blue-100 text-xs font-medium">
-                        {listDashboardTasks.total_task_assignments?.label}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-3xl font-bold text-white">
+                      <p className="text-2xl font-bold text-white">
                         {listDashboardTasks.total_task_assignments?.value || 0}
                       </p>
-                      <p className="text-blue-200 text-xs">nhiệm vụ</p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-blue-100 text-[10px] font-medium leading-tight">
+                        {listDashboardTasks.total_task_assignments?.label}
+                      </p>
+                      <p className="text-blue-200 text-[10px]">nhiệm vụ</p>
                     </div>
                   </div>
-                </div>
-  
+
                   {/* Công việc quá hạn */}
-                  <div className="relative overflow-hidden bg-gradient-to-br from-red-600 to-red-700 rounded-lg p-3 shadow-md hover:shadow-lg transition-all duration-300">
+                  <div className="relative overflow-hidden bg-gradient-to-br from-red-600 to-red-700 rounded-lg p-2.5 shadow-md hover:shadow-lg transition-all duration-300">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="p-1.5 bg-white/20 rounded-md animate-pulse">
+                        <AlertCircle className="h-4 w-4 text-white" />
+                      </div>
+                      <p className="text-2xl font-bold text-white">
+                        {listDashboardTasks.overdue_tasks?.value || 0}
+                      </p>
+                    </div>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white/20 rounded-md animate-pulse">
-                          <AlertCircle className="h-5 w-5 text-white" />
-                        </div>
-                        <p className="text-red-100 text-xs font-medium">
-                          {listDashboardTasks.overdue_tasks?.label}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-3xl font-bold text-white">
-                          {listDashboardTasks.overdue_tasks?.value || 0}
-                        </p>
-                        <p className="text-red-200 text-xs">cần xử lý</p>
-                      </div>
+                      <p className="text-red-100 text-[10px] font-medium leading-tight">
+                        {listDashboardTasks.overdue_tasks?.label}
+                      </p>
+                      <p className="text-red-200 text-[10px]">cần xử lý</p>
                     </div>
                   </div>
                 </div>
   
                 {/* Row 2: Theo trạng thái & Theo ưu tiên */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-1">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-0.5">
                   {/* Công việc theo trạng thái */}
-                  <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg p-3 shadow-md">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
+                  <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg p-2.5 shadow-md">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5">
                         <div className="p-1 bg-purple-600/20 rounded">
-                          <CheckCircle2 className="h-4 w-4 text-purple-400" />
+                          <CheckCircle2 className="h-3.5 w-3.5 text-purple-400" />
                         </div>
-                        <h3 className="text-xs font-bold text-white">
+                        <h3 className="text-[10px] font-bold text-white">
                           {listDashboardTasks.tasks_by_status?.label}
                         </h3>
                       </div>
-                      <div className="px-2 py-0.5 bg-purple-600/20 rounded-full">
-                        <span className="text-purple-300 text-xs font-semibold">
+                      <div className="px-1.5 py-0.5 bg-purple-600/20 rounded-full">
+                        <span className="text-purple-300 text-[10px] font-semibold">
                           {listDashboardTasks.tasks_by_status?.items?.reduce((sum: any, item: any) => sum + item.total, 0) || 0}
                         </span>
                       </div>
                     </div>
   
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       {listDashboardTasks.tasks_by_status?.items && 
                       listDashboardTasks.tasks_by_status.items.length > 0 ? (
                         listDashboardTasks.tasks_by_status.items.map((item: any, index: any) => {
@@ -585,8 +585,8 @@ function TasksTab() {
                           return (
                             <div key={index}>
                               <div className="flex items-center justify-between">
-                                <span className={`text-xs font-medium ${colors.text}`}>{item.label}</span>
-                                <span className={`text-sm font-bold px-2 py-0.5 ${colors.text} rounded`}>
+                                <span className={`text-[10px] font-medium ${colors.text}`}>{item.label}</span>
+                                <span className={`text-xs font-bold px-1.5 py-0.5 ${colors.text} rounded`}>
                                   {item.total}
                                 </span>
                               </div>
@@ -594,33 +594,33 @@ function TasksTab() {
                           );
                         })
                       ) : (
-                        <div className="text-center py-4">
-                          <CheckCircle2 className="h-6 w-6 text-slate-500 mx-auto mb-1" />
-                          <p className="text-xs text-slate-400">Chưa có dữ liệu</p>
+                        <div className="text-center py-3">
+                          <CheckCircle2 className="h-5 w-5 text-slate-500 mx-auto mb-1" />
+                          <p className="text-[10px] text-slate-400">Chưa có dữ liệu</p>
                         </div>
                       )}
                     </div>
                   </div>
   
                   {/* Công việc theo mức độ ưu tiên */}
-                  <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg p-3 shadow-md">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
+                  <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg p-2.5 shadow-md">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5">
                         <div className="p-1 bg-orange-600/20 rounded">
-                          <Star className="h-4 w-4 text-orange-400" />
+                          <Star className="h-3.5 w-3.5 text-orange-400" />
                         </div>
-                        <h3 className="text-xs font-bold text-white">
+                        <h3 className="text-[10px] font-bold text-white">
                           {listDashboardTasks.tasks_by_priority?.label}
                         </h3>
                       </div>
-                      <div className="px-2 py-0.5 bg-orange-600/20 rounded-full">
-                        <span className="text-orange-300 text-xs font-semibold">
+                      <div className="px-1.5 py-0.5 bg-orange-600/20 rounded-full">
+                        <span className="text-orange-300 text-[10px] font-semibold">
                           {listDashboardTasks.tasks_by_priority?.items?.reduce((sum: any, item: any) => sum + item.total, 0) || 0}
                         </span>
                       </div>
                     </div>
   
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       {listDashboardTasks.tasks_by_priority?.items && 
                       listDashboardTasks.tasks_by_priority.items.length > 0 ? (
                         listDashboardTasks.tasks_by_priority.items.map((item: any, index: any) => {
@@ -635,8 +635,8 @@ function TasksTab() {
                           return (
                             <div key={index}>
                               <div className="flex items-center justify-between">
-                                <span className={`text-xs font-medium ${colors.text}`}>{item.label}</span>
-                                <span className={`text-sm font-bold px-2 py-0.5 ${colors.text} rounded`}>
+                                <span className={`text-[10px] font-medium ${colors.text}`}>{item.label}</span>
+                                <span className={`text-xs font-bold px-1.5 py-0.5 ${colors.text} rounded`}>
                                   {item.total}
                                 </span>
                               </div>
@@ -644,9 +644,9 @@ function TasksTab() {
                           );
                         })
                       ) : (
-                        <div className="text-center py-4">
-                          <Star className="h-6 w-6 text-slate-500 mx-auto mb-1" />
-                          <p className="text-xs text-slate-400">Chưa có dữ liệu</p>
+                        <div className="text-center py-3">
+                          <Star className="h-5 w-5 text-slate-500 mx-auto mb-1" />
+                          <p className="text-[10px] text-slate-400">Chưa có dữ liệu</p>
                         </div>
                       )}
                     </div>
@@ -654,24 +654,24 @@ function TasksTab() {
                 </div>
   
                 {/* Row 3: Theo loại công việc */}
-                <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg p-3 shadow-md">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
+                <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg p-2.5 shadow-md">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
                       <div className="p-1 bg-cyan-600/20 rounded">
-                        <Layers className="h-4 w-4 text-cyan-400" />
+                        <Layers className="h-3.5 w-3.5 text-cyan-400" />
                       </div>
-                      <h3 className="text-xs font-bold text-white">
+                      <h3 className="text-[10px] font-bold text-white">
                         {listDashboardTasks.tasks_by_type_task?.label}
                       </h3>
                     </div>
-                    <div className="px-2 py-0.5 bg-cyan-600/20 rounded-full">
-                      <span className="text-cyan-300 text-xs font-semibold">
+                    <div className="px-1.5 py-0.5 bg-cyan-600/20 rounded-full">
+                      <span className="text-cyan-300 text-[10px] font-semibold">
                         {listDashboardTasks.tasks_by_type_task?.items?.reduce((sum: any, item: any) => sum + item.total, 0) || 0}
                       </span>
                     </div>
                   </div>
   
-                  <div className={`${listDashboardTasks.tasks_by_type_task?.items?.length === 0 ? "" : "grid grid-cols-3 gap-2"}`}>
+                  <div className={`${listDashboardTasks.tasks_by_type_task?.items?.length === 0 ? "" : "grid grid-cols-3 gap-1.5"}`}>
                     {listDashboardTasks.tasks_by_type_task?.items && 
                     listDashboardTasks.tasks_by_type_task.items.length > 0 ? (
                       listDashboardTasks.tasks_by_type_task.items.map((item: any, index: any) => {
@@ -683,16 +683,16 @@ function TasksTab() {
                         const colors = colorMap[item.type_task] || { bg: "bg-slate-600/20", border: "border-slate-500", text: "text-slate-400" };
   
                         return (
-                          <div key={index} className={`${colors.bg} border ${colors.border} rounded-lg p-2 text-center`}>
-                            <p className={`text-xs font-medium ${colors.text} mb-1`}>{item.label}</p>
-                            <p className={`text-xl font-bold ${colors.text}`}>{item.total}</p>
+                          <div key={index} className={`${colors.bg} border ${colors.border} rounded-lg p-1.5 text-center`}>
+                            <p className={`text-[10px] font-medium ${colors.text} mb-1`}>{item.label}</p>
+                            <p className={`text-lg font-bold ${colors.text}`}>{item.total}</p>
                           </div>
                         );
                       })
                     ) : (
-                      <div className="col-span-3 text-center py-4">
-                        <Layers className="h-6 w-6 text-slate-500 mx-auto mb-1" />
-                        <p className="text-xs text-slate-400">Chưa có dữ liệu</p>
+                      <div className="col-span-3 text-center py-3">
+                        <Layers className="h-5 w-5 text-slate-500 mx-auto mb-1" />
+                        <p className="text-[10px] text-slate-400">Chưa có dữ liệu</p>
                       </div>
                     )}
                   </div>
@@ -702,52 +702,52 @@ function TasksTab() {
                 <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg shadow-md">
                   <button
                     onClick={() => setIsKpiDropdownOpen(!isKpiDropdownOpen)}
-                    className="w-full flex items-center justify-between p-3 hover:bg-slate-700/50 transition-all duration-200 rounded-lg"
+                    className="w-full flex items-center justify-between p-2.5 hover:bg-slate-700/50 transition-all duration-200 rounded-lg"
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <div className="p-1 bg-emerald-600/20 rounded">
-                        <Target className="h-4 w-4 text-emerald-400" />
+                        <Target className="h-3.5 w-3.5 text-emerald-400" />
                       </div>
-                      <h3 className="text-xs font-bold text-white">
+                      <h3 className="text-[10px] font-bold text-white">
                         {listDashboardTasks.tasks_by_kpi_item?.label}
                       </h3>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="px-2 py-0.5 bg-emerald-600/20 rounded-full">
-                        <span className="text-emerald-300 text-xs font-semibold">
+                    <div className="flex items-center gap-1.5">
+                      <div className="px-1.5 py-0.5 bg-emerald-600/20 rounded-full">
+                        <span className="text-emerald-300 text-[10px] font-semibold">
                           {listDashboardTasks.tasks_by_kpi_item?.items?.reduce((sum: any, item: any) => sum + item.total, 0) || 0}
                         </span>
                       </div>
                       {isKpiDropdownOpen ? (
-                        <ChevronUp className="h-4 w-4 text-slate-400" />
+                        <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
                       ) : (
-                        <ChevronDown className="h-4 w-4 text-slate-400" />
+                        <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
                       )}
                     </div>
                   </button>
   
                   {isKpiDropdownOpen && (
-                    <div className="px-3 pb-3 space-y-1.5 max-h-64 overflow-y-auto">
+                    <div className="px-2.5 pb-2.5 space-y-1 max-h-56 overflow-y-auto">
                       {listDashboardTasks.tasks_by_kpi_item?.items && 
                       listDashboardTasks.tasks_by_kpi_item.items.length > 0 ? (
                         listDashboardTasks.tasks_by_kpi_item.items.map((item: any, index: any) => (
                           <div 
                             key={index} 
-                            className="flex items-center justify-between bg-slate-700/50 hover:bg-slate-700 rounded-md px-3 py-2 transition-all duration-200"
+                            className="flex items-center justify-between bg-slate-700/50 hover:bg-slate-700 rounded-md px-2.5 py-1.5 transition-all duration-200"
                           >
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5">
                               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
-                              <span className="text-xs font-medium text-slate-200">{item.label}</span>
+                              <span className="text-[10px] font-medium text-slate-200">{item.label}</span>
                             </div>
-                            <span className="text-sm font-bold text-emerald-400 px-2 py-0.5 bg-emerald-600/20 rounded">
+                            <span className="text-xs font-bold text-emerald-400 px-1.5 py-0.5 bg-emerald-600/20 rounded">
                               {item.total}
                             </span>
                           </div>
                         ))
                       ) : (
-                        <div className="text-center py-4">
-                          <Target className="h-6 w-6 text-slate-500 mx-auto mb-1" />
-                          <p className="text-xs text-slate-400">Chưa có dữ liệu</p>
+                        <div className="text-center py-3">
+                          <Target className="h-5 w-5 text-slate-500 mx-auto mb-1" />
+                          <p className="text-[10px] text-slate-400">Chưa có dữ liệu</p>
                         </div>
                       )}
                     </div>
@@ -764,7 +764,7 @@ function TasksTab() {
   const renderFilter = () => {
     return(
       <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
           {/* Task Type Filter */}
           <div className="space-y-1.5 sm:space-y-2">
             <label className="text-xs sm:text-sm font-semibold text-slate-300">

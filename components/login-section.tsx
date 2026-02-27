@@ -15,52 +15,52 @@ export default function LoginSection() {
     const router = useRouter();
     const { status, error, userInfo } = useSelector((state: any) => state.user);
     const [showPassword, setShowPassword] = useState(false);
-    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [emailError, setEmailError] = useState(false);
     const [passwordError, setPasswordError] = useState(false);
     
     // Refs để focus vào input
-    const emailRef = useRef<HTMLInputElement>(null);
+    const [phone, setPhone] = useState("");
+    const [phoneError, setPhoneError] = useState(false);
+    const phoneRef = useRef<HTMLInputElement>(null);
     const passwordRef = useRef<HTMLInputElement>(null);
-
+    const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
 
     
     const clearForm = () => {
         setPassword("");
-        setEmail("");
-        setEmailError(false);
+        setPhone("");
+        setPhoneError(false);
         setPasswordError(false);
     };
 
     const handleLogin = async (e: any) => {
         e.preventDefault();
 
-        // Reset errors
-        setEmailError(false);
+        setPhoneError(false);
         setPasswordError(false);
         
-        // Validate inputs
         let hasError = false;
         
-        if (!email.trim()) {
-            setEmailError(true);
+        if (!phone.trim()) {
+            setPhoneError(true);
             hasError = true;
-            emailRef.current?.focus();
+            phoneRef.current?.focus();
+        } else if (!phoneRegex.test(phone.trim())) {
+            setPhoneError(true);
+            hasError = true;
+            phoneRef.current?.focus();
         }
         
         if (!password.trim()) {
             setPasswordError(true);
             hasError = true;
-            // Chỉ focus vào password nếu email không có lỗi
-            if (!emailError && !email.trim()) {
+            if (!phoneError && !phone.trim()) {
                 passwordRef.current?.focus();
-            } else if (email.trim()) {
+            } else if (phone.trim()) {
                 passwordRef.current?.focus();
             }
         }
         
-        // Nếu có lỗi thì không submit
         if (hasError) {
             return;
         }
@@ -68,11 +68,7 @@ export default function LoginSection() {
         try {
             const fcmToken = await getFcmToken();
 
-            const payload = {
-                email,
-                password,
-                fcm_token: fcmToken,
-            };
+            const payload = { email: phone, password, fcm_token: fcmToken };
 
             const res = await dispatch(loginWeb(payload) as any);
             if (res.payload.status === 200) {
@@ -84,7 +80,6 @@ export default function LoginSection() {
                 toast.error(res.payload.message);
             }
         } catch (error) {
-            // console.error("Đăng nhập thất bại:", error);
         }
     };
 
@@ -96,11 +91,10 @@ export default function LoginSection() {
     };
 
     // Reset error khi user nhập lại
-    const handleEmailChange = (e: any) => {
-        setEmail(e.target.value);
-        if (emailError && e.target.value.trim()) {
-            setEmailError(false);
-        }
+    const handlePhoneChange = (e: any) => {
+        const value = e.target.value.replace(/[^0-9]/g, ""); 
+        setPhone(value);
+        if (phoneError && value.trim()) setPhoneError(false);
     };
     
     const handlePasswordChange = (e: any) => {
@@ -134,22 +128,26 @@ export default function LoginSection() {
                     <div className="mt-5 space-y-4 sm:mt-6">
                         <div>
                             <input
-                                ref={emailRef}
-                                id="email"
-                                type="email"
-                                value={email}
-                                onChange={handleEmailChange}
-                                placeholder="Email"
+                                ref={phoneRef}
+                                id="phone"
+                                type="tel"
+                                value={phone}
+                                onChange={handlePhoneChange}
+                                placeholder="Số điện thoại"
+                                maxLength={10}
                                 className={`w-full rounded-2xl border px-4 py-3 text-sm text-black placeholder:text-black
-                focus:outline-none bg-white focus:bg-white transition-colors ${
-                    emailError 
-                        ? 'border-red-500 focus:border-red-500' 
-                        : 'border-slate-400 focus:border-blue-500'
-                }`}
+                                focus:outline-none bg-white focus:bg-white transition-colors ${
+                                    phoneError 
+                                        ? 'border-red-500 focus:border-red-500' 
+                                        : 'border-slate-400 focus:border-blue-500'
+                                }`}
                             />
-                            {emailError && (
+
+                            {phoneError && (
                                 <p className="mt-1 text-xs text-red-500">
-                                    Vui lòng nhập email
+                                    {!phone.trim() 
+                                        ? "Vui lòng nhập số điện thoại" 
+                                        : "Số điện thoại không hợp lệ"}
                                 </p>
                             )}
                         </div>

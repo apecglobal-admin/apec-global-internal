@@ -79,43 +79,39 @@ function ManagerSupportTaskList({ tasks, pagination, onPageChange }: ManagerSupp
             toast.warn("Vui lòng nhập lý do từ chối");
             return;
         }
-
+    
         const token = localStorage.getItem("userToken");
         const apiCall = currentAction === 'accept' ? supportTaskAccept : supportTaskReject;
         const label = currentAction === 'accept' ? "Duyệt" : "Từ chối";
-
+    
         const payload: any = { token, id: selectedIds };
         if (currentAction === 'reject') {
             payload.reason = rejectReason;
         }
-
-        openPopup({
-            type: currentAction === 'accept' ? "success" : "warning",
-            title: `Xác nhận ${label} hàng loạt`,
-            message: `Bạn có chắc chắn muốn ${label.toLowerCase()} ${selectedIds.length} mục đã chọn?${
-                currentAction === 'reject' ? `\n\nLý do: ${rejectReason}` : ''
-            }`,
-            showActionButtons: true,
-            confirmText: `Đồng ý ${label}`,
-            onConfirm: async () => {
-                setIsProcessing(true);
-                try {
-                    const response = await dispatch(apiCall(payload) as any);
-                    if (response.payload.status === 200 || response.payload.status === 201) {
-                        toast.success(`${label} thành công!`);
-                        exitSelectMode();
-                        dispatch(getSupportTaskManager({ token, key: "supportTaskManager", page: 1 }) as any);
-                    } else {
-                        toast.error(response.payload.data?.message || "Thao tác thất bại");
-                    }
-                } catch (error) {
-                    toast.error("Lỗi hệ thống");
-                } finally {
-                    setIsProcessing(false);
-                    closePopup();
-                }
+    
+        setIsProcessing(true);
+    
+        try {
+            const response = await dispatch(apiCall(payload) as any);
+    
+            if (response?.payload?.status === 200 || response?.payload?.status === 201) {
+                toast.success(`${label} thành công!`);
+                exitSelectMode();
+                dispatch(
+                    getSupportTaskManager({
+                        token,
+                        key: "supportTaskManager",
+                        page: 1
+                    }) as any
+                );
+            } else {
+                toast.error(response?.payload?.data?.message || "Thao tác thất bại");
             }
-        });
+        } catch (error) {
+            toast.error("Lỗi hệ thống");
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     if (!tasks || tasks.length === 0) {
@@ -315,9 +311,9 @@ function ManagerSupportTaskList({ tasks, pagination, onPageChange }: ManagerSupp
                                     className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 min-h-[120px] resize-none"
                                     autoFocus
                                 />
-                                <p className="text-xs text-slate-500">
+                                {/* <p className="text-xs text-slate-500">
                                     {rejectReason.length}/500 ký tự
-                                </p>
+                                </p> */}
                             </div>
 
                             <div className="flex gap-3 pt-2">
