@@ -23,6 +23,7 @@ export default function AIReportButton({
     transcribedText,
     setTranscribedText,
     error,
+    setError,
     isSending,
     handleFormat,
     handleSave,
@@ -43,9 +44,9 @@ export default function AIReportButton({
   const handlePointerDown = (e: React.PointerEvent) => {
     // Prevent default browser actions (scrolling, text selection, context menu)
     e.preventDefault();
-    
+
     isLongPressRef.current = false;
-    
+
     // Start a timer to detect long press
     longPressTimerRef.current = setTimeout(() => {
       isLongPressRef.current = true;
@@ -65,33 +66,32 @@ export default function AIReportButton({
     }
 
     if (isLongPressRef.current) {
-        // If it was a long press (timer fired), we definitely attempted to start recording.
-        // We must call stopRecording() to signal the hook that the user released the button.
-        // This handles both cases:
-        // 1. Recording already active -> Stops it.
-        // 2. Recording still initializing (race condition) -> Sets internal ref to false so initialization aborts.
-        stopRecording();
+      // If it was a long press (timer fired), we definitely attempted to start recording.
+      // We must call stopRecording() to signal the hook that the user released the button.
+      // This handles both cases:
+      // 1. Recording already active -> Stops it.
+      // 2. Recording still initializing (race condition) -> Sets internal ref to false so initialization aborts.
+      stopRecording();
     } else {
-        // Short press (timer didn't fire) -> Open Modal for manual entry
-        setShowModal(true);
+      // Short press (timer didn't fire) -> Open Modal for manual entry
+      setShowModal(true);
     }
-    
+
     // Reset state
     isLongPressRef.current = false;
   };
 
   const handlePointerLeave = (e: React.PointerEvent) => {
-      // If cursor/finger leaves the button while holding
-      if (longPressTimerRef.current) {
-          clearTimeout(longPressTimerRef.current);
-          longPressTimerRef.current = null;
-      }
-      if (isRecording) {
-          stopRecording();
-      }
-      isLongPressRef.current = false;
+    // If cursor/finger leaves the button while holding
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    if (isRecording) {
+      stopRecording();
+    }
+    isLongPressRef.current = false;
   };
-
 
   return (
     <>
@@ -101,7 +101,7 @@ export default function AIReportButton({
           "fixed bottom-20 md:bottom-8 right-5 z-50 flex items-center justify-center w-10 h-10 rounded-full shadow-2xl transition-colors duration-300 cursor-pointer",
           isRecording
             ? "bg-red-500 shadow-red-500/50"
-            : "bg-gradient-to-r from-blue-600 to-cyan-500 shadow-blue-500/50 hover:shadow-blue-400/50"
+            : "bg-gradient-to-r from-blue-600 to-cyan-500 shadow-blue-500/50 hover:shadow-blue-400/50",
         )}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
@@ -129,6 +129,7 @@ export default function AIReportButton({
         transcribedText={transcribedText}
         setTranscribedText={setTranscribedText}
         error={error}
+        clearError={() => setError(null)}
         isSending={isSending}
         handleFormat={handleFormat}
         handleSave={handleSave}
@@ -139,7 +140,6 @@ export default function AIReportButton({
         setReportResult={setReportResult}
         isSuccess={isSuccess}
       />
-
     </>
   );
 }

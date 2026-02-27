@@ -1,7 +1,16 @@
 import { useState, useRef, useEffect } from "react";
 import { toast } from "react-toastify";
-import { sendAudioToGemini, formatReport, saveReport } from "../features/ai-report/api/api";
-import { useSelector } from "react-redux";
+import {
+  sendAudioToGemini,
+  formatReport,
+  saveReport,
+} from "../features/ai-report/api/api";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  updateProgressTask,
+  updateProgressSubTask,
+  createSubTask,
+} from "../features/task/api";
 
 export interface NTLReportItem {
   report_date: string;
@@ -20,20 +29,18 @@ export interface NTLReportItem {
 }
 
 export interface GenericReportData {
-  category: string;
-  project: string;
-  task_name: string;
-  quantity: number;
-  progress: string;
-  status: string;
-  start_date: string;
-  deadline: string;
+  task_name?: string;
+  progress?: number;
+  status: number;
+  achieved_value?: number;
 }
 
 export interface GenericReportItem {
   action: "insert" | "update";
+  targetType: "parent" | "subtask";
+  parent_task_id: string | null;
+  sub_task_id?: string | null;
   data: GenericReportData;
-  missing_deadline: boolean;
 }
 
 export type AIReportResponse =
@@ -42,8 +49,9 @@ export type AIReportResponse =
 
 export const useAIReport = (
   onReportGenerated?: (text: string) => void,
-  onSuccess?: () => void
+  onSuccess?: () => void,
 ) => {
+  const dispatch = useDispatch();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -51,17 +59,25 @@ export const useAIReport = (
   const [error, setError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false); // Used for saving
   const [isFormatting, setIsFormatting] = useState(false); // Used for formatting
-  const [reportResult, setReportResult] = useState<AIReportResponse | null>(null);
+  const [reportResult, setReportResult] = useState<AIReportResponse | null>(
+    null,
+  );
   const [isSuccess, setIsSuccess] = useState(false);
 
   const userInfo = useSelector((state: any) => state.user.userInfo.data);
   const positions = useSelector((state: any) => state.user.positions.data);
   const departments = useSelector((state: any) => state.user.departments.data);
+  const tasksData = useSelector((state: any) => state.user.tasks?.data);
+  const parentTasks: any[] = tasksData?.data || [];
 
   const userName = userInfo?.name || "Unknown User";
   const userEmail = userInfo?.email || "";
-  const userDepartment = departments?.find((d: any) => d.id === userInfo?.department_id)?.name || "Unknown Department";
-  const userPosition = positions?.find((p: any) => p.id === userInfo?.position_id)?.title || "Unknown Position";
+  const userDepartment =
+    departments?.find((d: any) => d.id === userInfo?.department_id)?.name ||
+    "Unknown Department";
+  const userPosition =
+    positions?.find((p: any) => p.id === userInfo?.position_id)?.title ||
+    "Unknown Position";
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -121,7 +137,7 @@ export const useAIReport = (
       console.error("Error accessing microphone:", err);
       if (isHoldingRef.current) {
         setError(
-          "Không thể truy cập microphone. Vui lòng kiểm tra quyền truy cập."
+          "Không thể truy cập microphone. Vui lòng kiểm tra quyền truy cập.",
         );
         setShowModal(true);
       }
@@ -147,7 +163,7 @@ export const useAIReport = (
       if (typeof data.text === "string") {
         if (data.text.trim()) {
           setTranscribedText((prev) =>
-            prev ? prev + " " + data.text : data.text
+            prev ? prev + " " + data.text : data.text,
           );
           if (onReportGenerated) {
             onReportGenerated(data.text);
@@ -171,25 +187,29 @@ export const useAIReport = (
 
     setIsFormatting(true);
     try {
-      const response = await formatReport(transcribedText, userName);
-      // Ensure response.data matches AIReportResponse
-      // If the API returns exactly what the user described:
-      // { "report_project": "...", "reports": [...] }
-      if (response.data && (response.data.report_project === 'ntl' || response.data.report_project === 'other')) {
-          setReportResult(response.data);
+      const token = localStorage.getItem("userToken");
+      const response = await formatReport(
+        transcribedText,
+        userName,
+        token || "",
+      );
+      if (
+        response.data &&
+        (response.data.report_project === "ntl" ||
+          response.data.report_project === "other")
+      ) {
+        setReportResult(response.data);
       } else {
-          // Fallback or error handling if unexpected structure
-           console.warn("Unexpected response format:", response.data);
-           // Attempt to cast or error out? 
-           // For now assume it might just be the array if looking at legacy, but user requested new structure.
-           // If it's legacy array, maybe wrap it?
-           if (Array.isArray(response.data)) {
-               // Assuming legacy behavior was NTL
-               setReportResult({ report_project: 'ntl', reports: response.data } as any);
-           } else {
-               setReportResult(null);
-               setError("Cấu trúc dữ liệu không hợp lệ.");
-           }
+        console.warn("Unexpected response format:", response.data);
+        if (Array.isArray(response.data)) {
+          setReportResult({
+            report_project: "ntl",
+            reports: response.data,
+          } as any);
+        } else {
+          setReportResult(null);
+          setError("Cấu trúc dữ liệu không hợp lệ.");
+        }
       }
     } catch (err: any) {
       console.error("Error formatting report:", err);
@@ -199,18 +219,174 @@ export const useAIReport = (
     }
   };
 
-  const handleSave = async (updatedResult?: AIReportResponse) => {
+  // Execute actual task operations for "other" reports
+  const executeTaskOperations = async (
+    reports: GenericReportItem[],
+    modalParentTasks?: any[],
+  ): Promise<{ successes: number; failures: number }> => {
+    const token = localStorage.getItem("userToken");
+    let successes = 0;
+    let failures = 0;
+
+    for (const report of reports) {
+      if (!report.parent_task_id) {
+        console.warn("Skipping report with null parent_task_id:", report);
+        failures++;
+        continue;
+      }
+
+      // Use modalParentTasks if available, otherwise fallback to Redux parentTasks
+      const tasksToUse = modalParentTasks?.length
+        ? modalParentTasks
+        : parentTasks;
+
+      // Find the parent task - parent_task_id from dropdown is task_assignment_id (t.id)
+      const parentTask = tasksToUse.find(
+        (t: any) => t?.id?.toString() === report.parent_task_id,
+      );
+
+      if (!parentTask) {
+        console.warn(
+          `Parent task not found for id: ${report.parent_task_id}`,
+          report,
+        );
+        failures++;
+        continue;
+      }
+
+      const taskId = parentTask?.task?.id; // actual task ID
+      const taskAssignmentId = parentTask?.id; // task assignment ID
+      const statusId = report.data.status ?? 2;
+
+      try {
+        if (report.action === "update" && report.targetType === "parent") {
+          // Update parent task progress
+          const payload = {
+            id: parseInt(taskAssignmentId),
+            task_id: parseInt(taskId),
+            status: statusId,
+            value: report.data.achieved_value ?? 0,
+            token,
+          };
+          console.log("Updating parent task:", payload);
+          const result = await dispatch(updateProgressTask(payload) as any);
+          if (result?.payload?.data?.success) {
+            successes++;
+          } else {
+            console.error("Update parent task failed:", result?.payload);
+            failures++;
+          }
+        } else if (
+          report.action === "update" &&
+          report.targetType === "subtask"
+        ) {
+          // Update subtask progress
+          if (!report.sub_task_id) {
+            console.warn(
+              "Skipping subtask update with null sub_task_id:",
+              report,
+            );
+            failures++;
+            continue;
+          }
+          const payload = {
+            id: parseInt(report.sub_task_id),
+            task_assignment_id: parseInt(taskAssignmentId),
+            process: (report.data.progress ?? 0).toString(),
+            status: statusId,
+            token,
+          };
+          console.log("Updating subtask:", payload);
+          const result = await dispatch(updateProgressSubTask(payload) as any);
+          if (result?.payload?.data?.success) {
+            successes++;
+          } else {
+            console.error("Update subtask failed:", result?.payload);
+            failures++;
+          }
+        } else if (
+          report.action === "insert" &&
+          report.targetType === "subtask"
+        ) {
+          // Create new subtask
+          const payload = {
+            token,
+            subtasks: [
+              {
+                name: report.data.task_name || "Nhiệm vụ con mới",
+                description: "",
+                task_id: parseInt(taskId),
+                task_assignment_id: parseInt(taskAssignmentId),
+                target_value: report.data.progress ?? 0,
+              },
+            ],
+          };
+          console.log("Creating subtask:", payload);
+          const result = await dispatch(createSubTask(payload) as any);
+          if (result?.payload?.data?.success) {
+            successes++;
+          } else {
+            console.error("Create subtask failed:", result?.payload);
+            failures++;
+          }
+        }
+      } catch (err: any) {
+        console.error("Task operation error:", err);
+        failures++;
+      }
+    }
+
+    return { successes, failures };
+  };
+
+  const handleSave = async (
+    updatedResult?: AIReportResponse,
+    modalParentTasks?: any[],
+  ) => {
     const dataToSave = updatedResult || reportResult;
     if (!dataToSave) return;
 
     setIsSending(true);
+    // Force React to paint the loading state before executing heavy synchronous/asynchronous tasks
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
     try {
-      // Pass the whole object or just reports?
-      // Assuming api.saveReport expects the data object
-      await saveReport(dataToSave, userName, userEmail, userDepartment, userPosition);
-      setIsSuccess(true);
-      if (onSuccess) {
-        onSuccess();
+      if (dataToSave.report_project === "other") {
+        // For "other" reports: execute actual task operations, no webhook
+        const { successes, failures } = await executeTaskOperations(
+          dataToSave.reports as GenericReportItem[],
+          modalParentTasks,
+        );
+
+        if (failures > 0 && successes === 0) {
+          setError("Đã xảy ra lỗi hệ thống. Vui lòng thử lại.");
+          return;
+        }
+
+        if (failures > 0) {
+          toast.warning(
+            `Hoàn thành ${successes} thao tác, ${failures} thao tác thất bại.`,
+          );
+        }
+
+        setIsSuccess(true);
+        if (onSuccess) {
+          onSuccess();
+        }
+      } else {
+        const token = localStorage.getItem("userToken");
+        // For NTL reports: send to webhook as before
+        await saveReport(
+          dataToSave,
+          userName,
+          userEmail,
+          userDepartment,
+          userPosition,
+        );
+        setIsSuccess(true);
+        if (onSuccess) {
+          onSuccess();
+        }
       }
     } catch (err: any) {
       console.error("Error saving report:", err);
@@ -235,6 +411,7 @@ export const useAIReport = (
     transcribedText,
     setTranscribedText,
     error,
+    setError,
     isSending,
     startRecording,
     stopRecording,
