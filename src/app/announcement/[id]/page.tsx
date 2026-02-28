@@ -3,8 +3,8 @@
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { getListAnnouncement, readAnnoucement, getTypeAnnouncement } from "@/src/features/announcement/api/api";
 import { toast } from "react-toastify";
+import { getListAnnouncement, readAnnoucement, getTypeAnnouncement } from "@/src/features/announcement/api/api";
 import { useAnnouncementData } from "@/src/hooks/annoucementhook";
 import { useProfileData } from "@/src/hooks/profileHook";
 import { listDepartments } from "@/src/services/api";

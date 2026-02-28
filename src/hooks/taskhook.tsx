@@ -30,12 +30,12 @@ export const useTaskData = () => {
     detailSupportTaskPending: task.detailSupportTaskPending.data.data,
     supportTaskStatus: task.supportTaskStatus.data.data,
     listEmployeeSupport: task.listEmployeeSupport.data.data,
-    
+    subTaskDetail: task.subTaskDetail.data.data,
 
     // Loading states
 
     loadingListDetailTaskAssign: task.listDetailTaskAssign.loading,
-    
+    loadingSubTaskDetail: task.subTaskDetail.loading,
 
     // Error states
     errorListDetailTaskAssign: task.listDetailTaskAssign.error

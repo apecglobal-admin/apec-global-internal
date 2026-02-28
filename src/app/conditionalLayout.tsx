@@ -8,7 +8,7 @@ import Footer from '@/components/footer'
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const hideLayout = pathname === '/login' 
-  const profifle = pathname === "/profile"
+  const profile = pathname.startsWith('/profile')
 
 
 
@@ -27,7 +27,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
           className="!text-base font-medium"  
       />
       {children}
-      {!hideLayout && !profifle && <Footer />}
+      {!hideLayout && !profile && <Footer />}
     </>
   )
 }

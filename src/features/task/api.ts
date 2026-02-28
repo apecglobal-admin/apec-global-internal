@@ -480,6 +480,37 @@ export const updateStatusSubTask = createAsyncThunk(
     }
 );
 
+export const getSubTaskDetail = createAsyncThunk(
+    "task/getSubTaskDetail",
+    async (payload: any, thunkAPI) => {
+        try {
+
+            const { task_assignment_id, subtask_status, token } = payload;
+            const params = Object.fromEntries(
+                Object.entries({  task_assignment_id, subtask_status }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/tasks/sub/detail",
+                {
+                    params,
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            return {
+                data: response.data,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+
 
 export const deleteSubTask = createAsyncThunk(
     "task/deleteSubTask",
