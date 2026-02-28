@@ -102,6 +102,7 @@ const ReportSelect = ({
   options,
   disabled = false,
   placeholder = "Chọn...",
+  alertWhenEmpty = false,
 }: {
   label: string;
   value: string;
@@ -109,6 +110,7 @@ const ReportSelect = ({
   options: { value: string; label: string }[];
   disabled?: boolean;
   placeholder?: string;
+  alertWhenEmpty?: boolean;
 }) => (
   <div className="space-y-1 m-0">
     <label className="text-xs font-semibold text-blue-200">{label}</label>
@@ -117,17 +119,19 @@ const ReportSelect = ({
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
       className={cn(
-        "w-full bg-slate-800/50 text-slate-200 text-sm px-2.5 py-1.5 rounded-lg border border-slate-500/50 outline-none mt-1",
+        "w-full bg-slate-800/50 text-sm px-2.5 py-1.5 rounded-lg border outline-none mt-1",
         disabled
-          ? "opacity-50 cursor-not-allowed bg-slate-900/50"
-          : "focus:border-blue-500/50",
+          ? "opacity-50 cursor-not-allowed bg-slate-900/50 border-slate-500/50 text-slate-200"
+          : alertWhenEmpty && !value
+            ? "border-red-500/70 text-red-400 focus:border-red-500/80"
+            : "border-slate-500/50 text-slate-200 focus:border-blue-500/50",
       )}
     >
-      <option value="" disabled hidden>
+      <option value="" disabled hidden className="text-slate-400">
         {placeholder}
       </option>
       {options.map((opt) => (
-        <option key={opt.value} value={opt.value}>
+        <option key={opt.value} value={opt.value} className="text-slate-200">
           {opt.label}
         </option>
       ))}
@@ -191,12 +195,21 @@ export const AIReportModal = ({
     const updateDataField = (field: keyof typeof report.data, value: any) => {
       if (!reportResult || reportResult.report_project !== "other") return;
       const newReports = [...reportResult.reports];
+
+      let newData = {
+        ...newReports[index].data,
+        [field]: value,
+      };
+
+      if (field === "status" && Number(value) === 4) {
+        newData.progress = 100;
+      } else if (field === "progress" && Number(value) === 100) {
+        newData.status = 4;
+      }
+
       newReports[index] = {
         ...newReports[index],
-        data: {
-          ...newReports[index].data,
-          [field]: value,
-        },
+        data: newData,
       };
       setReportResult({ ...reportResult, reports: newReports });
     };
@@ -243,6 +256,8 @@ export const AIReportModal = ({
             {isParent
               ? parentTasks.find(
                   (t: any) =>
+                    t?.task?.id?.toString() ===
+                      report.parent_task_id?.toString() ||
                     t?.id?.toString() === report.parent_task_id?.toString(),
                 )?.task?.name || `ID: ${report.parent_task_id}`
               : report.data.task_name || "Nhiệm vụ con mới"}
@@ -253,19 +268,32 @@ export const AIReportModal = ({
           {!isParent && (
             <ReportSelect
               label="Nhiệm vụ cha"
-              value={report.parent_task_id || ""}
+              value={
+                parentTasks
+                  .find(
+                    (t: any) =>
+                      t?.task?.id?.toString() ===
+                        report.parent_task_id?.toString() ||
+                      t?.id?.toString() === report.parent_task_id?.toString(),
+                  )
+                  ?.task?.id?.toString() ||
+                report.parent_task_id ||
+                ""
+              }
               onChange={updateParentTaskId}
               options={parentTasks.map((t: any) => ({
-                value: t?.id?.toString() || "",
+                value: t?.task?.id?.toString() || t?.id?.toString() || "",
                 label: t?.task?.name || "Nhiệm vụ không xác định",
               }))}
               placeholder="Chọn nhiệm vụ cha..."
+              disabled={isUpdate}
+              alertWhenEmpty
             />
           )}
 
           {!isParent && (
             <ReportInput
-              label="Tên công việc"
+              label="Nhiệm vụ con"
               value={report.data.task_name || ""}
               onChange={(v) => updateDataField("task_name", v)}
               disabled={!canEditName}
@@ -284,6 +312,15 @@ export const AIReportModal = ({
             ]}
             placeholder="Chọn trạng thái..."
           />
+
+          {!isParent && report.action === "insert" && (
+            <ReportInput
+              label="Tiến độ cần đạt (%)"
+              value={report.data.target_value ?? 100}
+              onChange={(v) => updateDataField("target_value", v)}
+              type="number"
+            />
+          )}
 
           {!isParent && (
             <ReportInput

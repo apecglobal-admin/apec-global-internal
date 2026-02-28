@@ -10,6 +10,7 @@ import {
   updateProgressTask,
   updateProgressSubTask,
   createSubTask,
+  getSubTask,
 } from "../features/task/api";
 
 export interface NTLReportItem {
@@ -31,6 +32,7 @@ export interface NTLReportItem {
 export interface GenericReportData {
   task_name?: string;
   progress?: number;
+  target_value?: number;
   status: number;
   achieved_value?: number;
 }
@@ -240,9 +242,11 @@ export const useAIReport = (
         ? modalParentTasks
         : parentTasks;
 
-      // Find the parent task - parent_task_id from dropdown is task_assignment_id (t.id)
+      // Find the parent task - handle both task.id and assignment id
       const parentTask = tasksToUse.find(
-        (t: any) => t?.id?.toString() === report.parent_task_id,
+        (t: any) =>
+          t?.task?.id?.toString() === report.parent_task_id?.toString() ||
+          t?.id?.toString() === report.parent_task_id?.toString(),
       );
 
       if (!parentTask) {
@@ -291,9 +295,8 @@ export const useAIReport = (
           }
           const payload = {
             id: parseInt(report.sub_task_id),
-            task_assignment_id: parseInt(taskAssignmentId),
-            process: (report.data.progress ?? 0).toString(),
-            status: statusId,
+            value: (report.data.progress ?? 0).toString(),
+            subtask_status: statusId,
             token,
           };
           console.log("Updating subtask:", payload);
@@ -317,7 +320,7 @@ export const useAIReport = (
                 description: "",
                 task_id: parseInt(taskId),
                 task_assignment_id: parseInt(taskAssignmentId),
-                target_value: report.data.progress ?? 0,
+                target_value: report.data.target_value ?? 100,
               },
             ],
           };
@@ -325,6 +328,60 @@ export const useAIReport = (
           const result = await dispatch(createSubTask(payload) as any);
           if (result?.payload?.data?.success) {
             successes++;
+
+            try {
+              let createdSubtask = result.payload.data.data;
+              let newSubtaskId = null;
+
+              if (Array.isArray(createdSubtask) && createdSubtask.length > 0) {
+                newSubtaskId = createdSubtask[0].id;
+              } else if (createdSubtask && createdSubtask.id) {
+                newSubtaskId = createdSubtask.id;
+              } else {
+                // Wait for DB insertion lag before refetching
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+
+                const fetchResult = await dispatch(
+                  getSubTask({
+                    limit: 100,
+                    offset: 0,
+                    task_assignment_id: parseInt(taskAssignmentId),
+                    token,
+                  }) as any,
+                );
+
+                if (fetchResult?.payload?.data?.success) {
+                  const allSubtasks = fetchResult.payload.data.data;
+                  const matched = allSubtasks?.filter(
+                    (s: any) =>
+                      s.name === (report.data.task_name || "Nhiệm vụ con mới"),
+                  );
+                  if (matched && matched.length > 0) {
+                    newSubtaskId = matched[matched.length - 1].id;
+                  }
+                }
+              }
+
+              if (
+                newSubtaskId &&
+                report.data.progress !== undefined &&
+                report.data.progress !== null
+              ) {
+                const progressPayload = {
+                  id: newSubtaskId,
+                  value: report.data.progress.toString(),
+                  subtask_status: statusId,
+                  token,
+                };
+                console.log(
+                  "Updating newly created subtask progress:",
+                  progressPayload,
+                );
+                await dispatch(updateProgressSubTask(progressPayload) as any);
+              }
+            } catch (err) {
+              console.error("Error setting progress for new subtask:", err);
+            }
           } else {
             console.error("Create subtask failed:", result?.payload);
             failures++;
