@@ -93,9 +93,9 @@ export const ReportInstructionButton = () => {
                           Khảo sát cửa hàng
                         </span>
                         "<br />
-                        Ví dụ: "
+                        Ví dụ thêm việc con cho 1 việc cha cụ thể: "
                         <span className="text-green-400">
-                          Ký hợp đồng phân phối sản phẩm Spa Queency
+                          Soạn hợp đồng thuộc Quản lý tài liệu
                         </span>
                         "
                       </div>
@@ -255,31 +255,54 @@ export const ReportInstructionButton = () => {
                             1. Cách hoạt động
                           </h4>
                         </div>
+
                         <div className="p-3 space-y-2 text-slate-300 text-sm">
-                          <p>
-                            Hệ thống so khớp{" "}
-                            <strong className="text-green-400">
-                              TÊN CÔNG VIỆC
-                            </strong>{" "}
-                            bạn nhắc đến với danh sách nhiệm vụ hiện có.
-                          </p>
-                          <p>
-                            Ưu tiên khớp{" "}
-                            <span className="text-white font-semibold">
-                              nhiệm vụ cha
-                            </span>{" "}
-                            trước → nếu không khớp mới tìm{" "}
-                            <span className="text-white font-semibold">
-                              việc con
-                            </span>
-                            . Việc chưa có sẽ được{" "}
-                            <span className="text-white font-semibold">
-                              THÊM MỚI
-                            </span>{" "}
-                            dưới nhiệm vụ cha tương ứng.
-                          </p>
-                          <p className="italic text-slate-400 text-xs">
+                          <div className="space-y-3">
+                            <div>
+                              <div className="mb-2 text-slate-200 font-medium">
+                                Hệ thống tự động so khớp <span className="text-green-400 font-semibold">tên công việc</span> bạn cung cấp theo thứ tự:
+                              </div>
+                              <ul className="list-decimal pl-5 space-y-1 text-slate-300">
+                                <li>
+                                  Tìm{" "}
+                                  <span className="text-white font-semibold">
+                                    việc cha
+                                  </span>{" "}
+                                  → nếu khớp: cập nhật việc cha
+                                </li>
+                                <li>
+                                  Tìm{" "}
+                                  <span className="text-white font-semibold">
+                                    việc con
+                                  </span>{" "}
+                                  → nếu khớp: cập nhật việc con
+                                </li>
+                                <li>
+                                  Không khớp → tự động{" "}
+                                  <span className="text-white font-semibold">
+                                    thêm việc con mới
+                                  </span>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                          <p className="italic text-amber-400 text-xs">
                             * Có thể báo cáo nhiều việc 1 lần.
+                          </p>
+                          <p className="text-slate-400 italic text-xs">
+                            <strong>* Mẹo:</strong> Nên nói kèm tên cha: &quot;
+                            <strong>[Việc con]</strong> thuộc{" "}
+                            <strong>[Nhiệm vụ cha]</strong>&quot;
+                            <br />
+                            (VD:
+                            <span className="text-slate-400 italic">
+                              {" "}
+                              "<strong>
+                                Gửi báo giá khách hàng
+                              </strong> thuộc{" "}
+                              <strong>Chăm sóc khách hàng</strong>"
+                            </span>
+                            ).
                           </p>
                         </div>
                       </div>
@@ -437,18 +460,29 @@ export const ReportInstructionButton = () => {
                                 <span className="text-green-400">
                                   [Tên việc mới]
                                 </span>{" "}
-                                +{" "}
+                                (thuộc{" "}
+                                <span className="text-blue-400">
+                                  [Nhiệm vụ cha]
+                                </span>
+                                ) + (
                                 <span className="text-amber-400">
                                   [Tiến độ]
                                 </span>
+                                )
                               </div>
                             </div>
                             <div className="bg-slate-900/50 p-2.5 rounded border border-green-700/50 text-xs">
                               <p className="italic text-slate-300 mb-1">
                                 &quot;
+                                <span>Thêm </span>
                                 <span className="text-green-400">
-                                  Soạn hợp đồng
+                                  soạn hợp đồng
                                 </span>{" "}
+                                <span>thuộc </span>
+                                <span className="text-blue-400">
+                                  Quản lý tài liệu
+                                </span>
+                                ,{" "}
                                 <span className="text-amber-400">đạt 50%</span>
                                 .&quot;
                               </p>
@@ -491,8 +525,9 @@ export const ReportInstructionButton = () => {
                             <div className="bg-slate-900/50 p-2.5 rounded border border-amber-300/50 text-xs">
                               <p className="italic text-slate-300 mb-1">
                                 &quot;
+                                <span>Cập nhật</span>{" "}
                                 <span className="text-green-400">
-                                  Soạn hợp đồng
+                                  soạn hợp đồng
                                 </span>{" "}
                                 <span className="text-amber-400">
                                   tiến độ 90%
