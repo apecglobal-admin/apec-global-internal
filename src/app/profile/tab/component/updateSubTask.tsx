@@ -29,7 +29,7 @@ interface UpdateSubTaskProps {
   taskAssignmentId: string;
   statusTask?: StatusTask[];
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (refreshTask?: boolean) => void;
 }
 
 const formatNumber = (value: number) =>
@@ -83,10 +83,12 @@ function UpdateSubTask({
   const handleActualValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
     if (!isNaN(value) && value >= 0) {
-      setActualValue(value);
+      const maxValue = selectedSubTask?.target_value ?? Infinity;
+      const clampedValue = Math.min(value, maxValue);
+      setActualValue(clampedValue);
       if (selectedSubTask?.target_value) {
         const percent = Math.min(
-          Math.round((value / selectedSubTask.target_value) * 100),
+          Math.round((clampedValue / selectedSubTask.target_value) * 100),
           100
         );
         setProgressValue(percent);
@@ -106,6 +108,7 @@ function UpdateSubTask({
       toast.warning("Tên nhiệm vụ con không được để trống");
       return;
     }
+  
     const token = localStorage.getItem("userToken");
     const nameChanged = isEditingInfo && trimmedName !== selectedSubTask?.name;
     const descChanged = isEditingInfo && editDescription.trim() !== (selectedSubTask?.description ?? "");
@@ -137,6 +140,14 @@ function UpdateSubTask({
         const progressResult = await dispatch(
           updateProgressSubTask(progressPayload) as any
         );
+
+        if(progressValue === 100){
+          await dispatch(updateStatusSubTask({
+              status: 4,
+              token, 
+              ids: [parseInt(selectedSubTaskId)]
+          }) as any)
+        }
 
         if (progressResult?.payload?.data?.success && !progressResult?.error) {
           progressSuccess = true;
@@ -175,6 +186,7 @@ function UpdateSubTask({
     }
 
 
+
     const progressResult = !shouldUpdateProgress || progressSuccess;
     const infoResult = !shouldUpdateInfo || infoSuccess;
     const anySuccess =
@@ -182,7 +194,7 @@ function UpdateSubTask({
       (shouldUpdateInfo && infoSuccess);
 
     if (anySuccess) {
-      onSuccess();
+      onSuccess(true);
     }
 
     if (progressResult && infoResult) {
