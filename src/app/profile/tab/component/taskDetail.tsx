@@ -51,6 +51,7 @@ interface TaskDetailProps {
 }
 
 interface SubTask {
+    
     id: string;
     name: string;
     description?: string;
@@ -215,7 +216,6 @@ function TaskDetail({
         //     toast.warning("Vui lòng tải lên minh chứng (ảnh hoặc tài liệu) khi hoàn thành nhiệm vụ")
         //     return;
         // }
-
         setIsSaving(true);
         try {
             const token = localStorage.getItem("userToken");

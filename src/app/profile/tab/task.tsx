@@ -226,29 +226,37 @@ function TasksTab() {
     await dispatch(personTasks(payload1 as any) as any);
     setSelectedTask(taskId);
 
-    // const payload2 = {
-    //   page: page,
-    //   token,
-    //   statusFilter: 2,
-    //   key: "tasks"
-    // };
-
-    // dispatch(personTasks(payload2 as any) as any);
+    
   };
 
 
-  const refreshTasks = (id: any) => {
+  const refreshTasks = async (id: any) => {
     const token = localStorage.getItem("userToken");
-    if (token) {
+    
       const payload1 = {
         id,
         token,
         key: "detailTasks"
       };
-      dispatch(personTasks(payload1 as any) as any);
+      const res = await dispatch(personTasks(payload1 as any) as any);
 
+      const payload = {
+        page: page,
+        token,
+        filter: taskFilter === "all" ? null : parseInt(taskFilter),
+        projectFilter: projectFilter === "all" ? null : parseInt(projectFilter),
+        kpiFilter: kpiFilter === "all" ? null : parseInt(kpiFilter),
+        statusFilter: statusFilter === "all" ? null : parseInt(statusFilter),
+        priorityFilter: priorityFilter === "all" ? null : parseInt(priorityFilter),
+        search: searchFilter === "" ? null : searchFilter,
+        key: "tasks"
+      };
+  
+      dispatch(personTasks(payload as any) as any);
+      
       refreshFilter()
-    }
+
+      
   };
 
   const getTaskStatusBadge = (statusId: number, checked: boolean, normal: boolean = false) => {
