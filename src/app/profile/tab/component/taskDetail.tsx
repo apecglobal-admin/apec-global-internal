@@ -338,8 +338,8 @@ function TaskDetail({
         }
         return "";
     };
-
-    const refreshSubTasks = () => {
+    
+    const refreshSubTasks = async (refreshTask: boolean = false) => {
         setSubTaskOffset(0);
         setHasMoreSubTasks(true);
         setAllSubTasks([]);
@@ -351,7 +351,11 @@ function TaskDetail({
             limit: 5,
             offset: 0
         };
-        dispatch(getSubTask(payload) as any);
+        await dispatch(getSubTask(payload) as any);
+        if(refreshTask){
+            onUpdateSuccess?.(task.id)
+        }
+
     };
 
     const loadMoreSubTasks = async () => {
@@ -689,7 +693,7 @@ function TaskDetail({
                                 task={task}
                                 statusTask={statusTask}
                                 onClose={() => setShowCreateSubTask(false)}
-                                onSuccess={refreshSubTasks}
+                                onSuccess={(refreshTask) => refreshSubTasks(refreshTask)}
                             />
                         )}
 
@@ -700,7 +704,7 @@ function TaskDetail({
                                 taskAssignmentId={task.id}
                                 statusTask={statusTask}
                                 onClose={() => setShowUpdateSubTask(false)}
-                                onSuccess={refreshSubTasks}
+                                onSuccess={(refreshTask) => refreshSubTasks(refreshTask)}
                             />
                         )}
 
@@ -716,14 +720,14 @@ function TaskDetail({
                                             <div
                                                 key={subtask.id}
                                                 onClick={() => {
-                                                    if (isSelectMode) {
+                                                    if (isSelectMode && subtask.status.id !== 4) {
                                                         toggleSelect(subtask.id);
                                                     }
                                                 }}
                                                 className="flex items-start justify-between gap-3 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-lg px-3 py-2.5 transition"
                                             >
                                                 <div className="min-w-0 flex-1">
-                                                    {isSelectMode && (
+                                                    {isSelectMode && subtask.status.id !== 4 && (
                                                         <div className="mt-1" onClick={(e) => e.stopPropagation()}>
                                                             <input
                                                                 type="checkbox"

@@ -43,7 +43,7 @@ export default function AnnouncementSection() {
         useAnnouncementData();
     const [searchQuery, setSearchQuery] = useState<string>("");
 
-    const [activeCategory, setActiveCategory] = useState<number | "all">(2);
+    const [activeCategory, setActiveCategory] = useState<number | "all">("all");
     const [selectedDepartment, setSelectedDepartment] = useState<
         number | "all"
     >("all");

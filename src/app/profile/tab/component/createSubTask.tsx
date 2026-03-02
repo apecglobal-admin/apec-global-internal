@@ -23,7 +23,7 @@ interface CreateSubTaskProps {
     task: Task;
     statusTask?: StatusTask[];
     onClose: () => void;
-    onSuccess?: () => void;
+    onSuccess?: (refreshTask?: boolean) => void;
 }
 
 const defaultSubTask: SubTaskForm = { name: "", description: "", target_value: 0 };
@@ -32,7 +32,7 @@ function CreateSubTask({ task, statusTask, onClose, onSuccess }: CreateSubTaskPr
     const dispatch = useDispatch();
     const [subTasks, setSubTasks] = useState<SubTaskForm[]>([{ ...defaultSubTask }]);
     const [isSubmitting, setIsSubmitting] = useState(false);
-
+    
     const formatNumber = (num: number) => num.toLocaleString("vi-VN");
 
     const handleSubTaskChange = (index: number, field: keyof SubTaskForm, value: string | number) => {
@@ -76,7 +76,7 @@ function CreateSubTask({ task, statusTask, onClose, onSuccess }: CreateSubTaskPr
             const result = await dispatch(createSubTask(payload) as any);
             if (result?.payload?.data?.success) {
                 toast.success("Tạo nhiệm vụ con thành công!");
-                onSuccess?.();
+                onSuccess?.(true);
                 onClose();
             } else {
                 toast.error(result?.payload?.data?.message || "Tạo thất bại");
@@ -170,27 +170,38 @@ function CreateSubTask({ task, statusTask, onClose, onSuccess }: CreateSubTaskPr
                                     <label className="block text-xs font-semibold text-slate-300 mb-2">
                                         {task.units?.name === "%" ? `Tiến độ cần đạt (${task.units?.name})` : `Giá trị cần đạt (${task.units?.name || "%"})`}
                                     </label>
+
                                     {task.units?.name === "%" || task.units?.name === null ? (
+                                        // ✅ PHẦN % - Cố định 100%, không cho sửa
                                         <div className="flex items-center gap-3">
-                                            <input
-                                                type="range"
-                                                min="0"
-                                                max="100"
-                                                value={subTask.target_value}
-                                                onChange={e => handleSubTaskChange(index, "target_value", parseInt(e.target.value) || 0)}
-                                                className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                                            />
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                max="100"
-                                                value={subTask.target_value}
-                                                onChange={e => handleSubTaskChange(index, "target_value", parseInt(e.target.value) || 0)}
-                                                className="w-20 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:outline-none focus:border-blue-500 transition"
-                                            />
+                                            <div className="flex-1 h-2 bg-blue-500 rounded-lg" />
+                                            <div className="w-20 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-blue-400 text-sm text-center font-semibold select-none cursor-not-allowed">
+                                                100
+                                            </div>
                                         </div>
                                     ) : (
+                                        // ✅ PHẦN ĐƠN VỊ KHÁC - Có chú thích + input bình thường
                                         <div className="space-y-2">
+
+                                            {/* Hint box - chỉ hiện khi không phải % */}
+                                            <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2.5">
+                                                <svg className="text-amber-400 mt-0.5 flex-shrink-0 w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                                                </svg>
+                                                <p className="text-xs text-slate-400 leading-relaxed">
+                                                    <span className="text-amber-400 font-semibold">Gợi ý: </span>
+                                                    Nhiệm vụ cha cần đạt{" "}
+                                                    <span className="text-white font-semibold">
+                                                        {formatNumber(Number(task.target_value))} {task.units?.name}
+                                                    </span>
+                                                    . Hãy chia nhỏ theo giai đoạn — mỗi nhiệm vụ con nên đảm nhận trong khoảng{" "}
+                                                    <span className="text-blue-400 font-semibold">
+                                                        {formatNumber(Math.round(Number(task.target_value) / subTasks.length))} {task.units?.name}
+                                                    </span>
+                                                    {subTasks.length > 1 ? ` (chia đều cho ${subTasks.length} nhiệm vụ con)` : " để dễ theo dõi tiến độ"}.
+                                                </p>
+                                            </div>
+
                                             <input
                                                 type="number"
                                                 min="0"
