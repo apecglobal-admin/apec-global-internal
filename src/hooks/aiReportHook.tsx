@@ -9,6 +9,7 @@ import { useSelector, useDispatch } from "react-redux";
 import {
   updateProgressTask,
   updateProgressSubTask,
+  updateStatusSubTask,
   createSubTask,
   getSubTask,
 } from "../features/task/api";
@@ -264,12 +265,20 @@ export const useAIReport = (
 
       try {
         if (report.action === "update" && report.targetType === "parent") {
+          const progressVal = report.data.progress;
+          const achievedVal = report.data.achieved_value;
+          const finalValue =
+            achievedVal !== undefined && achievedVal !== null
+              ? achievedVal
+              : (progressVal ?? 0);
+
           // Update parent task progress
           const payload = {
             id: parseInt(taskAssignmentId),
             task_id: parseInt(taskId),
             status: statusId,
-            value: report.data.achieved_value ?? 0,
+            process: progressVal ?? 0,
+            value: finalValue,
             token,
           };
           console.log("Updating parent task:", payload);
@@ -301,7 +310,20 @@ export const useAIReport = (
           };
           console.log("Updating subtask:", payload);
           const result = await dispatch(updateProgressSubTask(payload) as any);
-          if (result?.payload?.data?.success) {
+
+          const statusPayload = {
+            ids: [report.sub_task_id],
+            status: statusId,
+            token,
+          };
+          const statusResult = await dispatch(
+            updateStatusSubTask(statusPayload) as any,
+          );
+
+          if (
+            result?.payload?.data?.success ||
+            statusResult?.payload?.data?.success
+          ) {
             successes++;
           } else {
             console.error("Update subtask failed:", result?.payload);
@@ -378,6 +400,19 @@ export const useAIReport = (
                   progressPayload,
                 );
                 await dispatch(updateProgressSubTask(progressPayload) as any);
+              }
+
+              if (newSubtaskId && statusId !== undefined) {
+                const statusPayload = {
+                  ids: [newSubtaskId.toString()],
+                  status: statusId,
+                  token,
+                };
+                console.log(
+                  "Updating newly created subtask status:",
+                  statusPayload,
+                );
+                await dispatch(updateStatusSubTask(statusPayload) as any);
               }
             } catch (err) {
               console.error("Error setting progress for new subtask:", err);
