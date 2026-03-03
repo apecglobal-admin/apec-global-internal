@@ -66,7 +66,8 @@ function ProfilePage() {
     const [showInfoModal, setShowInfoModal] = useState(false);
 
     
-
+    console.log(userInfo);
+    
     
     useEffect(() => {
         const token = localStorage.getItem("userToken");
@@ -100,14 +101,7 @@ function ProfilePage() {
         }
     }, [showUploadModal, userInfo]);
 
-    // useEffect(() => {
-    //     if (activeTab === "career") {
-    //       window.open("https://lotrinh.apecglobal.net/", "_blank");
-    //     }
-    // }, [activeTab]);
 
-    // Show loading state if userInfo is not available
-    //if (isLoadingUser == true || isLoadingDepartments == true || isLoadingPositions == true) {
     if (!userInfo || !positions || !departments) {
         return (
             <div className="h-screen bg-slate-950 flex items-center justify-center">
@@ -116,14 +110,12 @@ function ProfilePage() {
         );
     }
     
-    const currentExp =
-        typeof userInfo.exp === "string"
-            ? parseFloat(userInfo.exp)
-            : userInfo.exp;
-    const currentLevel = userInfo.level;
-    const expForNextLevel = currentLevel * userInfo.next_exp;
-    const expProgress = (currentExp / expForNextLevel) * 100;
-    const expRemaining = expForNextLevel - currentExp;
+    const currentExp = userInfo.exp;
+    const currentLevel = userInfo.level_current;
+    const nextLevel = userInfo.next_level;
+    const nextExp = userInfo.next_exp;
+    const expProgress = userInfo.progress_percent;
+    const expRemaining = userInfo.remaining_exp;
 
     const nextImage = () => {
         setCurrentImage((prev) => (prev + 1) % images.length);
@@ -357,25 +349,21 @@ function ProfilePage() {
                                     <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-3">
                                         <div className="flex items-center justify-between mb-2">
                                             <span className="text-xs font-semibold text-slate-300">
-                                                Level {currentLevel}
+                                                Lv.{currentLevel} → Lv.{nextLevel}
                                             </span>
                                             <span className="text-xs font-bold text-blue-400">
-                                                {currentExp.toFixed(0)}/
-                                                {expForNextLevel}
+                                                {currentExp.toFixed(0)} / {nextExp} XP
                                             </span>
                                         </div>
                                         <div className="relative w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
                                             <div
                                                 className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-400 rounded-full transition-all duration-500 shadow-lg shadow-blue-500/50"
-                                                style={{
-                                                    width: `${expProgress}%`,
-                                                }}
+                                                style={{ width: `${expProgress}%` }}
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
                                         </div>
                                         <p className="text-xs text-slate-500 mt-1">
-                                            {expRemaining.toFixed(0)} XP to next
-                                            level
+                                            Còn {expRemaining.toFixed(0)} XP để lên Lv.{nextLevel}
                                         </p>
                                     </div>
                                 </div>
@@ -449,11 +437,10 @@ function ProfilePage() {
                                 <div className="hidden lg:block bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-xs font-semibold text-slate-300">
-                                            Level {currentLevel}
+                                            Lv.{currentLevel} → Lv.{nextLevel}
                                         </span>
                                         <span className="text-xs font-bold text-blue-400">
-                                            {currentExp.toFixed(0)}/
-                                            {expForNextLevel}
+                                            {currentExp.toFixed(0)} / {nextExp} XP
                                         </span>
                                     </div>
                                     <div className="relative w-full h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
@@ -464,8 +451,7 @@ function ProfilePage() {
                                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
                                     </div>
                                     <p className="text-xs text-slate-500 mt-2">
-                                        {expRemaining.toFixed(0)} XP to next
-                                        level
+                                        Còn {expRemaining.toFixed(0)} XP để lên Lv.{nextLevel}
                                     </p>
                                 </div>
 

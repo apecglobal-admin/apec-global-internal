@@ -95,6 +95,7 @@ const TaskLevelList = () => {
 
   const handleTaskClick = async (taskId: string) => {
     const token = localStorage.getItem("userToken");
+    setSelectedTaskId(taskId);
 
     await dispatch(getListTaskLevel({
         id: taskId,
@@ -102,7 +103,6 @@ const TaskLevelList = () => {
         key: "detailTaskLevel"
     }) as any);
 
-    setSelectedTaskId(taskId);
 
   };
 
@@ -410,8 +410,23 @@ const TaskLevelList = () => {
   }
 
 
-  if (selectedTaskId && detailTaskLevel) {
-    
+  if (selectedTaskId) {
+    if (loadingDetailTaskLevel) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-600 border-t-blue-500"></div>
+        </div>
+      );
+    }
+  
+    if (!detailTaskLevel) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-600 border-t-blue-500"></div>
+        </div>
+      );
+    }
+  
     return <TaskDetailAssign task={detailTaskLevel} onBack={handleBackToList} isEdit={false} />;
   }
 
