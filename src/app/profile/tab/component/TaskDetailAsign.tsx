@@ -44,7 +44,8 @@ interface SubTask {
 }
 
 const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, isEdit = true }) => {
-
+    console.log(task);
+    
     const dispatch = useDispatch();
     const {
         typeTask,
