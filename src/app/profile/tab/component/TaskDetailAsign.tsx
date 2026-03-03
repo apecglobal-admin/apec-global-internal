@@ -27,6 +27,7 @@ interface TaskDetailProps {
     task: any;
     onBack: () => void;
     onUpdate?: () => void;
+    isEdit?: boolean
 }
 
 interface SubTask {
@@ -42,7 +43,7 @@ interface SubTask {
     };
 }
 
-const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate }) => {
+const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, isEdit = true }) => {
 
     const dispatch = useDispatch();
     const {
@@ -167,7 +168,7 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate })
     const isSubTaskLoading = !!loadingSubTaskDetail;
     const completedSubTasks = subTasks.filter(st => st.status.id === 4).length;
 
-    if (isEditing) {
+    if (isEditing && isEdit) {
         return (
             <div className="max-w-7xl mx-auto p-6">
                 <div className="flex items-center justify-between mb-6">
@@ -202,13 +203,16 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate })
                     </svg>
                     <span className="text-xs">Quay lại</span>
                 </button>
-                <button
-                    onClick={() => setIsEditing(true)}
-                    className="px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center gap-2 transition-colors text-xs order-1 sm:order-2"
-                >
-                    <Edit2 size={16} />
-                    Chỉnh sửa
-                </button>
+                {isEdit && (
+                    <button
+                        onClick={() => setIsEditing(true)}
+                        className="px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center gap-2 transition-colors text-xs order-1 sm:order-2"
+                    >
+                        <Edit2 size={16} />
+                        Chỉnh sửa
+                    </button>
+
+                )}
             </div>
 
             <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-4 sm:p-6">

@@ -6,6 +6,7 @@ import EventManager from './component/EventManager'
 import Target from './component/Target'
 import Support from './component/Support'
 import Cautions from './Cautions'
+import TaskLevelList from './component/TaskLevelList'
 
 type TabId = 'list' | 'check' | 'request' | 'event' | 'support' | "caution"
 
@@ -14,11 +15,13 @@ function TaskManager() {
   const [requestSubTab, setRequestSubTab] = useState<'request' | 'target'>(
     'request'
   )
-
+  const [listSubTab, setListSubTab] = useState<'main' | 'sub'>(
+    'main'
+  )
   const tabs = [
     {
       id: 'list',
-      label: 'Công việc đã giao',
+      label: 'Công việc',
       shortLabel: 'Công việc',
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,10 +162,39 @@ function TaskManager() {
             </button>
           </div>
         )}
-
+        {activeTab === 'list' && (
+          <div className="bg-slate-800 rounded-lg p-1 flex gap-1">
+            <button
+              onClick={() => setListSubTab('main')}
+              className={`flex-1 py-2 rounded-lg font-semibold
+                ${listSubTab === 'main'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-slate-400 hover:bg-slate-700'
+                }`}
+            >
+              Công việc đã giao
+            </button>
+            <button
+              onClick={() => setListSubTab('sub')}
+              className={`flex-1 py-2 rounded-lg font-semibold
+                ${listSubTab === 'sub'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-slate-400 hover:bg-slate-700'
+                }`}
+            >
+              Quản lý công việc
+            </button>
+          </div>
+        )}
         {/* ================= CONTENT ================= */}
         <div className="rounded-lg">
-          {activeTab === 'list' && <TaskListAssign />}
+          {activeTab === 'list' && (
+            <>
+              {listSubTab === "main" && <TaskListAssign />}
+              {listSubTab === "sub" && <TaskLevelList />}
+
+            </>
+          )}
           {activeTab === 'check' && <CheckedTask />}
           {activeTab === 'request' && (
             <>

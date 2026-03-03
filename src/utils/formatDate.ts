@@ -20,3 +20,8 @@ export function formatDateTime(date: Date | string | number) {
   return format(new Date(date), "dd/MM/yyyy HH:mm:ss");
 }
 
+
+export const getToday = () => {
+  const today = new Date();
+  return today.toISOString().split("T")[0];
+};
