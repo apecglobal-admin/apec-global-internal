@@ -31,15 +31,20 @@ export const useTaskData = () => {
     supportTaskStatus: task.supportTaskStatus.data.data,
     listEmployeeSupport: task.listEmployeeSupport.data.data,
     subTaskDetail: task.subTaskDetail.data.data,
+    listTaskLevel: task.listTaskLevel.data.data,
+    detailTaskLevel:  task.detailTaskLevel.data.data,
 
     // Loading states
 
     loadingListDetailTaskAssign: task.listDetailTaskAssign.loading,
     loadingSubTaskDetail: task.subTaskDetail.loading,
+    loadingListTaskLevel: task.listTaskLevel.loading,
+    loadingDetailTaskLevel: task.detailTaskLevel.loading,
+
 
     // Error states
-    errorListDetailTaskAssign: task.listDetailTaskAssign.error
-
+    errorListDetailTaskAssign: task.listDetailTaskAssign.error,
+    errorListTaskLevel : task.listTaskLevel.error
     // Status codes
 
   };

@@ -1135,6 +1135,54 @@ export const importTemplate  = createAsyncThunk(
 );
 
 
+export const getListTaskLevel  = createAsyncThunk(
+    "task/getListTaskLevel",
+    async (payload: any, thunkAPI) => {
+        try {
+            const {
+                id, 
+                page, 
+                limit, 
+                task_status,
+                type_task,
+                project_id,
+                task_priority,
+                search, 
+                token,
+            } = payload;
+            const params = Object.fromEntries(
+                Object.entries({                 
+                    id, 
+                    page, 
+                    limit, 
+                    task_status,
+                    type_task,
+                    project_id,
+                    task_priority,
+                    search
+                }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/tasks/level/department", {
+                params,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+
 
 
 
