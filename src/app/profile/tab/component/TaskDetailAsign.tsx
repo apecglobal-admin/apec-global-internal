@@ -66,17 +66,21 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, i
     useEffect(() => {
         const token = localStorage.getItem("userToken");
         if (!statusTask) dispatch(getStatusTask() as any);
-        dispatch(getTypeTask() as any);
-        dispatch(getPriorityTask() as any);
-        dispatch(getListProject({}) as any);
-        dispatch(getChildKpi() as any);
         dispatch(getListEmployee({ position_id: null, department_id: null, filter: null, token }) as any);
-    }, [dispatch]);
+        
+        if (isEdit) {
+            if (!typeTask) dispatch(getTypeTask() as any);
+            if (!priorityTask) dispatch(getPriorityTask() as any);
+            if (!listProject) dispatch(getListProject({}) as any);
+            if (!childKpi) dispatch(getChildKpi() as any);
+        }
+    }, [dispatch, isEdit]);
 
     useEffect(() => {
+        if (!isEdit) return;
         const hasCompleted = task?.task_assignment?.some((a: any) => a.process === 100);
         setHasCompletedEmployee(hasCompleted);
-    }, [task]);
+    }, [task, isEdit]);
 
     const formatDate = (dateString: string) =>
         new Date(dateString).toLocaleDateString('vi-VN');

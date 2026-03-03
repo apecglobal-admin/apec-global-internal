@@ -93,16 +93,17 @@ const TaskLevelList = () => {
     }
   }, []);
 
-  const handleTaskClick = (taskId: string) => {
-    
+  const handleTaskClick = async (taskId: string) => {
     const token = localStorage.getItem("userToken");
 
-    setSelectedTaskId(taskId);
-    dispatch(getListTaskLevel({
+    await dispatch(getListTaskLevel({
         id: taskId,
         token: token,
         key: "detailTaskLevel"
     }) as any);
+
+    setSelectedTaskId(taskId);
+
   };
 
   const handlePageChange = (page: number) => {
@@ -410,6 +411,7 @@ const TaskLevelList = () => {
 
 
   if (selectedTaskId && detailTaskLevel) {
+    
     return <TaskDetailAssign task={detailTaskLevel} onBack={handleBackToList} isEdit={false} />;
   }
 
