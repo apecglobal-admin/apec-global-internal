@@ -164,7 +164,6 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, i
         setIsDialogOpen(true);
         const token = localStorage.getItem("userToken");
         const res = await dispatch(getSubTaskDetail({ task_assignment_id: assignmentId, token }) as any);
-        console.log(res);
         
     };
 
@@ -299,66 +298,69 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, i
                                     key={assignment.id}
                                     className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 sm:p-4 hover:border-blue-500/50 hover:bg-slate-900/80 transition-all cursor-pointer group"
                                 >
-                                    <div className="flex items-center justify-between gap-3">
+                                    <div className="flex items-start justify-between gap-2">
                                         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                                             {assignment.employee.avatar ? (
                                                 <img
                                                     src={assignment.employee.avatar}
                                                     alt={assignment.employee.name}
-                                                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-slate-600 flex-shrink-0"
+                                                    className="w-9 h-9 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-slate-600 flex-shrink-0"
                                                 />
                                             ) : (
-                                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-base sm:text-lg border-2 border-slate-600 flex-shrink-0">
+                                                <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm sm:text-lg border-2 border-slate-600 flex-shrink-0">
                                                     {assignment.employee.name.charAt(0).toUpperCase()}
                                                 </div>
                                             )}
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-1.5">
                                                     <p className="font-semibold text-white text-sm sm:text-base truncate">{assignment.employee.name}</p>
                                                     <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-blue-400 transition-colors flex-shrink-0" />
                                                 </div>
-                                                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-1">
-                                                    <span className={`text-xs px-2 py-0.5 sm:py-1 rounded-lg ${getStatusColor(assignment.status.id)}`}>
+                                                <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1">
+                                                    <span className={`text-xs px-2 py-0.5 rounded-lg ${getStatusColor(assignment.status.id)}`}>
                                                         {assignment.status.name}
                                                     </span>
                                                     {assignment.checked && (
-                                                        <span className="text-xs px-2 py-0.5 sm:py-1 rounded-lg bg-green-500/20 text-green-400 border border-green-500/30">
-                                                            ✓ Đã kiểm tra
+                                                        <span className="text-xs px-2 py-0.5 rounded-lg bg-green-500/20 text-green-400 border border-green-500/30">
+                                                            ✓ Đã KT
                                                         </span>
                                                     )}
+                                                    
+                                                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-slate-700/80 text-slate-300 border border-slate-600">
+                                                        {assignment.subtask_count} nhiệm vụ con
+                                                    </span>
+                                                    
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="text-right flex-shrink-0">
-                                            {(task.is_overdue || task.is_due) ? (
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-xs sm:text-sm font-medium text-white">Tiến độ</span>
-                                                    <div className="flex items-center gap-2">
-                                                        {task.is_overdue && (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] px-2.5 py-1 rounded-full bg-red-500 text-white font-medium shadow-sm">
-                                                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                                                                </svg>
-                                                                Trễ hạn
-                                                            </span>
-                                                        )}
-                                                        {task.is_due && !task.is_overdue && (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] px-2.5 py-1 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium shadow-sm animate-pulse">
-                                                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                                                                </svg>
-                                                                Gần deadline
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <span className="text-xs sm:text-sm font-medium text-white">Tiến độ</span>
-                                            )}
-                                            <p className="font-bold text-blue-400 text-base sm:text-lg">{assignment.process}%</p>
+
+                                        {/* Right: Progress + Badges */}
+                                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                            <div className="flex flex-wrap justify-end items-center gap-1">
+                                                {task.is_overdue && (
+                                                    <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-red-500 text-white font-medium">
+                                                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                                        </svg>
+                                                        Trễ
+                                                    </span>
+                                                )}
+                                                {task.is_due && !task.is_overdue && (
+                                                    <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium animate-pulse">
+                                                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                                                        </svg>
+                                                        Deadline
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-xs text-slate-400">Tiến độ</p>
+                                                <p className="font-bold text-blue-400 text-base sm:text-lg leading-tight">{assignment.process}%</p>
+                                            </div>
                                             {assignment.completed_date && (
-                                                <p className="text-xs text-slate-500 mt-1 hidden sm:block">
-                                                    deadline: {formatDate(assignment.completed_date)}
+                                                <p className="text-xs text-slate-500">
+                                                    {formatDate(assignment.completed_date)}
                                                 </p>
                                             )}
                                         </div>
