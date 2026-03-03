@@ -107,16 +107,15 @@ const TaskListAssign: React.FC = () => {
         }
     }, []);
     
-    const handleTaskClick = (taskId: string) => {
-
+    const handleTaskClick = async (taskId: string) => {
+        
         const token = localStorage.getItem("userToken");
-
-        setSelectedTaskId(taskId);
-        dispatch(getDetailListTaskAssign({
+        await dispatch(getDetailListTaskAssign({
             id: taskId,
             token: token,
             key: "detailTaskAssign"
         }) as any);
+        setSelectedTaskId(taskId);
     };
 
     const handleBackToList = () => {
