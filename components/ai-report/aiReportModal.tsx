@@ -65,6 +65,40 @@ const ReportInput = ({
   </div>
 );
 
+const ReportSliderInput = ({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number | string;
+  onChange: (val: number) => void;
+}) => (
+  <div className="space-y-1 m-0">
+    <label className="text-xs font-semibold text-blue-200">{label}</label>
+    <div className="flex items-center gap-2 mt-1">
+      <input
+        type="range"
+        min={0}
+        max={100}
+        value={typeof value === "number" ? value : 0}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="flex-1 h-1.5 accent-blue-500 cursor-pointer"
+      />
+      <input
+        type="number"
+        min={0}
+        max={100}
+        value={value}
+        onChange={(e) =>
+          onChange(Math.min(100, Math.max(0, Number(e.target.value))))
+        }
+        className="w-16 bg-slate-800/50 text-slate-200 text-sm px-2 py-1.5 rounded-lg border border-slate-500/50 outline-none text-center focus:border-blue-500/50"
+      />
+    </div>
+  </div>
+);
+
 const ReportTextarea = ({
   label,
   value,
@@ -314,20 +348,18 @@ export const AIReportModal = ({
           />
 
           {!isParent && report.action === "insert" && (
-            <ReportInput
+            <ReportSliderInput
               label="Tiến độ cần đạt (%)"
               value={report.data.target_value ?? 100}
               onChange={(v) => updateDataField("target_value", v)}
-              type="number"
             />
           )}
 
           {!isParent && (
-            <ReportInput
+            <ReportSliderInput
               label="Tiến độ (%)"
               value={report.data.progress ?? ""}
               onChange={(v) => updateDataField("progress", v)}
-              type="number"
             />
           )}
 

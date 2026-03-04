@@ -92,10 +92,25 @@ export const ReportInstructionButton = () => {
                         <span className="text-green-400">
                           Khảo sát cửa hàng
                         </span>
-                        "<br />
+                        <span className="text-white"> 60%</span>"
+                        <br />
+                        Ví dụ: "<span className="text-white">Hoàn thành </span>
+                        <span className="text-green-400">Gặp đối tác</span>"
+                        <br />
                         Ví dụ thêm việc con cho 1 việc cha cụ thể: "
+                        <span className="text-white">Trong </span>
+                        <span className="text-green-400">Quản lý tài liệu</span>
+                        <span className="text-white"> thêm </span>
+                        <span className="text-green-400">Soạn hợp đồng</span>
+                        "
+                        <br />
+                        Ví dụ: "<span className="text-white">Trong </span>
                         <span className="text-green-400">
-                          Soạn hợp đồng thuộc Quản lý tài liệu
+                          Nhật ký ngày tháng 3
+                        </span>
+                        <span className="text-white">
+                          {" "}
+                          hoàn thành tất cả việc con
                         </span>
                         "
                       </div>
@@ -260,7 +275,11 @@ export const ReportInstructionButton = () => {
                           <div className="space-y-3">
                             <div>
                               <div className="mb-2 text-slate-200 font-medium">
-                                Hệ thống tự động so khớp <span className="text-green-400 font-semibold">tên công việc</span> bạn cung cấp theo thứ tự:
+                                Hệ thống tự động so khớp{" "}
+                                <span className="text-green-400 font-semibold">
+                                  tên công việc
+                                </span>{" "}
+                                bạn cung cấp theo thứ tự:
                               </div>
                               <ul className="list-decimal pl-5 space-y-1 text-slate-300">
                                 <li>
