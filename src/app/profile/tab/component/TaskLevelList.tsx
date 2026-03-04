@@ -409,7 +409,6 @@ const TaskLevelList = () => {
     )
   }
 
-  console.log("listTaskLevel.data", listTaskLevel.data);
   
   if (selectedTaskId) {
     if (loadingDetailTaskLevel) {

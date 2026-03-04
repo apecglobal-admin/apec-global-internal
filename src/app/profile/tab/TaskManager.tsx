@@ -166,7 +166,7 @@ function TaskManager() {
           <div className="bg-slate-800 rounded-lg p-1 flex gap-1">
             <button
               onClick={() => setListSubTab('main')}
-              className={`flex-1 py-2 rounded-lg font-semibold
+              className={`flex-1 py-2 rounded-lg font-semibold text-sm
                 ${listSubTab === 'main'
                   ? 'bg-emerald-600 text-white'
                   : 'text-slate-400 hover:bg-slate-700'
@@ -176,7 +176,7 @@ function TaskManager() {
             </button>
             <button
               onClick={() => setListSubTab('sub')}
-              className={`flex-1 py-2 rounded-lg font-semibold
+              className={`flex-1 py-2 rounded-lg font-semibold text-sm
                 ${listSubTab === 'sub'
                   ? 'bg-emerald-600 text-white'
                   : 'text-slate-400 hover:bg-slate-700'
