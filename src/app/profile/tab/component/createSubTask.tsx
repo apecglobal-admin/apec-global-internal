@@ -52,6 +52,45 @@ function CreateSubTask({ task, statusTask, onClose, onSuccess }: CreateSubTaskPr
         setSubTasks([{ ...defaultSubTask }]);
     };
 
+    const handleFormattedTargetChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        index: number
+    ) => {
+        const input = e.target;
+        const selectionStart = input.selectionStart || 0;
+    
+        const rawValue = input.value;
+    
+        const numericString = rawValue.replace(/\./g, "");
+    
+        // Chỉ cho nhập số
+        if (!/^\d*$/.test(numericString)) return;
+    
+        const value = Number(numericString);
+    
+        const maxValue = Number(task.target_value);
+        const validatedValue = Math.min(Math.max(value, 0), maxValue);
+    
+        // Format lại
+        const formatted = formatNumber(validatedValue);
+    
+        // Tính lại vị trí caret
+        const dotsBefore =
+            (rawValue.slice(0, selectionStart).match(/\./g) || []).length;
+    
+        const newDotsBefore =
+            (formatted.slice(0, selectionStart).match(/\./g) || []).length;
+    
+        const caretPosition =
+            selectionStart + (newDotsBefore - dotsBefore);
+    
+        handleSubTaskChange(index, "target_value", validatedValue);
+    
+        setTimeout(() => {
+            input.setSelectionRange(caretPosition, caretPosition);
+        }, 0);
+    };
+
     const handleSubmit = async () => {
         if (subTasks.some(st => !st.name.trim())) {
             toast.warning("Vui lòng nhập tên cho tất cả nhiệm vụ con");
@@ -172,7 +211,6 @@ function CreateSubTask({ task, statusTask, onClose, onSuccess }: CreateSubTaskPr
                                     </label>
 
                                     {task.units?.name === "%" || task.units?.name === null ? (
-                                        // ✅ PHẦN % - Cố định 100%, không cho sửa
                                         <div className="flex items-center gap-3">
                                             <div className="flex-1 h-2 bg-blue-500 rounded-lg" />
                                             <div className="w-20 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-blue-400 text-sm text-center font-semibold select-none cursor-not-allowed">
@@ -180,10 +218,8 @@ function CreateSubTask({ task, statusTask, onClose, onSuccess }: CreateSubTaskPr
                                             </div>
                                         </div>
                                     ) : (
-                                        // ✅ PHẦN ĐƠN VỊ KHÁC - Có chú thích + input bình thường
                                         <div className="space-y-2">
 
-                                            {/* Hint box - chỉ hiện khi không phải % */}
                                             <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2.5">
                                                 <svg className="text-amber-400 mt-0.5 flex-shrink-0 w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                     <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -203,11 +239,10 @@ function CreateSubTask({ task, statusTask, onClose, onSuccess }: CreateSubTaskPr
                                             </div>
 
                                             <input
-                                                type="number"
-                                                min="0"
-                                                max={task.target_value}
-                                                value={subTask.target_value}
-                                                onChange={e => handleSubTaskChange(index, "target_value", parseInt(e.target.value) || 0)}
+                                                type="text"
+                                                inputMode="numeric"
+                                                value={formatNumber(subTask.target_value)}
+                                                onChange={(e) => handleFormattedTargetChange(e, index)}
                                                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition"
                                                 placeholder={`Nhập giá trị (tối đa ${formatNumber(Number(task.target_value))})`}
                                             />

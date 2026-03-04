@@ -66,9 +66,6 @@ function ProfilePage() {
     const [showInfoModal, setShowInfoModal] = useState(false);
 
     
-    console.log(userInfo);
-    
-    
     useEffect(() => {
         const token = localStorage.getItem("userToken");
      

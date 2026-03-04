@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCautionData } from '@/src/hooks/cautionHook';
+import getFileInfo from '@/src/utils/checkFileInfo';
 
 interface Caution {
   id: number;
@@ -135,33 +136,6 @@ function PersonalCautions() {
     });
   };
 
-  const getFileInfo = (url: string) => {
-    const extension = url.split('.').pop()?.toLowerCase() || '';
-    const fileName = url.split('/').pop() || 'file';
-
-    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
-    const isImage = imageExtensions.includes(extension);
-
-    const fileIcons: Record<string, string> = {
-      'pdf': '📄',
-      'doc': '📝',
-      'docx': '📝',
-      'xls': '📊',
-      'xlsx': '📊',
-      'ppt': '📊',
-      'pptx': '📊',
-      'txt': '📃',
-      'zip': '🗜️',
-      'rar': '🗜️',
-    };
-
-    return {
-      isImage,
-      extension: extension.toUpperCase(),
-      fileName,
-      icon: fileIcons[extension] || '📎'
-    };
-  };
 
   const renderFilePreview = (url?: string) => {
     if (!url) return null;

@@ -22,9 +22,21 @@ import {
     updateProgressTask,
     getSubTask,
     deleteSubTask,
-    updateStatusSubTask
+    updateStatusSubTask,
+    updateProgressSubTask
 } from "@/src/features/task/api";
-import { useEffect, useState } from "react";
+
+import {     
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle, 
+} from "@/components/ui/dialog";
+
+
+import { useEffect, useRef, useState } from "react";
 import { useTaskData } from "@/src/hooks/taskhook";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
@@ -32,6 +44,9 @@ import CreateSubTask from "./createSubTask";
 import UpdateSubTask from "./updateSubTask";
 import { Task } from "@/src/services/interface";
 import { formatNumber } from "@/src/utils/formatNumber";
+import getFileInfo from "@/src/utils/checkFileInfo";
+import { clearSubTaskList } from "@/src/features/task/taskSlice";
+
 
 
 interface StatusTask {
@@ -42,6 +57,7 @@ interface StatusTask {
 interface TaskDetailProps {
     task: Task;
     onBack: () => void;
+    isLoadingDetailTask: boolean
     getTaskStatusBadge: any;
     getPriorityBadge: (priorityId: number) => any;
     formatDate: (dateString: string) => string;
@@ -51,7 +67,7 @@ interface TaskDetailProps {
 }
 
 interface SubTask {
-    
+
     id: string;
     name: string;
     description?: string;
@@ -67,6 +83,7 @@ interface SubTask {
 function TaskDetail({
     task,
     onBack,
+    isLoadingDetailTask,
     getTaskStatusBadge,
     getPriorityBadge,
     formatDate,
@@ -76,10 +93,14 @@ function TaskDetail({
 }: TaskDetailProps) {
     const dispatch = useDispatch();
     const { imageTask, fileTask, listSubTask } = useTaskData();
-    
+
+    const currentTaskIdRef = useRef<string | null>(null);
+    const subTaskOffsetRef = useRef(0);
+
+    const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
     const progress = calculateProgress(task);
     const [isEditing, setIsEditing] = useState(false);
-    const [selectedStatus, setSelectedStatus] = useState(task.status.id);
+    const [selectedStatus, setSelectedStatus] = useState(task?.status.id);
     const [progressValue, setProgressValue] = useState(progress);
     const [uploadType, setUploadType] = useState<"image" | "document" | null>(
         null
@@ -96,21 +117,27 @@ function TaskDetail({
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [hasMoreSubTasks, setHasMoreSubTasks] = useState(true);
     const [allSubTasks, setAllSubTasks] = useState<SubTask[]>([]);
-    const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [showTaskLogs, setShowTaskLogs] = useState(false);
     const [actualValue, setActualValue] = useState<number>(0);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [currentAction, setCurrentAction] = useState<'accept' | 'reject' | null>(null);
     const [isSelectMode, setIsSelectMode] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+
+    const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
+    const [editingValue, setEditingValue] = useState<number>(0);
+    const [isUpdatingSubtask, setIsUpdatingSubtask] = useState(false);
     
     useEffect(() => {
         if (!task) return;
-
+        
+        currentTaskIdRef.current = task.id;
         setSubTaskOffset(0);
+
+        subTaskOffsetRef.current = 0;
         setHasMoreSubTasks(true);
         setAllSubTasks([]);
-        setIsInitialLoad(true);
+        dispatch(clearSubTaskList());
 
         const token = localStorage.getItem("userToken");
         const payload = {
@@ -120,24 +147,18 @@ function TaskDetail({
             offset: 0
         }
         dispatch(getSubTask(payload) as any);
-    }, [task]);
+    }, [task?.id]);
 
     // Cập nhật allSubTasks khi listSubTask thay đổi
     useEffect(() => {
         if (!listSubTask) return;
-
-        if (isInitialLoad) {
-            // Lần đầu load hoặc sau khi refresh
+    
+        if (subTaskOffsetRef.current === 0) { // ← đổi chỗ này
             setAllSubTasks(listSubTask);
-            setIsInitialLoad(false);
         } else {
-            // Load more - nối thêm vào cuối
             setAllSubTasks(prev => {
-                // Lọc ra các item mới chưa có trong danh sách
                 const existingIds = new Set(prev.map(st => st.id));
                 const newItems = listSubTask.filter((st: SubTask) => !existingIds.has(st.id));
-
-                // Nối vào cuối
                 return [...prev, ...newItems];
             });
         }
@@ -165,8 +186,8 @@ function TaskDetail({
 
     const toggleSelect = (id: string) => {
         setSelectedIds(prev => {
-            const newIds = prev.includes(id) 
-                ? prev.filter(i => i !== id) 
+            const newIds = prev.includes(id)
+                ? prev.filter(i => i !== id)
                 : [...prev, id];
             return newIds;
         });
@@ -195,7 +216,7 @@ function TaskDetail({
                 result = await dispatch(uploadFileTask(payload) as any);
             }
 
-            
+
 
             if (result?.payload?.data?.status === 200 || result?.payload?.data?.status === 201 || result?.payload?.data?.success) {
                 toast.success("Tải file thành công.")
@@ -209,13 +230,13 @@ function TaskDetail({
             setIsUploading(false);
         }
     };
-    
+
 
     const handleSave = async () => {
-        // if (selectedStatus === 4 && !isUploaded) {
-        //     toast.warning("Vui lòng tải lên minh chứng (ảnh hoặc tài liệu) khi hoàn thành nhiệm vụ")
-        //     return;
-        // }
+        if (selectedFile && !isUploaded) {
+            toast.warning("Bạn có một file chưa tải lên");
+            return;
+        }
         setIsSaving(true);
         try {
             const token = localStorage.getItem("userToken");
@@ -241,7 +262,7 @@ function TaskDetail({
             };
 
             const result = await dispatch(updateProgressTask(updatePayload) as any);
-            
+
             if (result?.payload.data.success && !result?.error) {
                 setIsEditing(false);
                 resetForm();
@@ -285,11 +306,11 @@ function TaskDetail({
     const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newStatus = parseInt(e.target.value);
         setSelectedStatus(newStatus);
-    
+
         if (newStatus !== 4) {
             resetForm();
         }
-    
+
         if (newStatus === 4) {
             setProgressValue(100);
             if (task.units?.name !== "%") {
@@ -338,12 +359,12 @@ function TaskDetail({
         }
         return "";
     };
-    
+
     const refreshSubTasks = async (refreshTask: boolean = false) => {
         setSubTaskOffset(0);
+        subTaskOffsetRef.current = 0;
         setHasMoreSubTasks(true);
         setAllSubTasks([]);
-        setIsInitialLoad(true);
         const token = localStorage.getItem("userToken");
         const payload = {
             token,
@@ -352,7 +373,7 @@ function TaskDetail({
             offset: 0
         };
         await dispatch(getSubTask(payload) as any);
-        if(refreshTask){
+        if (refreshTask) {
             onUpdateSuccess?.(task.id)
         }
 
@@ -360,28 +381,30 @@ function TaskDetail({
 
     const loadMoreSubTasks = async () => {
         if (isLoadingMore || !hasMoreSubTasks) return;
-
+    
         setIsLoadingMore(true);
         try {
             const token = localStorage.getItem("userToken");
             const newOffset = subTaskOffset + 5;
+    
+            subTaskOffsetRef.current = newOffset; // ← chuyển lên TRƯỚC khi dispatch
+    
             const payload = {
                 token,
                 task_assignment_id: task.id,
                 limit: 5,
                 offset: newOffset
             };
-
+    
             const result = await dispatch(getSubTask(payload) as any);
-
-            // Kiểm tra nếu không còn dữ liệu
+    
             if (result?.payload?.data?.data?.length === 0 || result?.payload?.data?.data?.length < 5) {
                 setHasMoreSubTasks(false);
             }
-
-            // Cập nhật offset sau khi load thành công
+    
             setSubTaskOffset(newOffset);
         } catch (error) {
+            subTaskOffsetRef.current = subTaskOffset; // ← rollback nếu lỗi
             console.error("Error loading more subtasks:", error);
         } finally {
             setIsLoadingMore(false);
@@ -397,42 +420,18 @@ function TaskDetail({
         }
     };
 
-    const getFileInfo = (url: string) => {
-        const extension = url.split('.').pop()?.toLowerCase() || '';
-        const fileName = url.split('/').pop() || 'file';
-        
-        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
-        const isImage = imageExtensions.includes(extension);
-        
-        const fileIcons: Record<string, string> = {
-            'pdf': '📄',
-            'doc': '📝',
-            'docx': '📝',
-            'xls': '📊',
-            'xlsx': '📊',
-            'ppt': '📊',
-            'pptx': '📊',
-            'txt': '📃',
-            'zip': '🗜️',
-            'rar': '🗜️',
-        };
-        
-        return {
-            isImage,
-            extension: extension.toUpperCase(),
-            fileName,
-            icon: fileIcons[extension] || '📎'
-        };
+    const parseFormattedNumber = (value: string) => {
+        return Number(value.replace(/\./g, "").replace(/,/g, ""));
     };
-
     const handleActualValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = parseFloat(e.target.value);
-        if (!isNaN(value) && value >= 0) {
+        const rawValue = parseFormattedNumber(e.target.value);
+
+        if (!isNaN(rawValue) && rawValue >= 0) {
             const targetValue = Number(task.target_value);
-            const newValue = Math.min(value, targetValue);
+            const newValue = Math.min(rawValue, targetValue);
+
             setActualValue(newValue);
-            
-            // Tự động tính process
+
             const newProcess = Math.min(100, (newValue / targetValue) * 100);
             setProgressValue(Math.round(newProcess));
         }
@@ -441,7 +440,7 @@ function TaskDetail({
     const renderFilePreview = (url?: string) => {
         if (!url) return null;
         const file = getFileInfo(url);
-        
+
         if (file.isImage) {
             return (
                 <img
@@ -452,7 +451,7 @@ function TaskDetail({
                 />
             );
         }
-        
+
         return (
             <a
                 href={`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url.replace("/fl_attachment", ""))}`}
@@ -477,45 +476,45 @@ function TaskDetail({
         }
 
         setIsProcessing(true);
-        if(currentAction === 'accept' ){
+        if (currentAction === 'accept') {
             try {
                 const token = localStorage.getItem("userToken");
                 const res = await dispatch(updateStatusSubTask({
                     status: 4,
-                    token, 
+                    token,
                     ids: selectedIds
                 }) as any)
-                
-                if(res.payload.data.success){
+
+                if (res.payload.data.success) {
                     toast.success(`Đã duyệt thành công nhiệm vụ`);
                     if (onUpdateSuccess) {
                         onUpdateSuccess(task.id);
                     }
-                }else{
+                } else {
                     toast.error(`duyệt nhiệm vụ thất bại`);
                 }
-    
+
                 exitSelectMode();
             } catch (error) {
                 toast.error("Có lỗi xảy ra khi duyệt nhiều nhiệm vụ");
             } finally {
                 setIsProcessing(false);
             }
-        }else{
+        } else {
 
             try {
                 const token = localStorage.getItem("userToken");
-                const res = await dispatch(deleteSubTask({token, ids: selectedIds}) as any)
-                
-                if(res.payload.data.success){
+                const res = await dispatch(deleteSubTask({ token, ids: selectedIds }) as any)
+
+                if (res.payload.data.success) {
                     toast.success(`Đã xóa thành công nhiệm vụ`);
                     if (onUpdateSuccess) {
                         onUpdateSuccess(task.id);
                     }
-                }else{
+                } else {
                     toast.error(`xóa nhiệm vụ thất bại`);
                 }
-    
+
                 exitSelectMode();
             } catch (error) {
                 toast.error("Có lỗi xảy ra khi xóa nhiều nhiệm vụ");
@@ -524,9 +523,204 @@ function TaskDetail({
             }
         }
     }
- 
 
+
+
+    const handleUpdateSubtaskProgress = async (id: number) => {
+        const token = localStorage.getItem("userToken");
+        try {
+            const progressPayload = { id, value: editingValue, token };
+            const progressResult = await dispatch(
+                updateProgressSubTask(progressPayload) as any
+            );
+
+            if (progressResult?.payload?.data?.success) {
+                toast.success("Cập nhật tiến độ thành công");
+
+                setEditingSubtaskId(null);
+
+                onUpdateSuccess?.(task.id);
+            } else {
+                toast.error(progressResult.payload.data.message)
+
+            }
+        } catch (error: any) {
+            toast.error("Có lỗi xảy ra khi cập nhật tiến độ.");
+        }
+    };
+    const handleSubtaskValueChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        subtask: SubTask
+    ) => {
+        const input = e.target;
+        const selectionStart = input.selectionStart || 0;
+
+        const rawValue = input.value;
+
+        // Remove dấu phân cách vi-VN
+        const numericString = rawValue.replace(/\./g, "").replace(/,/g, "");
+
+        if (!/^\d*$/.test(numericString)) return;
+
+        const value = Number(numericString);
+
+        // const maxValue =
+        //     task.units?.name === "%" ? 100 : Number(subtask.target_value);
+
+        // const validatedValue = Math.min(Math.max(value, 0), maxValue);
+        const validatedValue = Math.max(value, 0);
+
+
+        const formatted = formatNumber(validatedValue);
+
+        // Tính lại caret chuẩn hơnc
+        const diff = formatted.length - rawValue.length;
+        const caretPosition = selectionStart + diff;
+
+        setEditingValue(validatedValue);
+
+        setTimeout(() => {
+            input.setSelectionRange(caretPosition, caretPosition);
+        }, 0);
+    };
+
+    const handleSubmit = () => {
+        console.log(task);
+        
+        setOpenConfirmDialog(true);
+    }
+
+    const handleConfirm = async () => {
+        if (selectedFile && !isUploaded) {
+            toast.warning("Bạn có một file chưa tải lên");
+            return;
+        }
+        // logic xử lý hoàn thành task ở đây
+        setOpenConfirmDialog(false);
+    };
+
+    const renderUpload = () => {
+        return (
+            <div className="bg-slate-950/80 p-3 sm:p-4 rounded-lg border border-yellow-500/20">
+                <div className="flex items-center gap-2 mb-2">
+                    <Upload size={14} className="text-yellow-400 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm font-semibold text-yellow-400">
+                        Minh chứng hoàn thành
+                    </span>
+                    <span className="text-xs text-slate-500 ml-auto">(Không bắt buộc)</span>
+                </div>
     
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                    <button
+                        onClick={() => handleUploadTypeChange("image")}
+                        className={`flex items-center gap-2 p-2.5 sm:p-3 rounded-lg border-2 transition ${
+                            uploadType === "image"
+                                ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                                : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
+                        }`}
+                    >
+                        <Image size={16} className="flex-shrink-0" />
+                        <div className="text-left min-w-0">
+                            <p className="text-xs font-semibold truncate">Hình ảnh</p>
+                            <p className="text-xs text-slate-500 hidden sm:block">JPG, PNG, GIF</p>
+                        </div>
+                    </button>
+                    <button
+                        onClick={() => handleUploadTypeChange("document")}
+                        className={`flex items-center gap-2 p-2.5 sm:p-3 rounded-lg border-2 transition ${
+                            uploadType === "document"
+                                ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                                : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
+                        }`}
+                    >
+                        <FileText size={16} className="flex-shrink-0" />
+                        <div className="text-left min-w-0">
+                            <p className="text-xs font-semibold truncate">Tài liệu</p>
+                            <p className="text-xs text-slate-500 hidden sm:block">PDF, DOC, XLS</p>
+                        </div>
+                    </button>
+                </div>
+    
+                {uploadType && (
+                    <div className="space-y-2">
+                        <label className="block w-full cursor-pointer">
+                            <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-800 border border-slate-700 border-dashed rounded-lg hover:border-blue-500/50 hover:bg-slate-750 transition">
+                                <Upload size={14} className="text-blue-400 flex-shrink-0" />
+                                <span className="text-xs text-slate-300 truncate">
+                                    {selectedFile ? selectedFile.name : `Chọn ${uploadType === "image" ? "hình ảnh" : "tài liệu"}...`}
+                                </span>
+                            </div>
+                            <input
+                                type="file"
+                                accept={getAcceptedFileTypes()}
+                                onChange={handleFileSelect}
+                                className="hidden"
+                            />
+                        </label>
+    
+                        {filePreview && uploadType === "image" && (
+                            <img
+                                src={filePreview}
+                                alt="Preview"
+                                className="w-full h-32 object-cover rounded-lg border border-slate-700"
+                            />
+                        )}
+    
+                        {selectedFile && (
+                            <div className="flex items-center justify-between px-3 py-2 bg-slate-800 rounded-lg">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    {uploadType === "image"
+                                        ? <Image size={14} className="text-blue-400 flex-shrink-0" />
+                                        : <FileText size={14} className="text-blue-400 flex-shrink-0" />
+                                    }
+                                    <span className="text-xs text-slate-300 truncate">{selectedFile.name}</span>
+                                </div>
+                                <span className="text-xs text-slate-500 flex-shrink-0 ml-2">
+                                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                                </span>
+                            </div>
+                        )}
+    
+                        {selectedFile && !isUploaded && (
+                            <button
+                                onClick={handleUpload}
+                                disabled={isUploading}
+                                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition"
+                            >
+                                <Upload size={14} />
+                                {isUploading ? "Đang tải lên..." : "Tải lên"}
+                            </button>
+                        )}
+    
+                        {isUploaded && (
+                            <div className="flex items-center justify-center gap-2 p-2 bg-green-900/30 border border-green-500/30 rounded-lg">
+                                <Check size={14} className="text-green-400" />
+                                <p className="text-xs text-green-400 font-medium">Đã tải lên thành công!</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    if (isLoadingDetailTask || !task) {
+        return (
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <div className="h-6 w-32 bg-slate-800 rounded animate-pulse" />
+                    <div className="h-4 w-20 bg-slate-800 rounded animate-pulse" />
+                </div>
+                <div className="rounded-lg border border-slate-800 bg-slate-950 p-5 space-y-4">
+                    <div className="h-7 w-3/4 bg-slate-800 rounded animate-pulse" />
+                    <div className="h-4 w-1/2 bg-slate-800 rounded animate-pulse" />
+                    <div className="h-4 w-2/3 bg-slate-800 rounded animate-pulse" />
+                    <div className="h-3 w-full bg-slate-800 rounded-full animate-pulse mt-4" />
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-4 sm:space-y-6">
             <div className="flex items-center justify-between">
@@ -598,37 +792,40 @@ function TaskDetail({
                             <div className="flex items-center justify-between mb-2 gap-2">
                                 <h5 className="text-xs font-semibold text-slate-200 flex items-center gap-2 shrink-0">
                                     <ClipboardList size={16} className="text-slate-400" />
-                                    <span className="hidden sm:inline">Nhiệm vụ con ({allSubTasks?.length || 0})</span>
+                                    <span className="hidden sm:inline">Nhiệm vụ con({allSubTasks?.length || 0})</span>
                                     <span className="sm:hidden">Nhiệm vụ con ({allSubTasks?.length || 0})</span>
                                 </h5>
                                 <div className="flex gap-1.5 sm:gap-2 items-center">
-                                    <button
-                                        onClick={() => enterSelectMode('reject')}
-                                        className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition text-sm font-medium"
-                                        title="Xóa nhiều"
-                                    >
-                                        <XCircle className="h-4 w-4 shrink-0" />
-                                        <span className="hidden sm:inline">Xóa nhiều</span>
-                                    </button>
-
-                                    <button
-                                        onClick={() => enterSelectMode('accept')}
-                                        className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition text-sm font-medium"
-                                        title="Hoàn thành"
-                                    >
-                                        <CheckCheck className="h-4 w-4 shrink-0" />
-                                        <span className="hidden sm:inline">Hoàn thành</span>
-                                    </button>
-
                                     {allSubTasks && allSubTasks.length > 0 && (
-                                        <button
-                                            onClick={() => setShowUpdateSubTask(true)}
-                                            className="flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition"
-                                            title="Cập nhật"
-                                        >
-                                            <Edit3 size={14} className="shrink-0" />
-                                            <span className="hidden sm:inline">Cập nhật</span>
-                                        </button>
+                                        <>
+                                            <button
+                                                onClick={() => enterSelectMode('reject')}
+                                                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition"
+
+                                                title="Xóa nhiều"
+                                            >
+                                                <XCircle className="h-4 w-4 shrink-0" />
+                                                <span className="hidden sm:inline">Xóa nhiều</span>
+                                            </button>
+
+                                            {/* <button
+                                                onClick={() => enterSelectMode('accept')}
+                                                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition"
+
+                                                title="Hoàn thành"
+                                            >
+                                                <CheckCheck className="h-4 w-4 shrink-0" />
+                                                <span className="hidden sm:inline">Hoàn thành</span>
+                                            </button> */}
+                                            <button
+                                                onClick={() => setShowUpdateSubTask(true)}
+                                                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition"
+                                                title="Cập nhật"
+                                            >
+                                                <Edit3 size={14} className="shrink-0" />
+                                                <span className="hidden sm:inline">Cập nhật</span>
+                                            </button>
+                                        </>
                                     )}
 
                                     <button
@@ -749,16 +946,86 @@ function TaskDetail({
                                                         <div className="flex items-center gap-1.5 text-xs">
                                                             <span className="text-slate-500">Mục tiêu:</span>
                                                             <span className="text-blue-400 font-semibold">
-                                                                {formatNumber(Number(subtask.target_value))} {task.units?.name}
+                                                                {formatNumber(Number(subtask.target_value))} {task.units?.name || "%"}
                                                             </span>
                                                         </div>
                                                     </div>
+                                                    {/* toggle input */}
                                                     <div className="flex items-center gap-3 mt-2">
-                                                        <div className="flex items-center gap-1.5 text-xs">
-                                                            <span className="text-slate-500">Tiến độ:</span>
-                                                            <span className="text-blue-400 font-semibold">
-                                                                {formatNumber(Number(subtask.value))} {task.units?.name}
-                                                            </span>
+                                                        <div className="flex items-center gap-2 text-xs">
+
+                                                            {editingSubtaskId === subtask.id ? (
+                                                                <>
+                                                                    <span className="text-slate-500">Tiến độ:</span>
+
+                                                                    {task.units?.name !== "%" && (
+                                                                        <span className="text-slate-400 font-semibold">
+                                                                            {formatNumber(Number(subtask.value))} {task.units?.name}
+                                                                        </span>
+                                                                    )}
+
+                                                                    {task.units?.name !== "%" && (
+                                                                        <span className="text-slate-500">+</span>
+                                                                    )}
+
+                                                                    <input
+                                                                        type="text"
+                                                                        inputMode="numeric"
+                                                                        value={formatNumber(editingValue)}
+                                                                        onChange={(e) => handleSubtaskValueChange(e, subtask)}
+                                                                        className="w-24 px-2 py-1 bg-slate-800 border border-blue-500 rounded text-white text-xs focus:outline-none"
+                                                                    />
+
+                                                                    {task.units?.name !== "%" && (
+                                                                        <>
+                                                                            <span className="text-slate-500">=</span>
+                                                                            <span className="text-emerald-400 font-semibold">
+                                                                                {formatNumber(
+                                                                                    Number(subtask.value) + Number(editingValue || 0)
+                                                                                )}{" "}
+                                                                                {task.units?.name}
+                                                                            </span>
+                                                                        </>
+                                                                    )}
+
+                                                                    <button
+                                                                        onClick={() => handleUpdateSubtaskProgress(Number(subtask.id))}
+                                                                        disabled={isUpdatingSubtask}
+                                                                        className="p-1 bg-emerald-600 hover:bg-emerald-700 rounded text-white transition disabled:opacity-50"
+                                                                    >
+                                                                        <Save size={14} />
+                                                                    </button>
+
+                                                                    <button
+                                                                        onClick={() => setEditingSubtaskId(null)}
+                                                                        disabled={isUpdatingSubtask}
+                                                                        className="p-1 bg-slate-700 hover:bg-slate-600 rounded text-white transition"
+                                                                    >
+                                                                        <X size={14} />
+                                                                    </button>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <span className="text-slate-500">Tiến độ:</span>
+
+                                                                    <span className="text-blue-400 font-semibold">
+                                                                        {formatNumber(Number(subtask.value))} {task.units?.name || "%"}
+                                                                    </span>
+
+                                                                    {subtask.status.id !== 4 && (
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setEditingSubtaskId(subtask.id);
+                                                                                setEditingValue(Number(subtask.value));
+                                                                            }}
+                                                                            className="p-1 bg-blue-600 hover:bg-blue-700 rounded text-white transition"
+                                                                            title="Cập nhật tiến độ"
+                                                                        >
+                                                                            <Edit3 size={14} />
+                                                                        </button>
+                                                                    )}
+                                                                </>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -824,6 +1091,16 @@ function TaskDetail({
                                 <span className="text-sm font-bold text-blue-400">
                                     {progress}%
                                 </span>
+                                {progress === 100 && task.status.id === 2 && (
+                                    <button
+                                        onClick={handleSubmit}
+                                        className="flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition"
+                                        title="Hoàn thành"
+                                    >
+                                        <CheckCheck className="h-4 w-4 shrink-0" />
+                                        <span className="hidden sm:inline">Hoàn thành</span>
+                                    </button>
+                                )}
                                 {task.status.id !== 4 && task.status.id !== 5 && (
                                     <button
                                         onClick={() => setIsEditing(true)}
@@ -878,113 +1155,7 @@ function TaskDetail({
                             </div>
 
                             {/* Upload Section */}
-                            {selectedStatus === 4 && (
-                                <div className="bg-slate-950 p-4 rounded-lg border border-yellow-500/30">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Upload size={16} className="text-yellow-400" />
-                                        <span className="text-sm font-semibold text-yellow-400">
-                                            Minh chứng hoàn thành
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-slate-400 mb-3">
-                                        Chọn loại minh chứng bạn muốn tải lên:
-                                    </p>
-                                    <div className="grid grid-cols-2 gap-3 mb-4">
-                                        <button
-                                            onClick={() => handleUploadTypeChange("image")}
-                                            className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition ${uploadType === "image"
-                                                ? "border-blue-500 bg-blue-500/10 text-blue-400"
-                                                : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
-                                            }`}
-                                        >
-                                            <Image size={24} />
-                                            <span className="text-sm font-semibold">Hình ảnh</span>
-                                            <span className="text-xs text-slate-500">JPG, PNG, GIF</span>
-                                        </button>
-                                        <button
-                                            onClick={() => handleUploadTypeChange("document")}
-                                            className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition ${uploadType === "document"
-                                                ? "border-blue-500 bg-blue-500/10 text-blue-400"
-                                                : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
-                                            }`}
-                                        >
-                                            <FileText size={24} />
-                                            <span className="text-sm font-semibold">Tài liệu</span>
-                                            <span className="text-xs text-slate-500">PDF, DOC, XLS</span>
-                                        </button>
-                                    </div>
-
-                                    {uploadType && (
-                                        <div>
-                                            <label className="block w-full cursor-pointer">
-                                                <div className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-750 transition">
-                                                    <Upload size={16} className="text-blue-400" />
-                                                    <span className="text-sm text-slate-300">
-                                                        {selectedFile
-                                                            ? selectedFile.name
-                                                            : `Chọn ${uploadType === "image" ? "hình ảnh" : "tài liệu"}`}
-                                                    </span>
-                                                </div>
-                                                <input
-                                                    type="file"
-                                                    accept={getAcceptedFileTypes()}
-                                                    onChange={handleFileSelect}
-                                                    className="hidden"
-                                                />
-                                            </label>
-
-                                            {filePreview && uploadType === "image" && (
-                                                <div className="mt-3">
-                                                    <img
-                                                        src={filePreview}
-                                                        alt="Preview"
-                                                        className="w-full h-48 object-cover rounded-lg border border-slate-700"
-                                                    />
-                                                </div>
-                                            )}
-
-                                            {selectedFile && (
-                                                <div className="mt-3 p-3 bg-slate-800 rounded-lg">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                            {uploadType === "image" ? (
-                                                                <Image size={16} className="text-blue-400" />
-                                                            ) : (
-                                                                <FileText size={16} className="text-blue-400" />
-                                                            )}
-                                                            <span className="text-xs text-slate-300 truncate">
-                                                                {selectedFile.name}
-                                                            </span>
-                                                        </div>
-                                                        <span className="text-xs text-slate-500">
-                                                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {selectedFile && !isUploaded && (
-                                                <button
-                                                    onClick={handleUpload}
-                                                    disabled={isUploading}
-                                                    className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition"
-                                                >
-                                                    <Upload size={16} />
-                                                    {isUploading ? "Đang tải lên..." : "Tải lên"}
-                                                </button>
-                                            )}
-
-                                            {isUploaded && (
-                                                <div className="mt-3 p-3 bg-green-900/30 border border-green-500/50 rounded-lg">
-                                                    <p className="text-xs text-green-400 text-center">
-                                                        ✓ Đã tải lên thành công!
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                            {selectedStatus === 4 && renderUpload()}
 
                             {/* Progress Input */}
                             <div>
@@ -1016,10 +1187,9 @@ function TaskDetail({
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-3">
                                             <input
-                                                type="number"
-                                                min="0"
-                                                max={task.target_value}
-                                                value={actualValue}
+                                                type="text"
+                                                inputMode="numeric"
+                                                value={formatNumber(actualValue)}
                                                 onChange={handleActualValueChange}
                                                 disabled={selectedStatus === 4}
                                                 className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1172,7 +1342,44 @@ function TaskDetail({
                     />
                 </div>
             )}
+            <Dialog open={openConfirmDialog} onOpenChange={setOpenConfirmDialog}>
+                <DialogContent className="bg-slate-900 border border-slate-700 text-white max-w-md w-full">
+                    <DialogHeader>
+                        <div className="flex items-center gap-3 mb-1">
+                            <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                                <CheckCheck size={20} className="text-emerald-400" />
+                            </div>
+                            <div>
+                                <DialogTitle className="text-white text-base">Xác nhận hoàn thành</DialogTitle>
+                                <DialogDescription className="text-slate-400 text-xs mt-0.5">
+                                    Có thể đính kèm minh chứng và xác nhận hoàn thành nhiệm vụ
+                                </DialogDescription>
+                            </div>
+                        </div>
+                    </DialogHeader>
 
+                    <div className="border-t border-slate-700/50 pt-4">
+                        {renderUpload()}
+                    </div>
+
+                    <DialogFooter className="gap-2 border-t border-slate-700/50 pt-4">
+                        <button
+                            onClick={() => setOpenConfirmDialog(false)}
+                            className="flex-1 sm:flex-none px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition text-sm font-medium"
+                        >
+                            Hủy
+                        </button>
+                        <button
+                            onClick={handleConfirm}
+                            disabled={selectedFile !== null && !isUploaded}
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition text-sm"
+                        >
+                            <CheckCheck size={16} />
+                            Xác nhận hoàn thành
+                        </button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

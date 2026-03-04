@@ -35,7 +35,7 @@ export const useTaskData = () => {
     detailTaskLevel:  task.detailTaskLevel.data.data,
 
     // Loading states
-
+    loadingListSubTask: task.listSubTask.loading, 
     loadingListDetailTaskAssign: task.listDetailTaskAssign.loading,
     loadingSubTaskDetail: task.subTaskDetail.loading,
     loadingListTaskLevel: task.listTaskLevel.loading,

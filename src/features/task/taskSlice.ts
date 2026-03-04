@@ -115,7 +115,9 @@ const taskSlice = createSlice({
     initialState: initialState,
 
     reducers: {
-        
+        clearSubTaskList: (state: any) => {
+            state.listSubTask = createInitState(); 
+        }
     },
     extraReducers: (builder) => {
         createAsyncReducer(builder, createTask);
@@ -162,22 +164,10 @@ const taskSlice = createSlice({
         createAsyncReducerDynamic(builder, getSupportTaskPending);
 
         createAsyncReducer(builder, getSupportTaskStatus, "supportTaskStatus");
-        
-        
-
-        
-
-        
-
-        
-
-        
-
-        
     },
 });
 
-export const {  } = taskSlice.actions;
+export const { clearSubTaskList  } = taskSlice.actions;
 export default taskSlice.reducer;
 
 

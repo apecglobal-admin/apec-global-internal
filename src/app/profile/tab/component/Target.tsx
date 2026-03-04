@@ -32,6 +32,7 @@ import { ArrowLeft, Check, Search, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 import PopupComponent, { usePopup } from "@/components/PopupComponent";
+import getFileInfo from '@/src/utils/checkFileInfo';
 
 
 // Component hiển thị chi tiết
@@ -114,35 +115,6 @@ const TargetDetail = ({
     const canHonor = statusId === 6; // Đã áp dụng - chỉ hiện Honor
     const hideButtons = statusId === 3 || statusId === 5; // Từ chối hoặc Vinh danh - không hiện gì
 
-
-
-    const getFileInfo = (url: string) => {
-        const extension = url.split('.').pop()?.toLowerCase() || '';
-        const fileName = url.split('/').pop() || 'file';
-        
-        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
-        const isImage = imageExtensions.includes(extension);
-        
-        const fileIcons: Record<string, string> = {
-            'pdf': '📄',
-            'doc': '📝',
-            'docx': '📝',
-            'xls': '📊',
-            'xlsx': '📊',
-            'ppt': '📊',
-            'pptx': '📊',
-            'txt': '📃',
-            'zip': '🗜️',
-            'rar': '🗜️',
-        };
-        
-        return {
-            isImage,
-            extension: extension.toUpperCase(),
-            fileName,
-            icon: fileIcons[extension] || '📎'
-        };
-    };
 
     const renderFilePreview = (url?: string) => {
         if (!url) return null;
