@@ -290,7 +290,7 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, i
                             </svg>
                             <span className="truncate">Người thực hiện ({task.task_assignment.length})</span>
                         </h2>
-                        <div className="space-y-2 sm:space-y-3">
+                        <div className="space-y-2 sm:space-y-3 max-h-96 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
                             {task.task_assignment.map((assignment: any) => (
                                 <div
                                     onClick={() => handleDetail(assignment.id)}
