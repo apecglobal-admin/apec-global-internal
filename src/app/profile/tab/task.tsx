@@ -80,7 +80,7 @@ const MONTH_NAMES = [
 
 function TasksTab() {
   const dispatch = useDispatch();
-  const { tasks: tasksResponse, typeTask, detailTask } = useProfileData();
+  const { tasks: tasksResponse, typeTask, detailTask, isLoadingDetailTask } = useProfileData();
   const { listDashboardTasks } = useDashboardData();
   
 
@@ -208,6 +208,10 @@ function TasksTab() {
     setPage(1);
   };
 
+  const handleBack = () => {
+    setSelectedTask(null)
+  }
+
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
@@ -217,6 +221,8 @@ function TasksTab() {
 
   const handleTaskClick = async (taskId: string) => {
     const token = localStorage.getItem("userToken");
+
+
     const payload1 = {
       token,
       id: taskId,
@@ -224,8 +230,8 @@ function TasksTab() {
     }
 
     await dispatch(personTasks(payload1 as any) as any);
-    setSelectedTask(taskId);
 
+    setSelectedTask(taskId);
     
   };
 
@@ -369,7 +375,7 @@ function TasksTab() {
   };
 
   const calculateProgress = (task: Task): number => {
-    return Math.round(task.process || 0);
+    return Math.round(task?.process || 0);
   };
 
   const getPaginationItems = () => {
@@ -1242,7 +1248,8 @@ function TasksTab() {
         ) : (
           <TaskDetail
             task={detailTask}
-            onBack={() => setSelectedTask(null)}
+            isLoadingDetailTask={isLoadingDetailTask}
+            onBack={() => handleBack()}
             getTaskStatusBadge={getTaskStatusBadge}
             getPriorityBadge={getPriorityBadge}
             formatDate={formatDate}

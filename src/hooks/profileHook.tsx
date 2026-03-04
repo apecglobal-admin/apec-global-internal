@@ -42,6 +42,7 @@ export const useProfileData = () => {
     isLoadingProjects: user.projects.loading,
     isLoadingCards: user.cards.loading,
     isLoadingLinks: user.links.loading,
+    isLoadingDetailTask:  user.detailTasks.loading,
 
     // Error states
     userError: user.userInfo.error,

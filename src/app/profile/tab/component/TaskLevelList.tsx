@@ -409,7 +409,8 @@ const TaskLevelList = () => {
     )
   }
 
-
+  console.log("listTaskLevel.data", listTaskLevel.data);
+  
   if (selectedTaskId) {
     if (loadingDetailTaskLevel) {
       return (
@@ -430,13 +431,10 @@ const TaskLevelList = () => {
     return <TaskDetailAssign task={detailTaskLevel} onBack={handleBackToList} isEdit={false} />;
   }
 
+  
+
   return (
     <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6">
-      {/* <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-5'>
-        <h1 className="md:text-2xl text-xl  font-bold text-white mb-6">Công việc đã giao</h1>
-      </div> */}
-
-
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={() => setShowFilter(!showFilter)}
@@ -489,16 +487,6 @@ const TaskLevelList = () => {
                     </div>
                     <div className="flex items-start justify-between mb-4">
                       <h3 className="text-lg font-bold text-white flex-1 group-hover:text-blue-400 transition-colors">{task.name}</h3>
-                      {/* {task.status.id !== 4 && (
-                                            <button
-                                                onClick={(e) => handleDeleteTask(e,task)}
-                                                className={`p-2 rounded-lg transition-all 
-                                                bg-red-600 hover:bg-red-700 text-white cursor-pointer
-                                                disabled:opacity-50`}
-                                            >
-                                                <XCircle size={20} />
-                                            </button>
-                                        )} */}
                     </div>
 
 
@@ -533,7 +521,28 @@ const TaskLevelList = () => {
                         ></div>
                       </div>
                     </div>
+                    {task.assignee && (
+                      <div className="pt-3 border-t border-slate-700 flex items-center gap-2">
+                        {task.assignee.avatar ? (
+                          <img
+                            src={task.assignee.avatar}
+                            alt={task.assignee.name}
+                            className="w-7 h-7 rounded-full object-cover border-2 border-slate-600 flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs border-2 border-slate-600 flex-shrink-0">
+                            {task.assignee.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-slate-500">Người tạo</p>
+                          <p className="text-xs font-semibold text-slate-300 truncate">{task.assignee.name}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
+                  
+                  
                 ))}
               </div>
 

@@ -42,6 +42,7 @@ import {
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
+import getFileInfo from "@/src/utils/checkFileInfo";
 
 // Color map cho status
 const colorMap: Record<string, string> = {
@@ -371,33 +372,7 @@ function PersonalTab({ userInfo }: PersonalTabProps) {
 
   const activeFilterCount = selectedTypes.length + selectedStatuses.length;
 
-  const getFileInfo = (url: string) => {
-    const extension = url.split('.').pop()?.toLowerCase() || '';
-    const fileName = url.split('/').pop() || 'file';
-    
-    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
-    const isImage = imageExtensions.includes(extension);
-    
-    const fileIcons: Record<string, string> = {
-        'pdf': '📄',
-        'doc': '📝',
-        'docx': '📝',
-        'xls': '📊',
-        'xlsx': '📊',
-        'ppt': '📊',
-        'pptx': '📊',
-        'txt': '📃',
-        'zip': '🗜️',
-        'rar': '🗜️',
-    };
-    
-    return {
-        isImage,
-        extension: extension.toUpperCase(),
-        fileName,
-        icon: fileIcons[extension] || '📎'
-    };
-};
+
 
   // Phân loại các loại yêu cầu
   const proposalTypes = (typePersonal || []).filter((type: any) => 
