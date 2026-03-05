@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux';
 
 
-import { getDetailListTaskAssign, getListTaskLevel, getTypeTask, getStatusTask, getPriorityTask, getListProject, } from '@/src/features/task/api';
+import { getDetailListTaskAssign, getListTaskLevel, getTypeTask, getStatusTask, getPriorityTask, getListProject, getListDepartmentTaskLevel } from '@/src/features/task/api';
 import { useTaskData } from '@/src/hooks/taskhook';
 import { listTypeTask } from '@/src/services/api';
 
@@ -35,7 +35,7 @@ interface TypeProps {
 
 const TaskLevelList = () => {
   const dispatch = useDispatch();
-  const { listTaskLevel, detailTaskLevel, loadingListTaskLevel, loadingDetailTaskLevel, errorListTaskLevel, statusTask, priorityTask, listProject, } = useTaskData();
+  const { listTaskLevel, detailTaskLevel, loadingListTaskLevel, loadingDetailTaskLevel, errorListTaskLevel, statusTask, priorityTask, listProject, listDepartmentTaskLevel } = useTaskData();
   const { typeTask } = useProfileData();
 
   const [showFilter, setShowFilter] = useState(false);
@@ -43,10 +43,15 @@ const TaskLevelList = () => {
 
   const [taskFilter, setTaskFilter] = useState<string>("all");
   const [projectFilter, setProjectFilter] = useState<any>(null);
+  const [departmentFilter, setDepartmentFilter] = useState<any>(null);
+
   const [statusFilter, setStatusFilter] = useState<string>("2");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [searchFilter, setSearchFilter] = useState<string>("");
   const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
+  const [filteredDepartment, setFilteredDepartment] = useState<any[]>([]);
+
+
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -62,7 +67,8 @@ const TaskLevelList = () => {
           project_id: projectFilter?.id ? projectFilter?.id : null,
           search: searchFilter === "" ? null : searchFilter,
           task_priority: priorityFilter === "all" ? null : parseInt(priorityFilter),
-          key: "listTaskLevel"
+          department_id: departmentFilter?.id ? departmentFilter?.id : null,
+          key: "listTaskLevel",
         };
 
         dispatch(getListTaskLevel(payload) as any);
@@ -70,20 +76,31 @@ const TaskLevelList = () => {
       }
     }, 300)
     return () => clearTimeout(timeout);
-  }, [statusFilter, taskFilter, projectFilter, searchFilter, priorityFilter, currentPage]);
+  }, [statusFilter, taskFilter, projectFilter, searchFilter, priorityFilter, currentPage, departmentFilter]);
 
   useEffect(() => {
     if (listProject) {
       setFilteredProjects(listProject);
     }
   }, [listProject]);
+  useEffect(() => {
+    if (listDepartmentTaskLevel) {
+      setFilteredDepartment(listDepartmentTaskLevel);
+    }
+  }, [listDepartmentTaskLevel]);
+
 
   useEffect(() => {
+    const token = localStorage.getItem("userToken");
+
     if (!typeTask) {
       dispatch(listTypeTask() as any);
     }
     if (!listProject) {
       dispatch(getListProject({}) as any);
+    }
+    if (!listDepartmentTaskLevel) {
+      dispatch(getListDepartmentTaskLevel({token}) as any);
     }
     if (!statusTask) {
       dispatch(getStatusTask() as any);
@@ -164,11 +181,32 @@ const TaskLevelList = () => {
       setFilteredProjects(filtered);
     }
   }
+
+  const handleFilterDepartment = (filter: string) => {
+    if (!listDepartmentTaskLevel) return;
+
+    if (!filter || filter.trim() === "") {
+      // Nếu không có filter, hiển thị tất cả
+      setFilteredDepartment(listDepartmentTaskLevel);
+    } else {
+      // Lọc danh sách project theo tên
+      const filtered = listDepartmentTaskLevel.filter((project: any) =>
+        project.name.toLowerCase().includes(filter.toLowerCase())
+      );
+      listDepartmentTaskLevel(filtered);
+    }
+  }
+
   const handleProjectFilterChange = (filter: any) => {
     setProjectFilter(filter);
     setCurrentPage(1)
 
   };
+
+  const handleDepartmentFilterChange = (filter: any) => {
+    setDepartmentFilter(filter);
+    setCurrentPage(1)
+  }
 
   const handleBackToList = () => {
     setSelectedTaskId(null);
@@ -348,6 +386,21 @@ const TaskLevelList = () => {
             </Select>
           </div>
 
+          <div className="space-y-1.5 sm:space-y-2">
+            <label className="text-xs sm:text-sm font-semibold text-slate-300">
+              Phòng ban
+            </label>
+            <FilterableSelector
+              data={filteredDepartment}
+              onFilter={handleFilterDepartment}
+              onSelect={(value) => handleDepartmentFilterChange(value)}
+              value={departmentFilter}
+              placeholder="Chọn phòng ban"
+              displayField="name"
+              emptyMessage="Không có phòng ban"
+            />
+          </div>
+
           {/* Project Filter */}
           <div className="space-y-1.5 sm:space-y-2">
             <label className="text-xs sm:text-sm font-semibold text-slate-300">
@@ -426,12 +479,11 @@ const TaskLevelList = () => {
         </div>
       );
     }
-  
+
     return <TaskDetailAssign task={detailTaskLevel} onBack={handleBackToList} isEdit={false} />;
   }
 
   
-
   return (
     <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6">
       <div className="flex items-center justify-between mb-4">

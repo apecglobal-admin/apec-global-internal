@@ -58,7 +58,6 @@ export const loginWeb = createAsyncThunk(
   async (payload: any, thunkAPI) => {
     try {
       const { email, password, fcm_token }: any = payload;
-      console.log(fcm_token)
       const response = await apiAxiosInstance.post(`/auth/login`, {
         fcm_token,
         email,

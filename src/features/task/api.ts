@@ -518,6 +518,7 @@ export const deleteSubTask = createAsyncThunk(
         try {
             const { 
                 ids,
+                task_assignment_id,
                 token
             }: any = payload;
             const response = await apiAxiosInstance.delete("/tasks/sub/delete",
@@ -526,7 +527,8 @@ export const deleteSubTask = createAsyncThunk(
                         Authorization: `Bearer ${token}`,
                     },
                     data: {
-                        ids
+                        ids,
+                        task_assignment_id
                     }
                 },
             );
@@ -1148,6 +1150,7 @@ export const getListTaskLevel  = createAsyncThunk(
                 project_id,
                 task_priority,
                 search, 
+                department_id,
                 token,
             } = payload;
             const params = Object.fromEntries(
@@ -1159,12 +1162,42 @@ export const getListTaskLevel  = createAsyncThunk(
                     type_task,
                     project_id,
                     task_priority,
+                    department_id,
                     search
                 }).filter(
                     ([key, value]) => value != null
                 )
             );
             const response = await apiAxiosInstance.get("/tasks/level/department", {
+                params,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            return {
+                data: response.data,
+                status: response.status,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+
+export const getListDepartmentTaskLevel  = createAsyncThunk(
+    "task/getListDepartmentTaskLevel",
+    async (payload: any, thunkAPI) => {
+        try {
+            const { search, token} = payload;
+            const params = Object.fromEntries(
+                Object.entries({search}).filter(
+                    ([key, value]) => value != null
+                )
+            );
+            const response = await apiAxiosInstance.get("/departments/select/employees/permissions", {
                 params,
                 headers: {
                     Authorization: `Bearer ${token}`,
