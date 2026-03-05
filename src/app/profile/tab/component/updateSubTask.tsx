@@ -16,6 +16,7 @@ interface SubTask {
     description?: string;
     process: number;
     target_value?: number;
+    value?: number; // giá trị thực tế hiện tại
     units?: Unit;
     status: {
         id: number;
@@ -45,13 +46,16 @@ function UpdateSubTask({
     onClose,
     onSuccess,
 }: UpdateSubTaskProps) {
+
+    
     const dispatch = useDispatch();
     const [selectedSubTaskId, setSelectedSubTaskId] = useState<string>("");
     const [progressValue, setProgressValue] = useState<number>(0);
-    const [actualValue, setActualValue] = useState<number | null>(null);
+    // additionalValue: phần giá trị THÊM VÀO (cộng dồn) — chỉ dùng khi không phải %
+    const [additionalValue, setAdditionalValue] = useState<number>(0);
     const [isSaving, setIsSaving] = useState(false);
 
-    // New state for name & description editing
+    // State cho name & description editing
     const [editName, setEditName] = useState<string>("");
     const [editDescription, setEditDescription] = useState<string>("");
     const [isEditingInfo, setIsEditingInfo] = useState<boolean>(false);
@@ -72,7 +76,7 @@ function UpdateSubTask({
         const found = subtasks.find((st) => st.id === subtaskId);
         if (found) {
             setProgressValue(found.process);
-            setActualValue(0);
+            setAdditionalValue(0); // reset giá trị cộng thêm
             setEditName(found.name);
             setEditDescription(found.description ?? "");
         }
@@ -85,25 +89,44 @@ function UpdateSubTask({
         }
     };
 
-    const handleActualValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const rawValue = parseFormattedNumber(e.target.value);
-    
-      if (!isNaN(rawValue) && rawValue >= 0) {
-        const maxValue = selectedSubTask?.target_value ?? Infinity;
-        const clampedValue = Math.min(rawValue, maxValue);
-    
-        setActualValue(clampedValue);
-    
+    // Xử lý thay đổi giá trị cộng thêm (không phải %)
+    const handleAdditionalValueChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+        const input = e.target;
+        const selectionStart = input.selectionStart || 0;
+        const rawValue = input.value;
+
+        const numericString = rawValue.replace(/\./g, "").replace(/,/g, "");
+        if (!/^\d*$/.test(numericString)) return;
+
+        const value = Number(numericString);
+        const currentValue = Number(selectedSubTask?.value ?? 0);
+        const targetValue = Number(selectedSubTask?.target_value ?? Infinity);
+
+        // Giới hạn: tổng (hiện tại + thêm) không vượt mục tiêu
+        const maxAdditional = Math.max(0, targetValue - currentValue);
+        const clampedAdditional = Math.min(value, maxAdditional);
+
+        const formatted = formatNumber(clampedAdditional);
+        const diff = formatted.length - rawValue.length;
+        const caretPosition = selectionStart + diff;
+
+        setAdditionalValue(clampedAdditional);
+
+        // Tự tính lại % tiến độ từ tổng mới
         if (selectedSubTask?.target_value) {
-          const percent = Math.min(
-            Math.round((clampedValue / selectedSubTask.target_value) * 100),
-            100
-          );
-          setProgressValue(percent);
+            const newTotal = currentValue + clampedAdditional;
+            const percent = Math.min(
+                Math.round((newTotal / selectedSubTask.target_value) * 100),
+                100,
+            );
+            setProgressValue(percent);
         }
-      } else {
-        setActualValue(null);
-      }
+
+        setTimeout(() => {
+            input.setSelectionRange(caretPosition, caretPosition);
+        }, 0);
     };
 
     const handleSave = async () => {
@@ -125,9 +148,9 @@ function UpdateSubTask({
             isEditingInfo &&
             editDescription.trim() !== (selectedSubTask?.description ?? "");
         const progressChanged = progressValue !== selectedSubTask?.process;
-        const actualValueChanged = !isPercentUnit && actualValue !== null;
+        const additionalValueChanged = !isPercentUnit && additionalValue > 0;
 
-        const shouldUpdateProgress = progressChanged || actualValueChanged;
+        const shouldUpdateProgress = progressChanged || additionalValueChanged;
         const shouldUpdateInfo = nameChanged || descChanged;
 
         if (!shouldUpdateProgress && !shouldUpdateInfo) {
@@ -142,15 +165,20 @@ function UpdateSubTask({
 
         if (shouldUpdateProgress) {
             try {
+                // Với đơn vị không phải %: gửi giá trị THÊM VÀO (additionalValue)
+                // Với %: gửi progressValue như cũ
+                const valueToSend = isPercentUnit
+                    ? progressValue.toString()
+                    : additionalValue;
+
                 const progressPayload = {
                     id: parseInt(selectedSubTaskId),
-                    value: isPercentUnit
-                        ? progressValue.toString()
-                        : actualValue,
+                    value: valueToSend,
                     token,
                 };
+
                 const progressResult = await dispatch(
-                    updateProgressSubTask(progressPayload) as any
+                    updateProgressSubTask(progressPayload) as any,
                 );
 
                 if (
@@ -161,7 +189,7 @@ function UpdateSubTask({
                 } else {
                     toast.error(
                         progressResult?.payload?.data?.message ||
-                            "Cập nhật tiến độ thất bại"
+                            "Cập nhật tiến độ thất bại",
                     );
                 }
             } catch (error: any) {
@@ -178,7 +206,7 @@ function UpdateSubTask({
                     token,
                 };
                 const infoResult = await dispatch(
-                    updateSubTask(infoPayload) as any
+                    updateSubTask(infoPayload) as any,
                 );
 
                 if (infoResult?.payload?.data?.success && !infoResult?.error) {
@@ -186,7 +214,7 @@ function UpdateSubTask({
                 } else {
                     toast.error(
                         infoResult?.payload?.data?.message ||
-                            "Cập nhật tên/mô tả thất bại"
+                            "Cập nhật tên/mô tả thất bại",
                     );
                 }
             } catch (error: any) {
@@ -209,12 +237,14 @@ function UpdateSubTask({
             onClose();
         } else if (anySuccess) {
             toast.warning(
-                "Một số thông tin chưa được cập nhật. Vui lòng thử lại."
+                "Một số thông tin chưa được cập nhật. Vui lòng thử lại.",
             );
         }
 
         setIsSaving(false);
     };
+
+    
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
@@ -249,6 +279,7 @@ function UpdateSubTask({
                             {subtasks.map((subtask) => (
                                 <option key={subtask.id} value={subtask.id}>
                                     {subtask.name} ({Math.round(subtask.process)}%)
+                                    {subtask.status.id === 4 ? " - Đã hoàn thành" : ""}
                                 </option>
                             ))}
                         </select>
@@ -308,7 +339,7 @@ function UpdateSubTask({
                                                 value={editDescription}
                                                 onChange={(e) =>
                                                     setEditDescription(
-                                                        e.target.value
+                                                        e.target.value,
                                                     )
                                                 }
                                                 rows={3}
@@ -338,7 +369,9 @@ function UpdateSubTask({
                                         ? `Tiến độ (%)`
                                         : `Giá trị đạt được (${unit?.name})`}
                                 </label>
+
                                 {isPercentUnit ? (
+                                    /* ── Trường hợp đơn vị % ── */
                                     <div className="flex items-center gap-3">
                                         <input
                                             type="range"
@@ -357,26 +390,66 @@ function UpdateSubTask({
                                             className="w-20 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:outline-none focus:border-blue-500 transition"
                                         />
                                     </div>
-                                ) : (
+                                ) : selectedSubTask?.status.id === 4 ? (
+                                    /* Subtask đã hoàn thành — chỉ hiển thị, không cho nhập */
                                     <div className="space-y-2">
-                                        <div className="flex items-center gap-3">
-                                        <input
-                                          type="text"
-                                          inputMode="numeric"
-                                          value={actualValue !== null ? formatNumber(actualValue) : ""}
-                                          onChange={handleActualValueChange}
-                                          className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition"
-                                          placeholder={`Nhập giá trị (tối đa ${formatNumber(
-                                            Number(selectedSubTask?.target_value)
-                                          )})`}
-                                        />
+                                        <div className="flex flex-wrap items-center gap-1.5 text-sm">
+                                            <span className="text-emerald-400 font-semibold">
+                                                {formatNumber(Number(selectedSubTask?.value ?? 0))} {unit?.name}
+                                            </span>
+                                            <span className="text-xs text-emerald-500/70 ml-1">(Đã hoàn thành)</span>
                                         </div>
+                                        <div className="text-xs text-slate-400">
+                                            Mục tiêu: {formatNumber(Number(selectedSubTask?.target_value))} {unit?.name}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    /* ── Trường hợp đơn vị khác % — hiển thị dạng cộng dồn ── */
+                                    <div className="space-y-2">
+                                        <div className="flex flex-wrap items-center gap-1.5 text-sm">
+                                            {/* Giá trị hiện tại */}
+                                            <span className="text-slate-400 font-semibold">
+                                                {formatNumber(
+                                                    Number(
+                                                        selectedSubTask?.value ??
+                                                            0,
+                                                    ),
+                                                )}{" "}
+                                                {unit?.name}
+                                            </span>
+
+                                            <span className="text-slate-500">+</span>
+
+                                            {/* Input giá trị cộng thêm */}
+                                            <input
+                                                type="text"
+                                                inputMode="numeric"
+                                                value={formatNumber(additionalValue)}
+                                                onChange={handleAdditionalValueChange}
+                                                className="w-28 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition"
+                                                placeholder="0"
+                                            />
+
+                                            <span className="text-slate-500">=</span>
+
+                                            {/* Tổng kết quả */}
+                                            <span className="text-emerald-400 font-semibold">
+                                                {formatNumber(
+                                                    Number(
+                                                        selectedSubTask?.value ??
+                                                            0,
+                                                    ) + additionalValue,
+                                                )}{" "}
+                                                {unit?.name}
+                                            </span>
+                                        </div>
+
                                         <div className="text-xs text-slate-400">
                                             Mục tiêu:{" "}
                                             {formatNumber(
                                                 Number(
-                                                    selectedSubTask?.target_value
-                                                )
+                                                    selectedSubTask?.target_value,
+                                                ),
                                             )}{" "}
                                             {unit?.name}
                                         </div>

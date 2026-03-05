@@ -34,7 +34,8 @@ import {
     getSupportTaskStatus,
     getListEmployeeSupport,
     getSubTaskDetail,
-    getListTaskLevel
+    getListTaskLevel,
+    getListDepartmentTaskLevel
 } from "./api";
 import { createAsyncReducer, createAsyncReducerDynamic } from "@/src/utils/createAsyncReducer";
 import { initState } from "@/src/services/interface";
@@ -72,6 +73,7 @@ interface TaskState {
     subTaskDetail: initState<any[]>;
     listTaskLevel: initState<any[]>;
     detailTaskLevel: initState<any[]>;
+    listDepartmentTaskLevel: initState<any[]>;
     
 }
 
@@ -108,6 +110,8 @@ const initialState: TaskState = {
     subTaskDetail: createInitState(),
     listTaskLevel: createInitState(),
     detailTaskLevel:  createInitState(),
+    listDepartmentTaskLevel: createInitState(),
+
 };
 
 const taskSlice = createSlice({
@@ -143,8 +147,8 @@ const taskSlice = createSlice({
         createAsyncReducer(builder, getChildKpi, "childKpi");
         createAsyncReducer(builder, getListEmployee, "listEmployee");
         createAsyncReducer(builder, getListEmployeeSupport, "listEmployee");
-
-
+        createAsyncReducer(builder, getListDepartmentTaskLevel, "listDepartmentTaskLevel")
+        
         
         createAsyncReducer(builder, getStatusTask, "statusTask");
         createAsyncReducer(builder, getListDepartment, "listDepartment");
@@ -153,15 +157,15 @@ const taskSlice = createSlice({
         createAsyncReducer(builder, uploadFileTask, "fileTask");
         createAsyncReducer(builder, getSubTask, "listSubTask");
         createAsyncReducer(builder, getListTaskAssign, "listTaskAssign");
-        createAsyncReducerDynamic(builder, getDetailListTaskAssign);
-        createAsyncReducerDynamic(builder, getListTaskLevel);
-
+        
         createAsyncReducer(builder, getSupportTaskTypes, "supportTaskTypes");
         createAsyncReducer(builder, getSubTaskDetail, "subTaskDetail")
         createAsyncReducerDynamic(builder, getSupportTask);
         createAsyncReducerDynamic(builder, getSupportTaskManager);
         createAsyncReducerDynamic(builder, getSupportTaskEmployee);
         createAsyncReducerDynamic(builder, getSupportTaskPending);
+        createAsyncReducerDynamic(builder, getDetailListTaskAssign);
+        createAsyncReducerDynamic(builder, getListTaskLevel);
 
         createAsyncReducer(builder, getSupportTaskStatus, "supportTaskStatus");
     },

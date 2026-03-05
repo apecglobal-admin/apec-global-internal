@@ -93,7 +93,7 @@ function TaskDetail({
 }: TaskDetailProps) {
     const dispatch = useDispatch();
     const { imageTask, fileTask, listSubTask } = useTaskData();
-
+    
     const currentTaskIdRef = useRef<string | null>(null);
     const subTaskOffsetRef = useRef(0);
 
@@ -123,7 +123,7 @@ function TaskDetail({
     const [currentAction, setCurrentAction] = useState<'accept' | 'reject' | null>(null);
     const [isSelectMode, setIsSelectMode] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
-
+    
     const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
     const [editingValue, setEditingValue] = useState<number>(0);
     const [isUpdatingSubtask, setIsUpdatingSubtask] = useState(false);
@@ -165,12 +165,10 @@ function TaskDetail({
     }, [listSubTask]);
 
     useEffect(() => {
-        // Tính giá trị thực tế từ process và target_value
         if (task.units?.name !== "%") {
-            const calculatedValue = (progress / 100) * Number(task.target_value);
-            setActualValue(calculatedValue);
+            setActualValue(0);
         }
-    }, [task, progress]);
+    }, [task]);
 
     const enterSelectMode = (action: 'accept' | 'reject') => {
         setIsSelectMode(true);
@@ -215,8 +213,6 @@ function TaskDetail({
             } else if (uploadType === "document") {
                 result = await dispatch(uploadFileTask(payload) as any);
             }
-
-
 
             if (result?.payload?.data?.status === 200 || result?.payload?.data?.status === 201 || result?.payload?.data?.success) {
                 toast.success("Tải file thành công.")
@@ -272,13 +268,12 @@ function TaskDetail({
                 }
             } else {
                 toast.error(result?.payload.data?.message || "Cập nhật tiến độ thất bại")
-                throw new Error(result?.payload || "Update failed");
             }
         } catch (error: any) {
-            console.error("Save error:", error);
-            // toast.error(error?.message || "Có lỗi xảy ra khi cập nhật. Vui lòng thử lại.");
+            toast.error(error?.message || "Có lỗi xảy ra khi cập nhật. Vui lòng thử lại.");
         } finally {
             setIsSaving(false);
+            handleCancel()
         }
     };
 
@@ -287,6 +282,7 @@ function TaskDetail({
         setProgressValue(progress);
         resetForm();
         setIsEditing(false);
+        setActualValue(0)
     };
 
     const resetForm = () => {
@@ -377,6 +373,8 @@ function TaskDetail({
             onUpdateSuccess?.(task.id)
         }
 
+        handleCancel()
+
     };
 
     const loadMoreSubTasks = async () => {
@@ -425,15 +423,8 @@ function TaskDetail({
     };
     const handleActualValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const rawValue = parseFormattedNumber(e.target.value);
-
         if (!isNaN(rawValue) && rawValue >= 0) {
-            const targetValue = Number(task.target_value);
-            const newValue = Math.min(rawValue, targetValue);
-
-            setActualValue(newValue);
-
-            const newProcess = Math.min(100, (newValue / targetValue) * 100);
-            setProgressValue(Math.round(newProcess));
+            setActualValue(rawValue);
         }
     };
 
@@ -504,12 +495,13 @@ function TaskDetail({
 
             try {
                 const token = localStorage.getItem("userToken");
-                const res = await dispatch(deleteSubTask({ token, ids: selectedIds }) as any)
+                const res = await dispatch(deleteSubTask({ token, ids: selectedIds, task_assignment_id: task.id }) as any)
 
                 if (res.payload.data.success) {
                     toast.success(`Đã xóa thành công nhiệm vụ`);
                     if (onUpdateSuccess) {
-                        onUpdateSuccess(task.id);
+                        // onUpdateSuccess(task.id);
+                        refreshSubTasks(true)
                     }
                 } else {
                     toast.error(`xóa nhiệm vụ thất bại`);
@@ -520,11 +512,12 @@ function TaskDetail({
                 toast.error("Có lỗi xảy ra khi xóa nhiều nhiệm vụ");
             } finally {
                 setIsProcessing(false);
+                handleCancel()
             }
         }
     }
 
-
+    
 
     const handleUpdateSubtaskProgress = async (id: number) => {
         const token = localStorage.getItem("userToken");
@@ -549,6 +542,7 @@ function TaskDetail({
             toast.error("Có lỗi xảy ra khi cập nhật tiến độ.");
         }
     };
+
     const handleSubtaskValueChange = (
         e: React.ChangeEvent<HTMLInputElement>,
         subtask: SubTask
@@ -800,23 +794,30 @@ function TaskDetail({
                             )}
 
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
-                                <Briefcase size={16} className="text-slate-500 flex-shrink-0" />
+                                <Briefcase size={16} className="text-slate-500 flex-shrink-0" color="blue"/>
                                 <span className="font-semibold">Dự án:</span>
                                 <span className="truncate">{task.project.name}</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
-                                <Target size={16} className="text-slate-500 flex-shrink-0" />
+                                <Target size={16} className="text-slate-500 flex-shrink-0" color="yellow"/>
                                 <span className="font-semibold">KPI:</span>
                                 <span className="truncate">{task.kpi_item.name}</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
-                                <Target size={16} className="text-slate-500 flex-shrink-0" />
+                                <Target size={16} className="text-slate-500 flex-shrink-0" color="red"/>
                                 <span className="font-semibold">Chỉ tiêu:</span>
                                 {task.units?.name !== "%" && task.units?.name !== null ? (
-                                    <span>{formatNumber(Number(task.target_value))} {task.units?.name}</span>
+                                    <span className="text-red-600">{formatNumber(Number(task.target_value))} {task.units?.name}</span>
                                 ) : (
                                     <span>100%</span>
                                 )}
+                            </div>
+                            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
+                                <CheckCheck size={16} className="text-slate-500 flex-shrink-0" color="green"/>
+                                <span className="font-semibold">Đã đạt:</span>
+                                <span className="text-xs font-bold text-green-600">
+                                {formatNumber(Number(task.value))} {task.units.name}
+                                </span>
                             </div>
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
                                 <ClipboardList size={16} className="text-slate-500 flex-shrink-0" />
@@ -1178,6 +1179,7 @@ function TaskDetail({
                         </div>
                     </div>
                 ) : (
+                    // {allSubTask?.leng}
                     <div className="mb-4 bg-slate-900 p-4 rounded-lg border border-blue-500/30">
                         <div className="flex justify-between items-center mb-3">
                             <span className="text-sm font-semibold text-white">
@@ -1242,16 +1244,23 @@ function TaskDetail({
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex flex-wrap items-center gap-1.5">
+                                            <span className="text-slate-400 font-semibold">
+                                                {formatNumber(Number(task.value))} {task.units?.name}
+                                            </span>
+                                            <span className="text-slate-500">+</span>
                                             <input
                                                 type="text"
                                                 inputMode="numeric"
                                                 value={formatNumber(actualValue)}
                                                 onChange={handleActualValueChange}
                                                 disabled={selectedStatus === 4}
-                                                className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                                placeholder={`Nhập giá trị (tối đa ${formatNumber(Number(task.target_value))})`}
+                                                className="w-24 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                             />
+                                            <span className="text-slate-500">=</span>
+                                            <span className="text-emerald-400 font-semibold">
+                                                {formatNumber(Number(task.value) + actualValue)} {task.units?.name}
+                                            </span>
                                         </div>
                                         <div className="text-xs text-slate-400">
                                             Mục tiêu: {formatNumber(Number(task.target_value))} {task.units?.name}

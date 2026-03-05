@@ -33,6 +33,7 @@ export const useTaskData = () => {
     subTaskDetail: task.subTaskDetail.data.data,
     listTaskLevel: task.listTaskLevel.data.data,
     detailTaskLevel:  task.detailTaskLevel.data.data,
+    listDepartmentTaskLevel: task.listDepartmentTaskLevel.data.data,
 
     // Loading states
     loadingListSubTask: task.listSubTask.loading, 

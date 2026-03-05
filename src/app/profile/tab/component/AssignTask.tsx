@@ -468,26 +468,22 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
     const handleProcessChange = (
         e: React.ChangeEvent<HTMLInputElement>
     ) => {
-        // Bỏ hết dấu phẩy
+        if (unit === "%") return;
+    
         const rawValue = e.target.value.replace(/,/g, "");
-      
+    
         let value = Number(rawValue);
         if (Number.isNaN(value)) value = 0;
-      
-        if (unit === "%") {
-          if (value > 100) value = 100;
-          if (value < 0) value = 0;
-        }
-      
+    
         setAssignForm((prev) => ({
-          ...prev,
-          process: value,
+            ...prev,
+            process: value,
         }));
-
+    
         if (errors.value) {
             setErrors((prev) => ({
-              ...prev,
-              value: undefined,
+                ...prev,
+                value: undefined,
             }));
         }
     };
@@ -873,8 +869,9 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                     <input
                                         type="text"
                                         inputMode="numeric"
-                                        value={formatNumber(assignForm.process)}
+                                        value={unit === "%" ? 100 : formatNumber(assignForm.process)}
                                         onChange={handleProcessChange}
+                                        disabled={unit === "%"}
                                         className={`w-full px-3 py-2.5 sm:px-4 sm:py-3
                                             bg-slate-900 border rounded-lg
                                             text-sm sm:text-base text-white
@@ -884,6 +881,7 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                                     ? "border-red-500 focus:border-red-500"
                                                     : "border-slate-700 focus:border-blue-500"
                                             }
+                                            ${unit === "%" ? "opacity-60 cursor-not-allowed" : ""}
                                             transition`}
                                     />
                                     {errors.value && (
