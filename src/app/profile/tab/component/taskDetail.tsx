@@ -302,15 +302,16 @@ function TaskDetail({
     const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newStatus = parseInt(e.target.value);
         setSelectedStatus(newStatus);
-
+    
         if (newStatus !== 4) {
             resetForm();
+            setActualValue(0);
         }
-
+    
         if (newStatus === 4) {
             setProgressValue(100);
             if (task.units?.name !== "%") {
-                setActualValue(Number(task.target_value)); // Set giá trị = mục tiêu
+                setActualValue(Number(task.target_value) - Number(task.value));
             }
         }
     };
