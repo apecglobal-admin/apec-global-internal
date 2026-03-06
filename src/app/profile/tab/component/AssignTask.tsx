@@ -135,12 +135,16 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
         }
       };
 
-    useEffect(() => {
+      useEffect(() => {
         const filter = childKpi?.find((data: any) => Number(data.id) === assignForm?.kpi_item_id)
         if(filter?.unit_name){
             setUnit(filter.unit_name)
+            // Thêm dòng này:
+            setAssignForm((prev) => ({
+                ...prev,
+                process: filter.unit_name === "%" ? 100 : 0,
+            }));
         }
-        
     }, [assignForm?.kpi_item_id]);
 
     
@@ -275,7 +279,7 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
     const validateForm = (): ValidationErrors => {
         const newErrors: ValidationErrors = {};
     
-        if (assignForm.process === 0) {
+        if (assignForm.process === 0 && unit !== "%") {
             newErrors.value = "Vui lòng nhập giá trị";
         }
     
