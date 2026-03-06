@@ -64,8 +64,6 @@ interface AssignTaskProps {
 
 function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
 
-
-
     const dispatch = useDispatch();
     const {
         typeTask,
@@ -868,7 +866,12 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                 >
                                     <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
                                         Mục tiêu cần đạt ({unit})
-                                        <span className="text-red-400"> *</span>
+                                        {unit !== "%" ? (
+                                            <span className="text-red-400"> *</span>
+                                        ): (
+                                            <span className="text-slate-500 text-xs"> Mặc định 100</span>
+
+                                        )}
                                     </label>
                                     <input
                                         type="text"

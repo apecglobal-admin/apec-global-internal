@@ -302,12 +302,12 @@ function TaskDetail({
     const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newStatus = parseInt(e.target.value);
         setSelectedStatus(newStatus);
-    
+
         if (newStatus !== 4) {
             resetForm();
             setActualValue(0);
         }
-    
+
         if (newStatus === 4) {
             setProgressValue(100);
             if (task.units?.name !== "%") {
@@ -817,7 +817,12 @@ function TaskDetail({
                                 <CheckCheck size={16} className="text-slate-500 flex-shrink-0" color="green"/>
                                 <span className="font-semibold">Đã đạt:</span>
                                 <span className="text-xs font-bold text-green-600">
-                                {formatNumber(Number(task.value))} {task.units.name}
+                                <span className="text-xs font-bold text-green-600">
+                                    {task.units.name === "%"
+                                        ? `${Math.min(Number(task.value), 100)} %`
+                                        : `${formatNumber(Number(task.value))} ${task.units.name}`
+                                    }
+                                </span>
                                 </span>
                             </div>
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
