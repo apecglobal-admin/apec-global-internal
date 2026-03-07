@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -12,41 +14,47 @@ import {
   X,
 } from "lucide-react";
 import { useProfileData } from "@/src/hooks/profileHook";
+import { usePathname, useRouter } from "next/navigation";
 
-function TabNavigation({ activeTab, setActiveTab }: any) {
+function TabNavigation() {
   const [isOpen, setIsOpen] = useState(false);
   const { permission } = useProfileData();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const tabs = [
-    { id: "skills", label: "Tổng quát", icon: <Rocket size={18} /> },
-    { id: "projects", label: "Dự án", icon: <Briefcase size={18} /> },
-    { id: "career", label: "Lộ trình", icon: <Layers size={18} /> },
-    { id: "tasks", label: "Nhiệm vụ", icon: <ListTodo size={18} /> },
-    { id: "event", label: "Sự kiện", icon: <User size={18} /> },
-    ...(permission ? [{ id: "tasksManager", label: "Quản lý", icon: <ListTodo size={18} /> }] : []),
-    { id: "caution", label: "Vi phạm", icon: <ListTodo size={18} /> },
-    { id: "personal", label: "Yêu cầu", icon: <User size={18} /> },
-
-    { id: "achievements", label: "Thành tích", icon: <Award size={18} /> },
-    { id: "card", label: "Thẻ Apec", icon: <Home size={18} /> },
-    { id: "link", label: "Liên kết", icon: <Link2 size={18} /> },
+    { id: "skills",        label: "Tổng quát",  icon: <Rocket size={18} />,    path: "/profile/skills" },
+    { id: "projects",      label: "Dự án",       icon: <Briefcase size={18} />, path: "/profile/projects" },
+    { id: "career",        label: "Lộ trình",    icon: <Layers size={18} />,    path: "/profile/career" },
+    { id: "tasks",         label: "Nhiệm vụ",    icon: <ListTodo size={18} />,  path: "/profile/tasks" },
+    { id: "event",         label: "Sự kiện",     icon: <User size={18} />,      path: "/profile/event" },
+    ...(permission
+      ? [{ id: "tasksManager", label: "Quản lý", icon: <ListTodo size={18} />, path: "/profile/manager/task" }]
+      : []),
+    { id: "caution",       label: "Vi phạm",     icon: <ListTodo size={18} />,  path: "/profile/caution" },
+    { id: "personal",      label: "Yêu cầu",     icon: <User size={18} />,      path: "/profile/personal" },
+    { id: "achievements",  label: "Thành tích",  icon: <Award size={18} />,     path: "/profile/achievements" },
+    { id: "card",          label: "Thẻ Apec",    icon: <Home size={18} />,      path: "/profile/card" },
+    { id: "link",          label: "Liên kết",    icon: <Link2 size={18} />,     path: "/profile/link" },
   ];
 
-  // Chia tab ra 2 nhóm
+  const navigate = (path: string) => router.push(path);
+  const isActive = (path: string) => pathname === path || pathname.startsWith(path + "/");
+
   const mainTabs = ["tasks", "projects", "career", "personal"];
   const extraTabs = tabs.filter((t) => !mainTabs.includes(t.id));
 
   return (
     <>
-      {/* Desktop giữ nguyên */}
+      {/* Desktop */}
       <div className="hidden md:block border-b border-slate-800 mb-6">
         <div className="flex gap-4 px-6">
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => navigate(tab.path)}
               className={`relative px-4 py-3 text-sm font-semibold transition ${
-                activeTab === tab.id
+                isActive(tab.path)
                   ? "text-blue-400 border-b-2 border-blue-400"
                   : "text-slate-400 hover:text-slate-200"
               }`}
@@ -64,16 +72,16 @@ function TabNavigation({ activeTab, setActiveTab }: any) {
 
         {/* 4 tabs chính chia hai bên */}
         <div className="absolute bottom-0 w-full flex items-center justify-between px-8">
-          {/* Bên trái: 2 tab đầu */}
+          {/* Bên trái: skills + tasks */}
           <div className="flex gap-4">
             {tabs
               .filter((t) => ["skills", "tasks"].includes(t.id))
               .map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => navigate(tab.path)}
                   className={`flex flex-col items-center justify-center p-2 rounded-xl text-[11px] font-medium transition ${
-                    activeTab === tab.id
+                    isActive(tab.path)
                       ? "text-white"
                       : "text-slate-300 hover:text-white/30"
                   }`}
@@ -84,16 +92,16 @@ function TabNavigation({ activeTab, setActiveTab }: any) {
               ))}
           </div>
 
-          {/* Bên phải: 2 tab còn lại */}
+          {/* Bên phải: career + personal */}
           <div className="flex gap-4">
             {tabs
               .filter((t) => ["career", "personal"].includes(t.id))
               .map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => navigate(tab.path)}
                   className={`flex flex-col items-center justify-center p-2 rounded-xl text-[11px] font-medium transition ${
-                    activeTab === tab.id
+                    isActive(tab.path)
                       ? "text-white"
                       : "text-slate-300 hover:text-white/30"
                   }`}
@@ -149,11 +157,11 @@ active:scale-95 transition"
                     <motion.button
                       key={tab.id}
                       onClick={() => {
-                        setActiveTab(tab.id);
+                        navigate(tab.path);
                         setIsOpen(false);
                       }}
                       className={`flex flex-col items-center justify-center p-2 rounded-xl text-[11px] font-medium transition-all duration-150 ${
-                        activeTab === tab.id
+                        isActive(tab.path)
                           ? "bg-blue-500/90 text-white shadow-md"
                           : "bg-slate-800/60 text-slate-300 hover:bg-slate-700/70"
                       }`}
