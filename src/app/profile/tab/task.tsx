@@ -1137,7 +1137,7 @@ function TasksTab() {
                         </div>
                         <div className="flex items-center gap-1 text-yellow-400 flex-shrink-0">
                           <Star size={12} className="fill-yellow-400" />
-                          <span className="font-semibold">+100 XP</span>
+                          <span className="font-semibold">+{task.exp_increase} XP</span>
                         </div>
                       </div>
 

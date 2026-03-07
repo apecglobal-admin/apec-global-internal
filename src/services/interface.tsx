@@ -66,6 +66,7 @@ export interface Task {
 
     prove: string | null;
     checked: boolean;
+    exp_increase: number | string;
 
     process: number;
     target_value: string;

@@ -67,13 +67,13 @@ interface TaskDetailProps {
 }
 
 interface SubTask {
-
     id: string;
     name: string;
     description?: string;
     process: number;
     target_value: number;
     value: number;
+    exp_increase: number;
     status: {
         id: number;
         name: string;
@@ -123,6 +123,7 @@ function TaskDetail({
     const [currentAction, setCurrentAction] = useState<'accept' | 'reject' | null>(null);
     const [isSelectMode, setIsSelectMode] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    console.log(allSubTasks);
     
     const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
     const [editingValue, setEditingValue] = useState<number>(0);
@@ -836,8 +837,7 @@ function TaskDetail({
                             <div className="flex items-center justify-between mb-2 gap-2">
                                 <h5 className="text-xs font-semibold text-slate-200 flex items-center gap-2 shrink-0">
                                     <ClipboardList size={16} className="text-slate-400" />
-                                    <span className="hidden sm:inline">Nhiệm vụ con ({allSubTasks?.length || 0})</span>
-                                    <span className="sm:hidden">Nhiệm vụ con ({allSubTasks?.length || 0})</span>
+                                    <span className="">Nhiệm vụ con ({allSubTasks?.length || 0})</span>
                                 </h5>
                                 <div className="flex gap-1.5 sm:gap-2 items-center">
                                     {allSubTasks && allSubTasks.length > 0 && (
@@ -982,121 +982,129 @@ function TaskDetail({
                                                 )}
 
                                                 {/* Content */}
-                                                <div className="min-w-0 flex-1">
-                                                    {/* Name + Badge */}
-                                                    <div className="flex items-start justify-between gap-2">
-                                                        <p className="text-xs sm:text-sm text-white font-medium line-clamp-1 flex-1">
+                                                <div className="min-w-0 flex-1 flex gap-2">
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="text-xs sm:text-sm text-white font-medium line-clamp-1">
                                                             {subtask.name}
                                                         </p>
-                                                        <div className="flex-shrink-0">
-                                                            {getTaskStatusBadge(subtask.status.id, null, true)}
-                                                        </div>
-                                                    </div>
 
-                                                    {subtask.description && (
-                                                        <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">
-                                                            {subtask.description}
-                                                        </p>
-                                                    )}
+                                                        {subtask.description && (
+                                                            <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">
+                                                                {subtask.description}
+                                                            </p>
+                                                        )}
 
-                                                    <div className="flex flex-col gap-1 mt-1.5">
-                                                        <div className="flex items-center gap-1 text-xs">
-                                                            <span className="text-slate-500">Mục tiêu:</span>
-                                                            <span className="text-blue-400 font-semibold">
-                                                                {formatNumber(Number(subtask.target_value))} {task.units?.name || "%"}
-                                                            </span>
-                                                        </div>
-
-                                                        {editingSubtaskId !== subtask.id && (
+                                                        <div className="flex flex-col gap-1 mt-1.5">
                                                             <div className="flex items-center gap-1 text-xs">
-                                                                <span className="text-slate-500">Tiến độ:</span>
+                                                                <span className="text-slate-500">Mục tiêu:</span>
                                                                 <span className="text-blue-400 font-semibold">
-                                                                    {formatNumber(Number(subtask.value))} {task.units?.name || "%"}
+                                                                    {formatNumber(Number(subtask.target_value))} {task.units?.name || "%"}
                                                                 </span>
-                                                                {subtask.status.id !== 4 && (
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            setEditingSubtaskId(subtask.id);
-                                                                            setEditingValue(Number(subtask.value));
-                                                                        }}
-                                                                        className="p-1 bg-blue-600 hover:bg-blue-700 rounded text-white transition ml-1"
-                                                                        title="Cập nhật tiến độ"
-                                                                    >
-                                                                        <Edit3 size={12} />
-                                                                    </button>
+                                                            </div>
+
+                                                            {editingSubtaskId !== subtask.id && (
+                                                                <div className="flex items-center gap-1 text-xs">
+                                                                    <span className="text-slate-500">Tiến độ:</span>
+                                                                    <span className="text-blue-400 font-semibold">
+                                                                        {formatNumber(Number(subtask.value))} {task.units?.name || "%"}
+                                                                    </span>
+                                                                    {subtask.status.id !== 4 && (
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setEditingSubtaskId(subtask.id);
+                                                                                setEditingValue(Number(subtask.value));
+                                                                            }}
+                                                                            className="p-1 bg-blue-600 hover:bg-blue-700 rounded text-white transition ml-1"
+                                                                            title="Cập nhật tiến độ"
+                                                                        >
+                                                                            <Edit3 size={12} />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        {editingSubtaskId === subtask.id && (
+                                                            <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                                                                <span className="text-slate-500">Tiến độ:</span>
+
+                                                                {task.units?.name === "%" || task.units?.name === null ? (
+                                                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                                        <input
+                                                                            type="range"
+                                                                            min="0"
+                                                                            max="100"
+                                                                            value={editingValue}
+                                                                            onChange={(e) => setEditingValue(Number(e.target.value))}
+                                                                            className="flex-1 h-2 rounded-lg appearance-none cursor-pointer min-w-0"
+                                                                            style={{
+                                                                                background: `linear-gradient(to right, #2563eb, #a855f7 ${editingValue / 2}%, #ec4899 ${editingValue}%, #1e293b ${editingValue}%)`
+                                                                            }}
+                                                                        />
+                                                                        <input
+                                                                            type="number"
+                                                                            min="0"
+                                                                            max="100"
+                                                                            value={editingValue}
+                                                                            onChange={(e) => {
+                                                                                const v = Math.min(100, Math.max(0, Number(e.target.value)));
+                                                                                setEditingValue(v);
+                                                                            }}
+                                                                            className="w-14 px-2 py-1 bg-slate-800 border border-blue-500 rounded text-white text-xs focus:outline-none text-center flex-shrink-0"
+                                                                        />
+                                                                        <span className="text-slate-400 flex-shrink-0">%</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="flex flex-wrap items-center gap-1.5 flex-1">
+                                                                        <span className="text-slate-400 font-semibold">
+                                                                            {formatNumber(Number(subtask.value))} {task.units?.name}
+                                                                        </span>
+                                                                        <span className="text-slate-500">+</span>
+                                                                        <input
+                                                                            type="text"
+                                                                            inputMode="numeric"
+                                                                            value={formatNumber(editingValue)}
+                                                                            onChange={(e) => handleSubtaskValueChange(e, subtask)}
+                                                                            className="w-20 px-2 py-1 bg-slate-800 border border-blue-500 rounded text-white text-xs focus:outline-none"
+                                                                        />
+                                                                        <span className="text-slate-500">=</span>
+                                                                        <span className="text-emerald-400 font-semibold">
+                                                                            {formatNumber(Number(subtask.value) + Number(editingValue || 0))} {task.units?.name}
+                                                                        </span>
+                                                                    </div>
                                                                 )}
+
+                                                                <div className="flex items-center gap-1 flex-shrink-0">
+                                                                    <button
+                                                                        onClick={() => handleUpdateSubtaskProgress(Number(subtask.id))}
+                                                                        disabled={isUpdatingSubtask}
+                                                                        className="p-1.5 bg-emerald-600 hover:bg-emerald-700 rounded text-white transition disabled:opacity-50"
+                                                                    >
+                                                                        <Save size={12} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => setEditingSubtaskId(null)}
+                                                                        disabled={isUpdatingSubtask}
+                                                                        className="p-1.5 bg-slate-700 hover:bg-slate-600 rounded text-white transition"
+                                                                    >
+                                                                        <X size={12} />
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         )}
                                                     </div>
 
-                                                    {editingSubtaskId === subtask.id && (
-                                                        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
-                                                            <span className="text-slate-500">Tiến độ:</span>
-
-                                                            {task.units?.name === "%" || task.units?.name === null ? (
-                                                                <div className="flex items-center gap-2 flex-1 min-w-0">
-                                                                    <input
-                                                                        type="range"
-                                                                        min="0"
-                                                                        max="100"
-                                                                        value={editingValue}
-                                                                        onChange={(e) => setEditingValue(Number(e.target.value))}
-                                                                        className="flex-1 h-2 rounded-lg appearance-none cursor-pointer min-w-0"
-                                                                        style={{
-                                                                            background: `linear-gradient(to right, #2563eb, #a855f7 ${editingValue / 2}%, #ec4899 ${editingValue}%, #1e293b ${editingValue}%)`
-                                                                        }}
-                                                                    />
-                                                                    <input
-                                                                        type="number"
-                                                                        min="0"
-                                                                        max="100"
-                                                                        value={editingValue}
-                                                                        onChange={(e) => {
-                                                                            const v = Math.min(100, Math.max(0, Number(e.target.value)));
-                                                                            setEditingValue(v);
-                                                                        }}
-                                                                        className="w-14 px-2 py-1 bg-slate-800 border border-blue-500 rounded text-white text-xs focus:outline-none text-center flex-shrink-0"
-                                                                    />
-                                                                    <span className="text-slate-400 flex-shrink-0">%</span>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="flex flex-wrap items-center gap-1.5 flex-1">
-                                                                    <span className="text-slate-400 font-semibold">
-                                                                        {formatNumber(Number(subtask.value))} {task.units?.name}
-                                                                    </span>
-                                                                    <span className="text-slate-500">+</span>
-                                                                    <input
-                                                                        type="text"
-                                                                        inputMode="numeric"
-                                                                        value={formatNumber(editingValue)}
-                                                                        onChange={(e) => handleSubtaskValueChange(e, subtask)}
-                                                                        className="w-20 px-2 py-1 bg-slate-800 border border-blue-500 rounded text-white text-xs focus:outline-none"
-                                                                    />
-                                                                    <span className="text-slate-500">=</span>
-                                                                    <span className="text-emerald-400 font-semibold">
-                                                                        {formatNumber(Number(subtask.value) + Number(editingValue || 0))} {task.units?.name}
-                                                                    </span>
-                                                                </div>
-                                                            )}
-
-                                                            <div className="flex items-center gap-1 flex-shrink-0">
-                                                                <button
-                                                                    onClick={() => handleUpdateSubtaskProgress(Number(subtask.id))}
-                                                                    disabled={isUpdatingSubtask}
-                                                                    className="p-1.5 bg-emerald-600 hover:bg-emerald-700 rounded text-white transition disabled:opacity-50"
-                                                                >
-                                                                    <Save size={12} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => setEditingSubtaskId(null)}
-                                                                    disabled={isUpdatingSubtask}
-                                                                    className="p-1.5 bg-slate-700 hover:bg-slate-600 rounded text-white transition"
-                                                                >
-                                                                    <X size={12} />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    )}
+                                                    <div className="flex-shrink-0 flex flex-col items-end gap-1">
+                                                        {getTaskStatusBadge(subtask.status.id, null, true)}
+                                                        {subtask.exp_increase > 0 && (
+                                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold tracking-wide">
+                                                                <svg width="9" height="9" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                                                                    <path d="M5 1L6.18 3.82L9 4.27L7 6.27L7.45 9.09L5 7.73L2.55 9.09L3 6.27L1 4.27L3.82 3.82L5 1Z" fill="currentColor"/>
+                                                                </svg>
+                                                                +{subtask.exp_increase} XP
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         );
