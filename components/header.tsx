@@ -15,6 +15,8 @@ import {
     Menu,
     X,
     House,
+    SquareActivity,
+    SquareCheck,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
@@ -111,7 +113,7 @@ export default function Header() {
                 profifle
                     ? "bg-white  border-b border-slate-400"
                     : "bg-white  border-b border-slate-400"
-            }  w-full"`}
+            }  w-full sticky top-0 z-100 backdrop-blur-md"`}
         >
             {/* Top Bar */}
             <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4 max-w-7xl mx-auto w-full">
@@ -189,6 +191,14 @@ export default function Header() {
                                     <div className="p-2">
                                         {userInfo ? (
                                             <>
+                                                <button 
+                                                onClick={() => {
+                                                    router.push("/attendance/sheets");
+                                                }}
+                                                className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-black transition hover:bg-white hover:text-black cursor-pointer">
+                                                    <SquareCheck size={18} />
+                                                    <span>Bảng công</span>
+                                                </button>
                                                 <button
                                                     className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-black transition hover:bg-white hover:text-black cursor-pointer"
                                                     onClick={() =>
@@ -200,10 +210,7 @@ export default function Header() {
                                                         Thông tin cá nhân
                                                     </span>
                                                 </button>
-                                                {/* <button className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-black transition hover:bg-white hover:text-black cursor-pointer">
-                                                    <Settings size={18} />
-                                                    <span>Cài đặt</span>
-                                                </button> */}
+
                                                 <div className="my-2 border-t border-black"></div>
                                                 <button
                                                     className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-red-700 transition hover:bg-white hover:text-red-600 cursor-pointer"
@@ -256,7 +263,7 @@ export default function Header() {
 
             {/* Mobile Sidebar */}
             <div
-                className={`hidden show-over-1200 fixed top-0 right-0 ${profifle ? ` h-[91%]` : `h-full`} z-50 transform ${
+                className={`hidden show-over-1200 fixed top-0 right-0 ${profifle ? ` h-[91%]` : `h-full`} z-[100] transform ${
                     isSidebarOpen ? "translate-x-0" : "translate-x-full"
                 } transition-transform duration-300 ease-in-out bg-white w-64 sm:w-80 border-l border-black flex flex-col`}
                 ref={sidebarRef}
@@ -300,6 +307,17 @@ export default function Header() {
                             <button
                                 className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-black transition hover:bg-gray-200 cursor-pointer"
                                 onClick={() => {
+                                    router.push("/attendance/sheets");
+                                    setIsSidebarOpen(false);
+                                }}
+                            >
+                                <SquareCheck size={18} />
+                                <span>
+                                    Bảng công</span>
+                            </button>
+                            <button
+                                className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-black transition hover:bg-gray-200 cursor-pointer"
+                                onClick={() => {
                                     router.push("/profile");
                                     setIsSidebarOpen(false);
                                 }}
@@ -307,6 +325,7 @@ export default function Header() {
                                 <User size={18} />
                                 <span>Thông tin cá nhân</span>
                             </button>
+
                             {/* <button className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-left text-sm text-black transition hover:bg-gray-200 cursor-pointer">
                                 <Settings size={18} />
                                 <span>Cài đặt</span>

@@ -11,7 +11,7 @@ export const createTask = createAsyncThunk(
                 date_start, 
                 date_end, 
                 task_priority, 
-                project_id, 
+                projects, 
                 kpi_item_id, 
                 target_type, 
                 target_value, 
@@ -19,7 +19,8 @@ export const createTask = createAsyncThunk(
                 employees,position_id,department_id,
                 token,
                 min_count_reject,
-                max_count_reject
+                max_count_reject,
+                time_repeat
             }: any = payload;
             const response = await apiAxiosInstance.post("/tasks/create",{ 
                 name, 
@@ -27,7 +28,7 @@ export const createTask = createAsyncThunk(
                 date_start, 
                 date_end, 
                 task_priority, 
-                project_id, 
+                projects, 
                 kpi_item_id, 
                 target_type, 
                 target_value, 
@@ -36,7 +37,8 @@ export const createTask = createAsyncThunk(
                 position_id,
                 department_id,
                 min_count_reject,
-                max_count_reject
+                max_count_reject,
+                time_repeat
             }, {
                 headers: {
                     Authorization: `Bearer ${token}`,

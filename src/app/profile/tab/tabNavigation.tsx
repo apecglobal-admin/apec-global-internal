@@ -70,7 +70,6 @@ function TabNavigation() {
         {/* Nền đen */}
         <div className="absolute bottom-0 w-full h-16 bg-black/90 backdrop-blur-md rounded-t-3xl border-t border-slate-800" />
 
-        {/* 4 tabs chính chia hai bên */}
         <div className="absolute bottom-0 w-full flex items-center justify-between px-8">
           {/* Bên trái: skills + tasks */}
           <div className="flex gap-4">
