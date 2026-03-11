@@ -1,45 +1,58 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-
 import { buildCalendarWeeks, computeStats, getDaysInMonth, padZ } from "@/src/utils/attendance";
+import { DayRecord, DOW_LABELS, LEGEND_ITEMS, UPDATE_SCHEDULE_NOTE } from "@/src/services/interface";
+import { getPersonalAttendance } from "@/src/features/attendance/api";
 
-
-import { DayRecord, DOW_LABELS, LEGEND_ITEMS, UPDATE_SCHEDULE_NOTE  } from "@/src/services/interface";
 import { StatCard } from "../component/StatCard";
 import { DetailPage } from "../component/DetailPage";
 import { DayCell } from "../component/DayCell";
 import { ListItem } from "../component/ListItem";
 import { MonthPicker } from "../component/MonthPicker";
+import { useDispatch } from "react-redux";
+import { useAttendanceData } from "@/src/hooks/attendanceHook";
 
-export const MOCK_DATA: Record<string, DayRecord[]> = {
-  "2026-3": [
-    { date: 2,  type: "full",         shiftName: "Ca Công Nghệ",  checkIn: "08:16", checkOut: "18:00", soCong: 1,    diMuon: 0,  veSom: 0, lamThemTong: 0,    lamThemLuong: 0,   lamThemNghi: 0,    nghiDiCongTac: 0 },
-    { date: 3,  type: "full",         shiftName: "Ca Công Nghệ",  checkIn: "08:49", checkOut: "18:05", soCong: 1,    diMuon: 19, veSom: 0, lamThemTong: 0,    lamThemLuong: 0,   lamThemNghi: 0,    nghiDiCongTac: 0 },
-    { date: 4,  type: "full",         shiftName: "Ca Công Nghệ",  checkIn: "08:50", checkOut: "18:10", soCong: 1,    diMuon: 20, veSom: 0, lamThemTong: 0,    lamThemLuong: 0,   lamThemNghi: 0,    nghiDiCongTac: 0 },
-    { date: 5,  type: "full",         shiftName: "Ca Công Nghệ",  checkIn: "08:48", checkOut: "18:03", soCong: 1,    diMuon: 18, veSom: 0, lamThemTong: 0,    lamThemLuong: 0,   lamThemNghi: 0,    nghiDiCongTac: 0 },
-    { date: 6,  type: "full",         shiftName: "Ca Công Nghệ",  checkIn: "08:55", checkOut: "18:07", soCong: 1,    diMuon: 25, veSom: 0, lamThemTong: 0,    lamThemLuong: 0,   lamThemNghi: 0,    nghiDiCongTac: 0 },
-    { date: 7,  type: "full",         shiftName: "Ca sáng thứ 7", checkIn: "07:44", checkOut: "12:00", soCong: 0.5,  diMuon: 0,  veSom: 0, lamThemTong: 0,    lamThemLuong: 0,   lamThemNghi: 0,    nghiDiCongTac: 0 },
-    { date: 9,  type: "lack",         shiftName: "Ca Công Nghệ",  checkIn: "08:34",                   soCong: 0.38, diMuon: 4,  veSom: 0, lamThemTong: 0,    lamThemLuong: 0,   lamThemNghi: 0,    nghiDiCongTac: 0 },
-    { date: 10, type: "lack",         shiftName: "Ca Công Nghệ",  checkIn: "08:43",                   soCong: 0.38, diMuon: 13, veSom: 0, lamThemTong: 0,    lamThemLuong: 0,   lamThemNghi: 0,    nghiDiCongTac: 0 },
-    { date: 11, type: "full",         shiftName: "Ca Công Nghệ",  checkIn: "08:02", checkOut: "17:30", soCong: 1,    diMuon: 0,  veSom: 0, lamThemTong: 0,    lamThemLuong: 0,   lamThemNghi: 0,    nghiDiCongTac: 0 },
-    { date: 12, type: "full",         shiftName: "Ca Công Nghệ",  checkIn: "08:00", checkOut: "17:35", soCong: 1,    diMuon: 0,  veSom: 0, lamThemTong: 0,    lamThemLuong: 0,   lamThemNghi: 0,    nghiDiCongTac: 0 },
-    { date: 16, type: "overtime",     shiftName: "Ca Công Nghệ",  checkIn: "08:00", checkOut: "20:15", soCong: 1,    diMuon: 0,  veSom: 0, lamThemTong: 2.25, lamThemLuong: 2,   lamThemNghi: 0.25, nghiDiCongTac: 0 },
-    { date: 17, type: "full",         shiftName: "Ca Công Nghệ",  checkIn: "08:05", checkOut: "17:30", soCong: 1,    diMuon: 0,  veSom: 0, lamThemTong: 0,    lamThemLuong: 0,   lamThemNghi: 0,    nghiDiCongTac: 0 },
-    { date: 18, type: "unpaid_leave", shiftName: "Ca Công Nghệ",                                      soCong: 0,    diMuon: 0,  veSom: 0, lamThemTong: 0,    lamThemLuong: 0,   lamThemNghi: 0,    nghiDiCongTac: 0 },
-    { date: 19, type: "full",         shiftName: "Ca Công Nghệ",  checkIn: "08:00", checkOut: "17:30", soCong: 1,    diMuon: 0,  veSom: 0, lamThemTong: 0,    lamThemLuong: 0,   lamThemNghi: 0,    nghiDiCongTac: 0 },
-  ],
-  "2026-2": [
-    { date: 2,  type: "full",         shiftName: "Ca Công Nghệ",  checkIn: "08:00", checkOut: "17:30", soCong: 1,    diMuon: 0,  veSom: 0, lamThemTong: 0,    lamThemLuong: 0,   lamThemNghi: 0,    nghiDiCongTac: 0 },
-    { date: 3,  type: "full",         shiftName: "Ca Công Nghệ",  checkIn: "08:05", checkOut: "17:25", soCong: 1,    diMuon: 0,  veSom: 0, lamThemTong: 0,    lamThemLuong: 0,   lamThemNghi: 0,    nghiDiCongTac: 0 },
-    { date: 4,  type: "lack",         shiftName: "Ca Công Nghệ",  checkIn: "09:00",                   soCong: 0.5,  diMuon: 30, veSom: 0, lamThemTong: 0,    lamThemLuong: 0,   lamThemNghi: 0,    nghiDiCongTac: 0 },
-    { date: 9,  type: "overtime",     shiftName: "Ca Công Nghệ",  checkIn: "08:00", checkOut: "19:45", soCong: 1,    diMuon: 0,  veSom: 0, lamThemTong: 1.75, lamThemLuong: 1.5, lamThemNghi: 0.25, nghiDiCongTac: 0 },
-    { date: 16, type: "unpaid_leave", shiftName: "Ca Công Nghệ",                                      soCong: 0,    diMuon: 0,  veSom: 0, lamThemTong: 0,    lamThemLuong: 0,   lamThemNghi: 0,    nghiDiCongTac: 0 },
-  ],
-};
+// ─── Map API response item → DayRecord ───────────────────────────────────────
+function mapApiItemToDayRecord(item: {
+  id: string;
+  date_attendance: string;
+  checkin: string | null;
+  checkout: string | null;
+  score: number;
+  shift_work: string;
+  type: string;
+}): DayRecord {
+  const formatTime = (t: string | null): string =>
+    t ? t.slice(0, 5) : "";
+
+  return {
+    date:          parseInt(item.date_attendance, 10),
+    type:          item.type as DayRecord["type"],
+    shiftName:     item.shift_work,
+    checkIn:       formatTime(item.checkin),
+    checkOut:      formatTime(item.checkout),
+    score:         Math.round((item.score ?? 0) * 1000) / 1000,
+    diMuon:        0,
+    veSom:         0,
+    lamThemTong:   0,
+    lamThemLuong:  0,
+    lamThemNghi:   0,
+    nghiDiCongTac: 0,
+  };
+}
+
+// ─── Helper: lấy array thô từ store (tương thích mọi cấu trúc response) ──────
+function getRawItems(personalAttendance: any): any[] {
+  if (!personalAttendance) return [];
+  if (Array.isArray(personalAttendance)) return personalAttendance;
+  if (Array.isArray(personalAttendance?.data)) return personalAttendance.data;
+  if (Array.isArray(personalAttendance?.data?.data)) return personalAttendance.data.data;
+  return [];
+}
 
 // ─── Global font style ────────────────────────────────────────────────────────
 const GLOBAL_STYLE = `
@@ -50,20 +63,23 @@ const GLOBAL_STYLE = `
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function AttendanceSheetPage() {
+  const dispatch = useDispatch();
   const router = useRouter();
 
-  const [tab, setTab]           = useState<"bang_cong" | "danh_sach">("bang_cong");
-  const [month, setMonth]       = useState(3);
-  const [year, setYear]         = useState(2026);
+  const { loadingPersonalAttendance, personalAttendance } = useAttendanceData();
+
+  const [tab, setTab]               = useState<"bang_cong" | "danh_sach">("bang_cong");
+  const [month, setMonth]           = useState(3);
+  const [year, setYear]             = useState(2026);
   const [showPicker, setShowPicker] = useState(false);
   const [detailDay, setDetailDay]   = useState<number | null>(null);
 
-  // ── Derived data ──
-  const key       = `${year}-${month}`;
-  const records   = MOCK_DATA[key] ?? [];
-  const recordMap = new Map(records.map((r) => [r.date, r]));
-  const weeks     = buildCalendarWeeks(year, month);
-  const stats     = computeStats(records);
+  // ── Derive records TRƯỚC các useEffect để tránh dùng biến chưa khai báo ──
+  const rawItems: any[]      = getRawItems(personalAttendance);
+  const records: DayRecord[] = rawItems.map(mapApiItemToDayRecord);
+  const recordMap            = new Map(records.map((r) => [r.date, r]));
+  const weeks                = buildCalendarWeeks(year, month);
+  const stats                = computeStats(records);
 
   const daysInMonth = getDaysInMonth(year, month);
   const today       = new Date();
@@ -74,6 +90,36 @@ export default function AttendanceSheetPage() {
 
   const firstDay = `01/${padZ(month)}/${year}`;
   const lastDay  = `${padZ(daysInMonth)}/${padZ(month)}/${year}`;
+
+  // ── Fetch attendance khi đổi tháng/năm ──
+  useEffect(() => {
+    const token = localStorage.getItem("userToken");
+    const time  = `${padZ(month)}/${year}`;
+    dispatch(
+      getPersonalAttendance({ key: "personalAttendance", time, token }) as any
+    );
+  }, [month, year]);
+
+  // ── Fetch detail khi chọn ngày ──
+  useEffect(() => {
+    if (detailDay === null) return;
+
+    const rawItem = rawItems.find(
+      (item: any) => parseInt(item.date_attendance, 10) === detailDay
+    );
+    if (!rawItem) return;
+
+    const token = localStorage.getItem("userToken");
+    const time  = `${padZ(month)}/${year}`;
+    dispatch(
+      getPersonalAttendance({
+        key:   "detailPersonalAttendance",
+        time,
+        id:    rawItem.id,
+        token,
+      }) as any
+    );
+  }, [detailDay]);
 
   // ── Detail view ──
   if (detailDay !== null) {
@@ -162,10 +208,16 @@ export default function AttendanceSheetPage() {
           </div>
         </div>
 
+        {/* ── Loading state ── */}
+        {loadingPersonalAttendance && (
+          <div className="flex items-center justify-center py-10">
+            <span className="text-sm text-gray-400">Đang tải dữ liệu...</span>
+          </div>
+        )}
+
         {/* ── Calendar tab ── */}
-        {tab === "bang_cong" && (
+        {!loadingPersonalAttendance && tab === "bang_cong" && (
           <div className="bg-white mt-2 flex flex-col flex-1 overflow-hidden px-4">
-            {/* Day-of-week headers */}
             <div className="grid grid-cols-7 pt-3 mb-1 flex-shrink-0">
               {DOW_LABELS.map((d) => (
                 <div
@@ -209,7 +261,7 @@ export default function AttendanceSheetPage() {
         )}
 
         {/* ── List tab ── */}
-        {tab === "danh_sach" && (
+        {!loadingPersonalAttendance && tab === "danh_sach" && (
           <div className="bg-white mt-2 pb-8 overflow-y-auto flex-1">
             {records.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-8">

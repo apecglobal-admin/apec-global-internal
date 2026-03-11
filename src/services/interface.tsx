@@ -11,10 +11,8 @@ export interface DayRecord {
   type: RecordType;
   checkIn?: string;
   checkOut?: string;
-  checkIn2?: string;
-  checkOut2?: string;
   shiftName?: string;
-  soCong?: number;
+  score?: number;
   diMuon?: number;
   veSom?: number;
   lamThemTong?: number;
@@ -39,7 +37,7 @@ export const TYPE_COLOR: Record<RecordType, string> = {
 
 export const TYPE_LABEL: Record<RecordType, string> = {
   full:         "+",
-  lack:         "−",
+  lack:         "-",
   unpaid_leave: "NKL",
   overtime:     "OT",
   absent:       "V",
