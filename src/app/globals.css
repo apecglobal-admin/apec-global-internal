@@ -215,4 +215,13 @@ body {
   animation: ping-small 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
+/* globals.css */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 

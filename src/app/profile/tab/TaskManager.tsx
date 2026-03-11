@@ -7,8 +7,9 @@ import Target from './component/Target'
 import Support from './component/Support'
 import Cautions from './Cautions'
 import TaskLevelList from './component/TaskLevelList'
+import Attendance from './attendance'
 
-type TabId = 'list' | 'check' | 'request' | 'event' | 'support' | "caution"
+type TabId = 'list' | 'check' | 'request' | 'event' | 'support' | "caution" | "checkAttendance"
 
 function TaskManager() {
   const [activeTab, setActiveTab] = useState<TabId>('list')
@@ -33,6 +34,17 @@ function TaskManager() {
     {
       id: 'check',
       label: 'Duyệt nhiệm vụ',
+      shortLabel: 'Duyệt',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+            d="M9 12l2 2 4-4" />
+        </svg>
+      ),
+    },
+    {
+      id: 'checkAttendance',
+      label: 'Duyệt đơn từ',
       shortLabel: 'Duyệt',
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,47 +105,46 @@ function TaskManager() {
 
         {/* ================= TAB NAV ================= */}
         <div className="bg-slate-800 rounded-lg p-1">
+          <div
+            className="flex  gap-1 overflow-x-auto"
+            style={{
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#3b82f6 #1e293b',
+            }}
+          >
+            <style>{`
+              .tab-scroll::-webkit-scrollbar {
+                height: 3px;
+              }
+              .tab-scroll::-webkit-scrollbar-track {
+                background: #1e293b;
+                border-radius: 999px;
+                margin: 0 4px;
+              }
+              .tab-scroll::-webkit-scrollbar-thumb {
+                background: linear-gradient(90deg, #3b82f6, #6366f1);
+                border-radius: 999px;
+              }
+              .tab-scroll::-webkit-scrollbar-thumb:hover {
+                background: linear-gradient(90deg, #60a5fa, #818cf8);
+              }
+            `}</style>
 
-          {/* MOBILE & TABLET: 3 cột grid */}
-          <div className="grid grid-cols-3 gap-1 lg:hidden">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`py-3 rounded-lg text-xs font-semibold transition
-                  ${activeTab === tab.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-400 hover:bg-slate-700'
-                  }`}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  {/* {tab.icon} */}
-                  <span className="text-center leading-tight">
-                    {tab.shortLabel}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* DESKTOP */}
-          <div className="hidden lg:flex gap-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex-1 py-3 rounded-lg font-semibold transition
-                  ${activeTab === tab.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-400 hover:bg-slate-700'
-                  }`}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  {/* {tab.icon} */}
-                  <span className='text-sm'>{tab.label}</span>
-                </div>
-              </button>
-            ))}
+            <div className="tab-scroll flex justify-between gap-1 overflow-x-auto pb-1 w-full">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex-shrink-0 py-3 px-4 rounded-lg font-semibold transition text-sm whitespace-nowrap
+                    ${activeTab === tab.id
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-400 hover:bg-slate-700'
+                    }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -185,6 +196,10 @@ function TaskManager() {
               Quản lý công việc
             </button>
           </div>
+        )}
+
+        {activeTab === "checkAttendance" && (
+          <Attendance />
         )}
         {/* ================= CONTENT ================= */}
         <div className="rounded-lg">

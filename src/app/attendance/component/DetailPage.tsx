@@ -23,8 +23,6 @@ export function DetailPage({ record, day, month, year, onBack }: DetailPageProps
   const checkInRows = [
     { label: "Giờ vào",             value: record.checkIn  ?? "--:--" },
     { label: "Giờ ra",              value: record.checkOut ?? "--:--" },
-    { label: "Giờ vào",             value: record.checkIn2  ?? "--:--" },
-    { label: "Giờ ra",              value: record.checkOut2 ?? "--:--" },
     { label: "Nghỉ/Đi công tác",   value: record.nghiDiCongTac ?? 0 },
   ];
 
@@ -86,7 +84,7 @@ export function DetailPage({ record, day, month, year, onBack }: DetailPageProps
         {/* Số công hưởng lương */}
         <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-100">
           <span className="text-sm text-gray-700">Số công hưởng lương</span>
-          <span className="text-sm font-bold text-gray-900">{record.soCong ?? 0}</span>
+          <span className="text-sm font-bold text-gray-900">{record.score}</span>
         </div>
 
         {/* Số công đi làm thực tế — expandable */}
@@ -101,7 +99,7 @@ export function DetailPage({ record, day, month, year, onBack }: DetailPageProps
                 : <ChevronRight size={14} color="#6b7280" />}
               <span className="text-sm text-gray-700">Số công đi làm thực tế</span>
             </div>
-            <span className="text-sm font-bold text-gray-900">{record.soCong ?? 0}</span>
+            <span className="text-sm font-bold text-gray-900">{record.score}</span>
           </button>
 
           {expandCong && (

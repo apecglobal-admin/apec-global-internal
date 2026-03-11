@@ -26,13 +26,13 @@ import {
     updateProgressSubTask
 } from "@/src/features/task/api";
 
-import {     
+import {
     Dialog,
     DialogContent,
     DialogDescription,
     DialogFooter,
     DialogHeader,
-    DialogTitle, 
+    DialogTitle,
 } from "@/components/ui/dialog";
 
 
@@ -93,7 +93,7 @@ function TaskDetail({
 }: TaskDetailProps) {
     const dispatch = useDispatch();
     const { imageTask, fileTask, listSubTask } = useTaskData();
-    
+
     const currentTaskIdRef = useRef<string | null>(null);
     const subTaskOffsetRef = useRef(0);
 
@@ -124,14 +124,14 @@ function TaskDetail({
     const [isSelectMode, setIsSelectMode] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     console.log(allSubTasks);
-    
+
     const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
     const [editingValue, setEditingValue] = useState<number>(0);
     const [isUpdatingSubtask, setIsUpdatingSubtask] = useState(false);
-    
+
     useEffect(() => {
         if (!task) return;
-        
+
         currentTaskIdRef.current = task.id;
         setSubTaskOffset(0);
 
@@ -153,7 +153,7 @@ function TaskDetail({
     // Cập nhật allSubTasks khi listSubTask thay đổi
     useEffect(() => {
         if (!listSubTask) return;
-    
+
         if (subTaskOffsetRef.current === 0) { // ← đổi chỗ này
             setAllSubTasks(listSubTask);
         } else {
@@ -381,27 +381,27 @@ function TaskDetail({
 
     const loadMoreSubTasks = async () => {
         if (isLoadingMore || !hasMoreSubTasks) return;
-    
+
         setIsLoadingMore(true);
         try {
             const token = localStorage.getItem("userToken");
             const newOffset = subTaskOffset + 5;
-    
+
             subTaskOffsetRef.current = newOffset; // ← chuyển lên TRƯỚC khi dispatch
-    
+
             const payload = {
                 token,
                 task_assignment_id: task.id,
                 limit: 5,
                 offset: newOffset
             };
-    
+
             const result = await dispatch(getSubTask(payload) as any);
-    
+
             if (result?.payload?.data?.data?.length === 0 || result?.payload?.data?.data?.length < 5) {
                 setHasMoreSubTasks(false);
             }
-    
+
             setSubTaskOffset(newOffset);
         } catch (error) {
             subTaskOffsetRef.current = subTaskOffset; // ← rollback nếu lỗi
@@ -519,7 +519,7 @@ function TaskDetail({
         }
     }
 
-    
+
 
     const handleUpdateSubtaskProgress = async (id: number) => {
         const token = localStorage.getItem("userToken");
@@ -582,7 +582,7 @@ function TaskDetail({
     };
 
     const handleSubmit = () => {
-        
+
         setOpenConfirmDialog(true);
     }
 
@@ -606,9 +606,9 @@ function TaskDetail({
                 token,
                 date_end: task.task.date_end,
                 date_start: task.task.date_start,
-    
+
             };
-    
+
             const result = await dispatch(updateProgressTask(updatePayload) as any);
 
             if (result?.payload.data.success && !result?.error) {
@@ -624,8 +624,8 @@ function TaskDetail({
             }
 
         } catch (error) {
-            
-        } finally{
+
+        } finally {
             setOpenConfirmDialog(false);
 
         }
@@ -642,15 +642,14 @@ function TaskDetail({
                     </span>
                     <span className="text-xs text-slate-500 ml-auto">(Không bắt buộc)</span>
                 </div>
-    
+
                 <div className="grid grid-cols-2 gap-2 mb-3">
                     <button
                         onClick={() => handleUploadTypeChange("image")}
-                        className={`flex items-center gap-2 p-2.5 sm:p-3 rounded-lg border-2 transition ${
-                            uploadType === "image"
+                        className={`flex items-center gap-2 p-2.5 sm:p-3 rounded-lg border-2 transition ${uploadType === "image"
                                 ? "border-blue-500 bg-blue-500/10 text-blue-400"
                                 : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
-                        }`}
+                            }`}
                     >
                         <Image size={16} className="flex-shrink-0" />
                         <div className="text-left min-w-0">
@@ -660,11 +659,10 @@ function TaskDetail({
                     </button>
                     <button
                         onClick={() => handleUploadTypeChange("document")}
-                        className={`flex items-center gap-2 p-2.5 sm:p-3 rounded-lg border-2 transition ${
-                            uploadType === "document"
+                        className={`flex items-center gap-2 p-2.5 sm:p-3 rounded-lg border-2 transition ${uploadType === "document"
                                 ? "border-blue-500 bg-blue-500/10 text-blue-400"
                                 : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
-                        }`}
+                            }`}
                     >
                         <FileText size={16} className="flex-shrink-0" />
                         <div className="text-left min-w-0">
@@ -673,7 +671,7 @@ function TaskDetail({
                         </div>
                     </button>
                 </div>
-    
+
                 {uploadType && (
                     <div className="space-y-2">
                         <label className="block w-full cursor-pointer">
@@ -690,7 +688,7 @@ function TaskDetail({
                                 className="hidden"
                             />
                         </label>
-    
+
                         {filePreview && uploadType === "image" && (
                             <img
                                 src={filePreview}
@@ -698,7 +696,7 @@ function TaskDetail({
                                 className="w-full h-32 object-cover rounded-lg border border-slate-700"
                             />
                         )}
-    
+
                         {selectedFile && (
                             <div className="flex items-center justify-between px-3 py-2 bg-slate-800 rounded-lg">
                                 <div className="flex items-center gap-2 min-w-0">
@@ -713,7 +711,7 @@ function TaskDetail({
                                 </span>
                             </div>
                         )}
-    
+
                         {selectedFile && !isUploaded && (
                             <button
                                 onClick={handleUpload}
@@ -724,7 +722,7 @@ function TaskDetail({
                                 {isUploading ? "Đang tải lên..." : "Tải lên"}
                             </button>
                         )}
-    
+
                         {isUploaded && (
                             <div className="flex items-center justify-center gap-2 p-2 bg-green-900/30 border border-green-500/30 rounded-lg">
                                 <Check size={14} className="text-green-400" />
@@ -796,17 +794,17 @@ function TaskDetail({
                             )}
 
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
-                                <Briefcase size={16} className="text-slate-500 flex-shrink-0" color="blue"/>
+                                <Briefcase size={16} className="text-slate-500 flex-shrink-0" color="blue" />
                                 <span className="font-semibold">Dự án:</span>
                                 <span className="truncate">{task.project.name}</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
-                                <Target size={16} className="text-slate-500 flex-shrink-0" color="yellow"/>
+                                <Target size={16} className="text-slate-500 flex-shrink-0" color="yellow" />
                                 <span className="font-semibold">KPI:</span>
                                 <span className="truncate">{task.kpi_item.name}</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
-                                <Target size={16} className="text-slate-500 flex-shrink-0" color="red"/>
+                                <Target size={16} className="text-slate-500 flex-shrink-0" color="red" />
                                 <span className="font-semibold">Chỉ tiêu:</span>
                                 {task.units?.name !== "%" && task.units?.name !== null ? (
                                     <span className="text-red-600">{formatNumber(Number(task.target_value))} {task.units?.name}</span>
@@ -815,15 +813,15 @@ function TaskDetail({
                                 )}
                             </div>
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
-                                <CheckCheck size={16} className="text-slate-500 flex-shrink-0" color="green"/>
+                                <CheckCheck size={16} className="text-slate-500 flex-shrink-0" color="green" />
                                 <span className="font-semibold">Đã đạt:</span>
                                 <span className="text-xs font-bold text-green-600">
-                                <span className="text-xs font-bold text-green-600">
-                                    {task.units.name === "%"
-                                        ? `${Math.min(Number(task.value), 100)} %`
-                                        : `${formatNumber(Number(task.value))} ${task.units.name}`
-                                    }
-                                </span>
+                                    <span className="text-xs font-bold text-green-600">
+                                        {task.units.name === "%"
+                                            ? `${Math.min(Number(task.value), 100)} %`
+                                            : `${formatNumber(Number(task.value))} ${task.units.name}`
+                                        }
+                                    </span>
                                 </span>
                             </div>
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
@@ -965,9 +963,8 @@ function TaskDetail({
                                                         toggleSelect(subtask.id);
                                                     }
                                                 }}
-                                                className={`flex items-start gap-2 bg-slate-900 border rounded-lg px-2.5 py-2 transition ${
-                                                    isSelected ? "border-emerald-500/50" : "border-slate-800 hover:border-slate-700"
-                                                }`}
+                                                className={`flex items-start gap-2 bg-slate-900 border rounded-lg px-2.5 py-2 transition ${isSelected ? "border-emerald-500/50" : "border-slate-800 hover:border-slate-700"
+                                                    }`}
                                             >
                                                 {/* Checkbox */}
                                                 {isSelectMode && subtask.status.id !== 4 && (
@@ -1025,37 +1022,43 @@ function TaskDetail({
                                                         </div>
 
                                                         {editingSubtaskId === subtask.id && (
-                                                            <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
-                                                                <span className="text-slate-500">Tiến độ:</span>
+                                                            <div className="mt-2 flex flex-col gap-2 text-xs">
+                                                                <span className="text-slate-500">Cập nhật tiến độ:</span>
 
                                                                 {task.units?.name === "%" || task.units?.name === null ? (
-                                                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                                    <div className="flex flex-col gap-2">
                                                                         <input
                                                                             type="range"
                                                                             min="0"
                                                                             max="100"
                                                                             value={editingValue}
                                                                             onChange={(e) => setEditingValue(Number(e.target.value))}
-                                                                            className="flex-1 h-2 rounded-lg appearance-none cursor-pointer min-w-0"
+                                                                            className="w-full h-2 rounded-lg appearance-none cursor-pointer"
                                                                             style={{
                                                                                 background: `linear-gradient(to right, #2563eb, #a855f7 ${editingValue / 2}%, #ec4899 ${editingValue}%, #1e293b ${editingValue}%)`
                                                                             }}
                                                                         />
-                                                                        <input
-                                                                            type="number"
-                                                                            min="0"
-                                                                            max="100"
-                                                                            value={editingValue}
-                                                                            onChange={(e) => {
-                                                                                const v = Math.min(100, Math.max(0, Number(e.target.value)));
-                                                                                setEditingValue(v);
-                                                                            }}
-                                                                            className="w-14 px-2 py-1 bg-slate-800 border border-blue-500 rounded text-white text-xs focus:outline-none text-center flex-shrink-0"
-                                                                        />
-                                                                        <span className="text-slate-400 flex-shrink-0">%</span>
+                                                                        <div className="flex items-center justify-between gap-2">
+                                                                            <span className="text-slate-400 text-xs">0%</span>
+                                                                            <div className="flex items-center gap-1.5">
+                                                                                <input
+                                                                                    type="number"
+                                                                                    min="0"
+                                                                                    max="100"
+                                                                                    value={editingValue}
+                                                                                    onChange={(e) => {
+                                                                                        const v = Math.min(100, Math.max(0, Number(e.target.value)));
+                                                                                        setEditingValue(v);
+                                                                                    }}
+                                                                                    className="w-14 px-2 py-1 bg-slate-800 border border-blue-500 rounded text-white text-xs focus:outline-none text-center"
+                                                                                />
+                                                                                <span className="text-slate-400">%</span>
+                                                                            </div>
+                                                                            <span className="text-slate-400 text-xs">100%</span>
+                                                                        </div>
                                                                     </div>
                                                                 ) : (
-                                                                    <div className="flex flex-wrap items-center gap-1.5 flex-1">
+                                                                    <div className="flex items-center gap-1.5 bg-slate-800/60 rounded-lg px-2.5 py-2 flex-wrap">
                                                                         <span className="text-slate-400 font-semibold">
                                                                             {formatNumber(Number(subtask.value))} {task.units?.name}
                                                                         </span>
@@ -1065,7 +1068,7 @@ function TaskDetail({
                                                                             inputMode="numeric"
                                                                             value={formatNumber(editingValue)}
                                                                             onChange={(e) => handleSubtaskValueChange(e, subtask)}
-                                                                            className="w-20 px-2 py-1 bg-slate-800 border border-blue-500 rounded text-white text-xs focus:outline-none"
+                                                                            className="w-20 px-2 py-1 bg-slate-900 border border-blue-500 rounded text-white text-xs focus:outline-none"
                                                                         />
                                                                         <span className="text-slate-500">=</span>
                                                                         <span className="text-emerald-400 font-semibold">
@@ -1074,20 +1077,21 @@ function TaskDetail({
                                                                     </div>
                                                                 )}
 
-                                                                <div className="flex items-center gap-1 flex-shrink-0">
+                                                                {/* Save / Cancel — full width row */}
+                                                                <div className="flex gap-2">
                                                                     <button
                                                                         onClick={() => handleUpdateSubtaskProgress(Number(subtask.id))}
                                                                         disabled={isUpdatingSubtask}
-                                                                        className="p-1.5 bg-emerald-600 hover:bg-emerald-700 rounded text-white transition disabled:opacity-50"
+                                                                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded text-white transition disabled:opacity-50 text-xs font-medium"
                                                                     >
-                                                                        <Save size={12} />
+                                                                        <Save size={12} /> Lưu
                                                                     </button>
                                                                     <button
                                                                         onClick={() => setEditingSubtaskId(null)}
                                                                         disabled={isUpdatingSubtask}
-                                                                        className="p-1.5 bg-slate-700 hover:bg-slate-600 rounded text-white transition"
+                                                                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-white transition text-xs font-medium"
                                                                     >
-                                                                        <X size={12} />
+                                                                        <X size={12} /> Hủy
                                                                     </button>
                                                                 </div>
                                                             </div>
@@ -1099,7 +1103,7 @@ function TaskDetail({
                                                         {subtask.exp_increase > 0 && (
                                                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold tracking-wide">
                                                                 <svg width="9" height="9" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
-                                                                    <path d="M5 1L6.18 3.82L9 4.27L7 6.27L7.45 9.09L5 7.73L2.55 9.09L3 6.27L1 4.27L3.82 3.82L5 1Z" fill="currentColor"/>
+                                                                    <path d="M5 1L6.18 3.82L9 4.27L7 6.27L7.45 9.09L5 7.73L2.55 9.09L3 6.27L1 4.27L3.82 3.82L5 1Z" fill="currentColor" />
                                                                 </svg>
                                                                 +{subtask.exp_increase} XP
                                                             </span>
