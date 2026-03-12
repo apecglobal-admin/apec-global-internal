@@ -6,6 +6,10 @@ export const useAttendanceData = () => {
   return {
     // Data 
     historyCheckin: attendance.historyCheckin.data.data,
+    letters: attendance.letters.data.data,
+    statusLetter: attendance.statusLetter.data.data,
+    employeeLetter: attendance.employeeLetter?.data?.data?.data,
+    totalEmployeeLetter: attendance.totalEmployeeLetter?.data?.data?.pagination?.total,
 
     // Loading states
 
