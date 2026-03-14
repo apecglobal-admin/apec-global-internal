@@ -155,3 +155,50 @@ export const getListAttendanceManagerAbsences = createAsyncThunk(
     }
 );
 
+export const approveAttendanceAbsences = createAsyncThunk(
+    "attendance/approveAttendanceAbsences",
+    async (payload: any, thunkAPI) => {
+        const {id, token} = payload;
+        try {
+            const response = await apiAxiosInstance.put("/attendance/absence/approve", 
+                {id}, 
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            return {
+                data: response.data,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+export const rejectAttendanceAbsences = createAsyncThunk(
+    "attendance/rejectAttendanceAbsences",
+    async (payload: any, thunkAPI) => {
+        const {id, token} = payload;
+        try {
+            const response = await apiAxiosInstance.put("/attendance/absence/reject", 
+                {id}, 
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            return {
+                data: response.data,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);

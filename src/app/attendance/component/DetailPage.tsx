@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, ChevronUp } from "lucide-react";
 import { DayRecord, TYPE_COLOR, TYPE_LABEL, TYPE_NAME } from "@/src/services/interface";
 import { getDowLabel, padZ } from "@/src/utils/attendance";
@@ -19,6 +19,10 @@ export function DetailPage({ record, day, month, year, onBack }: DetailPageProps
 
   const dowLabel = getDowLabel(year, month, day);
   const color    = TYPE_COLOR[record.type];
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
 
   const checkInRows = [
     { label: "Giờ vào",             value: record.checkIn  ?? "--:--" },

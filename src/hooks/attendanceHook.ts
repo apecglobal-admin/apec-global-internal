@@ -14,6 +14,8 @@ export const useAttendanceData = () => {
     listStatusAttendanceAbsences: attendance.listStatusAttendanceAbsences.data.data,
     
     // Loading states
+    loadingHistoryCheckin: attendance.historyCheckin.loading,
+
     loadingPersonalAttendance: attendance.personalAttendance.loading,
     loadingDetailPersonalAttendance: attendance.detailPersonalAttendance.loading,
     loadingListAttendanceManagerAbsences:  attendance.listAttendanceManagerAbsences.loading,

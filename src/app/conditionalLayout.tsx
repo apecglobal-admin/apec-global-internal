@@ -9,7 +9,7 @@ import CheckInButton from './attendance/component/attendance'
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const hideLayout = pathname === '/login' 
-  const profile = pathname.startsWith('/profile') || pathname === "/attendance/Gpscheckin" || pathname === "/attendance/sheets"
+  const profile = pathname.startsWith('/profile') || pathname.startsWith('/attendance')
 
 
 
@@ -28,7 +28,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
           className="!text-base font-medium"  
       />
       {children}
-      {/* <CheckInButton /> */}
+      <CheckInButton />
       {!hideLayout && !profile && <Footer />}
     </>
   )

@@ -6,10 +6,11 @@ interface ListItemProps {
   day: number;
   month: number;
   year: number;
+  isToday?: boolean;
   onClick: () => void;
 }
 
-export function ListItem({ record, day, month, year, onClick }: ListItemProps) {
+export function ListItem({ record, day, month, year, isToday, onClick }: ListItemProps) {
   const dowLabel = getDowLabel(year, month, day);
   const color    = TYPE_COLOR[record.type];
   const timeStr  = record.checkIn
@@ -20,7 +21,7 @@ export function ListItem({ record, day, month, year, onClick }: ListItemProps) {
     <button onClick={onClick} className="w-full text-left">
       {/* Date header */}
       <div className="px-4 py-2 bg-gray-50">
-        <span className="text-xs font-semibold text-gray-500">
+        <span className={`text-xs font-semibold ${isToday ? "text-green-500" : "text-gray-500"}`}>
           {dowLabel}, {padZ(day)}/{padZ(month)}
         </span>
       </div>
