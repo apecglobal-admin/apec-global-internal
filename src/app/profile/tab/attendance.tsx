@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux';
 import { useAttendanceData } from '@/src/hooks/attendanceHook';
-import { getTypeAttendanceAbsences, getStatusAttendanceAbsences, getListAttendanceManagerAbsences } from '@/src/features/attendance/api';
+import { 
+  getTypeAttendanceAbsences, 
+  getStatusAttendanceAbsences, 
+  getListAttendanceManagerAbsences,
+  rejectAttendanceAbsences,
+  approveAttendanceAbsences 
+} from '@/src/features/attendance/api';
 import {
   Calendar, Clock, MapPin, FileText, User, Search, X,
   ClipboardList, Filter, Eye, Loader2,
-  ChevronDown
+  ChevronDown, Check, Ban
 } from 'lucide-react';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -77,6 +83,9 @@ const Attendance = () => {
   const [showDetail, setShowDetail]   = useState(false);
   const [showFilter, setShowFilter]   = useState(false);
 
+  // action loading state: tracks which item id is being approved/rejected
+  const [actionLoading, setActionLoading] = useState<{ id: string; type: 'approve' | 'reject' } | null>(null);
+
   /* ── initial loads ── */
   useEffect(() => {
     dispatch(getTypeAttendanceAbsences() as any);
@@ -134,6 +143,34 @@ const Attendance = () => {
       id,
       key: 'detailListAttendanceManagerAbsences',
     }) as any);
+  };
+
+  /* ── Approve handler ── */
+  const handleApprove = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (actionLoading) return;
+    const token = localStorage.getItem('userToken');
+    setActionLoading({ id, type: 'approve' });
+    try {
+      await dispatch(approveAttendanceAbsences({ id, token }) as any);
+      fetchList(currentPage);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  /* ── Reject handler ── */
+  const handleReject = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (actionLoading) return;
+    const token = localStorage.getItem('userToken');
+    setActionLoading({ id, type: 'reject' });
+    try {
+      await dispatch(rejectAttendanceAbsences({ id, token }) as any);
+      fetchList(currentPage);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   /* ── helpers ── */
@@ -231,6 +268,36 @@ const Attendance = () => {
               className="flex items-center gap-2 text-sky-400 text-sm hover:underline">
               <FileText size={14} /> Xem tài liệu
             </a>
+          </div>
+        )}
+
+        {/* approve / reject actions inside modal (only for pending) */}
+        {item.status.id === 1 && (
+          <div className="flex gap-3 pt-1">
+            <button
+              onClick={(e) => handleApprove(e, item.id)}
+              disabled={!!actionLoading}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm font-semibold hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {actionLoading?.id === item.id && actionLoading.type === 'approve' ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <Check size={15} />
+              )}
+              Duyệt
+            </button>
+            <button
+              onClick={(e) => handleReject(e, item.id)}
+              disabled={!!actionLoading}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-semibold hover:bg-red-500/20 hover:border-red-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {actionLoading?.id === item.id && actionLoading.type === 'reject' ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <Ban size={15} />
+              )}
+              Từ chối
+            </button>
           </div>
         )}
       </div>
@@ -367,6 +434,11 @@ const Attendance = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
                 {items.map(item => {
                   const sc = statusColor(item.status.id);
+                  const isPending = item.status.id === 1;
+                  const isApproving = actionLoading?.id === item.id && actionLoading.type === 'approve';
+                  const isRejecting = actionLoading?.id === item.id && actionLoading.type === 'reject';
+                  const isActioning = isApproving || isRejecting;
+
                   return (
                     <div key={item.id}
                         onClick={() => handleViewDetail(item.id)}
@@ -388,10 +460,47 @@ const Attendance = () => {
                           <h3 className="text-white font-semibold text-sm sm:text-base leading-tight">{item.employee.name}</h3>
                           <span className={`text-xs font-medium ${absenceColor(item.absence.id)}`}>{item.absence.name}</span>
                         </div>
-                        <div className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold ${sc.bg} ${sc.text} ${sc.border}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
-                          {item.status.name}
-                        </div>
+
+                        {/* ── Action buttons (top-right) — only for pending status ── */}
+                        {isPending ? (
+                          <div className="flex-shrink-0 flex items-center gap-1.5">
+                            {/* Approve button */}
+                            <button
+                              onClick={(e) => handleApprove(e, item.id)}
+                              disabled={!!actionLoading}
+                              title="Duyệt đơn"
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/20 hover:border-emerald-500/60 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isApproving ? (
+                                <Loader2 size={13} className="animate-spin" />
+                              ) : (
+                                <Check size={13} />
+                              )}
+                              <span className="hidden sm:inline">Duyệt</span>
+                            </button>
+
+                            {/* Reject button */}
+                            <button
+                              onClick={(e) => handleReject(e, item.id)}
+                              disabled={!!actionLoading}
+                              title="Từ chối đơn"
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold hover:bg-red-500/20 hover:border-red-500/60 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isRejecting ? (
+                                <Loader2 size={13} className="animate-spin" />
+                              ) : (
+                                <Ban size={13} />
+                              )}
+                              <span className="hidden sm:inline">Từ chối</span>
+                            </button>
+                          </div>
+                        ) : (
+                          /* Status badge when not pending */
+                          <div className={`flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold ${sc.bg} ${sc.text} ${sc.border}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
+                            {item.status.name}
+                          </div>
+                        )}
                       </div>
 
                       {/* time */}
@@ -419,7 +528,7 @@ const Attendance = () => {
                         </div>
                       </div>
 
-                      {/* address + view btn */}
+                      {/* address + status badge for pending */}
                       <div className="flex items-center justify-between gap-2">
                         {item.address ? (
                           <div className="flex items-center gap-1.5 text-xs text-slate-500 truncate">
@@ -428,6 +537,13 @@ const Attendance = () => {
                           </div>
                         ) : <div />}
 
+                        {/* Show pending badge at bottom only on mobile (since top-right shows buttons) */}
+                        {isPending && (
+                          <div className={`sm:hidden flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold ${sc.bg} ${sc.text} ${sc.border}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
+                            {item.status.name}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

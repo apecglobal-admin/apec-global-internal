@@ -58,8 +58,6 @@ export const LEGEND_ITEMS = [
   { color: "#3b82f6", label: "OT Làm thêm giờ" },
 ];
 
-export const UPDATE_SCHEDULE_NOTE =
-  "Bảng chấm công được tự động cập nhật vào 00:00, 08:30, 12:00, 15:00, 18:00, 21:00 hàng ngày";
 
 
 interface TaskLog {
