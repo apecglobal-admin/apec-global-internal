@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { createAsyncReducer, createAsyncReducerDynamic } from "@/src/utils/createAsyncReducer";
 import { initState } from "@/src/services/interface";
+import { getListEmployeeLetter, getListLetter, getListStatusLetter } from "./api";
 import { getTypeAttendanceAbsences, getStatusAttendanceAbsences, getHistoryCheckin, getPersonalAttendance, getListAttendanceManagerAbsences } from "./api";
 
 interface EventMessage {
@@ -9,6 +10,10 @@ interface EventMessage {
 
 interface AttendanceState {
     historyCheckin: initState<any[]>;
+    letters: initState<any[]>;
+    statusLetter: initState<any[]>;
+    employeeLetter: initState<any[]>;
+    totalEmployeeLetter: initState<any>;
     personalAttendance: initState<any[]>;
     detailPersonalAttendance: initState<any[]>;
     listAttendanceManagerAbsences: initState<any[]>;
@@ -22,6 +27,10 @@ const createInitState = () => ({ data: [], loading: false, error: null, status: 
 
 const initialState: AttendanceState = {
     historyCheckin: createInitState(),
+    letters: createInitState(),
+    statusLetter: createInitState(),
+    employeeLetter: createInitState(),
+    totalEmployeeLetter: createInitState(),
     personalAttendance: createInitState(),
     detailPersonalAttendance: createInitState(),
     listAttendanceManagerAbsences:  createInitState(),
@@ -36,8 +45,10 @@ const attendanceSlice = createSlice({
     initialState: initialState,
     reducers: {},
     extraReducers: (builder) => {
-
         createAsyncReducer(builder, getHistoryCheckin, "historyCheckin");
+        createAsyncReducer(builder, getListLetter, "letters");
+        createAsyncReducer(builder, getListStatusLetter, "statusLetter");
+        createAsyncReducer(builder, getListEmployeeLetter, ["employeeLetter", "totalEmployeeLetter"]);
         createAsyncReducer(builder, getTypeAttendanceAbsences, "listTypeAttendanceAbsences");
         createAsyncReducer(builder, getStatusAttendanceAbsences, "listStatusAttendanceAbsences");
 
