@@ -16,7 +16,7 @@ export function MonthPicker({ year, month, onSelect, onClose }: MonthPickerProps
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center"
+      className="fixed inset-0 z-[100] flex items-end md:items-center justify-center"
       style={{ background: "rgba(0,0,0,0.45)" }}
       onClick={onClose}
     >
@@ -24,8 +24,6 @@ export function MonthPicker({ year, month, onSelect, onClose }: MonthPickerProps
         className="w-full bg-white rounded-t-2xl md:rounded-2xl pt-3 pb-8 px-5 md:max-w-sm"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle */}
-        <div className="w-10 h-1 rounded-full bg-gray-200 mx-auto mb-5" />
 
         {/* Year navigation */}
         <div className="flex items-center justify-between mb-5">
