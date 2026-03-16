@@ -20,6 +20,7 @@ export function DayCell({
   isEmpty,
   onClick,
 }: DayCellProps) {
+  
   if (isEmpty) return <div className="w-full h-full" />;
 
   const isWeekend = isSunday || isSaturday;

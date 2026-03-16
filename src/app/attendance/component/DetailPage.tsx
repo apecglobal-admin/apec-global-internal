@@ -15,7 +15,7 @@ interface DetailPageProps {
 }
 
 export function DetailPage({ record, day, month, year, onBack }: DetailPageProps) {
-  const [expandCong, setExpandCong] = useState(false);
+  const [expandCong, setExpandCong] = useState(true);
 
   const dowLabel = getDowLabel(year, month, day);
   const color    = TYPE_COLOR[record.type];
@@ -25,9 +25,9 @@ export function DetailPage({ record, day, month, year, onBack }: DetailPageProps
   }, []);
 
   const checkInRows = [
-    { label: "Giờ vào",             value: record.checkIn  ?? "--:--" },
-    { label: "Giờ ra",              value: record.checkOut ?? "--:--" },
-    { label: "Nghỉ/Đi công tác",   value: record.nghiDiCongTac ?? 0 },
+    { label: "Giờ vào",           value: record.checkIn        ?? "--:--" },
+    { label: "Giờ ra",            value: record.checkOut       ?? "--:--" },
+    { label: "Nghỉ/Đi công tác", value: record.nghiDiCongTac  ?? 0 },
   ];
 
   const lateEarlyRows = [
@@ -36,39 +36,29 @@ export function DetailPage({ record, day, month, year, onBack }: DetailPageProps
   ];
 
   const overtimeRows = [
-    { label: "Tổng thời gian làm thêm giờ", value: record.lamThemTong   ?? 0 },
-    { label: "Làm thêm hưởng lương (giờ)",  value: record.lamThemLuong  ?? 0 },
-    { label: "Làm thêm nghỉ bù (giờ)",      value: record.lamThemNghi   ?? 0 },
+    { label: "Tổng thời gian làm thêm giờ", value: record.lamThemTong  ?? 0 },
+    { label: "Làm thêm hưởng lương (giờ)",  value: record.lamThemLuong ?? 0 },
+    { label: "Làm thêm nghỉ bù (giờ)",      value: record.lamThemNghi  ?? 0 },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100" style={{ maxWidth: 420, margin: "0 auto" }}>
+    <div className="min-h-screen" style={{ maxWidth: 420, margin: "0 auto" }}>
+
       {/* Header */}
-      <div className="bg-white px-4 pt-10 pb-4 flex items-center gap-3 shadow-sm">
+      <div className="px-4 pt-10 pb-4 flex items-center gap-3">
         <button onClick={onBack} className="p-1 -ml-1">
-          <ChevronLeft size={22} color="#111" />
+          <ChevronLeft size={22} className="text-slate-600" />
         </button>
-        <h1 className="text-base font-bold text-gray-900 flex-1 text-center mr-6">
+        <h1 className="text-base font-semibold text-slate-700 flex-1 text-center mr-6">
           Chi tiết công
         </h1>
       </div>
 
       {/* Date + status */}
-      <div className="bg-white mt-2 px-4 py-5 flex flex-col items-center gap-2">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onBack}
-            className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center"
-          >
-            <ChevronLeft size={14} color="#374151" />
-          </button>
-          <p className="text-base font-bold text-gray-900">
-            {dowLabel}, {padZ(day)}-{padZ(month)}-{year}
-          </p>
-          {/* placeholder to keep date centred */}
-          <div className="w-7" />
-        </div>
-
+      <div className="mx-4 mb-3 rounded-2xl bg-slate-50 border border-slate-100 px-4 py-5 flex flex-col items-center gap-2.5">
+        <p className="text-base font-semibold text-slate-700">
+          {dowLabel}, {padZ(day)}-{padZ(month)}-{year}
+        </p>
         <div
           className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
           style={{ background: `${color}18`, color }}
@@ -84,37 +74,38 @@ export function DetailPage({ record, day, month, year, onBack }: DetailPageProps
       </div>
 
       {/* Stats table */}
-      <div className="bg-white mt-2">
+      <div className="mx-4 rounded-2xl bg-slate-50 border border-slate-100 overflow-hidden">
+
         {/* Số công hưởng lương */}
-        <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-100">
-          <span className="text-sm text-gray-700">Số công hưởng lương</span>
-          <span className="text-sm font-bold text-gray-900">{record.score}</span>
+        <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100">
+          <span className="text-sm text-black">Số công hưởng lương</span>
+          <span className="text-sm font-semibold text-black">{record.score}</span>
         </div>
 
         {/* Số công đi làm thực tế — expandable */}
         <div>
           <button
             onClick={() => setExpandCong((v) => !v)}
-            className="w-full flex items-center justify-between px-4 py-3.5 border-b border-gray-100"
+            className="w-full flex items-center justify-between px-4 py-3.5 border-b border-slate-100"
           >
             <div className="flex items-center gap-1.5">
               {expandCong
-                ? <ChevronUp   size={14} color="#6b7280" />
-                : <ChevronRight size={14} color="#6b7280" />}
-              <span className="text-sm text-gray-700">Số công đi làm thực tế</span>
+                ? <ChevronUp    size={14} className="text-black" />
+                : <ChevronRight size={14} className="text-black" />}
+              <span className="text-sm text-black">Số công đi làm thực tế</span>
             </div>
-            <span className="text-sm font-bold text-gray-900">{record.score}</span>
+            <span className="text-sm font-semibold text-black">{record.score}</span>
           </button>
 
           {expandCong && (
-            <div className="bg-gray-50">
+            <div className="bg-white/70">
               {checkInRows.map((r, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between px-6 py-3 border-b border-gray-100 last:border-0"
+                  className="flex items-center justify-between px-6 py-3 border-b border-slate-100 last:border-0"
                 >
-                  <span className="text-sm text-gray-600">{r.label}</span>
-                  <span className="text-sm font-semibold text-gray-800">{r.value}</span>
+                  <span className="text-sm text-black">{r.label}</span>
+                  <span className="text-sm font-medium text-black">{r.value}</span>
                 </div>
               ))}
             </div>
@@ -122,28 +113,33 @@ export function DetailPage({ record, day, month, year, onBack }: DetailPageProps
         </div>
 
         {/* Late / early group */}
-        <div className="h-2 bg-gray-100" />
-        {lateEarlyRows.map((r, i) => (
-          <div
-            key={i}
-            className="flex items-center justify-between px-4 py-3.5 border-b border-gray-100 last:border-0"
-          >
-            <span className="text-sm text-gray-700">{r.label}</span>
-            <span className="text-sm font-semibold text-gray-900">{r.value}</span>
-          </div>
-        ))}
+        {/* <div className="h-px bg-slate-100" />
+        <div className="mt-1">
+          {lateEarlyRows.map((r, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 last:border-0"
+            >
+              <span className="text-sm text-black">{r.label}</span>
+              <span className="text-sm font-medium text-black">{r.value}</span>
+            </div>
+          ))}
+        </div> */}
 
         {/* Overtime group */}
-        <div className="h-2 bg-gray-100" />
-        {overtimeRows.map((r, i) => (
-          <div
-            key={i}
-            className="flex items-center justify-between px-4 py-3.5 border-b border-gray-100 last:border-0"
-          >
-            <span className="text-sm text-gray-700">{r.label}</span>
-            <span className="text-sm font-semibold text-gray-900">{r.value}</span>
-          </div>
-        ))}
+        {/* <div className="h-px bg-slate-100" />
+        <div className="mt-1">
+          {overtimeRows.map((r, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 last:border-0"
+            >
+              <span className="text-sm text-black">{r.label}</span>
+              <span className="text-sm font-medium text-black">{r.value}</span>
+            </div>
+          ))}
+        </div> */}
+
       </div>
     </div>
   );
