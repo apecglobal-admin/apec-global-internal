@@ -57,8 +57,8 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                 name: task.name || '',
                 description: task.description || '',
                 type_task: task.type_task?.id || 0,
-                date_start: task.date_start ? task.date_start.split('T')[0] : '',
-                date_end: task.date_end ? task.date_end.split('T')[0] : '',
+                date_start: toVNDate(task.date_start),
+                date_end: toVNDate(task.date_end),
                 task_priority: task.priority?.id || 0,
                 project_id: task.project?.id || 0,
                 kpi_item_id: task.kpi_item?.id || 0,
@@ -72,6 +72,13 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
     
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('vi-VN');
+    };
+
+    const toVNDate = (dateString: string): string => {
+        if (!dateString) return '';
+        const d = new Date(dateString);
+        d.setHours(d.getHours() + 7);
+        return d.toISOString().split('T')[0]; // "YYYY-MM-DD"
     };
 
     const getStatusColor = (statusId: number) => {
@@ -91,15 +98,13 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
         }));
     };
 
-    
-
     const handleInputChange = (field: string, value: any) => {
         setFormData(prev => ({
             ...prev,
             [field]: value
         }));
 
-        if(field === 'kpi_item_id'){
+        if (field === 'kpi_item_id') {
             setFormData(prev => ({
                 ...prev,
                 value: 0,
@@ -111,17 +116,15 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
         e: React.ChangeEvent<HTMLInputElement>,
         field: string,
     ) => {
-        const unit = childKpi?.find((k: any) => Number(k.id) === Number(formData.kpi_item_id))?.unit_name
-        // Bỏ hết dấu phẩy
+        const unit = childKpi?.find((k: any) => Number(k.id) === Number(formData.kpi_item_id))?.unit_name;
         const rawValue = e.target.value.replace(/,/g, "");
 
-        
         let value = Number(rawValue);
         if (Number.isNaN(value)) value = 0;
       
         if (unit === "%") {
-          if (value > 100) value = 100;
-          if (value < 0) value = 0;
+            if (value > 100) value = 100;
+            if (value < 0) value = 0;
         }
       
         setFormData(prev => ({
@@ -142,7 +145,6 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Lấy dữ liệu gốc từ task
         const originalData = {
             name: task.name || '',
             description: task.description || '',
@@ -158,68 +160,42 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
             value: task.target_value,
         };
 
-        if(formData.value === 0){
-            toast.warning("Bạn chưa nhập mục tiêu đạt được")
-            return
+        if (formData.value === 0) {
+            toast.warning("Bạn chưa nhập mục tiêu đạt được");
+            return;
         }
 
-        // So sánh và chỉ lấy những field thay đổi
+        if (formData.date_start && formData.date_end) {
+            if (new Date(formData.date_start) >= new Date(formData.date_end)) {
+                toast.warning("Ngày bắt đầu phải nhỏ hơn ngày kết thúc");
+                return;
+            }
+        }
+
         const changedData: any = {};
         
-        if (formData.name !== originalData.name) {
-            changedData.name = formData.name;
-        }
-        
-        if (formData.description !== originalData.description) {
-            changedData.description = formData.description;
-        }
-        
-        if (!hasCompletedEmployee) {
-            if (formData.type_task !== originalData.type_task) {
-                changedData.type_task = formData.type_task;
-            }
-            
-            if (formData.date_start !== originalData.date_start) {
-                changedData.date_start = formData.date_start;
-            }
-            
-            if (formData.date_end !== originalData.date_end) {
-                changedData.date_end = formData.date_end;
-            }
-            
-            if (formData.task_priority !== originalData.task_priority) {
-                changedData.task_priority = formData.task_priority;
-            }
-            
-            if (formData.project_id !== originalData.project_id) {
-                changedData.project_id = formData.project_id;
-            }
-            
-            if (formData.kpi_item_id !== originalData.kpi_item_id) {
-                changedData.kpi_item_id = formData.kpi_item_id;
-            }
-            
-            if (formData.min_count_reject !== originalData.min_count_reject) {
-                changedData.min_count_reject = formData.min_count_reject;
-            }
-            
-            if (formData.max_count_reject !== originalData.max_count_reject) {
-                changedData.max_count_reject = formData.max_count_reject;
-            }
+        if (formData.name !== originalData.name) changedData.name = formData.name;
+        if (formData.description !== originalData.description) changedData.description = formData.description;
 
-            if (formData.value !== originalData.value) {
-                changedData.target_value = formData.value;
-            }
-            
-            // So sánh mảng employees
-            const employeesChanged = 
+        // Ngày luôn được phép thay đổi dù hasCompletedEmployee
+        if (formData.date_start !== originalData.date_start) changedData.date_start = formData.date_start;
+        if (formData.date_end !== originalData.date_end) changedData.date_end = formData.date_end;
+
+        if (!hasCompletedEmployee) {
+            if (formData.type_task !== originalData.type_task) changedData.type_task = formData.type_task;
+            if (formData.task_priority !== originalData.task_priority) changedData.task_priority = formData.task_priority;
+            if (formData.project_id !== originalData.project_id) changedData.project_id = formData.project_id;
+            if (formData.kpi_item_id !== originalData.kpi_item_id) changedData.kpi_item_id = formData.kpi_item_id;
+            if (formData.min_count_reject !== originalData.min_count_reject) changedData.min_count_reject = formData.min_count_reject;
+            if (formData.max_count_reject !== originalData.max_count_reject) changedData.max_count_reject = formData.max_count_reject;
+            if (formData.value !== originalData.value) changedData.target_value = formData.value;
+
+            const employeesChanged =
                 formData.employees.length !== originalData.employees.length ||
                 formData.employees.some(id => !originalData.employees.includes(id)) ||
                 originalData.employees.some((id: any) => !formData.employees.includes(id));
-            
-            if (employeesChanged) {
-                changedData.employees = formData.employees;
-            }
+
+            if (employeesChanged) changedData.employees = formData.employees;
         }
 
         onSave(changedData);
@@ -234,7 +210,7 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
         <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-6">
             {hasCompletedEmployee && (
                 <div className="mb-6 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 px-4 py-3 rounded-lg">
-                    ⚠️ Có nhân viên đã hoàn thành công việc (100%). Bạn chỉ có thể cập nhật Tên và Mô tả.
+                    ⚠️ Có nhân viên đã hoàn thành công việc (100%). Bạn chỉ có thể cập nhật Tên, Mô tả, Ngày bắt đầu và Ngày kết thúc.
                 </div>
             )}
 
@@ -360,18 +336,19 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                             )}
                         </div>
 
+                        {/* Mục tiêu */}
                         <div className="bg-slate-900/50 p-3 rounded-lg">
                             <label className="text-sm font-semibold text-slate-400">
                                 Mục tiêu ({childKpi?.find((k: any) => Number(k.id) === Number(formData.kpi_item_id))?.unit_name})
                             </label>
                             {!hasCompletedEmployee ? (
                                 <input
-                                type="text"
-                                inputMode="numeric"
-                                value={formatNumber(formData.value)}
-                                onChange={(e) => handleProcessChange(e, 'value')}
-                                className={`w-full mt-1 bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500`}
-                            />
+                                    type="text"
+                                    inputMode="numeric"
+                                    value={formatNumber(formData.value)}
+                                    onChange={(e) => handleProcessChange(e, 'value')}
+                                    className="w-full mt-1 bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                                />
                             ) : (
                                 <p className="text-white mt-1">{formatNumber(task.target_value)}</p>
                             )}
@@ -413,34 +390,26 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
 
                     {/* Cột phải */}
                     <div className="space-y-4">
-                        {/* Ngày bắt đầu */}
+                        {/* Ngày bắt đầu - luôn cho phép chỉnh */}
                         <div className="bg-slate-900/50 p-3 rounded-lg">
                             <label className="text-sm font-semibold text-slate-400">Ngày bắt đầu</label>
-                            {!hasCompletedEmployee ? (
-                                <input
-                                    type="date"
-                                    value={formData.date_start}
-                                    onChange={(e) => handleInputChange('date_start', e.target.value)}
-                                    className="w-full mt-1 bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
-                                />
-                            ) : (
-                                <p className="text-white mt-1">{new Date(task.date_start).toLocaleDateString('vi-VN')}</p>
-                            )}
+                            <input
+                                type="date"
+                                value={formData.date_start}
+                                onChange={(e) => handleInputChange('date_start', e.target.value)}
+                                className="w-full mt-1 bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                            />
                         </div>
 
-                        {/* Ngày kết thúc */}
+                        {/* Ngày kết thúc - luôn cho phép chỉnh */}
                         <div className="bg-slate-900/50 p-3 rounded-lg">
                             <label className="text-sm font-semibold text-slate-400">Ngày kết thúc</label>
-                            {!hasCompletedEmployee ? (
-                                <input
-                                    type="date"
-                                    value={formData.date_end}
-                                    onChange={(e) => handleInputChange('date_end', e.target.value)}
-                                    className="w-full mt-1 bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
-                                />
-                            ) : (
-                                <p className="text-white mt-1">{new Date(task.date_end).toLocaleDateString('vi-VN')}</p>
-                            )}
+                            <input
+                                type="date"
+                                value={formData.date_end}
+                                onChange={(e) => handleInputChange('date_end', e.target.value)}
+                                className="w-full mt-1 bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                            />
                         </div>
 
                         {/* Số lần từ chối tối thiểu */}
@@ -519,8 +488,8 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                                     return emp ? (
                                         <span key={id} className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg text-sm flex items-center gap-2">
                                             {emp.name}
-                                            <X 
-                                                size={14} 
+                                            <X
+                                                size={14}
                                                 className="cursor-pointer hover:text-red-400"
                                                 onClick={() => handleEmployeeToggle(empId)}
                                             />
@@ -563,9 +532,10 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                     </button>
                 </div>
             </form>
+
             {/* Danh sách người thực hiện */}
             {task.task_assignment && task.task_assignment.length > 0 && (
-                <div>
+                <div className="mt-6">
                     <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -578,8 +548,8 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         {assignment.employee.avatar ? (
-                                            <img 
-                                                src={assignment.employee.avatar} 
+                                            <img
+                                                src={assignment.employee.avatar}
                                                 alt={assignment.employee.name}
                                                 className="w-12 h-12 rounded-full object-cover border-2 border-slate-600"
                                             />
