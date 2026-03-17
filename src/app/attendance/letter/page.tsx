@@ -11,13 +11,14 @@ import {
 } from "@/src/features/attendance/api";
 import { uploadFileTask, uploadImageTask } from "@/src/features/task/api";
 import { useAttendanceData } from "@/src/hooks/attendanceHook";
+import { ChevronLeft } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 
 type ViewMode = "list" | "grid";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 const IMAGE_EXTS = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"];
 const isImage = (filename: string) =>
   IMAGE_EXTS.some((ext) => filename.toLowerCase().endsWith(`.${ext}`));
@@ -59,7 +60,6 @@ function LetterIcon({ color }: { color: string }) {
   );
 }
 
-// ─── Shared UI ────────────────────────────────────────────────────────────────
 const ChevronRight = () => (
   <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -102,17 +102,6 @@ const FormRow = ({ label, value, required, onClick, clearable, onClear, muted }:
   </div>
 );
 
-const BottomButtons = ({ onDraft, onSubmit, loading }: { onDraft?: () => void; onSubmit: () => void; loading?: boolean }) => (
-  <div className="sticky bottom-0 bg-white border-t border-gray-100 px-4 py-3 flex gap-3">
-    <button onClick={onDraft} className="flex-1 py-3.5 rounded-2xl border-2 border-blue-300 text-blue-400 font-semibold text-base hover:bg-blue-50 transition-colors">
-      Lưu nháp
-    </button>
-    <button onClick={onSubmit} disabled={loading} className="flex-1 py-3.5 rounded-2xl bg-blue-400 text-white font-semibold text-base hover:bg-blue-500 transition-colors disabled:opacity-60">
-      {loading ? "Đang gửi..." : "Gửi"}
-    </button>
-  </div>
-);
-
 const SuggestChips = ({ chips, onSelect }: { chips: string[]; onSelect?: (c: string) => void }) => (
   <div className="flex gap-2 flex-wrap px-5 py-2 pb-3">
     {chips.map((c) => (
@@ -142,7 +131,6 @@ function SkeletonCard() {
   );
 }
 
-// ─── Calendar Picker ──────────────────────────────────────────────────────────
 const DAY_HEADERS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
 function MonthCalendar({ year, month, fromDay, toDay, onSelectDay }: {
@@ -298,7 +286,6 @@ function CalendarPicker({ initial, onClose, onDone }: {
   );
 }
 
-// ─── Letter Type Picker ───────────────────────────────────────────────────────
 function LetterTypeScreen({ letters, selected, onSelect, onBack }: {
   letters: any[]; selected: any | null;
   onSelect: (t: any) => void; onBack: () => void;
@@ -328,7 +315,6 @@ function LetterTypeScreen({ letters, selected, onSelect, onBack }: {
   );
 }
 
-// ─── File Upload Section ──────────────────────────────────────────────────────
 function FileUploadSection({
   token,
   onUploaded,
@@ -345,7 +331,6 @@ function FileUploadSection({
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName]   = useState<string | null>(null);
 
-  // Derive display state from existingUrl (edit mode) or local upload
   const displayUrl = existingUrl || null;
   const isImg      = displayUrl ? IMAGE_EXTS.some((ext) => displayUrl.toLowerCase().includes(`.${ext}`)) : false;
 
@@ -368,10 +353,7 @@ function FileUploadSection({
       <div className="px-5 py-3 flex items-center justify-between">
         <p className="text-xs font-bold text-gray-500 tracking-widest uppercase">Tài liệu đính kèm</p>
         {displayUrl && onRemove && (
-          <button
-            onClick={onRemove}
-            className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 font-medium transition-colors"
-          >
+          <button onClick={onRemove} className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 font-medium transition-colors">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
@@ -379,33 +361,19 @@ function FileUploadSection({
           </button>
         )}
       </div>
-
-      {/* Preview existing document */}
       {displayUrl && (
         <div className="mx-4 mb-3">
           {isImg ? (
             <div className="relative rounded-2xl overflow-hidden border border-gray-100 bg-gray-50">
-              <img
-                src={displayUrl}
-                alt="Tài liệu đính kèm"
-                className="w-full max-h-52 object-cover"
-              />
-              <a
-                href={displayUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2.5 py-1 rounded-full hover:bg-black/70 transition-colors"
-              >
+              <img src={displayUrl} alt="Tài liệu đính kèm" className="w-full max-h-52 object-cover" />
+              <a href={displayUrl} target="_blank" rel="noopener noreferrer"
+                className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2.5 py-1 rounded-full hover:bg-black/70 transition-colors">
                 Xem đầy đủ ↗
               </a>
             </div>
           ) : (
-            <a
-              href={displayUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-blue-100 bg-blue-50 hover:bg-blue-100 transition-colors"
-            >
+            <a href={displayUrl} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-blue-100 bg-blue-50 hover:bg-blue-100 transition-colors">
               <svg className="w-8 h-8 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
@@ -420,12 +388,8 @@ function FileUploadSection({
           )}
         </div>
       )}
-
-      {/* Upload area */}
-      <div
-        className="mx-4 mb-4 border-2 border-dashed border-blue-200 rounded-2xl p-6 flex flex-col items-center gap-2 cursor-pointer hover:bg-blue-50 transition-colors"
-        onClick={() => inputRef.current?.click()}
-      >
+      <div className="mx-4 mb-4 border-2 border-dashed border-blue-200 rounded-2xl p-6 flex flex-col items-center gap-2 cursor-pointer hover:bg-blue-50 transition-colors"
+        onClick={() => inputRef.current?.click()}>
         <input ref={inputRef} type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
         {uploading ? (
           <p className="text-blue-500 font-semibold text-sm">Đang tải lên...</p>
@@ -449,51 +413,78 @@ function FileUploadSection({
   );
 }
 
-// ─── Letter Form (Create / Edit) ─────────────────────────────────────────────
 interface LetterFormProps {
-  onClose:        () => void;
-  letters:        any[];
-  token:          string;
-  editData?:      any;        // existing employee letter when editing
-  defaultAbsence?: any;       // pre-selected letter object from sub-page
-  onSuccess?:     () => void;
+  onClose:           () => void;
+  letters:           any[];
+  token:             string;
+  editData?:         any;
+  defaultAbsence?:   any;
+  initialCalValue?:  CalendarValue;
+  initialAbsenceId?: number;
+  fromParams?:       boolean;
+  onSuccess?:        () => void;
 }
 
-function LetterForm({ onClose, letters, token, editData, defaultAbsence, onSuccess }: LetterFormProps) {
+function LetterForm({
+  onClose,
+  letters,
+  token,
+  editData,
+  defaultAbsence,
+  initialCalValue,
+  initialAbsenceId,
+  fromParams = false,
+  onSuccess,
+}: LetterFormProps) {
   const dispatch = useDispatch();
+  const router   = useRouter();
   const isEdit   = !!editData;
 
   const parseISODay = (iso: string) => { const d = new Date(iso); return { y: d.getFullYear(), m: d.getMonth() + 1, d: d.getDate() }; };
   const parseTime   = (t: string)   => { const [h, m] = t.split(":").map(Number); return { h, m }; };
 
-  const initAbsence  = editData ? letters.find((l) => l.id === String(editData.absence?.id)) || null : defaultAbsence || null;
+  const resolveInitAbsence = () => {
+    if (editData)         return letters.find((l) => l.id === String(editData.absence?.id)) || null;
+    if (initialAbsenceId) return letters.find((l) => Number(l.id) === initialAbsenceId) || null;
+    return defaultAbsence || null;
+  };
+
   const today        = new Date();
   const initFromDay  = editData ? parseISODay(editData.start_date) : { y: today.getFullYear(), m: today.getMonth() + 1, d: today.getDate() };
   const initToDay    = editData ? parseISODay(editData.end_date)   : initFromDay;
   const initFromTime = editData ? parseTime(editData.start_time)   : { h: 9,  m: 0 };
   const initToTime   = editData ? parseTime(editData.end_time)     : { h: 18, m: 0 };
 
-  const [selectedLetter, setSelectedLetter] = useState<any | null>(initAbsence);
+  const [selectedLetter, setSelectedLetter] = useState<any | null>(resolveInitAbsence);
   const [showTypeScreen, setShowTypeScreen]  = useState(false);
   const [showCal,        setShowCal]         = useState(false);
-  const [calValue, setCalValue] = useState<CalendarValue>({
-    fromDay: initFromDay, toDay: initToDay,
-    fromHour: initFromTime.h, fromMin: initFromTime.m,
-    toHour:   initToTime.h,   toMin:   initToTime.m,
-  });
+  const [calValue, setCalValue] = useState<CalendarValue>(
+    initialCalValue ?? {
+      fromDay:  initFromDay,
+      toDay:    initToDay,
+      fromHour: initFromTime.h,
+      fromMin:  initFromTime.m,
+      toHour:   initToTime.h,
+      toMin:    initToTime.m,
+    }
+  );
   const [reason,   setReason]   = useState(editData?.reason   || "");
   const [address,  setAddress]  = useState(editData?.address  || "");
-  // document holds the URL (existing or newly uploaded)
   const [document, setDocument] = useState(editData?.document || "");
+  const [loading,  setLoading]  = useState(false);
 
   const [popup, setPopup] = useState<{
     open: boolean; type: "error" | "warning" | "success"; title: string; message: string;
   }>({ open: false, type: "error", title: "", message: "" });
-
   const showPopup = (type: "error" | "warning" | "success", title: string, message: string) =>
     setPopup({ open: true, type, title, message });
 
-  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (!isEdit && initialAbsenceId && letters.length > 0 && !selectedLetter) {
+      const found = letters.find((l) => Number(l.id) === initialAbsenceId);
+      if (found) setSelectedLetter(found);
+    }
+  }, [letters, initialAbsenceId, isEdit, selectedLetter]);
 
   const fmtCalLabel = (cv: CalendarValue) => {
     const pad = (n: number) => String(n).padStart(2, "0");
@@ -505,6 +496,11 @@ function LetterForm({ onClose, letters, token, editData, defaultAbsence, onSucce
     `${d.y}-${String(d.m).padStart(2,"0")}-${String(d.d).padStart(2,"0")}`;
   const toTimeStr = (h: number, m: number) =>
     `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:00`;
+
+  const handleBack = () => {
+    if (fromParams) router.push("/attendance/sheets");
+    else onClose();
+  };
 
   const handleSubmit = async () => {
     if (!selectedLetter) return showPopup("warning", "Thiếu thông tin", "Vui lòng chọn loại đơn");
@@ -523,17 +519,17 @@ function LetterForm({ onClose, letters, token, editData, defaultAbsence, onSucce
       if (isEdit) {
         payload.id = editData.id;
         const res = await (dispatch as any)(updateLetter(payload));
-        if(res.payload.status == 200 || res.payload.status == 201){
-          toast.success(res.payload.data.message);
-        }
+        if (res.payload.status == 200 || res.payload.status == 201) toast.success(res.payload.data.message);
       } else {
         const res = await (dispatch as any)(createLetter(payload));
-        if(res.payload.status == 200 || res.payload.status == 201){
-          toast.success(res.payload.data.message);
-        }
+        if (res.payload.status == 200 || res.payload.status == 201) toast.success(res.payload.data.message);
       }
-      onSuccess?.();
-      onClose();
+      if (fromParams) {
+        router.push("/attendance/sheets");
+      } else {
+        onSuccess?.();
+        onClose();
+      }
     } catch (e) {
       console.error(e);
       showPopup("error", "Gửi thất bại", "Đã xảy ra lỗi khi gửi đơn. Vui lòng thử lại.");
@@ -549,17 +545,20 @@ function LetterForm({ onClose, letters, token, editData, defaultAbsence, onSucce
       <PopupComponent
         isOpen={popup.open}
         onClose={() => setPopup((p) => ({ ...p, open: false }))}
-        type={popup.type}
-        title={popup.title}
-        message={popup.message}
-        showActionButtons={false}
-        showCloseButton={true}
+        type={popup.type} title={popup.title} message={popup.message}
+        showActionButtons={false} showCloseButton={true}
       />
       <div className="fixed inset-x-0 bottom-0 z-40 bg-gray-50 font-sans flex flex-col overflow-auto top-[72px] sm:top-[80px] lg:top-[86px]">
         <div className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
           <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
-            <CloseBtn onClose={onClose} />
-            <h1 className="text-lg font-bold text-gray-800 flex-1 text-center pr-9">{isEdit ? "Chỉnh sửa đơn" : "Thêm đơn mới"}</h1>
+            {/*
+              fromParams=true  → /attendance/sheets  (ChevronLeft với router.push)
+              fromParams=false → đóng overlay         (ChevronLeft với onClose)
+            */}
+            <ChevronLeft onClick={handleBack} color="black" className="cursor-pointer" />
+            <h1 className="text-lg font-bold text-gray-800 flex-1 text-center pr-9">
+              {isEdit ? "Chỉnh sửa đơn" : "Thêm đơn mới"}
+            </h1>
           </div>
         </div>
 
@@ -589,17 +588,23 @@ function LetterForm({ onClose, letters, token, editData, defaultAbsence, onSucce
           <div className="bg-white mt-3 border-y border-gray-100">
             <div className="px-5 py-4 border-b border-gray-100">
               <p className="text-sm text-gray-500 mb-1">Địa điểm</p>
-              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Nhập địa điểm (nếu có)..." className="w-full text-gray-700 text-base outline-none placeholder-gray-300 bg-transparent font-medium" />
+              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)}
+                placeholder="Nhập địa điểm (nếu có)..."
+                className="w-full text-gray-700 text-base outline-none placeholder-gray-300 bg-transparent font-medium" />
             </div>
             <div className="px-5 pt-4 pb-2 relative">
               <p className="text-sm text-gray-500 mb-2">Lý do <Required /></p>
-              <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Nhập lý do..." rows={3} className="w-full text-gray-700 text-sm outline-none resize-none placeholder-gray-300 bg-transparent" />
+              <textarea value={reason} onChange={(e) => setReason(e.target.value)}
+                placeholder="Nhập lý do..." rows={3}
+                className="w-full text-gray-700 text-sm outline-none resize-none placeholder-gray-300 bg-transparent" />
               <AIBubble />
             </div>
-            <SuggestChips chips={["Xin nghỉ phép cá nhân", "Đi công tác theo kế hoạch", "Cập nhật giờ chấm công"]} onSelect={(c) => setReason(c)} />
+            <SuggestChips
+              chips={["Xin nghỉ phép cá nhân", "Đi công tác theo kế hoạch", "Cập nhật giờ chấm công"]}
+              onSelect={(c) => setReason(c)}
+            />
           </div>
 
-          {/* File — shows preview + delete when document exists */}
           <FileUploadSection
             token={token}
             existingUrl={document || undefined}
@@ -609,13 +614,27 @@ function LetterForm({ onClose, letters, token, editData, defaultAbsence, onSucce
           <div className="h-4" />
         </div>
 
-        <BottomButtons onSubmit={handleSubmit} loading={loading} />
+        {/* Bottom buttons — Gửi navigate theo fromParams */}
+        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-4 py-3 flex gap-3">
+          <button
+            onClick={() => {/* lưu nháp */}}
+            className="flex-1 py-3.5 rounded-2xl border-2 border-blue-300 text-blue-400 font-semibold text-base hover:bg-blue-50 transition-colors"
+          >
+            Lưu nháp
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="flex-1 py-3.5 rounded-2xl bg-blue-400 text-white font-semibold text-base hover:bg-blue-500 transition-colors disabled:opacity-60"
+          >
+            {loading ? "Đang gửi..." : "Gửi"}
+          </button>
+        </div>
       </div>
     </>
   );
 }
 
-// ─── Employee Letter Card ─────────────────────────────────────────────────────
 function EmployeeLetterCard({ item, onEdit, onDelete }: { item: any; onEdit: () => void; onDelete: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const statusName = item.status?.name || "";
@@ -633,7 +652,9 @@ function EmployeeLetterCard({ item, onEdit, onDelete }: { item: any; onEdit: () 
         </div>
         <div className="relative">
           <button onClick={() => setMenuOpen(!menuOpen)} className="text-gray-400 hover:text-gray-600 p-1">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
+            </svg>
           </button>
           {menuOpen && (
             <div className="absolute right-0 top-8 bg-white rounded-xl shadow-lg border border-gray-100 z-20 min-w-[120px]">
@@ -655,14 +676,9 @@ function EmployeeLetterCard({ item, onEdit, onDelete }: { item: any; onEdit: () 
           <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
           {statusName || "Không rõ"}
         </span>
-        {/* Show document badge on card */}
         {item.document && (
-          <a
-            href={item.document}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 transition-colors"
-          >
+          <a href={item.document} target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 transition-colors">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
             </svg>
@@ -674,13 +690,16 @@ function EmployeeLetterCard({ item, onEdit, onDelete }: { item: any; onEdit: () 
   );
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+
+const DEFAULT_ABSENCE_ID_FROM_PARAMS = 3;
+
 export default function LetterPage() {
-  const token    = typeof window !== "undefined" ? localStorage.getItem("userToken") || "" : "";
-  const dispatch = useDispatch();
-  const [deletePopup, setDeletePopup] = useState<{ open: boolean; id: string | null }>({
-    open: false, id: null,
-  });
+  const token        = typeof window !== "undefined" ? localStorage.getItem("userToken") || "" : "";
+  const dispatch     = useDispatch();
+  const router       = useRouter();
+  const searchParams = useSearchParams();
+
+  const [deletePopup, setDeletePopup] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
   const { letters, statusLetter, employeeLetter, totalEmployeeLetter } = useAttendanceData();
 
   const [page,         setPage]         = useState<"menu" | string>("menu");
@@ -690,12 +709,35 @@ export default function LetterPage() {
   const [showForm,     setShowForm]     = useState(false);
   const [editItem,     setEditItem]     = useState<any | null>(null);
 
+  const [paramCalValue,  setParamCalValue]  = useState<CalendarValue | null>(null);
+  const [paramAbsenceId, setParamAbsenceId] = useState<number | null>(null);
+  const [fromParams,     setFromParams]     = useState(false);
+
   useEffect(() => {
     dispatch(getListLetter()       as any);
     dispatch(getListStatusLetter() as any);
   }, [dispatch]);
 
-  // ── Fetch list — optionally pass a specific letter id (when opening edit form)
+  useEffect(() => {
+    const dayParam   = searchParams.get("day");
+    const monthParam = searchParams.get("month");
+    const yearParam  = searchParams.get("year");
+
+    if (dayParam && monthParam && yearParam) {
+      const d = { y: Number(yearParam), m: Number(monthParam), d: Number(dayParam) };
+      const cv: CalendarValue = {
+        fromDay: d, toDay: d,
+        fromHour: 9, fromMin: 0,
+        toHour: 18, toMin: 0,
+      };
+      setParamCalValue(cv);
+      setParamAbsenceId(DEFAULT_ABSENCE_ID_FROM_PARAMS);
+      setFromParams(true);
+      setEditItem(null);
+      setShowForm(true);
+    }
+  }, [searchParams]);
+
   const fetchEmployeeLetters = (absenceId: string, status: number | null, letterId?: string | null) => {
     setLoading(true);
     (dispatch as any)(
@@ -711,21 +753,14 @@ export default function LetterPage() {
   };
 
   useEffect(() => {
-    if (page !== "menu") {
-      fetchEmployeeLetters(page, filterStatus);
-    }
+    if (page !== "menu") fetchEmployeeLetters(page, filterStatus);
   }, [page, filterStatus, totalEmployeeLetter]);
 
-  const handleMenuClick = (letterId: string) => {
-    setFilterStatus(null);
-    setPage(letterId);
-  };
+  const handleMenuClick = (letterId: string) => { setFilterStatus(null); setPage(letterId); };
 
   const currentLetter = (letters || []).find((l: any) => l.id === page) || null;
 
-  const handleDelete = (id: string) => {
-    setDeletePopup({ open: true, id });
-  };
+  const handleDelete = (id: string) => setDeletePopup({ open: true, id });
 
   const confirmDelete = async () => {
     if (!deletePopup.id) return;
@@ -734,17 +769,32 @@ export default function LetterPage() {
     fetchEmployeeLetters(page, filterStatus);
   };
 
-  // When edit is triggered: call API with the specific letter's id so we get fresh data
   const handleEditClick = (item: any) => {
     setEditItem(item);
+    setParamCalValue(null);
+    setParamAbsenceId(null);
+    setFromParams(false);
     setShowForm(true);
-    // Fetch the single letter detail by passing its id
-    if (page !== "menu") {
-      fetchEmployeeLetters(page, filterStatus, item.id);
-    }
+    if (page !== "menu") fetchEmployeeLetters(page, filterStatus, item.id);
   };
 
   const handleSuccess = () => fetchEmployeeLetters(page, filterStatus);
+
+  const handleFormClose = () => {
+    setShowForm(false);
+    setEditItem(null);
+    setParamCalValue(null);
+    setParamAbsenceId(null);
+    setFromParams(false);
+  };
+
+  const openNewForm = () => {
+    setEditItem(null);
+    setParamCalValue(null);
+    setParamAbsenceId(null);
+    setFromParams(false);
+    setShowForm(true);
+  };
 
   const letterList: any[] = employeeLetter || [];
 
@@ -756,24 +806,27 @@ export default function LetterPage() {
         type="warning"
         title="Xác nhận xóa"
         message="Bạn có chắc muốn xóa đơn này không? Hành động này không thể hoàn tác."
-        confirmText="Xóa"
-        cancelText="Hủy"
+        confirmText="Xóa" cancelText="Hủy"
         onConfirm={confirmDelete}
         onCancel={() => setDeletePopup({ open: false, id: null })}
         showCloseButton={false}
       />
+
       {showForm && (
         <LetterForm
-          onClose={() => { setShowForm(false); setEditItem(null); }}
+          onClose={handleFormClose}
           letters={letters || []}
           token={token}
           editData={editItem || undefined}
-          defaultAbsence={editItem ? undefined : currentLetter}
+          defaultAbsence={editItem || paramAbsenceId ? undefined : currentLetter}
+          initialCalValue={paramCalValue ?? undefined}
+          initialAbsenceId={paramAbsenceId ?? undefined}
+          fromParams={fromParams}
           onSuccess={handleSuccess}
         />
       )}
 
-      {/* ── Sub-page: letter list filtered by absence_id ── */}
+      {/* ── Sub-page: letter list ── */}
       {page !== "menu" && (
         <div className="min-h-screen bg-gray-50 font-sans">
           <div className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
@@ -784,19 +837,15 @@ export default function LetterPage() {
                 </svg>
               </button>
               <h1 className="text-lg font-semibold text-gray-800">{currentLetter?.name || "Đơn từ"}</h1>
-              <button onClick={() => { setEditItem(null); setShowForm(true); }} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-blue-50 transition-colors text-blue-500">
+              <button onClick={openNewForm} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-blue-50 transition-colors text-blue-500">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
               </button>
             </div>
-
-            {/* Status filter tabs */}
             <div className="max-w-2xl mx-auto px-4 flex border-t border-gray-100 overflow-x-auto">
-              <button
-                onClick={() => setFilterStatus(null)}
-                className={`flex-shrink-0 px-4 py-3 text-sm font-medium transition-all border-b-2 ${filterStatus === null ? "text-blue-500 border-blue-500" : "text-gray-400 border-transparent hover:text-gray-600"}`}
-              >
+              <button onClick={() => setFilterStatus(null)}
+                className={`flex-shrink-0 px-4 py-3 text-sm font-medium transition-all border-b-2 ${filterStatus === null ? "text-blue-500 border-blue-500" : "text-gray-400 border-transparent hover:text-gray-600"}`}>
                 Tất cả
               </button>
               {(statusLetter || []).map((s: any) => (
@@ -807,7 +856,6 @@ export default function LetterPage() {
               ))}
             </div>
           </div>
-
           <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
             {loading ? (
               <><SkeletonCard /><SkeletonCard /></>
@@ -820,7 +868,7 @@ export default function LetterPage() {
                     </svg>
                   </div>
                   <p className="text-gray-400 text-sm">Chưa có đơn nào</p>
-                  <button onClick={() => { setEditItem(null); setShowForm(true); }} className="mt-4 px-5 py-2.5 bg-blue-500 text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors">
+                  <button onClick={openNewForm} className="mt-4 px-5 py-2.5 bg-blue-500 text-white text-sm font-semibold rounded-xl hover:bg-blue-600 transition-colors">
                     + Tạo đơn mới
                   </button>
                 </div>
@@ -830,8 +878,8 @@ export default function LetterPage() {
                 <EmployeeLetterCard
                   key={item.id}
                   item={item}
-                  onEdit={()   => handleEditClick(item)}
-                  onDelete={()  => handleDelete(item.id)}
+                  onEdit={()  => handleEditClick(item)}
+                  onDelete={() => handleDelete(item.id)}
                 />
               ))
             )}
@@ -844,7 +892,7 @@ export default function LetterPage() {
         <div className="min-h-screen bg-gray-50 font-sans">
           <div className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
             <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-              <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+              <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-600" onClick={() => router.back()}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
@@ -866,7 +914,6 @@ export default function LetterPage() {
               </button>
             </div>
           </div>
-
           <div className="max-w-2xl mx-auto px-4 py-6">
             {(letters || []).length === 0 ? (
               <div className="space-y-3">
