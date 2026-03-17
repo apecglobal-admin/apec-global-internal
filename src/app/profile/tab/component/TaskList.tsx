@@ -106,6 +106,14 @@ const TaskListAssign: React.FC = () => {
             dispatch(getPriorityTask() as any);
         }
     }, []);
+
+    const clearFilter = () => {
+        setTaskFilter("all");
+        setProjectFilter(null);
+        setStatusFilter("2");
+        setPriorityFilter("all");
+        setSearchFilter("");
+    };
     
     const handleTaskClick = async (taskId: string) => {
         
@@ -121,6 +129,25 @@ const TaskListAssign: React.FC = () => {
     const handleBackToList = () => {
         setSelectedTaskId(null);
     };
+
+    const handleEditSuccess = ()=> {
+        const token = localStorage.getItem("userToken");
+        if (token) {
+            const payload = {
+                page: currentPage,
+                token,
+                task_status: statusFilter === "all" ? null : parseInt(statusFilter),  
+                type_task: taskFilter === "all" ? null : parseInt(taskFilter), 
+                project_id: projectFilter?.id  ? projectFilter?.id : null, 
+                search: searchFilter === "" ? null : searchFilter,
+                task_priority: priorityFilter === "all" ? null : parseInt(priorityFilter), 
+                key: "listDetailTaskAssign"
+            };
+
+            dispatch(getDetailListTaskAssign(payload) as any);
+                
+        }
+    }
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -277,7 +304,7 @@ const TaskListAssign: React.FC = () => {
     // Hiển thị chi tiết task
     if (selectedTaskId && detailTaskAssign) {
 
-        return <TaskDetailAssign task={detailTaskAssign} onBack={handleBackToList} />;
+        return <TaskDetailAssign task={detailTaskAssign} onBack={handleBackToList} onUpdate={handleEditSuccess} />;
     }
 
     if (showAssignTask) {
@@ -562,7 +589,8 @@ const TaskListAssign: React.FC = () => {
             </div>
         )
     }
-
+    console.log(listDetailTaskAssign);
+    
     // Hiển thị danh sách task
     return (
         <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6">
