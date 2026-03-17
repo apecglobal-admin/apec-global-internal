@@ -13,7 +13,7 @@ import { uploadFileTask, uploadImageTask } from "@/src/features/task/api";
 import { useAttendanceData } from "@/src/hooks/attendanceHook";
 import { ChevronLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, Suspense } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 
@@ -551,10 +551,6 @@ function LetterForm({
       <div className="fixed inset-x-0 bottom-0 z-40 bg-gray-50 font-sans flex flex-col overflow-auto top-[72px] sm:top-[80px] lg:top-[86px]">
         <div className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
           <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
-            {/*
-              fromParams=true  → /attendance/sheets  (ChevronLeft với router.push)
-              fromParams=false → đóng overlay         (ChevronLeft với onClose)
-            */}
             <ChevronLeft onClick={handleBack} color="black" className="cursor-pointer" />
             <h1 className="text-lg font-bold text-gray-800 flex-1 text-center pr-9">
               {isEdit ? "Chỉnh sửa đơn" : "Thêm đơn mới"}
@@ -614,7 +610,7 @@ function LetterForm({
           <div className="h-4" />
         </div>
 
-        {/* Bottom buttons — Gửi navigate theo fromParams */}
+        {/* Bottom buttons */}
         <div className="sticky bottom-0 bg-white border-t border-gray-100 px-4 py-3 flex gap-3">
           <button
             onClick={() => {/* lưu nháp */}}
@@ -693,7 +689,8 @@ function EmployeeLetterCard({ item, onEdit, onDelete }: { item: any; onEdit: () 
 
 const DEFAULT_ABSENCE_ID_FROM_PARAMS = 3;
 
-export default function LetterPage() {
+// ─── Inner component that uses useSearchParams ────────────────────────────────
+function LetterPage() {
   const token        = typeof window !== "undefined" ? localStorage.getItem("userToken") || "" : "";
   const dispatch     = useDispatch();
   const router       = useRouter();
@@ -955,5 +952,14 @@ export default function LetterPage() {
         </div>
       )}
     </>
+  );
+}
+
+// ─── Default export wrapped in Suspense to satisfy Next.js App Router ─────────
+export default function LetterPageWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <LetterPage />
+    </Suspense>
   );
 }

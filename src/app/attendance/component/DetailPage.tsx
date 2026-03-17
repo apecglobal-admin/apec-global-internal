@@ -55,10 +55,8 @@ export function DetailPage({
 
   const handleUpdateLetter = () => {
     router.push(`/attendance/letter?day=${day}&month=${month}&year=${year}`);
-    console.log("Update letter", day, month, year);
   };
 
-  console.log("abc", record);
   return (
     <div className="min-h-screen" style={{ maxWidth: 420, margin: "0 auto" }}>
       {/* Header */}
