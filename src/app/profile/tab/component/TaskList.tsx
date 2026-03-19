@@ -589,7 +589,6 @@ const TaskListAssign: React.FC = () => {
             </div>
         )
     }
-    console.log(listDetailTaskAssign);
     
     // Hiển thị danh sách task
     return (

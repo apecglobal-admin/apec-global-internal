@@ -59,7 +59,6 @@ export default function AttendanceSheetPage() {
 
   const { userInfo } = useProfileData();
   const { loadingPersonalAttendance, personalAttendance } = useAttendanceData();
-  console.log(personalAttendance);
 
   const [tab, setTab] = useState<"bang_cong" | "danh_sach">("bang_cong");
   const [month, setMonth] = useState(new Date().getMonth() + 1);

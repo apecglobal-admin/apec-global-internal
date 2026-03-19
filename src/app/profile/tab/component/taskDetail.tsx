@@ -123,7 +123,6 @@ function TaskDetail({
     const [currentAction, setCurrentAction] = useState<'accept' | 'reject' | null>(null);
     const [isSelectMode, setIsSelectMode] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
-    console.log(allSubTasks);
 
     const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
     const [editingValue, setEditingValue] = useState<number>(0);
