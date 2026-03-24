@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { buildCalendarWeeks, computeStats, getDaysInMonth, padZ } from "@/src/utils/attendance";
 import { DayRecord, DOW_LABELS, LEGEND_ITEMS } from "@/src/services/interface";
-import { getPersonalAttendance } from "@/src/features/attendance/api";
+import { getListEmployeeLetter, getPersonalAttendance } from "@/src/features/attendance/api";
 import { fetchUserInfo } from "@/src/services/api";
 
 import { StatCard } from "../component/StatCard";
@@ -58,7 +58,8 @@ export default function AttendanceSheetPage() {
   const router = useRouter();
 
   const { userInfo } = useProfileData();
-  const { loadingPersonalAttendance, personalAttendance } = useAttendanceData();
+  const { loadingPersonalAttendance, personalAttendance, employeeLetter } = useAttendanceData();
+
 
   const [tab, setTab] = useState<"bang_cong" | "danh_sach">("bang_cong");
   const [month, setMonth] = useState(new Date().getMonth() + 1);
@@ -81,6 +82,18 @@ export default function AttendanceSheetPage() {
   const firstDay = `01/${padZ(month)}/${year}`;
   const lastDay = `${padZ(daysInMonth)}/${padZ(month)}/${year}`;
 
+
+  useEffect(() => {
+    const token = localStorage.getItem("userToken")
+    if (token) {
+      const payload: any = {
+        token,
+        status: 1
+      }
+      dispatch(getListEmployeeLetter(payload) as any);
+    };
+  }, [dispatch]);
+
   useEffect(() => {
     const token = localStorage.getItem("userToken");
     if (token && !userInfo) dispatch(fetchUserInfo(token) as any);
@@ -98,6 +111,7 @@ export default function AttendanceSheetPage() {
     const token = localStorage.getItem("userToken");
     dispatch(getPersonalAttendance({ key: "detailPersonalAttendance", time: `${padZ(month)}/${year}`, id: rawItem.id, token }) as any);
   }, [detailDay]);
+
 
   if (detailDay !== null) {
     const rec = recordMap.get(detailDay);
@@ -163,7 +177,127 @@ export default function AttendanceSheetPage() {
             />
           </div>
         )}
+        {/* ── Employee Letters ── */}
+        <div className="px-4 flex-shrink-0">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-5 rounded-full bg-blue-600" />
+              <h2 className="text-base font-extrabold text-gray-900 tracking-tight">Đơn từ của tôi</h2>
+            </div>
+            <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+              {employeeLetter?.length ?? 0} đơn
+            </span>
+          </div>
 
+          {!employeeLetter || employeeLetter.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-4">Không có dữ liệu</p>
+          ) : (
+            <div 
+              className="flex flex-col gap-3 max-h-72 overflow-y-auto pr-1"
+              style={{ overscrollBehavior: "contain", touchAction: "pan-y" }}
+            >
+              {employeeLetter.map((letter: any) => {
+                const statusColor =
+                  letter.status?.id === 1
+                    ? { bg: "#fff7ed", text: "#f97316", dot: "#f97316" }   // Chờ duyệt - orange
+                    : letter.status?.id === 2
+                      ? { bg: "#f0fdf4", text: "#22c55e", dot: "#22c55e" }   // Đã duyệt - green
+                      : { bg: "#fef2f2", text: "#ef4444", dot: "#ef4444" };  // Từ chối - red
+
+                const formatDate = (iso: string) => {
+                  const d = new Date(iso);
+                  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+                };
+
+                const startDate = formatDate(letter.start_date);
+                const endDate = formatDate(letter.end_date);
+                const startTime = letter.start_time?.slice(0, 5);
+                const endTime = letter.end_time?.slice(0, 5);
+
+                return (
+                  <div
+                    key={letter.id}
+                    className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+                  >
+                    {/* Top row: absence type + status badge */}
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-bold text-gray-900">
+                        {letter.absence?.name ?? "Đơn từ"}
+                      </span>
+                      <span
+                        className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
+                        style={{ background: statusColor.bg, color: statusColor.text }}
+                      >
+                        <span
+                          className="w-1.5 h-1.5 rounded-full"
+                          style={{ background: statusColor.dot }}
+                        />
+                        {letter.status?.name}
+                      </span>
+                    </div>
+
+                    {/* Date/time range */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                      </svg>
+                      <span className="text-xs text-gray-500">
+                        {startDate} {startTime} – {endDate} {endTime}
+                      </span>
+                    </div>
+
+                    {/* Reason */}
+                    {letter.reason && (
+                      <div className="flex items-start gap-2 mb-2">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 flex-shrink-0">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                        </svg>
+                        <span className="text-xs text-gray-500 line-clamp-2">{letter.reason}</span>
+                      </div>
+                    )}
+
+                    {/* Approver */}
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                      <div className="flex items-center gap-2">
+                        {letter.approver?.avatar ? (
+                          <img
+                            src={letter.approver.avatar}
+                            alt={letter.approver.name}
+                            className="w-5 h-5 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                            </svg>
+                          </div>
+                        )}
+                        <span className="text-xs text-gray-400">
+                          {letter.approver?.name ?? "Chưa có người duyệt"}
+                        </span>
+                      </div>
+
+                      {/* Document link */}
+                      {letter.document && (
+                        <a
+                          href={letter.document}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs font-semibold text-blue-600"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+                          </svg>
+                          Xem tài liệu
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
         {/* ── Tabs + legend ── */}
         <div className="bg-white mt-2 px-4 pt-3 flex-shrink-0">
           <div className="flex rounded-xl overflow-hidden border border-gray-200 mb-4">
