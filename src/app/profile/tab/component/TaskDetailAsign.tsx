@@ -62,6 +62,7 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, i
     const [hasCompletedEmployee, setHasCompletedEmployee] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
+    const [hasAllCompleted, setHasAllCompleted] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem("userToken");
@@ -80,6 +81,9 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, i
         if (!isEdit) return;
         const hasCompleted = task?.task_assignment?.some((a: any) => a.process === 100);
         setHasCompletedEmployee(hasCompleted);
+
+        const allCompleted = task?.task_assignment?.length > 0 && task?.task_assignment?.every((a: any) => a.status?.id === 4);
+        setHasAllCompleted(allCompleted);
     }, [task, isEdit]);
 
     const formatDate = (dateString: string) =>
@@ -144,7 +148,7 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, i
             const response = await dispatch(updateTaskAssign(payload) as any);
             if (response.payload?.data?.success) {
                 dispatch(getDetailListTaskAssign({ id: task?.id, token, key: "detailTaskAssign" }) as any);
-                toast.success('Cập nhật thành công!');
+                toast.success(response.payload?.data?.message);
                 setIsEditing(false);
                 if (onUpdate) onUpdate();
             } else {
@@ -170,6 +174,7 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, i
     const subTasks: SubTask[] = Array.isArray(subTaskDetail) && subTaskDetail.length > 0 ? subTaskDetail : [];
     const isSubTaskLoading = !!loadingSubTaskDetail;
     const completedSubTasks = subTasks.filter(st => st.status.id === 4).length;
+    
 
     if (isEditing && isEdit) {
         return (
@@ -185,6 +190,7 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, i
                     childKpi={childKpi}
                     listEmployee={listEmployee}
                     hasCompletedEmployee={hasCompletedEmployee}
+                    hasAllCompleted={hasAllCompleted}
                     onSave={handleSave}
                     onCancel={() => setIsEditing(false)}
                     isLoading={isLoading}

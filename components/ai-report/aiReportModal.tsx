@@ -220,7 +220,6 @@ export const AIReportModal = ({
 
   // Generic Render helper for 'other' project types
   const renderOtherReport = (report: GenericReportItem, index: number) => {
-    console.log("parentTasks: ", parentTasks);
     const isUpdate = report.action === "update";
     const isParent = report.targetType === "parent";
     const canEditName = !isUpdate && !isParent; // If insert subtask, can edit name

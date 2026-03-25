@@ -7,8 +7,10 @@ import { cn } from "@/src/lib/utils";
 import { useDispatch } from "react-redux";
 import { checkin } from "@/src/features/attendance/api";
 import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 export default function CheckInButton() {
+  const router = useRouter();
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const [successData, setSuccessData] = useState<{ message: string; distance: number; now: string } | null>(null);
@@ -46,9 +48,9 @@ export default function CheckInButton() {
     const token = localStorage.getItem("userToken");
 
     if (!token) {
-      setErrorMessage("Bạn chưa đăng nhập để thực hiện.");
+      router.push("/login");
       setIsLoading(false);
-      return
+      return;
     }
 
     try {
@@ -77,7 +79,7 @@ export default function CheckInButton() {
       } else if (error.code === 3) {
         setErrorMessage("Lấy vị trí quá lâu. Vui lòng thử lại.");
       } else {
-        setErrorMessage("Không thể lấy vị trí.");
+        setErrorMessage("Không thể lấy vị trí. Vui lòng đăng nhập lại để tiếp tục");
       }
 
     } finally {

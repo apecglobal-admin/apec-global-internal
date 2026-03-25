@@ -281,7 +281,6 @@ export const useAIReport = (
             value: finalValue,
             token,
           };
-          console.log("Updating parent task:", payload);
           const result = await dispatch(updateProgressTask(payload) as any);
           if (result?.payload?.data?.success) {
             successes++;
@@ -308,7 +307,6 @@ export const useAIReport = (
             subtask_status: statusId,
             token,
           };
-          console.log("Updating subtask:", payload);
           const result = await dispatch(updateProgressSubTask(payload) as any);
 
           const statusPayload = {
@@ -346,7 +344,6 @@ export const useAIReport = (
               },
             ],
           };
-          console.log("Creating subtask:", payload);
           const result = await dispatch(createSubTask(payload) as any);
           if (result?.payload?.data?.success) {
             successes++;
@@ -395,10 +392,6 @@ export const useAIReport = (
                   subtask_status: statusId,
                   token,
                 };
-                console.log(
-                  "Updating newly created subtask progress:",
-                  progressPayload,
-                );
                 await dispatch(updateProgressSubTask(progressPayload) as any);
               }
 
@@ -408,10 +401,6 @@ export const useAIReport = (
                   status: statusId,
                   token,
                 };
-                console.log(
-                  "Updating newly created subtask status:",
-                  statusPayload,
-                );
                 await dispatch(updateStatusSubTask(statusPayload) as any);
               }
             } catch (err) {

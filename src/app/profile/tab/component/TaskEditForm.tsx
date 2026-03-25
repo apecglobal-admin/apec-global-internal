@@ -10,6 +10,7 @@ interface TaskEditFormProps {
     childKpi: any[];
     listEmployee: any[];
     hasCompletedEmployee: boolean;
+    hasAllCompleted: boolean;
     onSave: (formData: any) => void;
     onCancel: () => void;
     isLoading: boolean;
@@ -23,6 +24,7 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
     childKpi,
     listEmployee,
     hasCompletedEmployee,
+    hasAllCompleted,
     onSave,
     onCancel,
     isLoading
@@ -160,17 +162,18 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
             value: task.target_value,
         };
 
+
         if (formData.value === 0) {
             toast.warning("Bạn chưa nhập mục tiêu đạt được");
             return;
         }
-
         if (formData.date_start && formData.date_end) {
-            if (new Date(formData.date_start) >= new Date(formData.date_end)) {
+            if (new Date(formData.date_start) > new Date(formData.date_end)) {
                 toast.warning("Ngày bắt đầu phải nhỏ hơn ngày kết thúc");
                 return;
             }
         }
+  
 
         const changedData: any = {};
         
@@ -208,9 +211,14 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
     
     return (
         <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-6">
-            {hasCompletedEmployee && (
+            {hasAllCompleted && (
+                <div className="mb-6 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg">
+                    🔒 Tất cả nhân viên đã hoàn thành. Bạn chỉ có thể cập nhật Tên và Mô tả.
+                </div>
+            )}
+            {!hasAllCompleted && hasCompletedEmployee && (
                 <div className="mb-6 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 px-4 py-3 rounded-lg">
-                    ⚠️ Có nhân viên đã hoàn thành công việc (100%). Bạn chỉ có thể cập nhật Tên, Mô tả, Ngày bắt đầu và Ngày kết thúc.
+                    ⚠️ Có nhân viên đã hoàn thành. Bạn chỉ có thể cập nhật Tên, Mô tả, Ngày bắt đầu và Ngày kết thúc.
                 </div>
             )}
 
@@ -390,26 +398,34 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
 
                     {/* Cột phải */}
                     <div className="space-y-4">
-                        {/* Ngày bắt đầu - luôn cho phép chỉnh */}
+                        {/* Ngày bắt đầu */}
                         <div className="bg-slate-900/50 p-3 rounded-lg">
                             <label className="text-sm font-semibold text-slate-400">Ngày bắt đầu</label>
-                            <input
-                                type="date"
-                                value={formData.date_start}
-                                onChange={(e) => handleInputChange('date_start', e.target.value)}
-                                className="w-full mt-1 bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
-                            />
+                            {!hasAllCompleted ? (
+                                <input
+                                    type="date"
+                                    value={formData.date_start}
+                                    onChange={(e) => handleInputChange('date_start', e.target.value)}
+                                    className="w-full mt-1 bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                                />
+                            ) : (
+                                <p className="text-white mt-1">{formData.date_start}</p>
+                            )}
                         </div>
 
-                        {/* Ngày kết thúc - luôn cho phép chỉnh */}
+                        {/* Ngày kết thúc */}
                         <div className="bg-slate-900/50 p-3 rounded-lg">
                             <label className="text-sm font-semibold text-slate-400">Ngày kết thúc</label>
-                            <input
-                                type="date"
-                                value={formData.date_end}
-                                onChange={(e) => handleInputChange('date_end', e.target.value)}
-                                className="w-full mt-1 bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
-                            />
+                            {!hasAllCompleted ? (
+                                <input
+                                    type="date"
+                                    value={formData.date_end}
+                                    onChange={(e) => handleInputChange('date_end', e.target.value)}
+                                    className="w-full mt-1 bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                                />
+                            ) : (
+                                <p className="text-white mt-1">{formData.date_end}</p>
+                            )}
                         </div>
 
                         {/* Số lần từ chối tối thiểu */}
