@@ -634,8 +634,11 @@ function LetterForm({
 function EmployeeLetterCard({ item, onEdit, onDelete }: { item: any; onEdit: () => void; onDelete: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const statusName = item.status?.name || "";
+  const statusId   = Number(item.status?.id);
   const colorClass = statusColor[statusName] || "bg-gray-50 text-gray-600 border-gray-200";
   const dotClass   = statusDot[statusName]   || "bg-gray-500";
+
+  const canEdit = statusId !== 2 && statusId !== 3;
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
@@ -646,20 +649,26 @@ function EmployeeLetterCard({ item, onEdit, onDelete }: { item: any; onEdit: () 
             {fmtDate(item.start_date)} {item.start_time?.slice(0, 5)} – {fmtDate(item.end_date)} {item.end_time?.slice(0, 5)}
           </p>
         </div>
-        <div className="relative">
-          <button onClick={() => setMenuOpen(!menuOpen)} className="text-gray-400 hover:text-gray-600 p-1">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
-            </svg>
-          </button>
-          {menuOpen && (
-            <div className="absolute right-0 top-8 bg-white rounded-xl shadow-lg border border-gray-100 z-20 min-w-[120px]">
-              <button onClick={() => { setMenuOpen(false); onEdit();   }} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-t-xl">Chỉnh sửa</button>
-              <button onClick={() => { setMenuOpen(false); onDelete(); }} className="w-full text-left px-4 py-3 text-sm text-red-500  hover:bg-red-50  rounded-b-xl">Xóa</button>
-            </div>
-          )}
-        </div>
+
+        {/* Chỉ hiện menu khi được phép chỉnh sửa */}
+        {canEdit && (
+          <div className="relative">
+            <button onClick={() => setMenuOpen(!menuOpen)} className="text-gray-400 hover:text-gray-600 p-1">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
+              </svg>
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-8 bg-white rounded-xl shadow-lg border border-gray-100 z-20 min-w-[120px]">
+                <button onClick={() => { setMenuOpen(false); onEdit();   }} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-t-xl">Chỉnh sửa</button>
+                <button onClick={() => { setMenuOpen(false); onDelete(); }} className="w-full text-left px-4 py-3 text-sm text-red-500  hover:bg-red-50  rounded-b-xl">Xóa</button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* phần còn lại giữ nguyên */}
       <div className="space-y-1.5 text-sm">
         {item.approver?.name && (
           <div className="flex gap-2"><span className="text-gray-400 w-28 shrink-0">Người duyệt:</span><span className="font-semibold text-gray-700">{item.approver.name}</span></div>
