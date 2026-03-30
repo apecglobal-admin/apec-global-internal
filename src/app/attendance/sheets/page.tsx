@@ -88,7 +88,6 @@ export default function AttendanceSheetPage() {
     if (token) {
       const payload: any = {
         token,
-        status: 1
       }
       dispatch(getListEmployeeLetter(payload) as any);
     };
@@ -200,7 +199,7 @@ export default function AttendanceSheetPage() {
                 const statusColor =
                   letter.status?.id === 1
                     ? { bg: "#fff7ed", text: "#f97316", dot: "#f97316" }   // Chờ duyệt - orange
-                    : letter.status?.id === 2
+                    : letter.status?.id === 3
                       ? { bg: "#f0fdf4", text: "#22c55e", dot: "#22c55e" }   // Đã duyệt - green
                       : { bg: "#fef2f2", text: "#ef4444", dot: "#ef4444" };  // Từ chối - red
 
