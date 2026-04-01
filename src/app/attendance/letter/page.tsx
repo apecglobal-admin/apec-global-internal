@@ -237,9 +237,24 @@ function CalendarPicker({ initial, onClose, onDone }: {
     else setToDay({ y, m, d });
   };
 
-  const months = Array.from({ length: 4 }, (_, i) => {
-    const raw = today.getMonth() + 1 + i;
-    return raw > 12 ? { y: today.getFullYear() + 1, m: raw - 12 } : { y: today.getFullYear(), m: raw };
+  const calScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (calScrollRef.current) {
+      const APPROX_MONTH_HEIGHT = 275; 
+      calScrollRef.current.scrollTop = 12 * APPROX_MONTH_HEIGHT;
+    }
+  }, []);
+
+  const PAST_MONTHS = 12;   // số tháng trước muốn hiển thị
+  const FUTURE_MONTHS = 12;  // số tháng tới muốn hiển thị
+
+  const months = Array.from({ length: PAST_MONTHS + FUTURE_MONTHS }, (_, i) => {
+    const offset = i - PAST_MONTHS;
+    const rawMonth = today.getMonth() + 1 + offset;
+    const year = today.getFullYear() + Math.floor((rawMonth - 1) / 12);
+    const month = ((rawMonth - 1 + 1200) % 12) + 1;
+    return { y: year, m: month };
   });
 
   return (
@@ -270,7 +285,7 @@ function CalendarPicker({ initial, onClose, onDone }: {
       <div className="grid grid-cols-7 px-4 py-2 bg-white border-b border-gray-50 shrink-0">
         {DAY_HEADERS.map((d) => <div key={d} className="text-center text-xs text-gray-400 font-medium">{d}</div>)}
       </div>
-      <div className="flex-1 overflow-auto min-h-0">
+      <div ref={calScrollRef} className="flex-1 overflow-auto min-h-0">
         {months.map(({ y, m }) => <MonthCalendar key={`${y}-${m}`} year={y} month={m} fromDay={fromDay} toDay={toDay} onSelectDay={handleSelectDay} />)}
       </div>
       <div className="shrink-0 border-t border-gray-200 bg-white px-6 py-3">
