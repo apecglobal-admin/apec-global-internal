@@ -79,12 +79,6 @@ export default function Footer() {
                         >
                             Hệ sinh thái
                         </a>
-                        <a
-                            href="/contact"
-                            className="rounded-full bg-white shadow-lg/10 bg-box-shadow px-4 py-2 hover:bg-black/10 hover:text-black/70"
-                        >
-                            Trung tâm hỗ trợ
-                        </a>
                         <div className="relative inline-flex group">
                             <span className="absolute inline-flex h-full w-full animate-ping-small rounded-full bg-red-500 opacity-75"></span>
                             <a
@@ -112,17 +106,6 @@ export default function Footer() {
                                 QR GuardCam
                             </div>
                         </div>
-                    </div>
-                    <div>
-                        <div className="uppercase  font-bold text-blue-950">
-                            Kênh hỗ trợ 24/7
-                        </div>
-                        <ul className="mt-2 text-black">
-                            <li>Hotline: <span>{hotlineInfo?.content}</span></li>
-                            <li>Email: <span>{emailInfo?.content}</span></li>
-
-                            
-                        </ul>
                     </div>
                 </div>
             </div>
