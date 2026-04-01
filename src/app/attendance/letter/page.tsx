@@ -237,9 +237,24 @@ function CalendarPicker({ initial, onClose, onDone }: {
     else setToDay({ y, m, d });
   };
 
-  const months = Array.from({ length: 4 }, (_, i) => {
-    const raw = today.getMonth() + 1 + i;
-    return raw > 12 ? { y: today.getFullYear() + 1, m: raw - 12 } : { y: today.getFullYear(), m: raw };
+  const calScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (calScrollRef.current) {
+      const APPROX_MONTH_HEIGHT = 275; 
+      calScrollRef.current.scrollTop = 12 * APPROX_MONTH_HEIGHT;
+    }
+  }, []);
+
+  const PAST_MONTHS = 12;   // số tháng trước muốn hiển thị
+  const FUTURE_MONTHS = 12;  // số tháng tới muốn hiển thị
+
+  const months = Array.from({ length: PAST_MONTHS + FUTURE_MONTHS }, (_, i) => {
+    const offset = i - PAST_MONTHS;
+    const rawMonth = today.getMonth() + 1 + offset;
+    const year = today.getFullYear() + Math.floor((rawMonth - 1) / 12);
+    const month = ((rawMonth - 1 + 1200) % 12) + 1;
+    return { y: year, m: month };
   });
 
   return (
@@ -270,7 +285,7 @@ function CalendarPicker({ initial, onClose, onDone }: {
       <div className="grid grid-cols-7 px-4 py-2 bg-white border-b border-gray-50 shrink-0">
         {DAY_HEADERS.map((d) => <div key={d} className="text-center text-xs text-gray-400 font-medium">{d}</div>)}
       </div>
-      <div className="flex-1 overflow-auto min-h-0">
+      <div ref={calScrollRef} className="flex-1 overflow-auto min-h-0">
         {months.map(({ y, m }) => <MonthCalendar key={`${y}-${m}`} year={y} month={m} fromDay={fromDay} toDay={toDay} onSelectDay={handleSelectDay} />)}
       </div>
       <div className="shrink-0 border-t border-gray-200 bg-white px-6 py-3">
@@ -634,8 +649,11 @@ function LetterForm({
 function EmployeeLetterCard({ item, onEdit, onDelete }: { item: any; onEdit: () => void; onDelete: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const statusName = item.status?.name || "";
+  const statusId   = Number(item.status?.id);
   const colorClass = statusColor[statusName] || "bg-gray-50 text-gray-600 border-gray-200";
   const dotClass   = statusDot[statusName]   || "bg-gray-500";
+
+  const canEdit = statusId !== 2 && statusId !== 3;
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
@@ -646,20 +664,26 @@ function EmployeeLetterCard({ item, onEdit, onDelete }: { item: any; onEdit: () 
             {fmtDate(item.start_date)} {item.start_time?.slice(0, 5)} – {fmtDate(item.end_date)} {item.end_time?.slice(0, 5)}
           </p>
         </div>
-        <div className="relative">
-          <button onClick={() => setMenuOpen(!menuOpen)} className="text-gray-400 hover:text-gray-600 p-1">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
-            </svg>
-          </button>
-          {menuOpen && (
-            <div className="absolute right-0 top-8 bg-white rounded-xl shadow-lg border border-gray-100 z-20 min-w-[120px]">
-              <button onClick={() => { setMenuOpen(false); onEdit();   }} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-t-xl">Chỉnh sửa</button>
-              <button onClick={() => { setMenuOpen(false); onDelete(); }} className="w-full text-left px-4 py-3 text-sm text-red-500  hover:bg-red-50  rounded-b-xl">Xóa</button>
-            </div>
-          )}
-        </div>
+
+        {/* Chỉ hiện menu khi được phép chỉnh sửa */}
+        {canEdit && (
+          <div className="relative">
+            <button onClick={() => setMenuOpen(!menuOpen)} className="text-gray-400 hover:text-gray-600 p-1">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
+              </svg>
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-8 bg-white rounded-xl shadow-lg border border-gray-100 z-20 min-w-[120px]">
+                <button onClick={() => { setMenuOpen(false); onEdit();   }} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-t-xl">Chỉnh sửa</button>
+                <button onClick={() => { setMenuOpen(false); onDelete(); }} className="w-full text-left px-4 py-3 text-sm text-red-500  hover:bg-red-50  rounded-b-xl">Xóa</button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* phần còn lại giữ nguyên */}
       <div className="space-y-1.5 text-sm">
         {item.approver?.name && (
           <div className="flex gap-2"><span className="text-gray-400 w-28 shrink-0">Người duyệt:</span><span className="font-semibold text-gray-700">{item.approver.name}</span></div>

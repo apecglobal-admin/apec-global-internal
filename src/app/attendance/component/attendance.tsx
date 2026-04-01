@@ -91,7 +91,7 @@ export default function CheckInButton() {
     <>
       <motion.button
         className={cn(
-          "fixed bottom-10 md:bottom-8 right-5 z-50 flex items-center justify-center w-15 h-15 rounded-full shadow-2xl transition-colors duration-300 cursor-pointer",
+          "fixed bottom-10 md:bottom-8 left-5 z-50 flex items-center justify-center w-15 h-15 rounded-full shadow-2xl transition-colors duration-300 cursor-pointer",
           isLoading
             ? "bg-gradient-to-r from-blue-400 to-cyan-400 shadow-blue-300/50 cursor-not-allowed"
             : "bg-gradient-to-r from-blue-600 to-cyan-500 shadow-blue-500/50 hover:shadow-blue-400/50"
