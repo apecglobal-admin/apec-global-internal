@@ -36,7 +36,7 @@ const menuItems = [
     { label: "Chính sách", href: "/policy" },
     { label: "Thống kê", href: "/analysis" },
     { label: "Thi đua", href: "/compet" },
-    { label: "Liên hệ", href: "/contact" },
+    // { label: "Liên hệ", href: "/contact" },
 ];
 
 export default function Header() {
