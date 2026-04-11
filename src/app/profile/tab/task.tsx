@@ -108,7 +108,6 @@ function TasksTab() {
   const totalPages = tasksResponse?.total_pages || 1;
   const totalItems = tasksResponse?.total_items || 0;
   const currentPage = tasksResponse?.page || 1;
-  console.log(tasks);
 
   const today = new Date();
   const [selectedMonth, setSelectedMonth] = useState<number | null>(today.getMonth() + 1);

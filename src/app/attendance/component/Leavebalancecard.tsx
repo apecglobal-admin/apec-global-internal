@@ -22,7 +22,7 @@ function useAnimatedValue(target: number, duration = 900) {
       if (!start) start = ts;
       const progress = Math.min((ts - start) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(Math.round(eased * target));
+      setValue(Math.round(eased * target * 100) / 100);
       if (progress < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);

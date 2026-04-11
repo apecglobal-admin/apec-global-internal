@@ -13,6 +13,8 @@ export default function LoginPage() {
   const dispatch = useDispatch();
   const router = useRouter();
   const { status, error } = useSelector((state: any) => state.user);
+  const [isLoading, setIsLoading] = useState(false);
+
   const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
@@ -31,13 +33,13 @@ export default function LoginPage() {
       return;
     }
     if (!phoneRegex.test(phone.trim())) {
-        setPhoneError("Số điện thoại không hợp lệ");
-        phoneRef.current?.focus();
-        return;
+      setPhoneError("Số điện thoại không hợp lệ");
+      phoneRef.current?.focus();
+      return;
     }
 
-
     try {
+      setIsLoading(true);
       const fcmToken = await getFcmToken();
       const payload = {
         email: phone,
@@ -47,16 +49,16 @@ export default function LoginPage() {
 
       const res = await dispatch(loginWeb(payload) as any);
       if (res.payload.status == 200 || res.payload.status == 201) {
-        const token = res.payload.data.token
+        const token = res.payload.data.token;
         dispatch(setToken(token));
         router.push("/");
-        // toast.success(res.payload.data.message);
-      }else{
+      } else {
         toast.error(res.payload.message);
-
       }
     } catch (error: any) {
       console.error("error", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -165,10 +167,37 @@ export default function LoginPage() {
 
             <button
               onClick={handleSubmit}
-              className="w-full flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 text-sm font-bold text-white hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all shadow-lg shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-600/40"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 text-sm font-bold text-white hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all shadow-lg shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-600/40 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              <LogIn size={18} />
-              Đăng nhập
+              {isLoading ? (
+                <>
+                  <svg
+                    className="animate-spin h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12" cy="12" r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                  Đang đăng nhập...
+                </>
+              ) : (
+                <>
+                  <LogIn size={18} />
+                  Đăng nhập
+                </>
+              )}
             </button>
           </div>
         </div>
