@@ -20,6 +20,7 @@ import {
   Pagination, PaginationContent, PaginationEllipsis,
   PaginationItem, PaginationLink, PaginationNext, PaginationPrevious,
 } from "@/components/ui/pagination";
+import { toast } from 'react-toastify';
 
 interface AbsenceItem {
   id: string;
@@ -152,8 +153,16 @@ const Attendance = () => {
     const token = localStorage.getItem('userToken');
     setActionLoading({ id, type: 'approve' });
     try {
-      await dispatch(approveAttendanceAbsences({ id, token }) as any);
-      fetchList(currentPage);
+      const res = await dispatch(approveAttendanceAbsences({ id, token }) as any);
+
+      if(res.payload.data.success){
+          toast.success(res.payload.data.message)
+          fetchList(currentPage);
+
+      }else{
+          toast.success(res.payload.data.message)
+      }
+    
     } finally {
       setActionLoading(null);
     }
@@ -166,8 +175,16 @@ const Attendance = () => {
     const token = localStorage.getItem('userToken');
     setActionLoading({ id, type: 'reject' });
     try {
-      await dispatch(rejectAttendanceAbsences({ id, token }) as any);
-      fetchList(currentPage);
+      const res = await dispatch(rejectAttendanceAbsences({ id, token }) as any);
+      
+      if(res.payload.data.success){
+        toast.success(res.payload.data.message)
+        fetchList(currentPage);
+
+      }else{
+          toast.success(res.payload.data.message)
+      }
+  
     } finally {
       setActionLoading(null);
     }

@@ -14,6 +14,8 @@ export default function LoginSection() {
     const dispatch = useDispatch();
     const router = useRouter();
     const { status, error, userInfo } = useSelector((state: any) => state.user);
+    const [isLoading, setIsLoading] = useState(false);
+
     const [showPassword, setShowPassword] = useState(false);
     const [password, setPassword] = useState("");
     const [passwordError, setPasswordError] = useState(false);
@@ -66,6 +68,7 @@ export default function LoginSection() {
         }
         
         try {
+            setIsLoading(true);
             const fcmToken = await getFcmToken();
 
             const payload = { email: phone, password, fcm_token: fcmToken };
@@ -80,6 +83,8 @@ export default function LoginSection() {
                 toast.error(res.payload.message);
             }
         } catch (error) {
+        }finally {
+            setIsLoading(false);
         }
     };
 
@@ -204,9 +209,34 @@ export default function LoginSection() {
                         )}
                         <button
                             onClick={handleLogin}
-                            className="w-full rounded-2xl py-3 text-sm font-semibold text-white uppercase  transition bg-active-blue-metallic cursor-pointer"
+                            disabled={isLoading}
+                            className="w-full rounded-2xl py-3 text-sm font-semibold text-white uppercase transition bg-active-blue-metallic cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                            Đăng nhập
+                            {isLoading ? (
+                                <>
+                                    <svg
+                                        className="animate-spin h-4 w-4 text-white"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <circle
+                                            className="opacity-25"
+                                            cx="12" cy="12" r="10"
+                                            stroke="currentColor"
+                                            strokeWidth="4"
+                                        />
+                                        <path
+                                            className="opacity-75"
+                                            fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                                        />
+                                    </svg>
+                                    Đang đăng nhập...
+                                </>
+                            ) : (
+                                "Đăng nhập"
+                            )}
                         </button>
                     </div>
                 </>
@@ -273,13 +303,13 @@ export default function LoginSection() {
                     <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <span>Chấm công realtime</span>
                         <a
-                            href="/profile"
+                            href="/attendance/sheets"
                             className="text-blue-400 transition hover:text-blue-300 text-blue-950 font-bold"
                         >
                             Mở bảng công
                         </a>
                     </div>
-                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    {/* <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <span>KPI và liên kết thi đua</span>
                         <a
                             href="/profile"
@@ -296,7 +326,7 @@ export default function LoginSection() {
                         >
                             Tải bảng lương
                         </a>
-                    </div>
+                    </div> */}
                 </div>
             )}
 
