@@ -265,65 +265,67 @@ function TasksTab() {
       
   };
 
-  const getTaskStatusBadge = (statusId: number, checked: boolean, normal: boolean = false) => {
+  const getTaskStatusBadge = (
+    statusId: number,
+    checked: boolean,
+    normal: boolean = false,
+    iconOnly: boolean = false
+) => {
     if (!statusTask) return null;
-    
-
     const status = statusTask.find((s: TypeProps) => parseInt(s.id) === statusId);
     if (!status) return null;
 
     switch (statusId) {
-      case 1:
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-500/20 text-slate-400 border border-slate-500/30">
-            <AlertCircle size={12} />
-            <span className="text-xs">{status.name}</span>
-          </span>
-        );
-      case 2:
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
-            <Clock size={12} />
-            <span className="text-xs">{status.name}</span>
-          </span>
-        );
-      case 3:
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-500/20 text-gray-400 border border-gray-500/30">
-            <Pause size={12} />
-            <span className="text-xs">{status.name}</span>
-          </span>
-        );
-      case 4:
-        return (
-          normal ? (            
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
-              <CheckCircle2 size={12} />
-              <span className="text-xs">{status.name}</span>
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
-              <CheckCircle2 size={12} />
-              <span className="text-xs">{checked ? "Đã Duyệt" : "Chờ Duyệt"}</span>
-            </span>
-
-          )
-        );
-      case 5:
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
-            <XCircle size={12} />
-            <span className="text-xs">{status.name}</span>
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-500/20 text-slate-400 border border-slate-500/30">
-            <span className="text-xs">{status.name}</span>
-          </span>
-        );
+        case 1:
+            return (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-500/20 text-slate-400 border border-slate-500/30">
+                    <AlertCircle size={12} />
+                    {!iconOnly && <span className="text-xs">{status.name}</span>}
+                </span>
+            );
+        case 2:
+            return (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                    <Clock size={12} />
+                    {!iconOnly && <span className="text-xs">{status.name}</span>}
+                </span>
+            );
+        case 3:
+            return (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-500/20 text-gray-400 border border-gray-500/30">
+                    <Pause size={12} />
+                    {!iconOnly && <span className="text-xs">{status.name}</span>}
+                </span>
+            );
+        case 4:
+            return (
+                normal ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
+                        <CheckCircle2 size={12} />
+                        {!iconOnly && <span className="text-xs">{status.name}</span>}
+                    </span>
+                ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
+                        <CheckCircle2 size={12} />
+                        {!iconOnly && <span className="text-xs">{checked ? "Đã Duyệt" : "Chờ Duyệt"}</span>}
+                    </span>
+                )
+            );
+        case 5:
+            return (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
+                    <XCircle size={12} />
+                    {!iconOnly && <span className="text-xs">{status.name}</span>}
+                </span>
+            );
+        default:
+            return (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-500/20 text-slate-400 border border-slate-500/30">
+                    {!iconOnly && <span className="text-xs">{status.name}</span>}
+                </span>
+            );
     }
-  };
+};
 
   const getPriorityBadge = (priorityId: number) => {
     if (!priorityTask) return null;

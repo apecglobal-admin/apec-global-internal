@@ -45,6 +45,7 @@ interface AssignFormData {
     target: Number;
     value: Number;
     time_repeat: string;
+    description: string;
 }
 
 interface ValidationErrors {
@@ -94,6 +95,7 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
         target: 0,
         value: 0,
         time_repeat: "",
+        description: ""
     });
 
     const [errors, setErrors] = useState<ValidationErrors>({});
@@ -252,6 +254,7 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
             target: 0,
             value: 0,
             time_repeat: "",
+            description: ""
         });
     };
 
@@ -285,6 +288,7 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                 time_repeat: assignForm.type_task === 1 && assignForm.time_repeat
                     ? assignForm.time_repeat
                     : null,
+                description: assignForm.description
             };
 
             if (assignForm.target_type === 3) {
@@ -409,6 +413,22 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                         <AlertCircle size={12} /> {errors.name}
                                     </p>
                                 )}
+                            </div>
+
+                            {/* Mô tả nhiệm vụ */}
+                            <div>
+                                <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
+                                    Mô tả chi tiết
+                                </label>
+                                <input
+                                    type="text"
+                                    value={assignForm.description}
+                                    onChange={(e) => {
+                                        setAssignForm({ ...assignForm, description: e.target.value });
+                                    }}
+                                    placeholder="Ví dụ: Xây dựng API login..."
+                                    className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white placeholder-slate-500 focus:outline-none transition border-slate-700 focus:border-blue-500`}
+                                />
                             </div>
 
                             {/* Loại nhiệm vụ + Độ ưu tiên */}
