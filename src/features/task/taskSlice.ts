@@ -35,7 +35,8 @@ import {
     getListEmployeeSupport,
     getSubTaskDetail,
     getListTaskLevel,
-    getListDepartmentTaskLevel
+    getListDepartmentTaskLevel,
+    getSubTaskLv2
 } from "./api";
 import { createAsyncReducer, createAsyncReducerDynamic } from "@/src/utils/createAsyncReducer";
 import { initState } from "@/src/services/interface";
@@ -74,7 +75,7 @@ interface TaskState {
     listTaskLevel: initState<any[]>;
     detailTaskLevel: initState<any[]>;
     listDepartmentTaskLevel: initState<any[]>;
-    
+    listSubTaskLv2: initState<any[]>;
 }
 
 const createInitState = () => ({ data: [], loading: false, error: null, status: null });
@@ -111,7 +112,7 @@ const initialState: TaskState = {
     listTaskLevel: createInitState(),
     detailTaskLevel:  createInitState(),
     listDepartmentTaskLevel: createInitState(),
-
+    listSubTaskLv2: createInitState(),
 };
 
 const taskSlice = createSlice({
@@ -168,6 +169,11 @@ const taskSlice = createSlice({
         createAsyncReducerDynamic(builder, getListTaskLevel);
 
         createAsyncReducer(builder, getSupportTaskStatus, "supportTaskStatus");
+
+        createAsyncReducer(builder, getSubTaskLv2, "listSubTaskLv2");
+
+
+        
     },
 });
 

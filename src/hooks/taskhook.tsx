@@ -34,6 +34,7 @@ export const useTaskData = () => {
     listTaskLevel: task.listTaskLevel.data.data,
     detailTaskLevel:  task.detailTaskLevel.data.data,
     listDepartmentTaskLevel: task.listDepartmentTaskLevel.data.data,
+    listSubTaskLv2: task.listSubTaskLv2.data.data,
 
     // Loading states
     loadingListSubTask: task.listSubTask.loading, 
@@ -41,7 +42,7 @@ export const useTaskData = () => {
     loadingSubTaskDetail: task.subTaskDetail.loading,
     loadingListTaskLevel: task.listTaskLevel.loading,
     loadingDetailTaskLevel: task.detailTaskLevel.loading,
-
+    loadingListSubTaskLv2: task.listSubTaskLv2.loading,
 
     // Error states
     errorListDetailTaskAssign: task.listDetailTaskAssign.error,

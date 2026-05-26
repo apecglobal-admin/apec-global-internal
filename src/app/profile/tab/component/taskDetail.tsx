@@ -14,6 +14,8 @@ import {
     Calendar,
     CheckCheck,
     Check,
+    Info,
+    InfoIcon,
 } from "lucide-react";
 
 import {
@@ -46,6 +48,8 @@ import { Task } from "@/src/services/interface";
 import { formatNumber } from "@/src/utils/formatNumber";
 import getFileInfo from "@/src/utils/checkFileInfo";
 import { clearSubTaskList } from "@/src/features/task/taskSlice";
+import { ModalPortal } from "@/components/ModalPortal";
+import SubTaskLv2Modal from "./Subtasklv2modal";
 
 
 
@@ -78,6 +82,9 @@ interface SubTask {
         id: number;
         name: string;
     };
+    start_date: string;
+    end_date: string;
+    is_overdue: boolean;
 }
 
 function TaskDetail({
@@ -91,8 +98,9 @@ function TaskDetail({
     statusTask,
     onUpdateSuccess
 }: TaskDetailProps) {
+    
     const dispatch = useDispatch();
-    const { imageTask, fileTask, listSubTask } = useTaskData();
+    const { imageTask, fileTask, listSubTask, listSubTaskLv2, loadingListSubTaskLv2 } = useTaskData();
 
     const currentTaskIdRef = useRef<string | null>(null);
     const subTaskOffsetRef = useRef(0);
@@ -127,6 +135,8 @@ function TaskDetail({
     const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
     const [editingValue, setEditingValue] = useState<number>(0);
     const [isUpdatingSubtask, setIsUpdatingSubtask] = useState(false);
+
+    const [showSubTaskLv2Modal, setShowSubTaskLv2Modal] = useState<string>("");
 
     useEffect(() => {
         if (!task) return;
@@ -791,6 +801,11 @@ function TaskDetail({
                                     <span>{formatDate(task.completed_date)}</span>
                                 </div>
                             )}
+                            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
+                                <InfoIcon size={16} className="text-slate-500 flex-shrink-0" color="blue" />
+                                <span className="font-semibold">Mô tả:</span>
+                                <span className="truncate">{task?.task?.description}</span>
+                            </div>
 
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
                                 <Briefcase size={16} className="text-slate-500 flex-shrink-0" color="blue" />
@@ -840,6 +855,18 @@ function TaskDetail({
                                     {allSubTasks && allSubTasks.length > 0 && (
                                         <>
                                             <button
+                                                onClick={() => {
+                                                    if (allSubTasks && allSubTasks.length > 0) {
+                                                        setShowSubTaskLv2Modal(allSubTasks[0].id);
+                                                    }
+                                                }}
+                                                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition"
+                                                title="chi tiết"
+                                            >
+                                                <InfoIcon className="h-4 w-4 shrink-0" />
+                                                <span className="hidden sm:inline">Chi tiết</span>
+                                            </button>
+                                            <button
                                                 onClick={() => enterSelectMode('reject')}
                                                 className="flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition"
 
@@ -872,7 +899,7 @@ function TaskDetail({
                                     <button
                                         onClick={() => setShowCreateSubTask(true)}
                                         className="flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition"
-                                        title="Tạo nhiệm vụ con"
+                                        title="Tạo mới"
                                     >
                                         <Plus size={14} className="shrink-0" />
                                         <span className="hidden sm:inline">Tạo</span>
@@ -926,24 +953,56 @@ function TaskDetail({
                             </div>
                         )}
 
+
                         {showCreateSubTask && (
-                            <CreateSubTask
-                                task={task}
-                                statusTask={statusTask}
-                                onClose={() => setShowCreateSubTask(false)}
-                                onSuccess={(refreshTask) => refreshSubTasks(refreshTask)}
-                            />
+                            <ModalPortal onClose={() => setShowCreateSubTask(false)}>
+                                <CreateSubTask
+                                    taskInfo={{
+                                        task_id: task.task.id,
+                                        task_assignment_id: parseInt(task.id),
+                                        task_name: task.task.name,
+                                        project_name: task.project.name,
+                                        target_value: task.target_value,
+                                        unit_name: task.units?.name,
+                                        date_start: task.task.date_start,
+                                        date_end: task.task.date_end
+                                    }}
+                                    statusTask={statusTask}
+                                    onClose={() => setShowCreateSubTask(false)}
+                                    onSuccess={(refreshTask) => refreshSubTasks(refreshTask)}
+                                />
+                            </ModalPortal>
                         )}
 
                         {showUpdateSubTask && allSubTasks && allSubTasks.length > 0 && (
-                            <UpdateSubTask
-                                unit={task.units}
-                                subtasks={allSubTasks}
-                                taskAssignmentId={task.id}
-                                statusTask={statusTask}
-                                onClose={() => setShowUpdateSubTask(false)}
-                                onSuccess={(refreshTask) => refreshSubTasks(refreshTask)}
-                            />
+                            <ModalPortal onClose={() => setShowUpdateSubTask(false)}>
+                                <UpdateSubTask
+                                    unit={task.units}
+                                    subtasks={allSubTasks}
+                                    taskAssignmentId={task.id}
+                                    statusTask={statusTask}
+                                    onClose={() => setShowUpdateSubTask(false)}
+                                    onSuccess={(refreshTask) => refreshSubTasks(refreshTask)}
+                                />
+                            </ModalPortal>
+                        )}
+
+                        {showSubTaskLv2Modal && (
+                            <ModalPortal onClose={() => setShowSubTaskLv2Modal("")}>
+                                <SubTaskLv2Modal
+                                    subtask_id={showSubTaskLv2Modal}
+                                    subtasks={allSubTasks}
+                                    task={task}
+                                    onClose={() => setShowSubTaskLv2Modal("")}
+                                    onSuccess={(refresh) => {}}
+                                    getTaskStatusBadge={getTaskStatusBadge}
+                                    // ── Lv1 infinity scroll props ──
+                                    hasMoreLv1={hasMoreSubTasks}
+                                    onLoadMoreLv1={loadMoreSubTasks}
+                                    isLoadingMoreLv1={isLoadingMore}
+                                    statusTask={statusTask}
+                                />
+                            </ModalPortal>
                         )}
 
                         {allSubTasks && allSubTasks.length > 0 && (
@@ -960,6 +1019,8 @@ function TaskDetail({
                                                 onClick={() => {
                                                     if (isSelectMode && subtask.status.id !== 4) {
                                                         toggleSelect(subtask.id);
+                                                    } else if (!isSelectMode) {
+                                                        setShowSubTaskLv2Modal(subtask.id); 
                                                     }
                                                 }}
                                                 className={`flex items-start gap-2 bg-slate-900 border rounded-lg px-2.5 py-2 transition ${isSelected ? "border-emerald-500/50" : "border-slate-800 hover:border-slate-700"
@@ -1018,6 +1079,20 @@ function TaskDetail({
                                                                     )}
                                                                 </div>
                                                             )}
+                                                        </div>
+
+                                                        <div className="flex flex-col gap-1 mt-1.5">
+                                                            {/* Ngày bắt đầu - Ngày kết thúc */}
+                                                            <div className="flex items-center gap-1 text-xs">
+                                                                <span className="text-slate-500">Thời gian:</span>
+                                                                <span className="text-slate-300">
+                                                                    {formatDate(subtask.start_date)}
+                                                                </span>
+                                                                <span className="text-slate-600">→</span>
+                                                                <span className="text-slate-300">
+                                                                    {formatDate(subtask.end_date)}
+                                                                </span>
+                                                            </div>
                                                         </div>
 
                                                         {editingSubtaskId === subtask.id && (
@@ -1099,6 +1174,17 @@ function TaskDetail({
 
                                                     <div className="flex-shrink-0 flex flex-col items-end gap-1">
                                                         {getTaskStatusBadge(subtask.status.id, null, true)}
+                                                        {/* Overdue badge */}
+                                                        {subtask.is_overdue && (
+                                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold tracking-wide">
+                                                                <svg width="9" height="9" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                                                                    <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.5" />
+                                                                    <line x1="5" y1="2.5" x2="5" y2="5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                                                    <circle cx="5" cy="7" r="0.6" fill="currentColor" />
+                                                                </svg>
+                                                                Trễ hạn
+                                                            </span>
+                                                        )}
                                                         {subtask.exp_increase > 0 && (
                                                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold tracking-wide">
                                                                 <svg width="9" height="9" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
@@ -1463,6 +1549,9 @@ function TaskDetail({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+
+
         </div>
     );
 }

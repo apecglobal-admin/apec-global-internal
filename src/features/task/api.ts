@@ -20,7 +20,8 @@ export const createTask = createAsyncThunk(
                 token,
                 min_count_reject,
                 max_count_reject,
-                time_repeat
+                time_repeat,
+                description
             }: any = payload;
             const response = await apiAxiosInstance.post("/tasks/create",{ 
                 name, 
@@ -38,7 +39,8 @@ export const createTask = createAsyncThunk(
                 department_id,
                 min_count_reject,
                 max_count_reject,
-                time_repeat
+                time_repeat,
+                description
             }, {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -67,6 +69,30 @@ export const createSubTask = createAsyncThunk(
                     Authorization: `Bearer ${token}`,
                 },
             });
+            return {
+                data: response.data,
+            };
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(
+                error?.response?.data || error?.message
+            );
+        }
+    }
+);
+
+export const getSubTaskLv2 = createAsyncThunk(
+    "task/getSubTaskLv2",
+    async (payload: any, thunkAPI) => {
+        try {
+            const { limit, offset, subtask_id} : any = payload;
+
+            const params = Object.fromEntries(
+                Object.entries({ limit, offset }).filter(
+                    ([key, value]) => value != null
+                )
+            );
+
+            const response = await apiAxiosInstance.get("/tasks/detail/subtasks?subtask_id=" + subtask_id, {params} );
             return {
                 data: response.data,
             };
