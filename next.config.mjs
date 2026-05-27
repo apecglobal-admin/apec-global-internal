@@ -7,7 +7,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig = {
- output: "standalone",
+  output: "standalone",
   turbopack:{},
   typescript: {
     ignoreBuildErrors: true,
