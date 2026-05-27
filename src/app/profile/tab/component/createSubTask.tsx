@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 
 import { createSubTask } from "@/src/features/task/api";
 import { useDispatch } from "react-redux";
-import { formatDate } from "@/src/utils/formatDate";
+import { formatDate, formatDate2 } from "@/src/utils/formatDate";
 
 interface StatusTask {
     id: string;
@@ -213,7 +213,7 @@ function CreateSubTask({ taskInfo, statusTask, onClose, onSuccess, subtask_id }:
                                     {taskInfo.project_name && (
                                         <p className="text-xs text-slate-400">Dự án: {taskInfo.project_name}</p>
                                     )}
-                                    <p className="text-xs text-slate-400">Thời gian: {formatDate(taskInfo?.date_start)} - {formatDate(taskInfo?.date_end)}</p>
+                                    <p className="text-xs text-slate-400">Thời gian: {formatDate2(taskInfo?.date_start)} - {formatDate2(taskInfo?.date_end)}</p>
 
                                 </div>
                             </div>

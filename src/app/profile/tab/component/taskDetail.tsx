@@ -138,6 +138,10 @@ function TaskDetail({
 
     const [showSubTaskLv2Modal, setShowSubTaskLv2Modal] = useState<string>("");
 
+    const fetchSubTask = async (payload: any) => {
+        await dispatch(getSubTask(payload) as any);
+    }
+
     useEffect(() => {
         if (!task) return;
 
@@ -156,14 +160,15 @@ function TaskDetail({
             limit: 5,
             offset: 0
         }
-        dispatch(getSubTask(payload) as any);
+
+        fetchSubTask(payload);
     }, [task?.id]);
 
     // Cập nhật allSubTasks khi listSubTask thay đổi
     useEffect(() => {
         if (!listSubTask) return;
 
-        if (subTaskOffsetRef.current === 0) { // ← đổi chỗ này
+        if (subTaskOffsetRef.current === 0) {
             setAllSubTasks(listSubTask);
         } else {
             setAllSubTasks(prev => {
@@ -231,7 +236,7 @@ function TaskDetail({
                 toast.error("Tải file thất bại. File tải quá nặng")
             }
         } catch (error: any) {
-            console.error("Upload error:", error);
+            // console.error("Upload error:", error);
         } finally {
             setIsUploading(false);
         }
@@ -273,9 +278,7 @@ function TaskDetail({
                 setIsEditing(false);
                 resetForm();
                 toast.success("Cập nhật tiến độ thành công!")
-                if (onUpdateSuccess) {
-                    onUpdateSuccess(task.id);
-                }
+                await refreshSubTasks(true);
             } else {
                 toast.error(result?.payload.data?.message || "Cập nhật tiến độ thất bại")
             }
@@ -1001,6 +1004,7 @@ function TaskDetail({
                                     onLoadMoreLv1={loadMoreSubTasks}
                                     isLoadingMoreLv1={isLoadingMore}
                                     statusTask={statusTask}
+                                    onRefreshLv1={() => refreshSubTasks(false)}
                                 />
                             </ModalPortal>
                         )}
@@ -1017,10 +1021,11 @@ function TaskDetail({
                                             <div
                                                 key={subtask.id}
                                                 onClick={() => {
+                                                    if (editingSubtaskId === subtask.id) return;
                                                     if (isSelectMode && subtask.status.id !== 4) {
                                                         toggleSelect(subtask.id);
                                                     } else if (!isSelectMode) {
-                                                        setShowSubTaskLv2Modal(subtask.id); 
+                                                        setShowSubTaskLv2Modal(subtask.id);
                                                     }
                                                 }}
                                                 className={`flex items-start gap-2 bg-slate-900 border rounded-lg px-2.5 py-2 transition ${isSelected ? "border-emerald-500/50" : "border-slate-800 hover:border-slate-700"
@@ -1032,7 +1037,10 @@ function TaskDetail({
                                                         <input
                                                             type="checkbox"
                                                             checked={isSelected}
-                                                            onChange={() => toggleSelect(subtask.id)}
+                                                            onChange={(e) => {
+                                                                e.stopPropagation();
+                                                                toggleSelect(subtask.id)
+                                                            }}
                                                             className="w-4 h-4 rounded border-slate-600 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-slate-900 bg-slate-700 cursor-pointer"
                                                         />
                                                     </div>
@@ -1067,7 +1075,8 @@ function TaskDetail({
                                                                     </span>
                                                                     {subtask.status.id !== 4 && (
                                                                         <button
-                                                                            onClick={() => {
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
                                                                                 setEditingSubtaskId(subtask.id);
                                                                                 setEditingValue(Number(subtask.value));
                                                                             }}
@@ -1106,7 +1115,10 @@ function TaskDetail({
                                                                             min="0"
                                                                             max="100"
                                                                             value={editingValue}
-                                                                            onChange={(e) => setEditingValue(Number(e.target.value))}
+                                                                            onChange={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setEditingValue(Number(e.target.value))
+                                                                            }}
                                                                             className="w-full h-2 rounded-lg appearance-none cursor-pointer"
                                                                             style={{
                                                                                 background: `linear-gradient(to right, #2563eb, #a855f7 ${editingValue / 2}%, #ec4899 ${editingValue}%, #1e293b ${editingValue}%)`
@@ -1121,6 +1133,7 @@ function TaskDetail({
                                                                                     max="100"
                                                                                     value={editingValue}
                                                                                     onChange={(e) => {
+                                                                                        e.stopPropagation();
                                                                                         const v = Math.min(100, Math.max(0, Number(e.target.value)));
                                                                                         setEditingValue(v);
                                                                                     }}
@@ -1141,7 +1154,10 @@ function TaskDetail({
                                                                             type="text"
                                                                             inputMode="numeric"
                                                                             value={formatNumber(editingValue)}
-                                                                            onChange={(e) => handleSubtaskValueChange(e, subtask)}
+                                                                            onChange={(e) => {
+                                                                                e.stopPropagation()
+                                                                                handleSubtaskValueChange(e, subtask)
+                                                                            }}
                                                                             className="w-20 px-2 py-1 bg-slate-900 border border-blue-500 rounded text-white text-xs focus:outline-none"
                                                                         />
                                                                         <span className="text-slate-500">=</span>
@@ -1154,14 +1170,20 @@ function TaskDetail({
                                                                 {/* Save / Cancel — full width row */}
                                                                 <div className="flex gap-2">
                                                                     <button
-                                                                        onClick={() => handleUpdateSubtaskProgress(Number(subtask.id))}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation()
+                                                                            handleUpdateSubtaskProgress(Number(subtask.id))
+                                                                        }}
                                                                         disabled={isUpdatingSubtask}
                                                                         className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded text-white transition disabled:opacity-50 text-xs font-medium"
                                                                     >
                                                                         <Save size={12} /> Lưu
                                                                     </button>
                                                                     <button
-                                                                        onClick={() => setEditingSubtaskId(null)}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation()
+                                                                            setEditingSubtaskId(null)
+                                                                        }}
                                                                         disabled={isUpdatingSubtask}
                                                                         className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-white transition text-xs font-medium"
                                                                     >

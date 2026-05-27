@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { X, ChevronRight, Plus, AlertCircle, Clock, XCircle, Edit3, CheckCheck } from "lucide-react";
+import { X, ChevronRight, Plus, AlertCircle, Clock, XCircle, Edit3, CheckCheck, Save } from "lucide-react";
 import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
+
 import { useTaskData } from "@/src/hooks/taskhook";
-import { getSubTaskLv2, deleteSubTask } from "@/src/features/task/api";
+import { getSubTaskLv2, deleteSubTask, updateProgressSubTask } from "@/src/features/task/api";
 import { Task } from "@/src/services/interface";
 import CreateSubTask from "./createSubTask";
 import { ModalPortal } from "@/components/ModalPortal";
 import UpdateSubTask from "./updateSubTask";
-import { toast } from "react-toastify";
+import { formatDate, formatDate2 } from "@/src/utils/formatDate";
+import { formatNumber } from "@/src/utils/formatNumber";
 
 interface SubTask {
     id: string;
@@ -35,20 +38,10 @@ interface SubTaskLv2ModalProps {
     hasMoreLv1?: boolean;
     onLoadMoreLv1?: () => void;
     isLoadingMoreLv1?: boolean;
-    statusTask: any
+    statusTask: any;
+    onRefreshLv1?: () => void; 
 }
 
-function formatDate(dateStr: string) {
-    if (!dateStr) return "—";
-    return new Date(dateStr).toLocaleDateString("vi-VN", {
-        day: "2-digit", month: "2-digit", year: "numeric",
-        timeZone: "Asia/Ho_Chi_Minh",
-    });
-}
-
-function formatNumber(num: number) {
-    return num.toLocaleString("vi-VN");
-}
 
 const LV2_LIMIT = 5;
 
@@ -62,13 +55,14 @@ export default function SubTaskLv2Modal({
     hasMoreLv1 = false,
     onLoadMoreLv1,
     isLoadingMoreLv1 = false,
-    statusTask
+    statusTask,
+    onRefreshLv1,   
 }: SubTaskLv2ModalProps) {
     const dispatch = useDispatch();
 
     const [selectedSubTask, setSelectedSubTask] = useState<SubTask | null>(null);
     const [showCreateSubTask, setShowCreateSubTask] = useState(false);
-
+    
     const [isSelectMode, setIsSelectMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [currentAction, setCurrentAction] = useState<'accept' | 'reject' | null>(null);
@@ -81,6 +75,9 @@ export default function SubTaskLv2Modal({
     const [isLoadingMoreLv2, setIsLoadingMoreLv2] = useState(false);
     const [isInitialLoadingLv2, setIsInitialLoadingLv2] = useState(false);
     const [showUpdateSubTask, setShowUpdateSubTask] = useState(false);
+    const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
+    const [editingValue, setEditingValue] = useState<number>(0);
+    const [isUpdatingSubtask, setIsUpdatingSubtask] = useState(false);
 
     // ── Scroll container refs (để check fill sau initial load) ──
     const lv1ContainerRef = useRef<HTMLDivElement>(null);
@@ -96,7 +93,51 @@ export default function SubTaskLv2Modal({
             ? subtasks.find((st: SubTask) => st.id === subtask_id)
             : null;
         setSelectedSubTask(target ?? subtasks[0]);
+
+        
     }, [subtasks, subtask_id]);
+
+    const handleSubtaskValueChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        lv2: any
+    ) => {
+        const input = e.target;
+        const selectionStart = input.selectionStart || 0;
+        const rawValue = input.value;
+        const numericString = rawValue.replace(/\./g, "").replace(/,/g, "");
+        if (!/^\d*$/.test(numericString)) return;
+        const value = Number(numericString);
+        const validatedValue = Math.max(value, 0);
+        const formatted = formatNumber(validatedValue);
+        const diff = formatted.length - rawValue.length;
+        const caretPosition = selectionStart + diff;
+        setEditingValue(validatedValue);
+        setTimeout(() => {
+            input.setSelectionRange(caretPosition, caretPosition);
+        }, 0);
+    };
+    
+    const handleUpdateSubtaskProgress = async (id: number) => {
+        const token = localStorage.getItem("userToken");
+        setIsUpdatingSubtask(true);
+        try {
+            const progressResult = await dispatch(
+                updateProgressSubTask({ id, value: editingValue, token }) as any
+            );
+            if (progressResult?.payload?.data?.success) {
+                toast.success("Cập nhật tiến độ thành công");
+                setEditingSubtaskId(null);
+                if (selectedSubTask) reloadLv2FromStart(selectedSubTask.id);
+                onRefreshLv1?.();
+            } else {
+                toast.error(progressResult?.payload?.data?.message || "Cập nhật thất bại");
+            }
+        } catch {
+            toast.error("Có lỗi xảy ra khi cập nhật tiến độ.");
+        } finally {
+            setIsUpdatingSubtask(false);
+        }
+    };
 
 
     // ── loadMoreLv2 — dùng useCallback để dùng trong effect ──
@@ -256,6 +297,7 @@ export default function SubTaskLv2Modal({
             reloadLv2FromStart(selectedSubTask.id);
         }
         onSuccess?.(refresh);
+        onRefreshLv1?.(); 
     };
 
     const refreshSubTasks = useCallback((refreshTask: boolean = false) => {
@@ -263,6 +305,7 @@ export default function SubTaskLv2Modal({
             reloadLv2FromStart(selectedSubTask.id);
         }
         onSuccess?.(refreshTask);
+        onRefreshLv1?.(); 
     }, [selectedSubTask, reloadLv2FromStart, onSuccess]);
 
 
@@ -304,6 +347,7 @@ export default function SubTaskLv2Modal({
                 exitSelectMode();
                 if (selectedSubTask) reloadLv2FromStart(selectedSubTask.id);
                 onSuccess?.(true);
+                onRefreshLv1?.();
             } else {
                 toast.error("Xóa nhiệm vụ thất bại");
             }
@@ -313,6 +357,66 @@ export default function SubTaskLv2Modal({
             setIsProcessing(false);
         }
     };
+
+    function EditingValueInput({
+        initialValue,
+        onChange,
+    }: {
+        initialValue: number;
+        onChange: (val: number) => void;
+    }) {
+        const [localValue, setLocalValue] = useState(initialValue);
+    
+        const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            const input = e.target;
+            const selectionStart = input.selectionStart || 0;
+            const rawValue = input.value;
+            const numericString = rawValue.replace(/\./g, "").replace(/,/g, "");
+            if (!/^\d*$/.test(numericString)) return;
+            const value = Math.max(Number(numericString), 0);
+            const formatted = formatNumber(value);
+            const diff = formatted.length - rawValue.length;
+            setLocalValue(value);
+            onChange(value);
+            setTimeout(() => {
+                input.setSelectionRange(selectionStart + diff, selectionStart + diff);
+            }, 0);
+        };
+    
+        return (
+            <input
+                type="text"
+                inputMode="numeric"
+                value={formatNumber(localValue)}
+                onChange={handleChange}
+                className="w-20 px-2 py-1 bg-slate-900 border border-blue-500 rounded text-white text-xs focus:outline-none"
+                autoFocus
+            />
+        );
+    }
+
+    function EditingPercentInput({
+        value,
+        onChange,
+    }: {
+        value: number;
+        onChange: (val: number) => void;
+    }) {
+        return (
+            <input
+                type="number"
+                min="0"
+                max="100"
+                value={value}
+                onChange={(e) => {
+                    const v = Math.min(100, Math.max(0, Number(e.target.value)));
+                    onChange(v);
+                }}
+                className="w-14 px-2 py-1 bg-slate-800 border border-blue-500 rounded text-white text-xs focus:outline-none text-center"
+                autoFocus
+            />
+        );
+    }
 
     // ────────────────────────────────────────────────────────
     const Lv1Card = ({ subtask }: { subtask: SubTask }) => {
@@ -351,7 +455,7 @@ export default function SubTaskLv2Modal({
                             {getTaskStatusBadge(subtask.status.id, null, true, true)}
                         </span>
                         <span className="hidden sm:inline">
-                            {getTaskStatusBadge(subtask.status.id, null, false)}
+                            {getTaskStatusBadge(subtask.status.id, null, true)}
                         </span>
                         {subtask.is_overdue && (
                             <>
@@ -373,13 +477,15 @@ export default function SubTaskLv2Modal({
 
     const Lv2Card = ({ lv2 }: { lv2: any }) => {
         const isSelected = selectedIds.includes(lv2.id);
+        const isEditing = editingSubtaskId === lv2.id;
         const progress = Number(lv2.target_value) > 0
             ? Math.min(100, (Number(lv2.value) / Number(lv2.target_value)) * 100)
             : 0;
-
+    
         return (
             <div
                 onClick={() => {
+                    if (isEditing) return;
                     if (isSelectMode && lv2.status?.id !== 4) toggleSelect(lv2.id);
                 }}
                 className={`bg-slate-900 border rounded-lg px-3 py-2.5 transition cursor-pointer
@@ -401,10 +507,102 @@ export default function SubTaskLv2Modal({
                         {lv2.description && (
                             <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">{lv2.description}</p>
                         )}
+    
                         <div className="flex items-center gap-3 mt-1.5 text-[11px] text-slate-500 flex-wrap">
                             <span>Mục tiêu: <span className="text-blue-400 font-semibold">{formatNumber(Number(lv2.target_value))} {task.units?.name || "%"}</span></span>
-                            <span>Tiến độ: <span className="text-emerald-400 font-semibold">{formatNumber(Number(lv2.value))} {task.units?.name || "%"}</span></span>
+                            {!isEditing && (
+                                <span className="flex items-center gap-1">
+                                    Tiến độ: <span className="text-emerald-400 font-semibold">{formatNumber(Number(lv2.value))} {task.units?.name || "%"}</span>
+                                    {lv2.status?.id !== 4 && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setEditingSubtaskId(lv2.id);
+                                                setEditingValue(0);
+                                            }}
+                                            className="p-1 bg-blue-600 hover:bg-blue-700 rounded text-white transition ml-1"
+                                            title="Cập nhật tiến độ"
+                                        >
+                                            <Edit3 size={12} />
+                                        </button>
+                                    )}
+                                </span>
+                            )}
                         </div>
+    
+                        {/* Inline editing */}
+                        {isEditing && (
+                            <div className="mt-2 flex flex-col gap-2 text-xs">
+                                <span className="text-slate-500">Cập nhật tiến độ:</span>
+                                {task.units?.name === "%" || task.units?.name === null ? (
+                                    <div className="flex flex-col gap-2">
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="100"
+                                            value={editingValue}
+                                            onChange={(e) => {
+                                                e.stopPropagation();
+                                                setEditingValue(Number(e.target.value));
+                                            }}
+                                            className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                            style={{
+                                                background: `linear-gradient(to right, #2563eb, #a855f7 ${editingValue / 2}%, #ec4899 ${editingValue}%, #1e293b ${editingValue}%)`
+                                            }}
+                                        />
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="text-slate-400">0%</span>
+                                            <div className="flex items-center gap-1.5">
+                                            <EditingPercentInput
+                                                value={editingValue}
+                                                onChange={(v) => setEditingValue(v)}
+                                            />
+                                                <span className="text-slate-400">%</span>
+                                            </div>
+                                            <span className="text-slate-400">100%</span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-1.5 bg-slate-800/60 rounded-lg px-2.5 py-2 flex-wrap">
+                                        <span className="text-slate-400 font-semibold">
+                                            {formatNumber(Number(lv2.value))} {task.units?.name}
+                                        </span>
+                                        <span className="text-slate-500">+</span>
+                                        <EditingValueInput
+                                            initialValue={editingValue}
+                                            onChange={(val) => setEditingValue(val)}
+                                        />
+                                        <span className="text-slate-500">=</span>
+                                        <span className="text-emerald-400 font-semibold">
+                                            {formatNumber(Number(lv2.value) + Number(editingValue || 0))} {task.units?.name}
+                                        </span>
+                                    </div>
+                                )}
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleUpdateSubtaskProgress(Number(lv2.id));
+                                        }}
+                                        disabled={isUpdatingSubtask}
+                                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded text-white transition disabled:opacity-50 text-xs font-medium"
+                                    >
+                                        <Save size={12} /> Lưu
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setEditingSubtaskId(null);
+                                        }}
+                                        disabled={isUpdatingSubtask}
+                                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-white transition text-xs font-medium"
+                                    >
+                                        <X size={12} /> Hủy
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+    
                         <div className="mt-1.5 flex items-center gap-2">
                             <div className="flex-1 h-1 rounded-full bg-slate-700 overflow-hidden">
                                 <div
@@ -451,7 +649,7 @@ export default function SubTaskLv2Modal({
     return (
         <>
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-3 sm:p-4">
-                <div className="bg-slate-950 border border-slate-800 rounded-xl w-full sm:max-w-4xl max-h-[90vh] flex flex-col">
+                <div className="bg-slate-950 border border-slate-800 rounded-xl w-full max-h-[90vh] flex flex-col">
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-800 flex-shrink-0">
                         <div className="flex items-center gap-2">
@@ -491,7 +689,7 @@ export default function SubTaskLv2Modal({
                                 </div>
                             </div>
                             <p className="text-md text-white truncate w-full">{selectedSubTask.name}</p>
-                            <p className="text-xs text-slate-400 mt-1">Thời gian: {formatDate(selectedSubTask?.start_date)} - {formatDate(selectedSubTask?.end_date)}</p>
+                            <p className="text-xs text-slate-400 mt-1">Thời gian: {formatDate2(selectedSubTask?.start_date)} - {formatDate2(selectedSubTask?.end_date)}</p>
                         </div>
                     )}
 
@@ -574,7 +772,7 @@ export default function SubTaskLv2Modal({
                                                 </button>
                                             </>
                                         )}
-                                        {selectedSubTask && selectedSubTask.status?.id !== 4 && (
+                                        {selectedSubTask && selectedSubTask.status?.id === 2 && (
                                             <button
                                                 onClick={() => setShowCreateSubTask(true)}
                                                 className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition flex-shrink-0"
@@ -646,7 +844,7 @@ export default function SubTaskLv2Modal({
                                     <div className="flex flex-col items-center justify-center h-full py-10 text-center">
                                         <Plus size={16} className="text-slate-500 mb-2" />
                                         <p className="text-[10px] sm:text-xs text-slate-500 mb-3">Chưa có cấp 2</p>
-                                        {selectedSubTask.status?.id !== 4 && (
+                                        {selectedSubTask.status?.id === 2 ? (
                                             <button
                                                 onClick={() => setShowCreateSubTask(true)}
                                                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600/20 border border-emerald-600/30 hover:bg-emerald-600/30 text-emerald-400 text-xs font-semibold transition"
@@ -654,6 +852,14 @@ export default function SubTaskLv2Modal({
                                                 <Plus size={11} />
                                                 <span className="hidden sm:inline">Tạo ngay</span>
                                             </button>
+                                        ) : (
+                                            <p className="text-[10px] sm:text-xs text-amber-400/80 px-4 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                                                Task đã 
+                                                <span className="lowercase mx-1">
+                                                {selectedSubTask.status.name}
+                                                </span>
+                                                 không thể thêm mới task
+                                            </p>
                                         )}
                                     </div>
                                 )}
@@ -673,6 +879,13 @@ export default function SubTaskLv2Modal({
                                             </div>
                                         )}
                                     </>
+                                )}
+                                {selectedSubTask && selectedSubTask.status?.id !== 2 && !isInitialLoadingLv2 && allLv2.length > 0 && (
+                                    <div className="py-2 px-3 text-center">
+                                        <p className="text-[10px] sm:text-xs text-amber-400/80 px-4 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                                            Task đã hoàn thành không thể thêm mới task
+                                        </p>
+                                    </div>
                                 )}
                             </div>
                         </div>
