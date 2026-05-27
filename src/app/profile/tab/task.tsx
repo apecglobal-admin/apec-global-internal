@@ -58,6 +58,7 @@ import { Task } from "@/src/services/interface";
 import { formatNumber } from "@/src/utils/formatNumber";
 import { getDashboardTasks } from "@/src/features/dashboard/api/api";
 import { useDashboardData } from "@/src/hooks/dashboardhook";
+import { formatDate2 } from "@/src/utils/formatDate";
 
 interface TasksResponse {
   data: Task[];
@@ -261,8 +262,6 @@ function TasksTab() {
       dispatch(personTasks(payload as any) as any);
       
       refreshFilter()
-
-      
   };
 
   const getTaskStatusBadge = (
@@ -273,8 +272,9 @@ function TasksTab() {
 ) => {
     if (!statusTask) return null;
     const status = statusTask.find((s: TypeProps) => parseInt(s.id) === statusId);
-    if (!status) return null;
 
+    
+    if (!status) return null;
     switch (statusId) {
         case 1:
             return (
@@ -370,11 +370,6 @@ function TasksTab() {
     }
   };
 
-  const formatDate = (dateString: string): string => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("vi-VN");
-  };
 
   const calculateProgress = (task: Task): number => {
     return Math.round(task?.process || 0);
@@ -1134,7 +1129,7 @@ function TasksTab() {
                             className="text-slate-500 flex-shrink-0"
                           />
                           <span className="truncate">
-                            {formatDate(task.task.date_end)}
+                            {formatDate2(task.task.date_end)}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 text-yellow-400 flex-shrink-0">
@@ -1166,7 +1161,7 @@ function TasksTab() {
                         {task.last_reject_date && !task.checked && (
                           <div className="flex items-center gap-1 text-yellow-400 flex-shrink-0">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-red-600/30 text-red-300 border border-red-600/40">
-                              {formatDate(task.last_reject_date)}
+                              {formatDate2(task.last_reject_date)}
                             </span>
                           </div>
                         )}
@@ -1175,7 +1170,7 @@ function TasksTab() {
                         {task.checked && (
                           <div className="flex items-center gap-1 text-yellow-400 flex-shrink-0">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-blue-600 text-white">
-                              {formatDate(task.completed_date)}
+                              {formatDate2(task.completed_date)}
                             </span>
                           </div>
                         )}
@@ -1254,7 +1249,7 @@ function TasksTab() {
             onBack={() => handleBack()}
             getTaskStatusBadge={getTaskStatusBadge}
             getPriorityBadge={getPriorityBadge}
-            formatDate={formatDate}
+            formatDate={formatDate2}
             calculateProgress={calculateProgress}
             statusTask={statusTask}
             onUpdateSuccess={(id) => refreshTasks(id)}
