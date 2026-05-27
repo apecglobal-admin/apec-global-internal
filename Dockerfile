@@ -1,20 +1,21 @@
-# ---------- BUILD STAGE ----------
-FROM node:22-alpine AS builder
+# syntax=docker/dockerfile:1.7
 
-# Enable corepack (pnpm)
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
+FROM node:22-alpine AS base
 WORKDIR /app
 
-# Copy lock tru?c d? cache
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN corepack enable && corepack prepare pnpm@10.29.3 --activate
+
+FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+  pnpm install --frozen-lockfile --store-dir /pnpm/store
 
-RUN pnpm install --frozen-lockfile
 
-# Copy source
-COPY . .
-
-# ===== BUILD-TIME ENV (FRONTEND) =====
+FROM base AS build
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_APP_URL
 ARG NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
@@ -40,18 +41,22 @@ ENV NEXT_PUBLIC_FIREBASE_PROJECT_ID=${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
 ENV NEXT_PUBLIC_FIREBASE_SENDER_ID=${NEXT_PUBLIC_FIREBASE_SENDER_ID}
 ENV NEXT_PUBLIC_FIREBASE_APP_ID=${NEXT_PUBLIC_FIREBASE_APP_ID}
 ENV NEXT_PUBLIC_FIREBASE_VAPID_KEY=${NEXT_PUBLIC_FIREBASE_VAPID_KEY}
-
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 RUN pnpm build
 
-# ---------- RUN STAGE ----------
-FROM node:22-alpine
-
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
+FROM node:22-alpine AS runner
 WORKDIR /app
 
-COPY --from=builder /app ./
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+ENV NEXT_TELEMETRY_DISABLED=1
+
+COPY --from=build /app/public ./public
+COPY --from=build /app/.next/static ./.next/static
+COPY --from=build /app/.next/standalone ./
 
 EXPOSE 3000
 
-CMD ["pnpm", "start"]
+CMD ["node", "server.js"]
