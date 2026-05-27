@@ -4,6 +4,12 @@ export function formatDate(isoString: string) {
   return new Date(isoString).toISOString().split('T')[0];
 }
 
+export const formatDate2 = (dateString: string): string => {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("vi-VN");
+};
+
 export function formatMonthYearVN(date: Date): string {
   const formatter = new Intl.DateTimeFormat("vi-VN", {
     timeZone: "Asia/Ho_Chi_Minh", // GMT+7
