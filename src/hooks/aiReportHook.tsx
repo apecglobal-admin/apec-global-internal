@@ -36,6 +36,8 @@ export interface GenericReportData {
   target_value?: number;
   status: number;
   achieved_value?: number;
+  start_date?: string;
+  end_date?: string;
 }
 
 export interface GenericReportItem {
@@ -341,6 +343,8 @@ export const useAIReport = (
                 task_id: parseInt(taskId),
                 task_assignment_id: parseInt(taskAssignmentId),
                 target_value: report.data.target_value ?? 100,
+                start_date: report.data.start_date,
+                end_date: report.data.end_date,
               },
             ],
           };

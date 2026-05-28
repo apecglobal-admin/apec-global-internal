@@ -218,6 +218,26 @@ export const AIReportModal = ({
     }
   }, [isOpen]);
 
+  const handleModalSave = () => {
+    if (!reportResult) return;
+
+    if (reportResult.report_project === "other") {
+      for (let i = 0; i < reportResult.reports.length; i++) {
+        const report = reportResult.reports[i];
+        if (report.action === "insert" && report.targetType === "subtask") {
+          if (!report.data.start_date || !report.data.end_date) {
+            toast.warning(
+              `Vui lòng nhập đầy đủ ngày bắt đầu và ngày kết thúc cho nhiệm vụ con #${i + 1}.`,
+            );
+            return;
+          }
+        }
+      }
+    }
+
+    handleSave(reportResult, parentTasks);
+  };
+
   // Generic Render helper for 'other' project types
   const renderOtherReport = (report: GenericReportItem, index: number) => {
     const isUpdate = report.action === "update";
@@ -351,6 +371,24 @@ export const AIReportModal = ({
               label="Tiến độ cần đạt (%)"
               value={report.data.target_value ?? 100}
               onChange={(v) => updateDataField("target_value", v)}
+            />
+          )}
+
+          {!isParent && report.action === "insert" && (
+            <ReportInput
+              label="Ngày bắt đầu"
+              value={report.data.start_date || ""}
+              onChange={(v) => updateDataField("start_date", v)}
+              type="date"
+            />
+          )}
+
+          {!isParent && report.action === "insert" && (
+            <ReportInput
+              label="Ngày kết thúc"
+              value={report.data.end_date || ""}
+              onChange={(v) => updateDataField("end_date", v)}
+              type="date"
             />
           )}
 
@@ -597,7 +635,7 @@ export const AIReportModal = ({
                           "px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-md transition-colors font-medium cursor-pointer",
                           isSending && "opacity-70 cursor-not-allowed",
                         )}
-                        onClick={() => handleSave(reportResult, parentTasks)}
+                        onClick={handleModalSave}
                         disabled={isSending}
                       >
                         {isSending ? (
