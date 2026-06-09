@@ -34,6 +34,7 @@ import { useProfileData } from '@/src/hooks/profileHook';
 import { listTypeTask } from '@/src/services/api';
 import FilterableSelector from '@/components/FilterableSelector';
 import DashboardTaskManager from './dashboard/DashboardTaskManager';
+import { Badge } from '@/components/ui/badge';
 
 interface TypeProps{
     id: string;
@@ -60,7 +61,7 @@ const TaskListAssign: React.FC = () => {
     const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
+    
     useEffect(() => {
 
         const timeout = setTimeout(() => {
@@ -408,7 +409,7 @@ const TaskListAssign: React.FC = () => {
     //         e.target.value = "";
     //     }
     // };
-
+    
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -760,7 +761,30 @@ const TaskListAssign: React.FC = () => {
 
                                         <div className="space-y-2 mb-4">
                                             <p className="text-sm text-slate-400">
-                                                <span className="font-semibold text-slate-300">Dự án:</span> {task.project.name}
+                                                <span className="font-semibold text-slate-300 block mb-1">Công ty:</span>
+                                                <span className="flex flex-wrap gap-1.5">
+                                                    {Array.isArray(task?.companies) && task.companies.length > 0
+                                                        ? task.companies.map((p: any) => (
+                                                            <Badge key={p.id} variant="outline" className="text-blue-300 border-blue-500/30 bg-blue-500/15">
+                                                                {p.name}
+                                                            </Badge>
+                                                        ))
+                                                        : <span className="text-white text-sm">-</span>
+                                                    }
+                                                </span>
+                                            </p>
+                                            <p className="text-sm text-slate-400">
+                                                <span className="font-semibold text-slate-300 block mb-1">Dự án:</span>
+                                                <span className="flex flex-wrap gap-1.5">
+                                                    {Array.isArray(task?.projects) && task.projects.length > 0
+                                                        ? task.projects.map((p: any) => (
+                                                            <Badge key={p.id} variant="outline" className="text-blue-300 border-blue-500/30 bg-blue-500/15">
+                                                                {p.name}
+                                                            </Badge>
+                                                        ))
+                                                        : <span className="text-white text-sm">-</span>
+                                                    }
+                                                </span>
                                             </p>
                                             <p className="text-sm text-slate-400">
                                                 <span className="font-semibold text-slate-300">Loại:</span> {task.type_task.name}

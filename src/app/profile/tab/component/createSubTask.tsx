@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { createSubTask } from "@/src/features/task/api";
 import { useDispatch } from "react-redux";
 import { formatDate, formatDate2 } from "@/src/utils/formatDate";
+import { Badge } from "@/components/ui/badge";
 
 interface StatusTask {
     id: string;
@@ -23,7 +24,7 @@ interface SubTaskForm {
 interface TaskInfo {
     task_id: number;              
     task_assignment_id: number;   
-    project_name?: string;        
+    project_name?: string[];    
     task_name?: string;           
     target_value?: number | string;
     unit_name?: string | null; 
@@ -202,21 +203,14 @@ function CreateSubTask({ taskInfo, statusTask, onClose, onSuccess, subtask_id }:
 
                 <div className="p-4 sm:p-6 space-y-6">
                     {/* Parent Task Info */}
-                    {(taskInfo.task_name || taskInfo.project_name) && (
-                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-                            <p className="text-xs text-slate-400 mb-2">Nhiệm vụ cha</p>
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="flex-1 min-w-0">
-                                    {taskInfo.task_name && (
-                                        <p className="text-sm font-semibold text-white mb-1">{taskInfo.task_name}</p>
-                                    )}
-                                    {taskInfo.project_name && (
-                                        <p className="text-xs text-slate-400">Dự án: {taskInfo.project_name}</p>
-                                    )}
-                                    <p className="text-xs text-slate-400">Thời gian: {formatDate2(taskInfo?.date_start)} - {formatDate2(taskInfo?.date_end)}</p>
-
-                                </div>
-                            </div>
+                    {taskInfo.project_name && taskInfo.project_name.length > 0 && (
+                        <div className="flex items-start gap-1.5 flex-wrap">
+                            <p className="text-xs text-slate-400 flex-shrink-0">Dự án:</p>
+                            {taskInfo.project_name.map((name, i) => (
+                                <Badge key={i} variant="outline" className="text-blue-300 border-blue-500/30 bg-blue-500/15 text-xs">
+                                    {name}
+                                </Badge>
+                            ))}
                         </div>
                     )}
 

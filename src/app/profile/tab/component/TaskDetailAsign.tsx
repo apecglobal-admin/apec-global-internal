@@ -10,7 +10,9 @@ import {
     getStatusTask,
     updateTaskAssign,
     getDetailListTaskAssign,
-    getSubTaskDetail
+    getSubTaskDetail,
+    updatePersonTaskAssign,
+    getListCompanyTask
 } from "@/src/features/task/api";
 import { useDispatch } from 'react-redux';
 import { useTaskData } from '@/src/hooks/taskhook';
@@ -22,12 +24,14 @@ import {
     DialogContent,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 
 interface TaskDetailProps {
     task: any;
     onBack: () => void;
     onUpdate?: () => void;
-    isEdit?: boolean
+    isEdit?: boolean;
+    isAdmin?: boolean;
 }
 
 interface SubTask {
@@ -43,7 +47,7 @@ interface SubTask {
     };
 }
 
-const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, isEdit = true }) => {
+const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, isEdit = true, isAdmin = true }) => {
     
     const dispatch = useDispatch();
     const {
@@ -55,6 +59,7 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, i
         listEmployee,
         subTaskDetail,
         loadingSubTaskDetail,
+        listCompanyTask,
     } = useTaskData();
 
     const [isEditing, setIsEditing] = useState(false);
@@ -75,6 +80,7 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, i
             if (!listProject) dispatch(getListProject({}) as any);
             if (!childKpi) dispatch(getChildKpi() as any);
         }
+        if (isEdit && !listCompanyTask) dispatch(getListCompanyTask({ search: null }) as any);
     }, [dispatch, isEdit]);
 
     useEffect(() => {
@@ -143,10 +149,13 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, i
     const handleSave = async (changedData: any) => {
         setIsLoading(true);
         const token = localStorage.getItem("userToken");
+
         try {
-            const payload: any = { id: task?.id, token, ...changedData };
+
+            const payload = { id: task?.id, token, ...changedData };
             const response = await dispatch(updateTaskAssign(payload) as any);
-            if (response.payload?.data?.success) {
+
+            if (response.payload?.data?.success || response.payload?.data?.status === 200 || response.payload?.data?.status === 201) {
                 dispatch(getDetailListTaskAssign({ id: task?.id, token, key: "detailTaskAssign" }) as any);
                 toast.success(response.payload?.data?.message);
                 setIsEditing(false);
@@ -179,9 +188,6 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, i
     if (isEditing && isEdit) {
         return (
             <div className="max-w-7xl mx-auto p-6">
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-white">Chỉnh sửa công việc</h2>
-                </div>
                 <TaskEditForm
                     task={task}
                     typeTask={typeTask}
@@ -194,6 +200,8 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, i
                     onSave={handleSave}
                     onCancel={() => setIsEditing(false)}
                     isLoading={isLoading}
+                    isAdmin={isAdmin}
+                    listCompanyTask={listCompanyTask ?? []}
                 />
             </div>
         );
@@ -239,8 +247,24 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, i
                 {/* Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-6">
                     <div className="space-y-3 sm:space-y-4">
+                        {/* Dự án */}
+                        
+                        <div className="bg-slate-900/50 p-2.5 sm:p-3 rounded-lg">
+                            <label className="text-xs sm:text-sm font-semibold text-slate-400">Dự án</label>
+                            <div className="flex flex-wrap gap-1.5 mt-1">
+                                {Array.isArray(task?.projects) && task.projects.length > 0
+                                    ? task.projects.map((p: any) => (
+                                        <Badge key={p.id} variant="outline" className="text-blue-300 border-blue-500/30 bg-blue-500/15">
+                                            {p.name}
+                                        </Badge>
+                                    ))
+                                    : <span className="text-white text-sm">-</span>
+                                }
+                            </div>
+                        </div>
+
+                        {/* Các field còn lại */}
                         {[
-                            { label: 'Dự án', value: task?.project?.name },
                             { label: 'Loại công việc', value: task?.type_task?.name },
                             { label: 'KPI', value: task?.kpi_item?.name },
                             { label: 'Mục tiêu', value: `${formatNumber(task?.target_value)} ${task?.unit?.name}` },
@@ -252,7 +276,21 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, i
                             </div>
                         ))}
                     </div>
+
                     <div className="space-y-3 sm:space-y-4">
+                    <div className="bg-slate-900/50 p-2.5 sm:p-3 rounded-lg">
+                        <label className="text-xs sm:text-sm font-semibold text-slate-400">Công ty</label>
+                            <div className="flex flex-wrap gap-1.5 mt-1">
+                                {Array.isArray(task?.companies) && task.companies.length > 0
+                                    ? task.companies.map((p: any) => (
+                                        <Badge key={p.id} variant="outline" className="text-blue-300 border-blue-500/30 bg-blue-500/15">
+                                            {p.name}
+                                        </Badge>
+                                    ))
+                                    : <span className="text-white text-sm">-</span>
+                                }
+                            </div>
+                        </div>
                         {[
                             { label: 'Ngày bắt đầu', value: formatDate(task?.date_start) },
                             { label: 'Ngày kết thúc', value: formatDate(task?.date_end) },

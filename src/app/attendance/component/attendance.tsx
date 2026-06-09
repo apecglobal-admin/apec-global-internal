@@ -8,10 +8,13 @@ import { useDispatch } from "react-redux";
 import { checkin } from "@/src/features/attendance/api";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import { useProfileData } from "@/src/hooks/profileHook";
 
 export default function CheckInButton() {
   const router = useRouter();
   const dispatch = useDispatch();
+  const { userInfo, isLoadingUser } = useProfileData();
+  
   const [isLoading, setIsLoading] = useState(false);
   const [successData, setSuccessData] = useState<{ message: string; distance: number; now: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -86,6 +89,10 @@ export default function CheckInButton() {
       setIsLoading(false);
     }
   };
+  
+  if(!userInfo){
+    return 
+  }
 
   return (
     <>

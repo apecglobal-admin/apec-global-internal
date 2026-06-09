@@ -76,6 +76,8 @@ interface TaskDetail {
     process: number;
     date_start: string;
     date_end: string;
+    max_count_reject?: number;
+    min_count_reject?: number;
 }
 
 interface Status {
@@ -90,6 +92,10 @@ interface Priority {
 }
 
 interface Project {
+    id: number;
+    name: string;
+}
+interface Company{
     id: number;
     name: string;
 }
@@ -143,7 +149,8 @@ export interface Task {
 
     priority: Priority;
 
-    project: Project;
+    projects: Project[];
+    companies: Company[]
 
     kpi_item: KPIItem;
 
@@ -151,5 +158,34 @@ export interface Task {
 
     target_type: TargetType;
     units: Unit
+
+    created_by?: {
+        id: number;
+        name: string;
+    }
+
 }
+
+
+export interface PersonTask {
+    cursor_id: number;
+    id: number;
+    name: string;
+    description: string;
+    start_date: string | null;
+    end_date: string | null;
+    budget: string;
+    project_manager: {
+      id: number | null;
+      name: string | null;
+    };
+    status: {
+      id: number | null;
+      name: string | null;
+    };
+    total_tasks: string;
+    completed_tasks: string;
+    in_progress_tasks: string;
+    pending_tasks: string;
+  }
 

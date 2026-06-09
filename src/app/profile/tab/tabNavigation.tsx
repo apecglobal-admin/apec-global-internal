@@ -41,7 +41,7 @@ function TabNavigation() {
   const navigate = (path: string) => router.push(path);
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + "/");
 
-  const mainTabs = ["tasks", "projects", "career", "personal"];
+  const mainTabs = ["tasks", "career", "personal"];
   const extraTabs = tabs.filter((t) => !mainTabs.includes(t.id));
 
   return (
