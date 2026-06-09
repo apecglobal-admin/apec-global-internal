@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Loader2, AlertCircle, Calendar, CheckCircle2 } from "lucide-react";
+import { X, Loader2, AlertCircle, Trash2 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { AIReportStatus } from "./aiReportStatus";
 import {
@@ -13,6 +13,10 @@ import {
 import apiAxiosInstance from "@/src/services/axios";
 import { toast } from "react-toastify";
 import { ReportInstructionButton } from "./reportInstructions";
+import { removeReportAtIndex } from "./aiReportResultUtils";
+
+type NTLReportResult = Extract<AIReportResponse, { report_project: "ntl" }>;
+type OtherReportResult = Extract<AIReportResponse, { report_project: "other" }>;
 
 interface AIReportModalProps {
   isOpen: boolean;
@@ -28,7 +32,7 @@ interface AIReportModalProps {
   isProcessing: boolean;
   isFormatting: boolean;
   reportResult: AIReportResponse | null;
-  setReportResult: (result: AIReportResponse) => void;
+  setReportResult: (result: AIReportResponse | null) => void;
   isSuccess?: boolean;
 }
 
@@ -129,6 +133,32 @@ const ReportTextarea = ({
   </div>
 );
 
+const DeleteReportButton = ({
+  reportIndex,
+  disabled,
+  onDelete,
+}: {
+  reportIndex: number;
+  disabled: boolean;
+  onDelete: (reportIndex: number) => void;
+}) => (
+  <button
+    type="button"
+    aria-label={`Xóa báo cáo #${reportIndex + 1}`}
+    onClick={() => onDelete(reportIndex)}
+    disabled={disabled}
+    className={cn(
+      "inline-flex shrink-0 items-center gap-1.5 rounded-md border border-red-400/30 bg-red-500/10 px-2.5 py-1 text-xs font-semibold text-red-200 transition-colors",
+      disabled
+        ? "cursor-not-allowed opacity-50"
+        : "cursor-pointer hover:border-red-300/60 hover:bg-red-500/20 hover:text-red-100",
+    )}
+  >
+    <Trash2 size={13} />
+    <span>Xóa</span>
+  </button>
+);
+
 const ReportSelect = ({
   label,
   value,
@@ -218,8 +248,40 @@ export const AIReportModal = ({
     }
   }, [isOpen]);
 
+  const handleModalSave = () => {
+    if (!reportResult) return;
+
+    if (reportResult.report_project === "other") {
+      for (let i = 0; i < reportResult.reports.length; i++) {
+        const report = reportResult.reports[i];
+        if (report.action === "insert" && report.targetType === "subtask") {
+          if (!report.data.start_date || !report.data.end_date) {
+            toast.warning(
+              `Vui lòng nhập đầy đủ ngày bắt đầu và ngày kết thúc cho nhiệm vụ con #${i + 1}.`,
+            );
+            return;
+          }
+        }
+      }
+    }
+
+    handleSave(reportResult, parentTasks);
+  };
+
+  const handleDeleteReport = (
+    currentReportResult: AIReportResponse,
+    reportIndex: number,
+  ) => {
+    setReportResult(removeReportAtIndex(currentReportResult, reportIndex));
+    clearError();
+  };
+
   // Generic Render helper for 'other' project types
-  const renderOtherReport = (report: GenericReportItem, index: number) => {
+  const renderOtherReport = (
+    currentReportResult: OtherReportResult,
+    report: GenericReportItem,
+    index: number,
+  ) => {
     const isUpdate = report.action === "update";
     const isParent = report.targetType === "parent";
     const canEditName = !isUpdate && !isParent; // If insert subtask, can edit name
@@ -262,39 +324,50 @@ export const AIReportModal = ({
         key={index}
         className="bg-slate-800/30 p-4 rounded-xl border border-white/40 space-y-4"
       >
-        <div className="flex flex-wrap items-center border-b border-white/10 pb-2 gap-y-1">
-          <span
-            className={cn(
-              "text-xs px-2 py-0.5 mr-2 rounded-md border",
-              report.action === "insert"
-                ? "bg-green-500/20 text-green-300 border-green-500/30"
-                : "bg-amber-500/20 text-amber-300 border-amber-500/30",
-            )}
-          >
-            {report.action === "insert" ? "Thêm mới" : "Cập nhật"}
-          </span>
-          <span
-            className={cn(
-              "text-xs px-2 py-0.5 mr-2 rounded-md border bg-blue-500/20 text-blue-300 border-blue-500/30",
-            )}
-          >
-            {isParent ? "Nhiệm vụ cha" : "Nhiệm vụ con"}
-          </span>
-          <h4
-            className={cn(
-              "text-xs flex items-center gap-2 w-full md:w-auto",
-              report.action === "insert" ? "text-green-300" : "text-amber-300",
-            )}
-          >
-            {isParent
-              ? parentTasks.find(
-                  (t: any) =>
-                    t?.task?.id?.toString() ===
-                      report.parent_task_id?.toString() ||
-                    t?.id?.toString() === report.parent_task_id?.toString(),
-                )?.task?.name || `ID: ${report.parent_task_id}`
-              : report.data.task_name || "Nhiệm vụ con mới"}
-          </h4>
+        <div className="flex flex-wrap items-center justify-between border-b border-white/10 pb-2 gap-2">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-y-1">
+            <span
+              className={cn(
+                "text-xs px-2 py-0.5 mr-2 rounded-md border",
+                report.action === "insert"
+                  ? "bg-green-500/20 text-green-300 border-green-500/30"
+                  : "bg-amber-500/20 text-amber-300 border-amber-500/30",
+              )}
+            >
+              {report.action === "insert" ? "Thêm mới" : "Cập nhật"}
+            </span>
+            <span
+              className={cn(
+                "text-xs px-2 py-0.5 mr-2 rounded-md border bg-blue-500/20 text-blue-300 border-blue-500/30",
+              )}
+            >
+              {isParent ? "Nhiệm vụ cha" : "Nhiệm vụ con"}
+            </span>
+            <h4
+              className={cn(
+                "text-xs flex items-center gap-2 w-full md:w-auto",
+                report.action === "insert"
+                  ? "text-green-300"
+                  : "text-amber-300",
+              )}
+            >
+              {isParent
+                ? parentTasks.find(
+                    (t: any) =>
+                      t?.task?.id?.toString() ===
+                        report.parent_task_id?.toString() ||
+                      t?.id?.toString() === report.parent_task_id?.toString(),
+                  )?.task?.name || `ID: ${report.parent_task_id}`
+                : report.data.task_name || "Nhiệm vụ con mới"}
+            </h4>
+          </div>
+          <DeleteReportButton
+            reportIndex={index}
+            disabled={isSending}
+            onDelete={(reportIndex) =>
+              handleDeleteReport(currentReportResult, reportIndex)
+            }
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
@@ -354,6 +427,24 @@ export const AIReportModal = ({
             />
           )}
 
+          {!isParent && report.action === "insert" && (
+            <ReportInput
+              label="Ngày bắt đầu"
+              value={report.data.start_date || ""}
+              onChange={(v) => updateDataField("start_date", v)}
+              type="date"
+            />
+          )}
+
+          {!isParent && report.action === "insert" && (
+            <ReportInput
+              label="Ngày kết thúc"
+              value={report.data.end_date || ""}
+              onChange={(v) => updateDataField("end_date", v)}
+              type="date"
+            />
+          )}
+
           {!isParent && (
             <ReportSliderInput
               label="Tiến độ (%)"
@@ -376,7 +467,11 @@ export const AIReportModal = ({
   };
 
   // NTL Render Helper
-  const renderNTLReport = (report: NTLReportItem, index: number) => {
+  const renderNTLReport = (
+    currentReportResult: NTLReportResult,
+    report: NTLReportItem,
+    index: number,
+  ) => {
     const updateField = (field: keyof NTLReportItem, value: any) => {
       if (!reportResult || reportResult.report_project !== "ntl") return;
       const newReports = [...reportResult.reports];
@@ -390,9 +485,18 @@ export const AIReportModal = ({
         className="bg-slate-800/30 p-4 rounded-xl border border-white/50 space-y-6"
       >
         <div className="border-b border-slate-300/50 pb-3">
-          <h4 className="text-blue-100 font-bold text-lg bg-blue-900/40 py-2 rounded-lg text-center border border-indigo-500/30">
-            Báo cáo {report.area ? `- ${report.area}` : `#${index + 1}`}
-          </h4>
+          <div className="flex items-center gap-2">
+            <h4 className="flex-1 text-blue-100 font-bold text-lg bg-blue-900/40 py-2 rounded-lg text-center border border-indigo-500/30">
+              Báo cáo {report.area ? `- ${report.area}` : `#${index + 1}`}
+            </h4>
+            <DeleteReportButton
+              reportIndex={index}
+              disabled={isSending}
+              onDelete={(reportIndex) =>
+                handleDeleteReport(currentReportResult, reportIndex)
+              }
+            />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
             <ReportInput
               label="Ngày báo cáo"
@@ -570,7 +674,7 @@ export const AIReportModal = ({
                     {reportResult.report_project === "ntl" && (
                       <div className="space-y-6">
                         {reportResult.reports.map((report, idx) =>
-                          renderNTLReport(report, idx),
+                          renderNTLReport(reportResult, report, idx),
                         )}
                       </div>
                     )}
@@ -578,7 +682,7 @@ export const AIReportModal = ({
                     {reportResult.report_project === "other" && (
                       <div className="space-y-6">
                         {reportResult.reports.map((report, idx) =>
-                          renderOtherReport(report, idx),
+                          renderOtherReport(reportResult, report, idx),
                         )}
                       </div>
                     )}
@@ -597,7 +701,7 @@ export const AIReportModal = ({
                           "px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-md transition-colors font-medium cursor-pointer",
                           isSending && "opacity-70 cursor-not-allowed",
                         )}
-                        onClick={() => handleSave(reportResult, parentTasks)}
+                        onClick={handleModalSave}
                         disabled={isSending}
                       >
                         {isSending ? (
