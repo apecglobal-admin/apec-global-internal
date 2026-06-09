@@ -474,6 +474,32 @@ export const listProjects = createAsyncThunk(
   }
 );
 
+export const listPersonalProjects = createAsyncThunk(
+  "user/listPersonalProjects",
+  async (payload: any, thunkAPI) => {
+    try {
+      const { cursor, token }: any = payload;
+      const params = Object.fromEntries(
+          Object.entries({ cursor }).filter(
+              ([key, value]) => value != null
+          )
+      );
+      const response = await apiAxiosInstance.get("/profile/personal/projects", {
+        params,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return {
+        data: response.data,
+        status: response.status
+      };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error?.message);
+    }
+  }
+);
+
 export const listCard = createAsyncThunk(
   "user/listCard",
   async (token, thunkAPI) => {

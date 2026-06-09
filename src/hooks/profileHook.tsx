@@ -17,6 +17,8 @@ export const useProfileData = () => {
     typePersonal: user.typePersonal.data,
     achievements: user.achievements.data,
     projects: user.projects.data,
+    personalProjects: user.personalProjects.data,
+
     cards: user.cards.data,
     links: user.links.data,
     listEmployeeDepartment: user.listEmployeeDepartment.data.data,

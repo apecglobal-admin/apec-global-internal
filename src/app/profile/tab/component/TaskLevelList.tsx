@@ -549,9 +549,9 @@ const TaskLevelList = () => {
                     </div>
 
                     <div className="space-y-2 mb-4">
-                      <p className="text-sm text-slate-400">
+                      {/* <p className="text-sm text-slate-400">
                         <span className="font-semibold text-slate-300">Dự án:</span> {task.project.name}
-                      </p>
+                      </p> */}
                       <p className="text-sm text-slate-400">
                         <span className="font-semibold text-slate-300">Loại:</span> {task.type_task.name}
                       </p>
