@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, memo } from "react";
 import { X, ChevronRight, Plus, AlertCircle, Clock, XCircle, Edit3, CheckCheck, Save } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
@@ -28,6 +28,25 @@ interface SubTask {
     is_overdue: boolean;
 }
 
+
+interface Lv2CardProps {
+    lv2: any;
+    task: Task;
+    isSelected: boolean;
+    isEditing: boolean;
+    isSelectMode: boolean;
+    editingValue: number;
+    isUpdatingSubtask: boolean;
+    onToggleSelect: (id: string) => void;
+    onStartEdit: (id: string) => void;
+    onCancelEdit: () => void;
+    onChangeValue: (v: number) => void;
+    onSave: (id: number) => void;
+    getTaskStatusBadge: any;
+    formatNumber: (n: number) => string;
+    formatDate: (d: string) => string;
+}
+
 interface SubTaskLv2ModalProps {
     task: Task;
     onClose: () => void;
@@ -44,6 +63,237 @@ interface SubTaskLv2ModalProps {
 
 
 const LV2_LIMIT = 5;
+
+function EditingValueInput({
+    initialValue,
+    onChange,
+}: {
+    initialValue: number;
+    onChange: (val: number) => void;
+}) {
+    const [localValue, setLocalValue] = useState(initialValue);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const input = e.target;
+        const selectionStart = input.selectionStart || 0;
+        const rawValue = input.value;
+        const numericString = rawValue.replace(/\./g, "").replace(/,/g, "");
+        if (!/^\d*$/.test(numericString)) return;
+        const value = Math.max(Number(numericString), 0);
+        const formatted = formatNumber(value);
+        const diff = formatted.length - rawValue.length;
+        setLocalValue(value);
+        onChange(value);
+        setTimeout(() => {
+            input.setSelectionRange(selectionStart + diff, selectionStart + diff);
+        }, 0);
+    };
+
+    return (
+        <input
+            type="text"
+            inputMode="numeric"
+            value={formatNumber(localValue)}
+            onChange={handleChange}
+            className="w-20 px-2 py-1 bg-slate-900 border border-blue-500 rounded text-white text-xs focus:outline-none"
+            autoFocus
+        />
+    );
+}
+
+function EditingPercentInput({
+    value,
+    onChange,
+}: {
+    value: number;
+    onChange: (val: number) => void;
+}) {
+    return (
+        <input
+            type="number"
+            min="0"
+            max="100"
+            value={value}
+            onChange={(e) => {
+                const v = Math.min(100, Math.max(0, Number(e.target.value)));
+                onChange(v);
+            }}
+            className="w-14 px-2 py-1 bg-slate-800 border border-blue-500 rounded text-white text-xs focus:outline-none text-center"
+            autoFocus
+        />
+    );
+}
+
+const Lv2Card = memo(({
+    lv2,
+    task,
+    isSelected,
+    isEditing,
+    isSelectMode,
+    editingValue,
+    isUpdatingSubtask,
+    onToggleSelect,
+    onStartEdit,
+    onCancelEdit,
+    onChangeValue,
+    onSave,
+    getTaskStatusBadge,
+    formatNumber,
+    formatDate,
+}: Lv2CardProps) => {
+    const progress = Number(lv2.target_value) > 0
+        ? Math.min(100, (Number(lv2.value) / Number(lv2.target_value)) * 100)
+        : 0;
+
+    return (
+        <div
+            onClick={() => {
+                if (isEditing) return;
+                if (isSelectMode && lv2.status?.id !== 4) onToggleSelect(lv2.id);
+            }}
+            className={`bg-slate-900 border rounded-lg px-3 py-2.5 transition cursor-pointer
+                ${isSelected ? "border-emerald-500/50" : "border-slate-800 hover:border-slate-700"}`}
+        >
+            <div className="flex items-start gap-2">
+                {isSelectMode && lv2.status?.id !== 4 && (
+                    <div className="pt-0.5 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                        <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => onToggleSelect(lv2.id)}
+                            className="w-4 h-4 rounded border-slate-600 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-slate-900 bg-slate-700 cursor-pointer"
+                        />
+                    </div>
+                )}
+                <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-white line-clamp-1">{lv2.name}</p>
+                    {lv2.description && (
+                        <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">{lv2.description}</p>
+                    )}
+
+                    <div className="flex items-center gap-3 mt-1.5 text-[11px] text-slate-500 flex-wrap">
+                        <span>Mục tiêu: <span className="text-blue-400 font-semibold">{formatNumber(Number(lv2.target_value))} {task.units?.name || "%"}</span></span>
+                        {!isEditing && (
+                            <span className="flex items-center gap-1">
+                                Tiến độ: <span className="text-emerald-400 font-semibold">{formatNumber(Number(lv2.value))} {task.units?.name || "%"}</span>
+                                {lv2.status?.id !== 4 && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onStartEdit(lv2.id);
+                                        }}
+                                        className="p-1 bg-blue-600 hover:bg-blue-700 rounded text-white transition ml-1"
+                                        title="Cập nhật tiến độ"
+                                    >
+                                        <Edit3 size={12} />
+                                    </button>
+                                )}
+                            </span>
+                        )}
+                    </div>
+
+                    {isEditing && (
+                        <div
+                            className="mt-2 flex flex-col gap-2 text-xs"
+                            onClick={e => e.stopPropagation()}
+                            onPointerDown={e => e.stopPropagation()}
+                            onMouseDown={e => e.stopPropagation()}
+                        >
+                            <span className="text-slate-500">Cập nhật tiến độ:</span>
+                            {task.units?.name === "%" || task.units?.name === null ? (
+                                <div className="flex flex-col gap-2">
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        value={editingValue}
+                                        onChange={(e) => onChangeValue(Number(e.target.value))}
+                                        className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                        style={{
+                                            background: `linear-gradient(to right, #2563eb, #a855f7 ${editingValue / 2}%, #ec4899 ${editingValue}%, #1e293b ${editingValue}%)`
+                                        }}
+                                    />
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="text-slate-400">0%</span>
+                                        <div className="flex items-center gap-1.5">
+                                            <EditingPercentInput
+                                                value={editingValue}
+                                                onChange={onChangeValue}
+                                            />
+                                            <span className="text-slate-400">%</span>
+                                        </div>
+                                        <span className="text-slate-400">100%</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-1.5 bg-slate-800/60 rounded-lg px-2.5 py-2 flex-wrap">
+                                    <span className="text-slate-400 font-semibold">
+                                        {formatNumber(Number(lv2.value))} {task.units?.name}
+                                    </span>
+                                    <span className="text-slate-500">+</span>
+                                    <EditingValueInput
+                                        initialValue={editingValue}
+                                        onChange={onChangeValue}
+                                    />
+                                    <span className="text-slate-500">=</span>
+                                    <span className="text-emerald-400 font-semibold">
+                                        {formatNumber(Number(lv2.value) + Number(editingValue || 0))} {task.units?.name}
+                                    </span>
+                                </div>
+                            )}
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onSave(Number(lv2.id)); }}
+                                    disabled={isUpdatingSubtask}
+                                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded text-white transition disabled:opacity-50 text-xs font-medium"
+                                >
+                                    <Save size={12} /> Lưu
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onCancelEdit(); }}
+                                    disabled={isUpdatingSubtask}
+                                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-white transition text-xs font-medium"
+                                >
+                                    <X size={12} /> Hủy
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="mt-1.5 flex items-center gap-2">
+                        <div className="flex-1 h-1 rounded-full bg-slate-700 overflow-hidden">
+                            <div
+                                className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all"
+                                style={{ width: `${progress}%` }}
+                            />
+                        </div>
+                        <span className="text-[10px] text-slate-400 tabular-nums">{Math.round(progress)}%</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-slate-500">
+                        <Clock size={9} />
+                        <span>{formatDate(lv2.start_date)}</span>
+                        <span className="text-slate-600">→</span>
+                        <span>{formatDate(lv2.end_date)}</span>
+                    </div>
+                </div>
+                <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    {getTaskStatusBadge(lv2.status.id, null, true)}
+                    {lv2.is_overdue && (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold">
+                            Trễ hạn
+                        </span>
+                    )}
+                    {Number(lv2.exp_increase) > 0 && (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold">
+                            +{lv2.exp_increase} XP
+                        </span>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+});
+Lv2Card.displayName = "Lv2Card";
 
 export default function SubTaskLv2Modal({
     task,
@@ -358,65 +608,7 @@ export default function SubTaskLv2Modal({
         }
     };
 
-    function EditingValueInput({
-        initialValue,
-        onChange,
-    }: {
-        initialValue: number;
-        onChange: (val: number) => void;
-    }) {
-        const [localValue, setLocalValue] = useState(initialValue);
-    
-        const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-            const input = e.target;
-            const selectionStart = input.selectionStart || 0;
-            const rawValue = input.value;
-            const numericString = rawValue.replace(/\./g, "").replace(/,/g, "");
-            if (!/^\d*$/.test(numericString)) return;
-            const value = Math.max(Number(numericString), 0);
-            const formatted = formatNumber(value);
-            const diff = formatted.length - rawValue.length;
-            setLocalValue(value);
-            onChange(value);
-            setTimeout(() => {
-                input.setSelectionRange(selectionStart + diff, selectionStart + diff);
-            }, 0);
-        };
-    
-        return (
-            <input
-                type="text"
-                inputMode="numeric"
-                value={formatNumber(localValue)}
-                onChange={handleChange}
-                className="w-20 px-2 py-1 bg-slate-900 border border-blue-500 rounded text-white text-xs focus:outline-none"
-                autoFocus
-            />
-        );
-    }
 
-    function EditingPercentInput({
-        value,
-        onChange,
-    }: {
-        value: number;
-        onChange: (val: number) => void;
-    }) {
-        return (
-            <input
-                type="number"
-                min="0"
-                max="100"
-                value={value}
-                onChange={(e) => {
-                    const v = Math.min(100, Math.max(0, Number(e.target.value)));
-                    onChange(v);
-                }}
-                className="w-14 px-2 py-1 bg-slate-800 border border-blue-500 rounded text-white text-xs focus:outline-none text-center"
-                autoFocus
-            />
-        );
-    }
 
     // ────────────────────────────────────────────────────────
     const Lv1Card = ({ subtask }: { subtask: SubTask }) => {
@@ -475,167 +667,6 @@ export default function SubTaskLv2Modal({
         );
     };
 
-    const Lv2Card = ({ lv2 }: { lv2: any }) => {
-        const isSelected = selectedIds.includes(lv2.id);
-        const isEditing = editingSubtaskId === lv2.id;
-        const progress = Number(lv2.target_value) > 0
-            ? Math.min(100, (Number(lv2.value) / Number(lv2.target_value)) * 100)
-            : 0;
-    
-        return (
-            <div
-                onClick={() => {
-                    if (isEditing) return;
-                    if (isSelectMode && lv2.status?.id !== 4) toggleSelect(lv2.id);
-                }}
-                className={`bg-slate-900 border rounded-lg px-3 py-2.5 transition cursor-pointer
-                    ${isSelected ? "border-emerald-500/50" : "border-slate-800 hover:border-slate-700"}`}
-            >
-                <div className="flex items-start gap-2">
-                    {isSelectMode && lv2.status?.id !== 4 && (
-                        <div className="pt-0.5 flex-shrink-0" onClick={e => e.stopPropagation()}>
-                            <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => toggleSelect(lv2.id)}
-                                className="w-4 h-4 rounded border-slate-600 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-slate-900 bg-slate-700 cursor-pointer"
-                            />
-                        </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-white line-clamp-1">{lv2.name}</p>
-                        {lv2.description && (
-                            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">{lv2.description}</p>
-                        )}
-    
-                        <div className="flex items-center gap-3 mt-1.5 text-[11px] text-slate-500 flex-wrap">
-                            <span>Mục tiêu: <span className="text-blue-400 font-semibold">{formatNumber(Number(lv2.target_value))} {task.units?.name || "%"}</span></span>
-                            {!isEditing && (
-                                <span className="flex items-center gap-1">
-                                    Tiến độ: <span className="text-emerald-400 font-semibold">{formatNumber(Number(lv2.value))} {task.units?.name || "%"}</span>
-                                    {lv2.status?.id !== 4 && (
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setEditingSubtaskId(lv2.id);
-                                                setEditingValue(0);
-                                            }}
-                                            className="p-1 bg-blue-600 hover:bg-blue-700 rounded text-white transition ml-1"
-                                            title="Cập nhật tiến độ"
-                                        >
-                                            <Edit3 size={12} />
-                                        </button>
-                                    )}
-                                </span>
-                            )}
-                        </div>
-    
-                        {/* Inline editing */}
-                        {isEditing && (
-                            <div className="mt-2 flex flex-col gap-2 text-xs">
-                                <span className="text-slate-500">Cập nhật tiến độ:</span>
-                                {task.units?.name === "%" || task.units?.name === null ? (
-                                    <div className="flex flex-col gap-2">
-                                        <input
-                                            type="range"
-                                            min="0"
-                                            max="100"
-                                            value={editingValue}
-                                            onChange={(e) => {
-                                                e.stopPropagation();
-                                                setEditingValue(Number(e.target.value));
-                                            }}
-                                            className="w-full h-2 rounded-lg appearance-none cursor-pointer"
-                                            style={{
-                                                background: `linear-gradient(to right, #2563eb, #a855f7 ${editingValue / 2}%, #ec4899 ${editingValue}%, #1e293b ${editingValue}%)`
-                                            }}
-                                        />
-                                        <div className="flex items-center justify-between gap-2">
-                                            <span className="text-slate-400">0%</span>
-                                            <div className="flex items-center gap-1.5">
-                                            <EditingPercentInput
-                                                value={editingValue}
-                                                onChange={(v) => setEditingValue(v)}
-                                            />
-                                                <span className="text-slate-400">%</span>
-                                            </div>
-                                            <span className="text-slate-400">100%</span>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center gap-1.5 bg-slate-800/60 rounded-lg px-2.5 py-2 flex-wrap">
-                                        <span className="text-slate-400 font-semibold">
-                                            {formatNumber(Number(lv2.value))} {task.units?.name}
-                                        </span>
-                                        <span className="text-slate-500">+</span>
-                                        <EditingValueInput
-                                            initialValue={editingValue}
-                                            onChange={(val) => setEditingValue(val)}
-                                        />
-                                        <span className="text-slate-500">=</span>
-                                        <span className="text-emerald-400 font-semibold">
-                                            {formatNumber(Number(lv2.value) + Number(editingValue || 0))} {task.units?.name}
-                                        </span>
-                                    </div>
-                                )}
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleUpdateSubtaskProgress(Number(lv2.id));
-                                        }}
-                                        disabled={isUpdatingSubtask}
-                                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded text-white transition disabled:opacity-50 text-xs font-medium"
-                                    >
-                                        <Save size={12} /> Lưu
-                                    </button>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setEditingSubtaskId(null);
-                                        }}
-                                        disabled={isUpdatingSubtask}
-                                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-white transition text-xs font-medium"
-                                    >
-                                        <X size={12} /> Hủy
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-    
-                        <div className="mt-1.5 flex items-center gap-2">
-                            <div className="flex-1 h-1 rounded-full bg-slate-700 overflow-hidden">
-                                <div
-                                    className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all"
-                                    style={{ width: `${progress}%` }}
-                                />
-                            </div>
-                            <span className="text-[10px] text-slate-400 tabular-nums">{Math.round(progress)}%</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-slate-500">
-                            <Clock size={9} />
-                            <span>{formatDate(lv2.start_date)}</span>
-                            <span className="text-slate-600">→</span>
-                            <span>{formatDate(lv2.end_date)}</span>
-                        </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                        {getTaskStatusBadge(lv2.status.id, null, true)}
-                        {lv2.is_overdue && (
-                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold">
-                                Trễ hạn
-                            </span>
-                        )}
-                        {Number(lv2.exp_increase) > 0 && (
-                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold">
-                                +{lv2.exp_increase} XP
-                            </span>
-                        )}
-                    </div>
-                </div>
-            </div>
-        );
-    };
 
     const SpinnerRow = () => (
         <div className="flex items-center justify-center py-3">
@@ -868,7 +899,24 @@ export default function SubTaskLv2Modal({
                                 {selectedSubTask && !isInitialLoadingLv2 && allLv2.length > 0 && (
                                     <>
                                         {allLv2.map((lv2: any) => (
-                                            <Lv2Card key={lv2.id} lv2={lv2} />
+                                            <Lv2Card
+                                                key={lv2.id}
+                                                lv2={lv2}
+                                                task={task}
+                                                isSelected={selectedIds.includes(lv2.id)}
+                                                isEditing={editingSubtaskId === lv2.id}
+                                                isSelectMode={isSelectMode}
+                                                editingValue={editingValue}
+                                                isUpdatingSubtask={isUpdatingSubtask}
+                                                onToggleSelect={toggleSelect}
+                                                onStartEdit={(id) => { setEditingSubtaskId(id); setEditingValue(0); }}
+                                                onCancelEdit={() => setEditingSubtaskId(null)}
+                                                onChangeValue={setEditingValue}
+                                                onSave={handleUpdateSubtaskProgress}
+                                                getTaskStatusBadge={getTaskStatusBadge}
+                                                formatNumber={formatNumber}
+                                                formatDate={formatDate}
+                                            />
                                         ))}
 
                                         {isLoadingMoreLv2 && <SpinnerRow />}

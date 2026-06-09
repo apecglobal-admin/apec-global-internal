@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState, useMemo } from "react";
+
 import {
     Briefcase,
     Target,
@@ -16,6 +18,9 @@ import {
     Check,
     Info,
     InfoIcon,
+    Building2,
+    ArrowLeft,
+    Edit2,
 } from "lucide-react";
 
 import {
@@ -25,7 +30,16 @@ import {
     getSubTask,
     deleteSubTask,
     updateStatusSubTask,
-    updateProgressSubTask
+    updateProgressSubTask,
+    getTypeTask,
+    getPriorityTask,
+    getListProject,
+    getChildKpi,
+    getListCompanyTask,
+    getListEmployee,
+    updatePersonTaskAssign,
+    getDetailListTaskAssign,
+    deletePersonTaskAssign
 } from "@/src/features/task/api";
 
 import {
@@ -38,7 +52,6 @@ import {
 } from "@/components/ui/dialog";
 
 
-import { useEffect, useRef, useState } from "react";
 import { useTaskData } from "@/src/hooks/taskhook";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
@@ -50,6 +63,9 @@ import getFileInfo from "@/src/utils/checkFileInfo";
 import { clearSubTaskList } from "@/src/features/task/taskSlice";
 import { ModalPortal } from "@/components/ModalPortal";
 import SubTaskLv2Modal from "./Subtasklv2modal";
+import { Badge } from "@/components/ui/badge";
+import TaskEditForm from "./TaskEditForm";
+import { useProfileData } from "@/src/hooks/profileHook";
 
 
 
@@ -68,6 +84,7 @@ interface TaskDetailProps {
     calculateProgress: (task: Task) => number;
     statusTask?: StatusTask[];
     onUpdateSuccess?: (id: any) => void;
+    isAdmin?: boolean;
 }
 
 interface SubTask {
@@ -96,11 +113,26 @@ function TaskDetail({
     formatDate,
     calculateProgress,
     statusTask,
-    onUpdateSuccess
+    onUpdateSuccess,
+    isAdmin = false,
 }: TaskDetailProps) {
-    
+
     const dispatch = useDispatch();
-    const { imageTask, fileTask, listSubTask, listSubTaskLv2, loadingListSubTaskLv2 } = useTaskData();
+    const {
+        imageTask,
+        fileTask,
+        listSubTask,
+        listSubTaskLv2,
+        loadingListSubTaskLv2,
+        typeTask,
+        priorityTask,
+        childKpi,
+        listProject,
+        listEmployee,
+        listCompanyTask,
+    } = useTaskData();
+
+    const { userInfo } = useProfileData();
 
     const currentTaskIdRef = useRef<string | null>(null);
     const subTaskOffsetRef = useRef(0);
@@ -108,6 +140,9 @@ function TaskDetail({
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
     const progress = calculateProgress(task);
     const [isEditing, setIsEditing] = useState(false);
+    const [isEditingTask, setIsEditingTask] = useState(false);
+
+
     const [selectedStatus, setSelectedStatus] = useState(task?.status.id);
     const [progressValue, setProgressValue] = useState(progress);
     const [uploadType, setUploadType] = useState<"image" | "document" | null>(
@@ -136,11 +171,46 @@ function TaskDetail({
     const [editingValue, setEditingValue] = useState<number>(0);
     const [isUpdatingSubtask, setIsUpdatingSubtask] = useState(false);
 
+    const [hasCompletedEmployee, setHasCompletedEmployee] = useState(false);
+    const [hasAllCompleted, setHasAllCompleted] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+
     const [showSubTaskLv2Modal, setShowSubTaskLv2Modal] = useState<string>("");
+
+    const taskDataForEdit = useMemo(() => {
+        if (!task?.task) return null;
+        return {
+            id: task.task.id,
+            name: task.task.name,
+            description: task.task.description,
+            date_start: task.task.date_start,
+            date_end: task.task.date_end,
+            min_count_reject: task.task.min_count_reject,
+            max_count_reject: task.task.max_count_reject,
+            type_task: task.type,
+            priority: task.priority,
+            kpi_item: task.kpi_item,
+            target_value: task.target_value,
+            projects: task.projects,
+            companies: task.companies,
+            task_assignment: (task as any).task_assignment ?? [],
+        };
+    }, [task.id]);
 
     const fetchSubTask = async (payload: any) => {
         await dispatch(getSubTask(payload) as any);
     }
+
+    useEffect(() => {
+        const token = localStorage.getItem("userToken");
+        if (!typeTask) dispatch(getTypeTask() as any);
+        if (!priorityTask) dispatch(getPriorityTask() as any);
+        if (!listProject) dispatch(getListProject({}) as any);
+        if (!childKpi) dispatch(getChildKpi() as any);
+        if (!listCompanyTask) dispatch(getListCompanyTask({ search: null }) as any);
+        dispatch(getListEmployee({ position_id: null, department_id: null, filter: null, token }) as any);
+    }, []);
 
     useEffect(() => {
         if (!task) return;
@@ -659,8 +729,8 @@ function TaskDetail({
                     <button
                         onClick={() => handleUploadTypeChange("image")}
                         className={`flex items-center gap-2 p-2.5 sm:p-3 rounded-lg border-2 transition ${uploadType === "image"
-                                ? "border-blue-500 bg-blue-500/10 text-blue-400"
-                                : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
+                            ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                            : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
                             }`}
                     >
                         <Image size={16} className="flex-shrink-0" />
@@ -672,8 +742,8 @@ function TaskDetail({
                     <button
                         onClick={() => handleUploadTypeChange("document")}
                         className={`flex items-center gap-2 p-2.5 sm:p-3 rounded-lg border-2 transition ${uploadType === "document"
-                                ? "border-blue-500 bg-blue-500/10 text-blue-400"
-                                : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
+                            ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                            : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
                             }`}
                     >
                         <FileText size={16} className="flex-shrink-0" />
@@ -747,6 +817,69 @@ function TaskDetail({
         );
     };
 
+    const handleSaveEdit = async (changedData: any) => {
+        setIsLoading(true);
+        const token = localStorage.getItem("userToken");
+        try {
+            const response = await dispatch(updatePersonTaskAssign({ id: task.task.id, token, ...changedData }) as any);
+
+            if (response.payload?.data?.success || response.payload?.data?.status === 200 || response.payload?.data?.status === 201) {
+                toast.success(response.payload?.data?.message);
+                setIsEditingTask(false);
+                if (onUpdateSuccess) onUpdateSuccess(task.id);
+            } else {
+                toast.error(response.payload?.data?.message || 'Cập nhật thất bại!');
+            }
+        } catch {
+            toast.error('Có lỗi xảy ra khi cập nhật!');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleDelete = async (id: number) => {
+        try {
+            const token = localStorage.getItem("userToken");
+            const response = await dispatch(deletePersonTaskAssign({id, token}) as any);
+            
+            if (response.payload?.data?.success || response.payload?.data?.status === 200 || response.payload?.data?.status === 201) {
+                toast.success(response.payload?.data?.message);
+                if (onUpdateSuccess){
+                    onBack()
+                    onUpdateSuccess(task.id)
+                };
+            } else {
+                toast.error(response.payload?.data?.message);
+            }
+        } catch (error) {
+            
+        }
+    }
+
+
+    if (isEditingTask) {
+
+        return (
+            <div className="max-w-7xl mx-auto p-6">
+                <TaskEditForm
+                    task={taskDataForEdit}
+                    typeTask={typeTask}
+                    priorityTask={priorityTask}
+                    listProject={listProject}
+                    listCompanyTask={listCompanyTask ?? []}
+                    childKpi={childKpi}
+                    listEmployee={listEmployee}
+                    hasCompletedEmployee={hasCompletedEmployee}
+                    hasAllCompleted={hasAllCompleted}
+                    isAdmin={isAdmin}
+                    onSave={handleSaveEdit}
+                    onCancel={() => setIsEditingTask(false)}
+                    isLoading={isLoading}
+                />
+            </div>
+        );
+    }
+
     if (isLoadingDetailTask || !task) {
         return (
             <div className="space-y-4">
@@ -767,15 +900,41 @@ function TaskDetail({
     return (
         <div className="space-y-4 sm:space-y-6">
             <div className="flex items-center justify-between">
-                <h3 className="text-base sm:text-lg lg:text-xl font-bold text-white">
-                    Chi tiết nhiệm vụ
-                </h3>
-                <button
-                    onClick={onBack}
-                    className="text-xs sm:text-sm text-blue-400 hover:text-blue-300 transition"
-                >
-                    ← Quay lại
-                </button>
+                <div className="flex gap-3 items-center justify-between">
+                    <button
+                        onClick={onBack}
+                        className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white flex-shrink-0"
+                    >
+                        <ArrowLeft />
+                    </button>
+                    <h3 className="text-base sm:text-lg lg:text-xl font-bold text-white">
+                        Chi tiết nhiệm vụ
+                    </h3>
+                </div>
+                {Number(userInfo.id) === Number(task?.created_by?.id) && Number(task.status.id) !== 4 ? (
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => handleDelete(Number(task.task.id)) }
+                            className="px-3 sm:px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center justify-center gap-2 transition-colors text-xs order-1 sm:order-2"
+                        >
+                            <XCircle size={16} />
+                            Xóa
+                        </button>
+                        <button
+                            onClick={() => setIsEditingTask(true)}
+                            className="px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center gap-2 transition-colors text-xs order-1 sm:order-2"
+                        >
+                            <Edit2 size={16} />
+                            Chỉnh sửa
+                        </button>
+                    </div>
+                ) : (
+                    Number(task.status.id) !== 4 && (
+                        <span className="text-red-500 text-sm">Quản lý tạo không thể sửa/xóa</span>
+                    ) 
+
+                )}
+
             </div>
             <div className="rounded-lg border border-slate-800 bg-slate-950 p-3 sm:p-5 lg:p-6">
                 <div className="gap-4 mb-4">
@@ -788,7 +947,7 @@ function TaskDetail({
                                 </h4>
                             </div>
                             <div className="flex sm:flex-col gap-2 items-start sm:items-end">
-                                {getTaskStatusBadge(task.status.id)}
+                                {getTaskStatusBadge(task.status.id, task.checked)}
                                 {getPriorityBadge(task.priority.id)}
                             </div>
                         </div>
@@ -809,11 +968,33 @@ function TaskDetail({
                                 <span className="font-semibold">Mô tả:</span>
                                 <span className="truncate">{task?.task?.description}</span>
                             </div>
-
-                            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
-                                <Briefcase size={16} className="text-slate-500 flex-shrink-0" color="blue" />
-                                <span className="font-semibold">Dự án:</span>
-                                <span className="truncate">{task.project.name}</span>
+                            <div className="flex items-start gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
+                                <Building2 size={16} className="text-slate-500 flex-shrink-0 mt-0.5" color="blue" />
+                                <span className="font-semibold flex-shrink-0">Dự án:</span>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {Array.isArray(task?.companies) && task.companies.length > 0
+                                        ? task.companies.map((p: any, idx: number) => (
+                                            <Badge key={idx} variant="outline" className="text-blue-300 border-blue-500/30 bg-blue-500/15">
+                                                {p.name}
+                                            </Badge>
+                                        ))
+                                        : <span className="text-white text-sm">-</span>
+                                    }
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
+                                <Briefcase size={16} className="text-slate-500 flex-shrink-0 mt-0.5" color="blue" />
+                                <span className="font-semibold flex-shrink-0">Dự án:</span>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {Array.isArray(task?.projects) && task.projects.length > 0
+                                        ? task.projects.map((p: any, idx: number) => (
+                                            <Badge key={idx} variant="outline" className="text-blue-300 border-blue-500/30 bg-blue-500/15">
+                                                {p.name}
+                                            </Badge>
+                                        ))
+                                        : <span className="text-white text-sm">-</span>
+                                    }
+                                </div>
                             </div>
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
                                 <Target size={16} className="text-slate-500 flex-shrink-0" color="yellow" />
@@ -964,7 +1145,7 @@ function TaskDetail({
                                         task_id: task.task.id,
                                         task_assignment_id: parseInt(task.id),
                                         task_name: task.task.name,
-                                        project_name: task.project.name,
+                                        project_name: task.projects?.map((p: any) => p.name) ?? [],
                                         target_value: task.target_value,
                                         unit_name: task.units?.name,
                                         date_start: task.task.date_start,
@@ -997,7 +1178,7 @@ function TaskDetail({
                                     subtasks={allSubTasks}
                                     task={task}
                                     onClose={() => setShowSubTaskLv2Modal("")}
-                                    onSuccess={(refresh) => {}}
+                                    onSuccess={(refresh) => { }}
                                     getTaskStatusBadge={getTaskStatusBadge}
                                     // ── Lv1 infinity scroll props ──
                                     hasMoreLv1={hasMoreSubTasks}

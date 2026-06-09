@@ -13,12 +13,14 @@ import {
     getTypeTask,
     getPriorityTask,
     getListProject,
+    getListCompanyTask,
     getChildKpi,
     getListEmployee,
     getStatusTask,
     getListDepartment,
     getListPosition,
     getDetailListTaskAssign,
+    createPersonalTask,
 } from "@/src/features/task/api";
 import { useDispatch } from "react-redux";
 import { useTaskData } from "@/src/hooks/taskhook";
@@ -56,14 +58,16 @@ interface ValidationErrors {
     projects?: string;
     reject?: string;
     value?: any;
+    companies?: string;
 }
 
 interface AssignTaskProps {
     onBack: () => void;
     onAssignSuccess?: (task: any) => void;
+    isAdmin?: boolean;
 }
 
-function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
+function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps) {
     const dispatch = useDispatch();
     const {
         typeTask,
@@ -74,6 +78,7 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
         listEmployee,
         listDepartment,
         listPosition,
+        listCompanyTask
     } = useTaskData();
 
     const { tasks } = useProfileData();
@@ -98,6 +103,7 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
         description: ""
     });
 
+    const [selectedCompanies, setSelectedCompanies] = useState<any[]>([]);
     const [errors, setErrors] = useState<ValidationErrors>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [unit, setUnit] = useState<string>("%");
@@ -139,6 +145,7 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
     useEffect(() => {
         const token = localStorage.getItem("userToken");
 
+        if (!listCompanyTask) dispatch(getListCompanyTask({ search: null }) as any);
         if (!statusTask) dispatch(getStatusTask() as any);
         if (!typeTask) dispatch(getTypeTask() as any);
         if (!priorityTask) dispatch(getPriorityTask() as any);
@@ -167,7 +174,21 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
     }, [childKpi]);
 
     const handleFilterChange = (filter: any) => {
-        dispatch(getListProject({ filter }) as any);
+        const companiesParam = selectedCompanies.length > 0
+            ? selectedCompanies.map((c: any) => c.id).join(",")
+            : null;
+        dispatch(getListProject({ filter, companies: companiesParam }) as any);
+    };
+
+
+    const handleCompanyChange = (selected: any[]) => {
+        setSelectedCompanies(selected);
+        const companiesParam = selected.length > 0
+            ? selected.map((c: any) => c.id).join(",")
+            : null;
+        dispatch(getListProject({ companies: companiesParam }) as any);
+        // Reset project khi đổi company
+        setAssignForm((prev) => ({ ...prev, projects: [] }));
     };
 
     // Handle multi-select for projects
@@ -188,6 +209,10 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
 
         if (assignForm.process === 0 && unit !== "%") {
             newErrors.value = "Vui lòng nhập giá trị";
+        }
+
+        if (selectedCompanies.length === 0) {
+            newErrors.companies = "Vui lòng chọn ít nhất 1 công ty";
         }
 
         if (!assignForm.name.trim()) {
@@ -218,17 +243,19 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
             newErrors.reject = "Số lần (min) không được lớn hơn (max)";
         }
 
-        if (assignForm.target_type === 3) {
-            if (!Array.isArray(assignForm.employees) || assignForm.employees.length === 0) {
-                newErrors.employees = "Vui lòng chọn ít nhất 1 nhân viên hoặc chọn tất cả";
-            }
-        } else if (assignForm.target_type === 1) {
-            if (!assignForm.employees || assignForm.employees === "") {
-                newErrors.employees = "Vui lòng chọn 1 phòng ban";
-            }
-        } else if (assignForm.target_type === 2) {
-            if (!assignForm.employees || assignForm.employees === "") {
-                newErrors.employees = "Vui lòng chọn 1 vị trí";
+        if (isAdmin) {
+            if (assignForm.target_type === 3) {
+                if (!Array.isArray(assignForm.employees) || assignForm.employees.length === 0) {
+                    newErrors.employees = "Vui lòng chọn ít nhất 1 nhân viên hoặc chọn tất cả";
+                }
+            } else if (assignForm.target_type === 1) {
+                if (!assignForm.employees || assignForm.employees === "") {
+                    newErrors.employees = "Vui lòng chọn 1 phòng ban";
+                }
+            } else if (assignForm.target_type === 2) {
+                if (!assignForm.employees || assignForm.employees === "") {
+                    newErrors.employees = "Vui lòng chọn 1 vị trí";
+                }
             }
         }
 
@@ -264,54 +291,77 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
             scrollToFirstError(validationErrors);
             return;
         }
-
+    
         setIsSubmitting(true);
         try {
             const token = localStorage.getItem("userToken");
-            const taskData: any = {
-                name: assignForm.name,
-                type_task: parseInt(assignForm.type_task.toString()),
-                date_start: assignForm.date_start,
-                date_end: assignForm.date_end,
-                task_priority: parseInt(assignForm.task_priority.toString()),
-                projects: assignForm.projects.map((p: any) => p.id),
-                kpi_item_id: parseInt(assignForm.kpi_item_id.toString()),
-                target_type: parseInt(assignForm.target_type.toString()),
-                target_value: assignForm.process,
-                task_status: parseInt(assignForm.task_status.toString()),
-                employees: null,
-                position_id: null,
-                department_id: null,
-                token,
-                min_count_reject: parseInt(assignForm.min_reject.toString()),
-                max_count_reject: parseInt(assignForm.max_reject.toString()),
-                time_repeat: assignForm.type_task === 1 && assignForm.time_repeat
-                    ? assignForm.time_repeat
-                    : null,
-                description: assignForm.description
-            };
-
-            if (assignForm.target_type === 3) {
-                taskData.employees = assignForm.employees;
-                taskData.position_id = null;
-                taskData.department_id = null;
-            } else if (assignForm.target_type === 2) {
-                taskData.position_id = assignForm.employees;
-                taskData.employees = null;
-                taskData.department_id = null;
-            } else if (assignForm.target_type === 1) {
-                taskData.department_id = assignForm.employees;
-                taskData.employees = null;
-                taskData.position_id = null;
+    
+            let result;
+    
+            if (isAdmin) {
+                // Giữ nguyên taskData cũ + dispatch createTask
+                const taskData: any = {
+                    name: assignForm.name,
+                    type_task: parseInt(assignForm.type_task.toString()),
+                    date_start: assignForm.date_start,
+                    date_end: assignForm.date_end,
+                    task_priority: parseInt(assignForm.task_priority.toString()),
+                    projects: assignForm.projects.map((p: any) => p.id),
+                    kpi_item_id: parseInt(assignForm.kpi_item_id.toString()),
+                    target_type: parseInt(assignForm.target_type.toString()),
+                    target_value: assignForm.process,
+                    task_status: parseInt(assignForm.task_status.toString()),
+                    employees: null,
+                    position_id: null,
+                    department_id: null,
+                    token,
+                    min_count_reject: parseInt(assignForm.min_reject.toString()),
+                    max_count_reject: parseInt(assignForm.max_reject.toString()),
+                    time_repeat: assignForm.type_task === 1 && assignForm.time_repeat
+                        ? assignForm.time_repeat
+                        : null,
+                    description: assignForm.description,
+                    companies: selectedCompanies.map((c: any) => c.id),
+                };
+    
+                if (assignForm.target_type === 3) {
+                    taskData.employees = assignForm.employees;
+                } else if (assignForm.target_type === 2) {
+                    taskData.position_id = assignForm.employees;
+                } else if (assignForm.target_type === 1) {
+                    taskData.department_id = assignForm.employees;
+                }
+    
+                result = await dispatch(createTask(taskData) as any);
+            } else {
+                const personalTaskData = {
+                    name: assignForm.name,
+                    description: assignForm.description,
+                    type_task: parseInt(assignForm.type_task.toString()),
+                    date_start: assignForm.date_start,
+                    date_end: assignForm.date_end,
+                    task_priority: parseInt(assignForm.task_priority.toString()),
+                    projects: assignForm.projects.map((p: any) => p.id),
+                    kpi_item_id: parseInt(assignForm.kpi_item_id.toString()),
+                    target_type: parseInt(assignForm.target_type.toString()),
+                    target_value: assignForm.process,
+                    min_count_reject: parseInt(assignForm.min_reject.toString()),
+                    max_count_reject: parseInt(assignForm.max_reject.toString()),
+                    time_repeat: assignForm.type_task === 1 && assignForm.time_repeat
+                        ? assignForm.time_repeat
+                        : null,
+                    companies: selectedCompanies.map((c: any) => c.id),
+                    token,
+                };
+    
+                result = await dispatch(createPersonalTask(personalTaskData) as any);
             }
-
-            const result = await dispatch(createTask(taskData) as any);
-
-            if (result.payload.data.success) {
+    
+            if (result.payload.data.status === 200 || result.payload.data.status === 201 || result.payload.data.success) {
                 toast.success("Giao nhiệm vụ thành công!");
                 resetForm();
                 dispatch(getDetailListTaskAssign({
-                    token: token,
+                    token,
                     key: "listDetailTaskAssign"
                 }) as any);
                 setErrors({});
@@ -326,7 +376,6 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
             setIsSubmitting(false);
         }
     };
-
     const getSelectedCount = () => {
         if (assignForm.target_type === 3) {
             return Array.isArray(assignForm.employees) ? assignForm.employees.length : 0;
@@ -402,11 +451,10 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                         if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }));
                                     }}
                                     placeholder="Ví dụ: Xây dựng API login..."
-                                    className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white placeholder-slate-500 focus:outline-none transition ${
-                                        errors.name
+                                    className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white placeholder-slate-500 focus:outline-none transition ${errors.name
                                             ? "border-red-500 focus:border-red-500"
                                             : "border-slate-700 focus:border-blue-500"
-                                    }`}
+                                        }`}
                                 />
                                 {errors.name && (
                                     <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
@@ -497,17 +545,66 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                 </div>
                             )} */}
 
-                            {/* Dự án - multi select */}
+                            {/* Company multi-select */}
+                            <div ref={setErrorRef("companies")}>
+                                <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
+                                    Công ty <span className="text-red-400">*</span>
+                                </label>
+                                <FilterableSelector
+                                    data={listCompanyTask ?? []}
+                                    multi={true}
+                                    onFilter={(search) =>
+                                        dispatch(getListCompanyTask({ search: search || null }) as any)
+                                    }
+                                    onSelect={(selected) => {
+                                        const arr = Array.isArray(selected) ? selected : selected ? [selected] : [];
+                                        handleCompanyChange(arr);
+                                        if (arr.length > 0) setErrors((prev) => ({ ...prev, companies: undefined })); 
+                                    }}
+                                    value={selectedCompanies}
+                                    placeholder="Chọn công ty"
+                                    displayField="name"
+                                    emptyMessage="Không có công ty"
+                                />
+                                {errors.companies && ( // thêm hiển thị error
+                                    <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                                        <AlertCircle size={12} /> {errors.companies}
+                                    </p>
+                                )}
+                                {selectedCompanies.length > 0 && (
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                        {selectedCompanies.map((c: any) => (
+                                            <span
+                                                key={c.id}
+                                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-500/15 border border-purple-500/30 rounded-full text-xs text-purple-300"
+                                            >
+                                                {c.name}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const next = selectedCompanies.filter((x: any) => x.id !== c.id);
+                                                        handleCompanyChange(next);
+                                                    }}
+                                                    className="text-purple-400 hover:text-white transition ml-0.5"
+                                                >
+                                                    ×
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Dự án */}
                             <div ref={setErrorRef("projects")}>
                                 <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
                                     Dự án <span className="text-red-400">*</span>
                                 </label>
                                 <FilterableSelector
                                     data={listProject ?? []}
-                                    multi={true}
                                     onFilter={handleFilterChange}
-                                    onSelect={handleProjectChange}
-                                    value={assignForm.projects}
+                                    onSelect={(selected) => handleProjectChange(selected ? [selected] : [])}
+                                    value={assignForm.projects[0] ?? null}
                                     placeholder="Chọn dự án"
                                     displayField="name"
                                     emptyMessage="Không có dự án"
@@ -517,8 +614,6 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                         <AlertCircle size={12} /> {errors.projects}
                                     </p>
                                 )}
-
-                                {/* Hiển thị tag các dự án đã chọn */}
                                 {assignForm.projects.length > 0 && (
                                     <div className="mt-2 flex flex-wrap gap-2">
                                         {assignForm.projects.map((p: any) => (
@@ -577,11 +672,10 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                                 setAssignForm({ ...assignForm, date_start: e.target.value });
                                                 if (errors.date_start) setErrors((prev) => ({ ...prev, date_start: undefined }));
                                             }}
-                                            className={`w-full pl-10 sm:pl-11 pr-3 py-2.5 sm:pr-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white focus:outline-none transition ${
-                                                errors.date_start
+                                            className={`w-full pl-10 sm:pl-11 pr-3 py-2.5 sm:pr-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white focus:outline-none transition ${errors.date_start
                                                     ? "border-red-500 focus:border-red-500"
                                                     : "border-slate-700 focus:border-blue-500"
-                                            }`}
+                                                }`}
                                         />
                                     </div>
                                     {errors.date_start && (
@@ -605,11 +699,10 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                                 setAssignForm({ ...assignForm, date_end: e.target.value });
                                                 if (errors.date_end) setErrors((prev) => ({ ...prev, date_end: undefined }));
                                             }}
-                                            className={`w-full pl-10 sm:pl-11 pr-3 py-2.5 sm:pr-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white focus:outline-none transition ${
-                                                errors.date_end
+                                            className={`w-full pl-10 sm:pl-11 pr-3 py-2.5 sm:pr-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white focus:outline-none transition ${errors.date_end
                                                     ? "border-red-500 focus:border-red-500"
                                                     : "border-slate-700 focus:border-blue-500"
-                                            }`}
+                                                }`}
                                         />
                                     </div>
                                     {errors.date_end && (
@@ -654,11 +747,10 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                                         value={unit === "%" ? 100 : formatNumber(assignForm.process)}
                                         onChange={handleProcessChange}
                                         disabled={unit === "%"}
-                                        className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white focus:outline-none transition ${
-                                            errors.value
+                                        className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white focus:outline-none transition ${errors.value
                                                 ? "border-red-500 focus:border-red-500"
                                                 : "border-slate-700 focus:border-blue-500"
-                                        } ${unit === "%" ? "opacity-60 cursor-not-allowed" : ""}`}
+                                            } ${unit === "%" ? "opacity-60 cursor-not-allowed" : ""}`}
                                     />
                                     {errors.value && (
                                         <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
@@ -705,44 +797,47 @@ function AssignTask({ onBack, onAssignSuccess }: AssignTaskProps) {
                         </div>
 
                         {/* Đối tượng giao */}
-                        <div
-                            ref={setErrorRef("employees")}
-                            className="pt-4 sm:pt-6 border-t border-slate-800"
-                        >
-                            <TaskTargetSelector
-                                enabledTargets={["employee", "department"]}
-                                employees={listEmployee}
-                                departments={listDepartment}
-                                selectedTargetType={assignForm.target_type}
-                                selectedValues={assignForm.employees}
-                                onTargetTypeChange={(type) => {
-                                    setAssignForm({ ...assignForm, target_type: type, employees: type === 3 ? [] : "" });
-                                }}
-                                onSelectionChange={(values) => {
-                                    setAssignForm({ ...assignForm, employees: values });
-                                }}
-                                onFilterChangeUser={(filters) => {
-                                    const token = localStorage.getItem("userToken");
-                                    dispatch(getListEmployee({
-                                        position_id: filters.position,
-                                        department_id: filters.department,
-                                        filter: filters.search || null,
-                                        token,
-                                    }) as any);
-                                }}
-                                onFilterChangeDepartment={(filters) => {
-                                    dispatch(getListDepartment({ filter: filters.search }) as any);
-                                }}
-                                onFilterChangeLevel={(filters) => {
-                                    dispatch(getListDepartment({ filter: filters.search }) as any);
-                                }}
-                                error={errors.employees}
-                                onErrorClear={() => setErrors((prev) => ({ ...prev, employees: undefined }))}
-                                showSelectAll={true}
-                                showFilters={true}
-                                maxHeight="24rem"
-                            />
-                        </div>
+                        {isAdmin && (
+                            <div
+                                ref={setErrorRef("employees")}
+                                className="pt-4 sm:pt-6 border-t border-slate-800"
+                            >
+                                <TaskTargetSelector
+                                    enabledTargets={["employee", "department"]}
+                                    employees={listEmployee}
+                                    departments={listDepartment}
+                                    selectedTargetType={assignForm.target_type}
+                                    selectedValues={assignForm.employees}
+                                    onTargetTypeChange={(type) => {
+                                        setAssignForm({ ...assignForm, target_type: type, employees: type === 3 ? [] : "" });
+                                    }}
+                                    onSelectionChange={(values) => {
+                                        setAssignForm({ ...assignForm, employees: values });
+                                    }}
+                                    onFilterChangeUser={(filters) => {
+                                        const token = localStorage.getItem("userToken");
+                                        dispatch(getListEmployee({
+                                            position_id: filters.position,
+                                            department_id: filters.department,
+                                            filter: filters.search || null,
+                                            token,
+                                        }) as any);
+                                    }}
+                                    onFilterChangeDepartment={(filters) => {
+                                        dispatch(getListDepartment({ filter: filters.search }) as any);
+                                    }}
+                                    onFilterChangeLevel={(filters) => {
+                                        dispatch(getListDepartment({ filter: filters.search }) as any);
+                                    }}
+                                    error={errors.employees}
+                                    onErrorClear={() => setErrors((prev) => ({ ...prev, employees: undefined }))}
+                                    showSelectAll={true}
+                                    showFilters={true}
+                                    maxHeight="24rem"
+                                />
+                            </div>
+
+                        )}
 
                         {/* Actions */}
                         <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-slate-800">

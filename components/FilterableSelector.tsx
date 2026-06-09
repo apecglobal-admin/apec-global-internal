@@ -290,41 +290,40 @@ function FilterableSelector<T extends SearchFilterItem>({
             className="overflow-y-auto py-1"
             style={{ maxHeight: 180 }}
           >
-            {data.map((item, index) => {
-              const selected = isSelected(item);
-              return (
-
-                <li
-                  key={item.id}
-                  onClick={() => handleSelect(item)}
-                  onMouseEnter={() =>
-                    setHighlightedIndex(index)
-                  }
-                  className={`flex items-center px-3 py-2 text-sm cursor-pointer
-                  ${index === highlightedIndex
-                      ? "bg-slate-700 text-white"
-                      : "text-slate-300 hover:bg-slate-700"}
-                  `}
-                >
-                  <span className="w-5 flex-shrink-0">
-
-                    {selected && (
-                      <svg
-                        className="h-4 w-4 text-slate-400"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293l-8 8-4-4"
-                        />
-                      </svg>
-                    )}
-                  </span>
-                  {getDisplayText(item)}
-                </li>
-              );
-            })}
+            {data.length === 0 ? (
+              <li className="flex items-center justify-center px-3 py-4 text-sm text-slate-500">
+                {isLoading ? "Đang tải..." : emptyMessage}
+              </li>
+            ) : (
+              data.map((item, index) => {
+                const selected = isSelected(item);
+                return (
+                  <li
+                    key={item.id}
+                    onClick={() => handleSelect(item)}
+                    onMouseEnter={() => setHighlightedIndex(index)}
+                    className={`flex items-center px-3 py-2 text-sm cursor-pointer
+          ${index === highlightedIndex
+                        ? "bg-slate-700 text-white"
+                        : "text-slate-300 hover:bg-slate-700"}
+          `}
+                  >
+                    <span className="w-5 flex-shrink-0">
+                      {selected && (
+                        <svg
+                          className="h-4 w-4 text-slate-400"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path fillRule="evenodd" d="M16.707 5.293l-8 8-4-4" />
+                        </svg>
+                      )}
+                    </span>
+                    {getDisplayText(item)}
+                  </li>
+                );
+              })
+            )}
           </ul>
         </div>
       )}

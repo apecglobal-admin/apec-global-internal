@@ -25,9 +25,11 @@ import {
   updatePassword,
   personalTarget,
   getPermissonManager,
-  personalRequestStatus
+  personalRequestStatus,
+  listPersonalProjects
 } from "../../services/api";
 import { createAsyncReducer, createAsyncReducerDynamic } from "@/src/utils/createAsyncReducer";
+import { PersonTask } from "@/src/services/interface";
 
 interface InitState<T> {
   data: T;
@@ -48,6 +50,7 @@ interface UserState {
 
   typeTask: InitState<any[]>;
   personals: InitState<any[]>;
+  personalProjects: InitState<PersonTask[]>;
   typePersonal: InitState<any[]>;
   achievements: InitState<any[]>;
   projects: InitState<any | null>;
@@ -77,6 +80,7 @@ const initialState: UserState = {
   detailTasks: { data: [], loading: false, error: null, status: null },
   typeTask: { data: [], loading: false, error: null, status: null },
   personals: { data: [], loading: false, error: null, status: null },
+  personalProjects: { data: [], loading: false, error: null, status: null },
   typePersonal: { data: [], loading: false, error: null, status: null },
   achievements: { data: [], loading: false, error: null, status: null },
   projects: { data: null, loading: false, error: null, status: null },
@@ -146,6 +150,8 @@ const userSlice = createSlice({
 
     createAsyncReducer(builder, listAchievements, "achievements");
     createAsyncReducer(builder, listProjects, "projects");
+    createAsyncReducer(builder, listPersonalProjects, "personalProjects");
+
     createAsyncReducer(builder, listCard, "cards");
     createAsyncReducer(builder, listLink, "links");
     createAsyncReducer(builder, getListEmployeeDepartment, "listEmployeeDepartment");

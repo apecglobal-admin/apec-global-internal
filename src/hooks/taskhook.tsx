@@ -10,6 +10,7 @@ export const useTaskData = () => {
     childKpi: task.childKpi.data.data,
     statusTask: task.statusTask.data.data,
     listProject: task.listProject.data.data,
+    listCompanyTask: task.listCompanyTask.data.data,
     listEmployee: task.listEmployee.data.data,
     listDepartment: task.listDepartment.data.data,
     listPosition: task.listPosition.data.data,

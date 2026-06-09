@@ -22,6 +22,8 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  Building2,
+  FolderKanban,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -46,12 +48,12 @@ import {
 } from "@/components/ui/select";
 
 import TaskDetail from "./component/taskDetail";
-import { 
-  getPriorityTask, 
+import {
+  getPriorityTask,
   getStatusTask,
   getChildKpi,
   getListProject,
- } from "@/src/features/task/api";
+} from "@/src/features/task/api";
 import { useTaskData } from "@/src/hooks/taskhook";
 import CheckedTask from "./component/CheckedTask";
 import { Task } from "@/src/services/interface";
@@ -59,6 +61,7 @@ import { formatNumber } from "@/src/utils/formatNumber";
 import { getDashboardTasks } from "@/src/features/dashboard/api/api";
 import { useDashboardData } from "@/src/hooks/dashboardhook";
 import { formatDate2 } from "@/src/utils/formatDate";
+import { Badge } from "@/components/ui/badge";
 
 interface TasksResponse {
   data: Task[];
@@ -69,14 +72,14 @@ interface TasksResponse {
   total_pages: number;
 }
 
-interface TypeProps{
+interface TypeProps {
   id: string;
   name: string;
 }
 
 const MONTH_NAMES = [
-  'Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
-  'Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12',
+  'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+  'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
 ];
 
 function TasksTab() {
@@ -100,6 +103,9 @@ function TasksTab() {
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [searchFilter, setSearchFilter] = useState<string>("");
   const [showFilter, setShowFilter] = useState(false);
+  const [showAssignTask, setShowAssignTask] = useState(false);
+  const [isKpiDropdownOpen, setIsKpiDropdownOpen] = useState(false);
+
 
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
@@ -112,22 +118,22 @@ function TasksTab() {
 
   const today = new Date();
   const [selectedMonth, setSelectedMonth] = useState<number | null>(today.getMonth() + 1);
-  const [selectedYear, setSelectedYear]   = useState<number>(today.getFullYear());
+  const [selectedYear, setSelectedYear] = useState<number>(today.getFullYear());
 
-  const isCurrentMonth = selectedMonth !== null && selectedMonth === today.getMonth() + 1 && selectedYear  === today.getFullYear();
+  const isCurrentMonth = selectedMonth !== null && selectedMonth === today.getMonth() + 1 && selectedYear === today.getFullYear();
 
   const buildMonthParam = (month: number | null, year: number) =>
     month !== null ? `${String(month).padStart(2, '0')}/${year}` : undefined;
-  
+
   useEffect(() => {
     const token = localStorage.getItem("userToken");
-    if(!typeTask){
+    if (!typeTask) {
       dispatch(listTypeTask() as any);
     }
-    if(!listProject){
+    if (!listProject) {
       dispatch(getListProject({}) as any);
     }
-    if(!childKpi){
+    if (!childKpi) {
       dispatch(getChildKpi() as any);
     }
     if (!statusTask) {
@@ -142,8 +148,8 @@ function TasksTab() {
     const token = localStorage.getItem("userToken");
     dispatch(
       getDashboardTasks({
-          token,
-          month: buildMonthParam(selectedMonth, selectedYear),
+        token,
+        month: buildMonthParam(selectedMonth, selectedYear),
       }) as any
     );
   }, [selectedMonth, selectedYear]);
@@ -165,8 +171,8 @@ function TasksTab() {
         };
 
         dispatch(personTasks(payload as any) as any);
-        
-        
+
+
       }
     }, 300)
     return () => clearTimeout(timer);
@@ -233,35 +239,35 @@ function TasksTab() {
     await dispatch(personTasks(payload1 as any) as any);
 
     setSelectedTask(taskId);
-    
+
   };
 
 
   const refreshTasks = async (id: any) => {
     const token = localStorage.getItem("userToken");
-    
-      const payload1 = {
-        id,
-        token,
-        key: "detailTasks"
-      };
-      const res = await dispatch(personTasks(payload1 as any) as any);
 
-      const payload = {
-        page: page,
-        token,
-        filter: taskFilter === "all" ? null : parseInt(taskFilter),
-        projectFilter: projectFilter === "all" ? null : parseInt(projectFilter),
-        kpiFilter: kpiFilter === "all" ? null : parseInt(kpiFilter),
-        statusFilter: statusFilter === "all" ? null : parseInt(statusFilter),
-        priorityFilter: priorityFilter === "all" ? null : parseInt(priorityFilter),
-        search: searchFilter === "" ? null : searchFilter,
-        key: "tasks"
-      };
-  
-      dispatch(personTasks(payload as any) as any);
-      
-      refreshFilter()
+    const payload1 = {
+      id,
+      token,
+      key: "detailTasks"
+    };
+    const res = await dispatch(personTasks(payload1 as any) as any);
+
+    const payload = {
+      page: page,
+      token,
+      filter: taskFilter === "all" ? null : parseInt(taskFilter),
+      projectFilter: projectFilter === "all" ? null : parseInt(projectFilter),
+      kpiFilter: kpiFilter === "all" ? null : parseInt(kpiFilter),
+      statusFilter: statusFilter === "all" ? null : parseInt(statusFilter),
+      priorityFilter: priorityFilter === "all" ? null : parseInt(priorityFilter),
+      search: searchFilter === "" ? null : searchFilter,
+      key: "tasks"
+    };
+
+    dispatch(personTasks(payload as any) as any);
+
+    refreshFilter()
   };
 
   const getTaskStatusBadge = (
@@ -269,63 +275,62 @@ function TasksTab() {
     checked: boolean,
     normal: boolean = false,
     iconOnly: boolean = false
-) => {
+  ) => {
     if (!statusTask) return null;
     const status = statusTask.find((s: TypeProps) => parseInt(s.id) === statusId);
 
-    
     if (!status) return null;
     switch (statusId) {
-        case 1:
-            return (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-500/20 text-slate-400 border border-slate-500/30">
-                    <AlertCircle size={12} />
-                    {!iconOnly && <span className="text-xs">{status.name}</span>}
-                </span>
-            );
-        case 2:
-            return (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                    <Clock size={12} />
-                    {!iconOnly && <span className="text-xs">{status.name}</span>}
-                </span>
-            );
-        case 3:
-            return (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-500/20 text-gray-400 border border-gray-500/30">
-                    <Pause size={12} />
-                    {!iconOnly && <span className="text-xs">{status.name}</span>}
-                </span>
-            );
-        case 4:
-            return (
-                normal ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
-                        <CheckCircle2 size={12} />
-                        {!iconOnly && <span className="text-xs">{status.name}</span>}
-                    </span>
-                ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
-                        <CheckCircle2 size={12} />
-                        {!iconOnly && <span className="text-xs">{checked ? "Đã Duyệt" : "Chờ Duyệt"}</span>}
-                    </span>
-                )
-            );
-        case 5:
-            return (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
-                    <XCircle size={12} />
-                    {!iconOnly && <span className="text-xs">{status.name}</span>}
-                </span>
-            );
-        default:
-            return (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-500/20 text-slate-400 border border-slate-500/30">
-                    {!iconOnly && <span className="text-xs">{status.name}</span>}
-                </span>
-            );
+      case 1:
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-500/20 text-slate-400 border border-slate-500/30">
+            <AlertCircle size={12} />
+            {!iconOnly && <span className="text-xs">{status.name}</span>}
+          </span>
+        );
+      case 2:
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+            <Clock size={12} />
+            {!iconOnly && <span className="text-xs">{status.name}</span>}
+          </span>
+        );
+      case 3:
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-500/20 text-gray-400 border border-gray-500/30">
+            <Pause size={12} />
+            {!iconOnly && <span className="text-xs">{status.name}</span>}
+          </span>
+        );
+      case 4:
+        return (
+          normal ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
+              <CheckCircle2 size={12} />
+              {!iconOnly && <span className="text-xs">{status.name}</span>}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
+              <CheckCircle2 size={12} />
+              {!iconOnly && <span className="text-xs">{checked ? "Đã Duyệt" : "Chờ Duyệt"}</span>}
+            </span>
+          )
+        );
+      case 5:
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/30">
+            <XCircle size={12} />
+            {!iconOnly && <span className="text-xs">{status.name}</span>}
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-500/20 text-slate-400 border border-slate-500/30">
+            {!iconOnly && <span className="text-xs">{status.name}</span>}
+          </span>
+        );
     }
-};
+  };
 
   const getPriorityBadge = (priorityId: number) => {
     if (!priorityTask) return null;
@@ -416,10 +421,10 @@ function TasksTab() {
   const handlePrevMonth = () => {
     if (selectedMonth === null) return;
     if (selectedMonth === 1) {
-        setSelectedMonth(12);
-        setSelectedYear(y => y - 1);
+      setSelectedMonth(12);
+      setSelectedYear(y => y - 1);
     } else {
-        setSelectedMonth(m => m! - 1);
+      setSelectedMonth(m => m! - 1);
     }
   };
 
@@ -427,17 +432,26 @@ function TasksTab() {
     if (isCurrentMonth) return;
     if (selectedMonth === null) return;
     if (selectedMonth === 12) {
-        setSelectedMonth(1);
-        setSelectedYear(y => y + 1);
+      setSelectedMonth(1);
+      setSelectedYear(y => y + 1);
     } else {
-        setSelectedMonth(m => m! + 1);
+      setSelectedMonth(m => m! + 1);
     }
   };
 
+  if (showAssignTask) {
+    return (
+      <AssignTask
+        onBack={() => setShowAssignTask(false)}
+        isAdmin={false}
+      // onAssignSuccess={handleAssignSuccess}
+      />
+    );
+  }
+
+
   const renderDashboard = () => {
-    const [isKpiDropdownOpen, setIsKpiDropdownOpen] = useState(false);
-    
-    return(
+    return (
       <div>
         {listDashboardTasks && (
           <div className="space-y-0.5">
@@ -452,74 +466,70 @@ function TasksTab() {
                 <ChevronDown className="h-4 w-4 text-slate-400" />
               )}
             </button>
-  
+
             {isVisible && (
               <div className="space-y-0.5">
                 {/* Filter theo tháng */}
                 <div className="flex items-center justify-between bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-1.5 gap-2">
-                    <div className="flex items-center gap-2 shrink-0">
-                        <div className="p-1 bg-sky-600/20 rounded">
-                            <CalendarDays className="h-3.5 w-3.5 text-sky-400" />
-                        </div>
-                        <span className="hidden sm:inline text-[10px] font-medium text-slate-300">Lọc theo tháng</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="p-1 bg-sky-600/20 rounded">
+                      <CalendarDays className="h-3.5 w-3.5 text-sky-400" />
                     </div>
+                    <span className="hidden sm:inline text-[10px] font-medium text-slate-300">Lọc theo tháng</span>
+                  </div>
 
-                    <div className="flex items-center gap-1.5">
-                        <button
-                            onClick={() => setSelectedMonth(null)}
-                            className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
-                                selectedMonth === null
-                                    ? 'text-white bg-green-500'
-                                    : 'bg-slate-700 text-slate-400 hover:bg-slate-600 hover:text-slate-200'
-                            }`}
-                        >
-                            Tất cả
-                        </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setSelectedMonth(null)}
+                      className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${selectedMonth === null
+                        ? 'text-white bg-green-500'
+                        : 'bg-slate-700 text-slate-400 hover:bg-slate-600 hover:text-slate-200'
+                        }`}
+                    >
+                      Tất cả
+                    </button>
 
-                        <button
-                            onClick={handlePrevMonth}
-                            disabled={selectedMonth === null}
-                            className={`p-1 rounded transition-colors ${
-                                selectedMonth === null
-                                    ? 'opacity-30 cursor-not-allowed'
-                                    : 'hover:bg-slate-700'
-                            }`}
-                        >
-                            <ChevronLeft className="h-3.5 w-3.5 text-slate-400" />
-                        </button>
+                    <button
+                      onClick={handlePrevMonth}
+                      disabled={selectedMonth === null}
+                      className={`p-1 rounded transition-colors ${selectedMonth === null
+                        ? 'opacity-30 cursor-not-allowed'
+                        : 'hover:bg-slate-700'
+                        }`}
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5 text-slate-400" />
+                    </button>
 
-                        <button
-                            onClick={() => {
-                                if (selectedMonth === null) {
-                                    setSelectedMonth(today.getMonth() + 1);
-                                    setSelectedYear(today.getFullYear());
-                                }
-                            }}
-                            className={`min-w-[110px] text-center px-1 py-0.5 rounded transition-colors ${
-                                selectedMonth === null
-                                    ? 'bg-slate-700/30 cursor-pointer hover:bg-slate-700/60'
-                                    : 'bg-slate-700/60'
-                            }`}
-                        >
-                            <span className={`text-[10px] font-bold ${selectedMonth === null ? 'text-slate-500' : 'text-white'}`}>
-                                {selectedMonth !== null
-                                    ? `${MONTH_NAMES[selectedMonth - 1]} / ${selectedYear}`
-                                    : '— / —'}
-                            </span>
-                        </button>
+                    <button
+                      onClick={() => {
+                        if (selectedMonth === null) {
+                          setSelectedMonth(today.getMonth() + 1);
+                          setSelectedYear(today.getFullYear());
+                        }
+                      }}
+                      className={`min-w-[110px] text-center px-1 py-0.5 rounded transition-colors ${selectedMonth === null
+                        ? 'bg-slate-700/30 cursor-pointer hover:bg-slate-700/60'
+                        : 'bg-slate-700/60'
+                        }`}
+                    >
+                      <span className={`text-[10px] font-bold ${selectedMonth === null ? 'text-slate-500' : 'text-white'}`}>
+                        {selectedMonth !== null
+                          ? `${MONTH_NAMES[selectedMonth - 1]} / ${selectedYear}`
+                          : '— / —'}
+                      </span>
+                    </button>
 
-                        <button
-                            onClick={handleNextMonth}
-                            disabled={isCurrentMonth || selectedMonth === null}
-                            className={`p-1 rounded transition-colors ${
-                                isCurrentMonth || selectedMonth === null
-                                    ? 'opacity-30 cursor-not-allowed'
-                                    : 'hover:bg-slate-700'
-                            }`}
-                        >
-                            <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
-                        </button>
-                    </div>
+                    <button
+                      onClick={handleNextMonth}
+                      disabled={isCurrentMonth || selectedMonth === null}
+                      className={`p-1 rounded transition-colors ${isCurrentMonth || selectedMonth === null
+                        ? 'opacity-30 cursor-not-allowed'
+                        : 'hover:bg-slate-700'
+                        }`}
+                    >
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Row 1: Tổng công việc & Quá hạn - 2 cột layout mới */}
@@ -560,7 +570,7 @@ function TasksTab() {
                     </div>
                   </div>
                 </div>
-  
+
                 {/* Row 2: Theo trạng thái & Theo ưu tiên */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-0.5">
                   {/* Công việc theo trạng thái */}
@@ -580,10 +590,10 @@ function TasksTab() {
                         </span>
                       </div>
                     </div>
-  
+
                     <div className="space-y-1.5">
-                      {listDashboardTasks.tasks_by_status?.items && 
-                      listDashboardTasks.tasks_by_status.items.length > 0 ? (
+                      {listDashboardTasks.tasks_by_status?.items &&
+                        listDashboardTasks.tasks_by_status.items.length > 0 ? (
                         listDashboardTasks.tasks_by_status.items.map((item: any, index: any) => {
                           const colorMap: any = {
                             "2": { bg: "bg-blue-500", text: "text-blue-400" },
@@ -592,7 +602,7 @@ function TasksTab() {
                             "5": { bg: "bg-red-500", text: "text-red-400" },
                           };
                           const colors = colorMap[item.task_status] || { bg: "bg-slate-500", text: "text-slate-400" };
-  
+
                           return (
                             <div key={index}>
                               <div className="flex items-center justify-between">
@@ -612,7 +622,7 @@ function TasksTab() {
                       )}
                     </div>
                   </div>
-  
+
                   {/* Công việc theo mức độ ưu tiên */}
                   <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg p-2.5 shadow-md">
                     <div className="flex items-center justify-between mb-2">
@@ -630,10 +640,10 @@ function TasksTab() {
                         </span>
                       </div>
                     </div>
-  
+
                     <div className="space-y-1.5">
-                      {listDashboardTasks.tasks_by_priority?.items && 
-                      listDashboardTasks.tasks_by_priority.items.length > 0 ? (
+                      {listDashboardTasks.tasks_by_priority?.items &&
+                        listDashboardTasks.tasks_by_priority.items.length > 0 ? (
                         listDashboardTasks.tasks_by_priority.items.map((item: any, index: any) => {
                           const colorMap: any = {
                             "1": { bg: "bg-red-600", text: "text-red-400" },
@@ -642,7 +652,7 @@ function TasksTab() {
                             "4": { bg: "bg-green-500", text: "text-green-400" },
                           };
                           const colors = colorMap[item.task_priority] || { bg: "bg-slate-500", text: "text-slate-400" };
-  
+
                           return (
                             <div key={index}>
                               <div className="flex items-center justify-between">
@@ -663,7 +673,7 @@ function TasksTab() {
                     </div>
                   </div>
                 </div>
-  
+
                 {/* Row 3: Theo loại công việc */}
                 <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg p-2.5 shadow-md">
                   <div className="flex items-center justify-between mb-2">
@@ -681,10 +691,10 @@ function TasksTab() {
                       </span>
                     </div>
                   </div>
-  
+
                   <div className={`${listDashboardTasks.tasks_by_type_task?.items?.length === 0 ? "" : "grid grid-cols-3 gap-1.5"}`}>
-                    {listDashboardTasks.tasks_by_type_task?.items && 
-                    listDashboardTasks.tasks_by_type_task.items.length > 0 ? (
+                    {listDashboardTasks.tasks_by_type_task?.items &&
+                      listDashboardTasks.tasks_by_type_task.items.length > 0 ? (
                       listDashboardTasks.tasks_by_type_task.items.map((item: any, index: any) => {
                         const colorMap: any = {
                           "1": { bg: "bg-blue-600/20", border: "border-blue-500", text: "text-blue-400" },
@@ -692,7 +702,7 @@ function TasksTab() {
                           "3": { bg: "bg-teal-600/20", border: "border-teal-500", text: "text-teal-400" },
                         };
                         const colors = colorMap[item.type_task] || { bg: "bg-slate-600/20", border: "border-slate-500", text: "text-slate-400" };
-  
+
                         return (
                           <div key={index} className={`${colors.bg} border ${colors.border} rounded-lg p-1.5 text-center`}>
                             <p className={`text-[10px] font-medium ${colors.text} mb-1`}>{item.label}</p>
@@ -708,7 +718,7 @@ function TasksTab() {
                     )}
                   </div>
                 </div>
-  
+
                 {/* Row 4: Công việc theo KPI - Dropdown */}
                 <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg shadow-md">
                   <button
@@ -736,14 +746,14 @@ function TasksTab() {
                       )}
                     </div>
                   </button>
-  
+
                   {isKpiDropdownOpen && (
                     <div className="px-2.5 pb-2.5 space-y-1 max-h-56 overflow-y-auto">
-                      {listDashboardTasks.tasks_by_kpi_item?.items && 
-                      listDashboardTasks.tasks_by_kpi_item.items.length > 0 ? (
+                      {listDashboardTasks.tasks_by_kpi_item?.items &&
+                        listDashboardTasks.tasks_by_kpi_item.items.length > 0 ? (
                         listDashboardTasks.tasks_by_kpi_item.items.map((item: any, index: any) => (
-                          <div 
-                            key={index} 
+                          <div
+                            key={index}
                             className="flex items-center justify-between bg-slate-700/50 hover:bg-slate-700 rounded-md px-2.5 py-1.5 transition-all duration-200"
                           >
                             <div className="flex items-center gap-1.5">
@@ -773,7 +783,7 @@ function TasksTab() {
   }
 
   const renderFilter = () => {
-    return(
+    return (
       <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4">
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
           {/* Task Type Filter */}
@@ -792,8 +802,8 @@ function TasksTab() {
                 {typeTask &&
                   Array.isArray(typeTask) &&
                   typeTask.map((type: TypeProps) => (
-                    <SelectItem 
-                      key={type.id} 
+                    <SelectItem
+                      key={type.id}
                       value={type.id}
                       className="text-white text-xs sm:text-sm"
                     >
@@ -820,8 +830,8 @@ function TasksTab() {
                 {listProject &&
                   Array.isArray(listProject) &&
                   listProject.map((project: TypeProps) => (
-                    <SelectItem 
-                      key={project.id} 
+                    <SelectItem
+                      key={project.id}
                       value={project.id.toString()}
                       className="text-white text-xs sm:text-sm"
                     >
@@ -848,8 +858,8 @@ function TasksTab() {
                 {childKpi &&
                   Array.isArray(childKpi) &&
                   childKpi.map((kpi: TypeProps) => (
-                    <SelectItem 
-                      key={kpi.id} 
+                    <SelectItem
+                      key={kpi.id}
                       value={kpi.id.toString()}
                       className="text-white text-xs sm:text-sm"
                     >
@@ -875,8 +885,8 @@ function TasksTab() {
                 {statusTask &&
                   Array.isArray(statusTask) &&
                   statusTask.map((kpi: TypeProps) => (
-                    <SelectItem 
-                      key={kpi.id} 
+                    <SelectItem
+                      key={kpi.id}
                       value={kpi.id.toString()}
                       className="text-white text-xs sm:text-sm"
                     >
@@ -901,8 +911,8 @@ function TasksTab() {
                 {priorityTask &&
                   Array.isArray(priorityTask) &&
                   priorityTask.map((kpi: TypeProps) => (
-                    <SelectItem 
-                      key={kpi.id} 
+                    <SelectItem
+                      key={kpi.id}
                       value={kpi.id.toString()}
                       className="text-white text-xs sm:text-sm"
                     >
@@ -922,11 +932,10 @@ function TasksTab() {
             <div className="flex gap-2">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`flex-1 p-2 rounded-lg transition text-xs sm:text-sm font-medium ${
-                  viewMode === "grid"
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700"
-                }`}
+                className={`flex-1 p-2 rounded-lg transition text-xs sm:text-sm font-medium ${viewMode === "grid"
+                  ? "bg-blue-600 text-white"
+                  : "bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700"
+                  }`}
                 title="Xem dạng lưới"
               >
                 <LayoutGrid size={16} className="mx-auto sm:hidden" />
@@ -934,11 +943,10 @@ function TasksTab() {
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`flex-1 p-2 rounded-lg transition text-xs sm:text-sm font-medium ${
-                  viewMode === "list"
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700"
-                }`}
+                className={`flex-1 p-2 rounded-lg transition text-xs sm:text-sm font-medium ${viewMode === "list"
+                  ? "bg-blue-600 text-white"
+                  : "bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700"
+                  }`}
                 title="Xem dạng danh sách"
               >
                 <LayoutList size={16} className="mx-auto sm:hidden" />
@@ -951,14 +959,14 @@ function TasksTab() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
             <input
-                type="text"
-                value={searchFilter}
-                onChange={(e) => {
-                    setSearchFilter(e.target.value)
-                    setPage(1)
-                }}
-                placeholder={"Tìm kiếm tên, mô tả..."}
-                className="
+              type="text"
+              value={searchFilter}
+              onChange={(e) => {
+                setSearchFilter(e.target.value)
+                setPage(1)
+              }}
+              placeholder={"Tìm kiếm tên, mô tả..."}
+              className="
                 w-full rounded-md
                 bg-slate-900 border border-slate-700
                 pl-9 pr-8 py-2 text-sm text-white
@@ -968,8 +976,8 @@ function TasksTab() {
                 transition-colors duration-150
                 "
             />
-            {searchFilter  && (
-                <button
+            {searchFilter && (
+              <button
                 type="button"
                 onClick={() => setSearchFilter("")}
                 aria-label="Xóa tìm kiếm"
@@ -978,18 +986,16 @@ function TasksTab() {
                     text-slate-500 hover:text-white
                     transition-colors duration-150
                 "
-                >
+              >
                 <X className="h-4 w-4" />
-                </button>
+              </button>
             )}
-            </div>
+          </div>
         </div>
       </div>
     )
   }
 
-
-      
   return (
     <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6">
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
@@ -1005,6 +1011,18 @@ function TasksTab() {
                   Tổng số {totalItems} nhiệm vụ
                 </p>
               </div>
+              <button
+                onClick={() => setShowAssignTask(true)}
+                className="flex items-center justify-center gap-2 px-2.5 py-1.5 
+                              bg-blue-600 hover:bg-blue-700 text-white text-xs 
+                              font-semibold rounded-lg transition 
+                              shadow-lg shadow-blue-500/30 w-full sm:w-auto"
+              >
+                <Plus size={18} />
+                <span className="hidden sm:inline">
+                  Giao nhiệm vụ
+                </span>
+              </button>
             </div>
 
             <div className="flex items-center justify-between mb-4">
@@ -1013,10 +1031,10 @@ function TasksTab() {
                 className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition border border-slate-700"
               >
                 {showFilter ? "Ẩn bộ lọc" : "Hiện bộ lọc"}
-                <svg 
+                <svg
                   className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`}
-                  fill="none" 
-                  stroke="currentColor" 
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -1043,7 +1061,7 @@ function TasksTab() {
               >
                 {tasks.map((task) => {
                   const progress = calculateProgress(task);
-                  
+
                   return (
                     <div
                       key={task.id}
@@ -1055,9 +1073,27 @@ function TasksTab() {
                           <h4 className="text-sm sm:text-base font-bold text-white mb-1.5 sm:mb-2 line-clamp-2">
                             {task.task.name}
                           </h4>
-                          <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-slate-500 mb-1">
-                            <Briefcase size={12} className="flex-shrink-0" />
-                            <span className="truncate">{task.project.name}</span>
+                          <div className="items-center gap-1.5 sm:gap-2 text-xs text-slate-500 mb-1">
+                            <Building2 size={12} className="flex-shrink-0" />
+                            {Array.isArray(task?.companies) && task.companies.length > 0
+                                ? task.companies.map((p: any, idx: number) => (
+                                    <Badge key={idx} variant="outline" className="text-blue-300 border-blue-500/30 bg-blue-500/15 my-1 mr-1 max-w-[160px]">
+                                        <span className="truncate">{p.name}</span>
+                                    </Badge>
+                                ))
+                                : <span className="text-white text-sm">-</span>
+                            }
+                          </div>
+                          <div className="items-center gap-1.5 sm:gap-2 text-xs text-slate-500 mb-1">
+                            <FolderKanban size={12} className="flex-shrink-0" />
+                            {Array.isArray(task?.projects) && task.projects.length > 0
+                                ? task.projects.map((p: any, idx: number) => (
+                                    <Badge key={idx} variant="outline" className="text-blue-300 border-blue-500/30 bg-blue-500/15 my-1 mr-1 max-w-[160px]">
+                                        <span className="truncate">{p.name}</span>
+                                    </Badge>
+                                ))
+                                : <span className="text-white text-sm">-</span>
+                            }
                           </div>
                           <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-slate-500">
                             <Target size={12} className="flex-shrink-0" />
@@ -1256,6 +1292,7 @@ function TasksTab() {
           />
         )}
       </div>
+
     </div>
   );
 }
