@@ -1,355 +1,488 @@
-import {
-  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-  ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-} from "recharts";
-import {
-  Calendar, Briefcase, Award, TrendingUp, Users,
-  CheckCircle2, Clock, AlertCircle,
-} from "lucide-react";
-import { useEffect, useState, useRef, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { listPersonalProjects, listProjects } from "@/src/services/api";
+import { CheckCircle2, Clock, AlertCircle, XCircle, CalendarClock, Filter, RotateCcw, Search, X, Flame, AlarmClock } from "lucide-react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useDispatch } from "react-redux";
 import { useProfileData } from "@/src/hooks/profileHook";
+import { useTaskData } from "@/src/hooks/taskhook";
+import { PersonTask } from "@/src/services/interface";
+import FilterableSelector from "@/components/FilterableSelector";
+import { listPersonalProjects } from "@/src/services/api";
+import { getListCompanyTask, getListProject } from "@/src/features/task/api";
 
-interface ProjectsTab {
-  userInfo: any;
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+interface ProjectFilters {
+  company_id: number | null;
+  project_id: number | null;
+  type: "all" | "personal" | null;
+  search: string;
 }
 
-interface PersonalProject {
-  cursor_id: number;
-  id: number;
-  name: string;
-  description: string | null;
-  start_date: string | null;
-  end_date: string | null;
-  budget: string;
-  project_manager: { id: number | null; name: string | null };
-  status: { id: number | null; name: string | null };
-  total_tasks: string;
-  completed_tasks: string;
-  in_progress_tasks: string;
-  pending_tasks: string;
-}
+const TYPE_OPTIONS = [
+  { id: "all", name: "Tất cả" },
+  { id: "personal", name: "Cá nhân" },
+];
 
-function ProjectsTab({ userInfo }: ProjectsTab) {
+// ─── Component ───────────────────────────────────────────────────────────────
+
+function ProjectsTab() {
   const dispatch = useDispatch();
-  const { projects } = useProfileData();
+  const { personalProjects } = useProfileData();
+  const { listCompanyTask, listProject } = useTaskData();
 
-  // ── Infinite scroll state ──
-  const [personalList, setPersonalList] = useState<PersonalProject[]>([]);
-  const [nextCursor, setNextCursor] = useState<number | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [filters, setFilters] = useState<ProjectFilters>({
+    company_id: null,
+    project_id: null,
+    type: "personal",
+    search: "",
+  });
 
-  const isFetchingRef = useRef(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
+  const [selectedProject, setSelectedProject] = useState<any | null>(null);
+  const [selectedType, setSelectedType] = useState<any | null>(TYPE_OPTIONS[1]); // default: Cá nhân
 
-  // ── Initial fetch ──
+  // ─── Pagination / infinite scroll state ─────────────────────────────────
+  const [rows, setRows] = useState<PersonTask[]>([]);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+
+  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const sentinelRef = useRef<HTMLTableRowElement | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // ─── Fetch ───────────────────────────────────────────────────────────────
+  // append = false → fresh load (reset rows)
+  // append = true  → load next page (concat rows)
+  const fetchProjects = useCallback(
+    async (overrides?: Partial<ProjectFilters>, append = false, nextCursor: string | null = null) => {
+      if (isFetching) return;
+      setIsFetching(true);
+
+      const token = localStorage.getItem("userToken");
+      const merged = { ...filters, ...overrides };
+
+      const result = await dispatch(
+        listPersonalProjects({
+          token,
+          ...(nextCursor && { cursor: nextCursor }),
+          ...(merged.company_id != null && { company_id: merged.company_id }),
+          ...(merged.project_id != null && { project_id: merged.project_id }),
+          ...(merged.type != null && { type: merged.type }),
+          ...(merged.search?.trim() && { search: merged.search.trim() }),
+        }) as any
+      );
+
+      const payload = result?.payload?.data;
+      if (payload) {
+        const newRows: PersonTask[] = payload.data ?? [];
+        const pagination = payload.pagination ?? {};
+
+        setRows((prev) => (append ? [...prev, ...newRows] : newRows));
+        setCursor(pagination.cursor ?? null);
+        setHasMore(pagination.has_more ?? false);
+      }
+
+      setIsFetching(false);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dispatch, filters, isFetching]
+  );
+
+  // ─── Fresh fetch whenever filters change ─────────────────────────────────
+  const resetAndFetch = useCallback(
+    (overrides?: Partial<ProjectFilters>) => {
+      setCursor(null);
+      setRows([]);
+      // small timeout so state flushes before fetch reads it
+      setTimeout(() => fetchProjects(overrides, false, null), 0);
+    },
+    [fetchProjects]
+  );
+
+  // ─── Init ────────────────────────────────────────────────────────────────
   useEffect(() => {
-    const token = localStorage.getItem("userToken");
-    if (!token) return;
-    dispatch(listProjects(token as any) as any);
-
-    setIsInitialLoading(true);
-    (dispatch(listPersonalProjects({ token, cursor: undefined }) as any))
-      .then((res: any) => {
-        const data: PersonalProject[] = res?.payload?.data?.data ?? [];
-        const pagination = res?.payload?.data?.pagination;
-        setPersonalList(data);
-        setNextCursor(pagination?.has_more ? pagination?.next_cursor : null);
-        setHasMore(pagination?.has_more ?? false);
-      })
-      .finally(() => setIsInitialLoading(false));
+    if (!listCompanyTask) dispatch(getListCompanyTask({ search: null }) as any);
+    resetAndFetch();
   }, [dispatch]);
 
-  // ── Load more ──
-  const loadMore = useCallback(async () => {
-    if (isFetchingRef.current || !hasMore || nextCursor === null) return;
-    isFetchingRef.current = true;
-    setIsLoadingMore(true);
+  // ─── IntersectionObserver for infinite scroll ────────────────────────────
+  useEffect(() => {
+    if (observerRef.current) observerRef.current.disconnect();
 
-    const token = localStorage.getItem("userToken");
-    try {
-      const res = await (dispatch(
-        listPersonalProjects({ token, cursor: nextCursor }) as any
-      ));
-      const data: PersonalProject[] = res?.payload?.data?.data ?? [];
-      const pagination = res?.payload?.data?.pagination;
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isFetching) {
+          fetchProjects(undefined, true, cursor);
+        }
+      },
+      { threshold: 0.1 }
+    );
 
-      setPersonalList(prev => {
-        const existingIds = new Set(prev.map(p => p.id));
-        return [...prev, ...data.filter(p => !existingIds.has(p.id))];
-      });
-      setNextCursor(pagination?.has_more ? pagination?.next_cursor : null);
-      setHasMore(pagination?.has_more ?? false);
-    } finally {
-      isFetchingRef.current = false;
-      setIsLoadingMore(false);
+    if (sentinelRef.current) {
+      observerRef.current.observe(sentinelRef.current);
     }
-  }, [dispatch, hasMore, nextCursor]);
 
-  // ── Scroll handler ──
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    if (scrollHeight - scrollTop <= clientHeight + 100) {
-      loadMore();
-    }
+    return () => observerRef.current?.disconnect();
+  }, [hasMore, isFetching, cursor, fetchProjects]);
+
+  // ─── Filter handlers ──────────────────────────────────────────────────────
+  const handleCompanyChange = (item: any) => {
+    const company = item ?? null;
+    setSelectedCompany(company);
+    setSelectedProject(null);
+    const companyId = company?.id ?? null;
+    const next: ProjectFilters = { ...filters, company_id: companyId, project_id: null };
+    setFilters(next);
+    if (companyId) dispatch(getListProject({ companies: String(companyId) }) as any);
+    resetAndFetch({ company_id: companyId, project_id: null });
   };
 
-  // ── Helpers ──
-  const projectStats = [
-    {
-      skill: projects?.rada_chart?.pending?.name || "Đang thực hiện",
-      value: projects?.rada_chart?.pending?.count || 0,
-      fullMark: parseInt(projects?.max_value_chart || "100"),
-    },
-    {
-      skill: projects?.rada_chart?.success?.name || "Tạm dừng",
-      value: projects?.rada_chart?.success?.count || 0,
-      fullMark: parseInt(projects?.max_value_chart || "100"),
-    },
-    {
-      skill: projects?.rada_chart?.stoping?.name || "Hoàn thành",
-      value: projects?.rada_chart?.stoping?.count || 0,
-      fullMark: parseInt(projects?.max_value_chart || "100"),
-    },
-  ];
+  const handleProjectChange = (item: any) => {
+    const project = item ?? null;
+    setSelectedProject(project);
+    const projectId = project?.id ?? null;
+    const next: ProjectFilters = { ...filters, project_id: projectId };
+    setFilters(next);
+    resetAndFetch({ project_id: projectId });
+  };
 
-  const getStatusBadge = (statusId: number | null) => {
-    switch (statusId) {
+  const handleTypeChange = (item: any) => {
+    const t = item ?? null;
+    setSelectedType(t);
+    const type = t?.id ?? null;
+    const next: ProjectFilters = { ...filters, type };
+    setFilters(next);
+    resetAndFetch({ type });
+  };
+
+  const handleSearchChange = (value: string) => {
+    const next: ProjectFilters = { ...filters, search: value };
+    setFilters(next);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => resetAndFetch({ search: value }), 400);
+  };
+
+  const handleReset = () => {
+    setSelectedCompany(null);
+    setSelectedProject(null);
+    setSelectedType(null);
+    const reset: ProjectFilters = { company_id: null, project_id: null, type: null, search: "" };
+    setFilters(reset);
+    resetAndFetch(reset);
+  };
+
+  const hasActiveFilter = !!(
+    filters.company_id || filters.project_id || filters.type || filters.search.trim()
+  );
+
+  // ─── UI helpers ──────────────────────────────────────────────────────────
+  const getStatusBadge = (status: PersonTask["status"] | null) => {
+    const id = status?.id ?? null;
+    switch (id) {
       case 4:
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
-            <CheckCircle2 size={10} /> Hoàn thành
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-500/15 text-green-400 border border-green-500/30 whitespace-nowrap">
+            <CheckCircle2 size={11} /> Hoàn thành
           </span>
         );
       case 2:
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
-            <Clock size={10} /> Đang thực hiện
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/30 whitespace-nowrap">
+            <Clock size={11} /> Đang thực hiện
           </span>
         );
       case 3:
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
-            <AlertCircle size={10} /> Tạm dừng
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30 whitespace-nowrap">
+            <AlertCircle size={11} /> Tạm dừng
+          </span>
+        );
+      case 5:
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-red-500/15 text-red-400 border border-red-500/30 whitespace-nowrap">
+            <XCircle size={11} /> Đã huỷ
+          </span>
+        );
+      case 1:
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/15 text-purple-400 border border-purple-500/30 whitespace-nowrap">
+            <CalendarClock size={11} /> Lên kế hoạch
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-700 text-slate-400 border border-slate-600">
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-slate-700 text-slate-400 border border-slate-600 whitespace-nowrap">
             Chưa xác định
           </span>
         );
     }
   };
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
+  const getBarColor = (statusId: number | null) => {
+    switch (statusId) {
+      case 4: return "bg-green-500";
+      case 2: return "bg-blue-500";
+      case 3: return "bg-amber-400";
+      case 5: return "bg-red-500";
+      case 1: return "bg-purple-400";
+      default: return "bg-slate-500";
+    }
   };
 
-  const formatBudget = (budget: string) => {
-    const num = parseFloat(budget);
-    if (!num || num === 0) return "Chưa xác định";
-    return `${(num / 1_000_000).toFixed(0)}M VNĐ`;
+  const getRowBg = (project: PersonTask) => {
+    if (project.is_overdue) return "bg-red-500/10 hover:bg-red-500/15";
+    if (project.is_near_due) return "bg-orange-500/10 hover:bg-orange-500/15";
+    return "hover:bg-slate-700/40";
   };
 
+  const parsePercent = (process: string) => {
+    const val = parseFloat(process);
+    return isNaN(val) ? 0 : Math.min(100, Math.max(0, val));
+  };
 
+  // ─── Render ──────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-6">
-      {!projects || !projects.rada_chart ? (
-        <div className="text-center py-10 text-slate-400">Đang tải dữ liệu...</div>
-      ) : (
-        <>
-          {/* Charts row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            {/* Radar Chart */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-4">Tình trạng dự án</h3>
-              <ResponsiveContainer width="100%" height={260}>
-                <RadarChart data={projectStats}>
-                  <PolarGrid stroke="#334155" />
-                  <PolarAngleAxis dataKey="skill" tick={{ fill: "#94a3b8", fontSize: 12 }} />
-                  <PolarRadiusAxis
-                    angle={90}
-                    domain={[0, parseInt(projects?.max_value_chart || "100")]}
-                    tick={{ fill: "#64748b", fontSize: 10 }}
-                  />
-                  <Radar name="Dự án" dataKey="value" stroke="#10b981" fill="#10b981" fillOpacity={0.6} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #334155", borderRadius: "8px", fontSize: "12px" }}
-                    labelStyle={{ color: "#e2e8f0" }}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                {projectStats.map((stat, i) => (
-                  <div key={i} className="text-center p-3 rounded-lg bg-slate-950 border border-slate-800">
-                    <div className={`h-2.5 w-2.5 rounded-full mx-auto mb-2 ${
-                      stat.skill === "Hoàn thành" ? "bg-green-500"
-                      : stat.skill === "Đang thực hiện" ? "bg-blue-500"
-                      : "bg-yellow-500"
-                    }`} />
-                    <div className="text-xl font-bold text-white">{stat.value}</div>
-                    <div className="text-xs text-slate-400">{stat.skill}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+    <div className="space-y-3">
 
-            {/* Bar Chart */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-4">Hiệu suất (6 tháng)</h3>
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={projects?.performance_chart || []}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                  <XAxis dataKey="month" stroke="#94a3b8" tick={{ fontSize: 12 }} />
-                  <YAxis stroke="#94a3b8" domain={[0, parseInt(projects?.max_value_chart || "100")]} tick={{ fontSize: 11 }} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #334155", borderRadius: "8px", fontSize: "12px" }}
-                    labelStyle={{ color: "#e2e8f0" }}
-                  />
-                  <Bar dataKey="scores" fill="#3b82f6" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+      {/* ── Filter bar ── */}
+      <div className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 shadow-sm space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1.5 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+            <Filter size={13} />
+            <span>Lọc</span>
+          </div>
+
+          {/* Search */}
+          <div className="flex-1 w-full relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
+            <input
+              type="text"
+              value={filters.search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="Tìm kiếm dự án..."
+              className="w-full pl-9 pr-8 py-2 bg-slate-900 border border-slate-700 rounded-lg text-md text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+            />
+            {filters.search && (
+              <button onClick={() => handleSearchChange("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition">
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {hasActiveFilter && (
+            <button onClick={handleReset} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-700 border border-slate-600 transition whitespace-nowrap ml-auto">
+              <RotateCcw size={12} /> Xoá lọc
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          {/* Công ty */}
+          <div className="flex-1 min-w-[160px] max-w-[220px]">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Công ty</label>
+            <FilterableSelector
+              data={listCompanyTask ?? []}
+              multi={false}
+              onFilter={(search) => dispatch(getListCompanyTask({ search: search || null }) as any)}
+              onSelect={(item) => handleCompanyChange(Array.isArray(item) ? (item[0] ?? null) : item)}
+              value={selectedCompany}
+              placeholder="Tất cả công ty"
+              displayField="name"
+              emptyMessage="Không có công ty"
+            />
+          </div>
+
+          {/* Dự án */}
+          <div className="flex-1 min-w-[160px] max-w-[220px]">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+              Dự án
+              {!selectedCompany && <span className="ml-1 normal-case text-slate-600 font-normal">(chọn công ty trước)</span>}
+            </label>
+            <div className={!selectedCompany ? "opacity-40 pointer-events-none" : ""}>
+              <FilterableSelector
+                data={listProject ?? []}
+                multi={false}
+                onFilter={(search) => dispatch(getListProject({ filter: search || null, companies: filters.company_id ? String(filters.company_id) : null }) as any)}
+                onSelect={(item) => handleProjectChange(Array.isArray(item) ? (item[0] ?? null) : item)}
+                value={selectedProject}
+                placeholder="Tất cả dự án"
+                displayField="name"
+                emptyMessage="Không có dự án"
+              />
             </div>
           </div>
 
-          {/* ── Personal Projects List ── */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
-            <div className="px-4 sm:px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Briefcase size={18} className="text-blue-400" />
-                <h3 className="text-base sm:text-lg font-bold text-white">Dự án cá nhân</h3>
-                {!isInitialLoading && (
-                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-xs font-bold">
-                    {personalList.length}{hasMore ? "+" : ""}
-                  </span>
-                )}
-              </div>
-            </div>
+          {/* Loại */}
+          <div className="flex-1 min-w-[150px] max-w-[200px]">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Loại</label>
+            <FilterableSelector
+              data={TYPE_OPTIONS}
+              multi={false}
+              isSearch={false}
+              onSelect={(item) => handleTypeChange(Array.isArray(item) ? (item[0] ?? null) : item)}
+              value={selectedType}
+              placeholder="Tất cả"
+              displayField="name"
+              emptyMessage=""
+            />
+          </div>
+        </div>
 
-            {/* Scrollable list */}
-            <div
-              ref={scrollContainerRef}
-              onScroll={handleScroll}
-              className="overflow-y-auto max-h-[520px] divide-y divide-slate-800 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900"
-            >
-              {isInitialLoading ? (
-                /* Skeleton */
-                <div className="p-4 space-y-3">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="animate-pulse flex gap-4 p-4 rounded-lg bg-slate-800/40">
-                      <div className="flex-1 space-y-2">
-                        <div className="h-3.5 bg-slate-700 rounded w-2/5" />
-                        <div className="h-2.5 bg-slate-700/60 rounded w-3/5" />
-                        <div className="h-2 bg-slate-700/40 rounded w-1/2" />
-                      </div>
-                      <div className="h-6 w-24 bg-slate-700 rounded-full self-start" />
-                    </div>
-                  ))}
-                </div>
-              ) : personalList.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <Briefcase size={32} className="text-slate-600 mb-3" />
-                  <p className="text-sm text-slate-400">Chưa có dự án cá nhân</p>
-                </div>
+        {/* Active tags */}
+        {hasActiveFilter && (
+          <div className="flex flex-wrap gap-1.5 pt-0.5">
+            {selectedCompany && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-purple-500/15 text-purple-400 border border-purple-500/30">
+                {selectedCompany.name}
+                <button onClick={() => handleCompanyChange(null)} className="hover:text-white ml-0.5">×</button>
+              </span>
+            )}
+            {selectedProject && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-blue-500/15 text-blue-400 border border-blue-500/30">
+                {selectedProject.name}
+                <button onClick={() => handleProjectChange(null)} className="hover:text-white ml-0.5">×</button>
+              </span>
+            )}
+            {selectedType && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-slate-700 text-slate-300 border border-slate-600">
+                {selectedType.name}
+                <button onClick={() => handleTypeChange(null)} className="hover:text-white ml-0.5">×</button>
+              </span>
+            )}
+            {filters.search.trim() && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-slate-700 text-slate-300 border border-slate-600">
+                "{filters.search.trim()}"
+                <button onClick={() => handleSearchChange("")} className="hover:text-white ml-0.5">×</button>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Table ── */}
+      <div className="w-full rounded-xl border border-slate-700 bg-slate-800 shadow-sm overflow-hidden">
+        <div
+          className="overflow-x-auto overflow-y-auto overscroll-contain"
+          style={{ maxHeight: "calc(100vh - 120px)", minHeight: "200px" }}
+        >
+          <table className="w-full min-w-[900px] border-collapse text-sm">
+            <thead className="sticky top-0 z-10 bg-slate-800">
+              <tr className="border-b border-slate-700">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-slate-500 w-[22%]">Dự Án</th>
+                <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-widest text-slate-500">Tổng<br />CV</th>
+                <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-widest text-slate-500">Hoàn<br />Thành</th>
+                <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-widest text-slate-500">Đã<br />Huỷ</th>
+                <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-widest text-slate-500">Đang<br />Thực Hiện</th>
+                <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-widest text-slate-500">Tạm<br />Dừng</th>
+                <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-widest text-slate-500 min-w-[280px]">Tiến Độ & Timeline</th>
+                <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-widest text-slate-500">Trạng Thái</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {rows.length === 0 && !isFetching ? (
+                <tr>
+                  <td colSpan={8} className="py-16 text-center text-slate-500 text-sm">
+                    Không có dự án nào
+                  </td>
+                </tr>
               ) : (
                 <>
-                  {personalList.map((project) => {
+                  {rows.map((project: PersonTask) => {
+                    const pct = parsePercent(project.process);
+                    const barColor = getBarColor(project.status?.id ?? null);
 
                     return (
-                      <div
+                      <tr
                         key={project.id}
-                        className="px-4 sm:px-6 py-4 hover:bg-slate-800/40 transition-colors"
+                        className={`border-b border-slate-700/60 transition-colors ${getRowBg(project)}`}
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            {/* Name + status */}
-                            <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <p className="text-sm font-semibold text-white truncate max-w-xs">
-                                {project.name}
-                              </p>
-                              {getStatusBadge(project.status.id)}
-                            </div>
-
-                            {/* Description */}
-                            {project.description && (
-                              <p className="text-xs text-slate-500 line-clamp-1 mb-2">
-                                {project.description}
-                              </p>
+                        {/* Name + alert badges */}
+                        <td className="px-4 py-4 align-top">
+                          <div className="flex flex-wrap items-start gap-1.5 mb-1">
+                            <p className="font-bold text-slate-100 text-[13px] leading-tight">{project.name}</p>
+                            {project.is_overdue && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/40 whitespace-nowrap">
+                                <Flame size={9} /> Quá hạn
+                              </span>
                             )}
-
-                            {/* Meta row */}
-                            <div className="flex items-center gap-3 flex-wrap text-[11px] text-slate-500">
-                              {(project.start_date || project.end_date) && (
-                                <span className="flex items-center gap-1">
-                                  <Calendar size={10} />
-                                  {formatDate(project.start_date)} → {formatDate(project.end_date)}
-                                </span>
-                              )}
-                              {project.project_manager.name && (
-                                <span className="flex items-center gap-1">
-                                  <Users size={10} />
-                                  {project.project_manager.name}
-                                </span>
-                              )}
-                              <span className="flex items-center gap-1">
-                                <Briefcase size={10} />
-                                Ngân sách: {formatBudget(project.budget)}
+                            {project.is_near_due && !project.is_overdue && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-500/20 text-orange-400 border border-orange-500/40 whitespace-nowrap">
+                                <AlarmClock size={9} /> Sắp đến hạn
                               </span>
-                            </div>
-
-                            {/* Task count chips */}
-                            <div className="mt-2 flex items-center gap-1.5 flex-wrap">
-                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px]">
-                                Tổng: <span className="text-white font-semibold ml-0.5">{project.total_tasks}</span>
-                              </span>
-                              {parseInt(project.completed_tasks) > 0 && (
-                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 text-[10px]">
-                                  <CheckCircle2 size={9} /> {project.completed_tasks}
-                                </span>
-                              )}
-                              {parseInt(project.in_progress_tasks) > 0 && (
-                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px]">
-                                  <Clock size={9} /> {project.in_progress_tasks}
-                                </span>
-                              )}
-                              {parseInt(project.pending_tasks) > 0 && (
-                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-slate-700 text-slate-400 text-[10px]">
-                                  <AlertCircle size={9} /> {project.pending_tasks}
-                                </span>
-                              )}
-                            </div>
+                            )}
                           </div>
-                        </div>
-                      </div>
+                          <p className="text-[11px] text-slate-500 leading-snug line-clamp-2">{project.description}</p>
+                        </td>
+
+                        <td className="px-3 py-4 text-center align-middle">
+                          <p className="font-bold text-slate-200 text-[15px]">{project.total_tasks}</p>
+                          <p className="text-[10px] text-slate-500">công việc</p>
+                        </td>
+
+                        <td className="px-3 py-4 text-center align-middle">
+                          <span className="font-bold text-[15px] text-green-400">{project.completed_tasks}</span>
+                        </td>
+
+                        <td className="px-3 py-4 text-center align-middle">
+                          <span className={`font-bold text-[15px] ${project.cancelled_tasks > 0 ? "text-red-400" : "text-slate-600"}`}>
+                            {project.cancelled_tasks}
+                          </span>
+                        </td>
+
+                        <td className="px-3 py-4 text-center align-middle">
+                          <span className={`font-bold text-[15px] ${project.in_progress_tasks > 0 ? "text-blue-400" : "text-slate-600"}`}>
+                            {project.in_progress_tasks}
+                          </span>
+                        </td>
+
+                        <td className="px-3 py-4 text-center align-middle">
+                          <span className={`font-bold text-[15px] ${project.paused_tasks > 0 ? "text-orange-400" : "text-slate-600"}`}>
+                            {project.paused_tasks}
+                          </span>
+                        </td>
+
+                        <td className="px-4 py-4 align-middle min-w-[280px]">
+                          <p className="text-[11px] font-bold text-slate-400 mb-1">{pct}%</p>
+                          <div className="relative w-full h-2.5 bg-slate-700 rounded-full overflow-hidden">
+                            <div className={`absolute top-0 h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
+                          </div>
+                          <div className="flex justify-between mt-1.5">
+                            <span className="text-[10px] text-slate-600">{project.start_date?.slice(0, 10) ?? "—"}</span>
+                            <span className="text-[10px] text-slate-600">{project.end_date?.slice(0, 10) ?? "—"}</span>
+                          </div>
+                        </td>
+
+                        <td className="px-4 py-4 text-center align-middle">
+                          {getStatusBadge(project.status)}
+                        </td>
+                      </tr>
                     );
                   })}
 
-                  {/* Loading more spinner */}
-                  {isLoadingMore && (
-                    <div className="flex items-center justify-center py-4 gap-2">
-                      <div className="w-4 h-4 border-2 border-slate-600 border-t-blue-500 rounded-full animate-spin" />
-                      <span className="text-xs text-slate-400">Đang tải thêm...</span>
-                    </div>
-                  )}
-
-                  {/* End of list */}
-                  {!hasMore && personalList.length > 0 && (
-                    <div className="py-4 text-center">
-                      <p className="text-xs text-slate-500">Đã hiển thị tất cả {personalList.length} dự án</p>
-                    </div>
-                  )}
+                  {/* ── Sentinel row for IntersectionObserver ── */}
+                  <tr ref={sentinelRef}>
+                    <td colSpan={8} className="py-4 text-center">
+                      {isFetching && (
+                        <div className="flex items-center justify-center gap-2 text-slate-500 text-xs">
+                          <svg className="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                          </svg>
+                          Đang tải thêm...
+                        </div>
+                      )}
+                      {!hasMore && rows.length > 0 && !isFetching && (
+                        <p className="text-[11px] text-slate-600">Đã hiển thị tất cả {rows.length} dự án</p>
+                      )}
+                    </td>
+                  </tr>
                 </>
               )}
-            </div>
-          </div>
-        </>
-      )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

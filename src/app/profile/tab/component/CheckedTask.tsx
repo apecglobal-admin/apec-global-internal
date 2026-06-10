@@ -104,7 +104,7 @@ function CheckedTask() {
     const [searchFilter, setSearchFilter] = useState<string>("");
     const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
     const [showFilter, setShowFilter] = useState(false);
-
+    
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isSelectMode, setIsSelectMode] = useState(false);
     const [currentAction, setCurrentAction] = useState<'accept' | null>(null);
@@ -163,7 +163,11 @@ function CheckedTask() {
             setIsProcessing(false);
         }
     };
-
+    useEffect(() => {
+        if (listProject) {
+            setFilteredProjects(listProject);
+        }
+    }, [listProject]);
 
     useEffect(() => {
         if(!typeTask){

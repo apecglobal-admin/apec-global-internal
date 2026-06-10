@@ -478,9 +478,9 @@ export const listPersonalProjects = createAsyncThunk(
   "user/listPersonalProjects",
   async (payload: any, thunkAPI) => {
     try {
-      const { cursor, token }: any = payload;
+      const { cursor, token, type, company_id, project_id, search }: any = payload;
       const params = Object.fromEntries(
-          Object.entries({ cursor }).filter(
+          Object.entries({ cursor, type, company_id, project_id, search }).filter(
               ([key, value]) => value != null
           )
       );
@@ -490,6 +490,8 @@ export const listPersonalProjects = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
+
+      
       return {
         data: response.data,
         status: response.status
