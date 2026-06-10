@@ -149,7 +149,7 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
         if (!statusTask) dispatch(getStatusTask() as any);
         if (!typeTask) dispatch(getTypeTask() as any);
         if (!priorityTask) dispatch(getPriorityTask() as any);
-        if (!listProject) dispatch(getListProject({}) as any);
+        if (!listProject) dispatch(getListProject({token}) as any);
         if (!childKpi) dispatch(getChildKpi() as any);
         if (!listPosition) dispatch(getListPosition() as any);
         if (!listDepartment) dispatch(getListDepartment({}) as any);

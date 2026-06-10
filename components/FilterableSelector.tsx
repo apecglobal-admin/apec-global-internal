@@ -243,7 +243,7 @@ function FilterableSelector<T extends SearchFilterItem>({
         bg-slate-900 border border-slate-700 rounded-lg
         px-3 py-2.5 text-sm text-white"
       >
-        <span className="text-xs">
+        <span className="text-md">
           {displayText}
         </span>
 
@@ -280,7 +280,7 @@ function FilterableSelector<T extends SearchFilterItem>({
                   placeholder={placeholder}
                   className="w-full pl-9 pr-8 py-2
                   bg-slate-900 border border-slate-700
-                  rounded-md text-sm text-white"
+                  rounded-md text-md text-white"
                 />
               </div>
             </div>

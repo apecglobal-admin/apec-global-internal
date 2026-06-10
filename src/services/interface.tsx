@@ -168,24 +168,33 @@ export interface Task {
 
 
 export interface PersonTask {
-    cursor_id: number;
+  id: number;
+  name: string;
+
+  description: string;
+  start_date: string;
+  end_date: string;
+
+  budget: string;
+
+  total_tasks: number;
+  completed_tasks: number;
+  cancelled_tasks: number;
+  paused_tasks: number;
+  in_progress_tasks: number;
+  overdue_tasks: number;
+
+  process: string;
+
+  status: {
     id: number;
     name: string;
-    description: string;
-    start_date: string | null;
-    end_date: string | null;
-    budget: string;
-    project_manager: {
-      id: number | null;
-      name: string | null;
-    };
-    status: {
-      id: number | null;
-      name: string | null;
-    };
-    total_tasks: string;
-    completed_tasks: string;
-    in_progress_tasks: string;
-    pending_tasks: string;
-  }
+  };
+
+  is_overdue: boolean;
+  is_near_due: boolean;
+
+  timeline: string;
+  time_remaining: string;
+}
 
