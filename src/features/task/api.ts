@@ -250,15 +250,21 @@ export const getListProject = createAsyncThunk(
     "task/getListProject",
     async (payload: any, thunkAPI) => {
         try {
-            const { filter, companies } = payload;
+            const { filter, companies, token } = payload;
             const params = Object.fromEntries(
                 Object.entries({ filter, companies }).filter(
                     ([key, value]) => value != null
                 )
             );
-            const response = await apiAxiosInstance.get("/projects/select/option", { params });
+            const response = await apiAxiosInstance.get("/projects/select/option", { 
+                params,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             return {
                 data: response.data,
+                
             };
         } catch (error: any) {
             return thunkAPI.rejectWithValue(
