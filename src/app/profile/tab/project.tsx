@@ -371,7 +371,7 @@ function ProjectsTab() {
                 <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-widest text-slate-500 w-[22%]">Dự Án</th>
                 <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-widest text-slate-500">Tổng<br />CV</th>
                 <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-widest text-slate-500">Hoàn<br />Thành</th>
-                <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-widest text-slate-500">Đã<br />Huỷ</th>
+                <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-widest text-slate-500">Trễ<br />Hạn</th>
                 <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-widest text-slate-500">Đang<br />Thực Hiện</th>
                 <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-widest text-slate-500">Tạm<br />Dừng</th>
                 <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-widest text-slate-500 min-w-[280px]">Tiến Độ & Timeline</th>
@@ -395,22 +395,12 @@ function ProjectsTab() {
                     return (
                       <tr
                         key={project.id}
-                        className={`border-b border-slate-700/60 transition-colors ${getRowBg(project)}`}
+                        className={`border-b border-slate-700/60 transition-colors`}
                       >
                         {/* Name + alert badges */}
                         <td className="px-4 py-4 align-top">
                           <div className="flex flex-wrap items-start gap-1.5 mb-1">
                             <p className="font-bold text-slate-100 text-[13px] leading-tight">{project.name}</p>
-                            {project.is_overdue && (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/40 whitespace-nowrap">
-                                <Flame size={9} /> Quá hạn
-                              </span>
-                            )}
-                            {project.is_near_due && !project.is_overdue && (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-500/20 text-orange-400 border border-orange-500/40 whitespace-nowrap">
-                                <AlarmClock size={9} /> Sắp đến hạn
-                              </span>
-                            )}
                           </div>
                           <p className="text-[11px] text-slate-500 leading-snug line-clamp-2">{project.description}</p>
                         </td>
@@ -425,8 +415,8 @@ function ProjectsTab() {
                         </td>
 
                         <td className="px-3 py-4 text-center align-middle">
-                          <span className={`font-bold text-[15px] ${project.cancelled_tasks > 0 ? "text-red-400" : "text-slate-600"}`}>
-                            {project.cancelled_tasks}
+                          <span className={`font-bold text-[15px] ${project.overdue_tasks > 0 ? "text-red-400" : "text-slate-600"}`}>
+                            {project.overdue_tasks}
                           </span>
                         </td>
 
@@ -443,14 +433,47 @@ function ProjectsTab() {
                         </td>
 
                         <td className="px-4 py-4 align-middle min-w-[280px]">
-                          <p className="text-[11px] font-bold text-slate-400 mb-1">{pct}%</p>
+                          {/* Progress bar tiến độ */}
+                          <p className="text-[11px] font-bold text-white mb-1">{pct}%</p>
                           <div className="relative w-full h-2.5 bg-slate-700 rounded-full overflow-hidden">
                             <div className={`absolute top-0 h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
                           </div>
-                          <div className="flex justify-between mt-1.5">
-                            <span className="text-[10px] text-slate-600">{project.start_date?.slice(0, 10) ?? "—"}</span>
-                            <span className="text-[10px] text-slate-600">{project.end_date?.slice(0, 10) ?? "—"}</span>
-                          </div>
+
+                          {/* Timeline bar thời gian */}
+                          {(() => {
+                            const start = project.start_date ? new Date(project.start_date).getTime() : null;
+                            const end = project.end_date ? new Date(project.end_date).getTime() : null;
+                            const now = Date.now();
+                            let timePct = 0;
+                            let isOverdue = false;
+                            if (start && end && end > start) {
+                              timePct = Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
+                              isOverdue = now > end;
+                            }
+                            const timeBarColor = isOverdue
+                              ? "bg-red-500"
+                              : timePct > 80
+                              ? "bg-orange-400"
+                              : "bg-slate-400";
+
+                            return (
+                              <div className="mt-2">
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="text-[10px] text-white">Thời gian</span>
+                                </div>
+                                <div className="relative w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                  <div
+                                    className={`absolute top-0 h-full rounded-full transition-all ${timeBarColor}`}
+                                    style={{ width: `${Math.min(timePct, 100)}%` }}
+                                  />
+                                </div>
+                                <div className="flex justify-between mt-1">
+                                  <span className="text-[10px] text-white">{project.start_date?.slice(0, 10) ?? "—"}</span>
+                                  <span className="text-[10px] text-white">{project.end_date?.slice(0, 10) ?? "—"}</span>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </td>
 
                         <td className="px-4 py-4 text-center align-middle">
