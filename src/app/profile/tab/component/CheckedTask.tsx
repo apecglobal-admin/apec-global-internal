@@ -39,6 +39,8 @@ import { listTypeTask } from '@/src/services/api';
 import FilterableSelector from "@/components/FilterableSelector";
 import DashboardTaskManager from "./dashboard/DashboardTaskManager";
 import getFileInfo from "@/src/utils/checkFileInfo";
+import { getListCompanyTask } from '@/src/features/task/api';
+import { RotateCcw, Filter } from 'lucide-react';
 
 interface Props{
     id: number;
@@ -75,7 +77,7 @@ interface TypeProps{
 
 function CheckedTask() {
     const dispatch = useDispatch();
-    const { listTaskAssign, listDetailTaskAssign, loadingListDetailTaskAssign, detailTaskAssign, listProject, statusTask, priorityTask } = useTaskData();
+    const { listCompanyTask, listTaskAssign, listDetailTaskAssign, loadingListDetailTaskAssign, detailTaskAssign, listProject, statusTask, priorityTask } = useTaskData();
     const { typeTask } = useProfileData();
     
     
@@ -109,6 +111,8 @@ function CheckedTask() {
     const [isSelectMode, setIsSelectMode] = useState(false);
     const [currentAction, setCurrentAction] = useState<'accept' | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
+    const [selectedProject, setSelectedProject] = useState<any | null>(null);
 
     // Bật chế độ chọn
     const enterSelectMode = (action: 'accept') => {
@@ -181,6 +185,9 @@ function CheckedTask() {
         }
         if (!priorityTask) {
             dispatch(getPriorityTask() as any);
+        }
+        if (!listCompanyTask) {
+            dispatch(getListCompanyTask({ search: null }) as any);
         }
     }, []);
 
@@ -532,159 +539,205 @@ function CheckedTask() {
         }
     }
 
+    const handleCompanyChange = (item: any) => {
+        const company = item ?? null;
+        setSelectedCompany(company);
+        setSelectedProject(null);
+        setProjectFilter(null);
+        if (company?.id) {
+            dispatch(getListProject({ companies: String(company.id) }) as any);
+        }
+        setCurrentPage(1);
+    };
+    
+    const handleProjectChange = (item: any) => {
+        const project = item ?? null;
+        setSelectedProject(project);
+        setProjectFilter(project);
+        setCurrentPage(1);
+    };
+    
+    const clearFilter = () => {
+        setTaskFilter("all");
+        setProjectFilter(null);
+        setSelectedCompany(null);
+        setSelectedProject(null);
+        setStatusFilter("false");
+        setPriorityFilter("all");
+        setSearchFilter("");
+    };
+
     const renderFilter = () => {
-        return(
-            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4 mb-5">
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-                    {/* Task Type Filter */}
-                    <div className="space-y-1.5 sm:space-y-2">
-                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
-                        Loại nhiệm vụ
-                        </label>
-                        <Select value={taskFilter} onValueChange={handleFilterChange}>
-                        <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
-                            <SelectValue placeholder="Chọn loại nhiệm vụ" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-700">
-                            <SelectItem value="all" className="text-white text-xs sm:text-sm">
-                            Tất cả
-                            </SelectItem>
-                            {typeTask &&
-                            Array.isArray(typeTask) &&
-                            typeTask.map((type: TypeProps) => (
-                                <SelectItem 
-                                key={type.id} 
-                                value={type.id}
-                                className="text-white text-xs sm:text-sm"
-                                >
-                                {type.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                        </Select>
+        const hasActiveFilter = !!(
+            selectedCompany || selectedProject ||
+            taskFilter !== "all" || statusFilter !== "false" ||
+            priorityFilter !== "all" || searchFilter.trim()
+        );
+    
+        return (
+            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4 mb-5 space-y-3">
+    
+                {/* Row 1: Search + Reset */}
+                <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 text-slate-400 text-xs font-semibold uppercase tracking-wider shrink-0">
+                        <Filter size={13} />
+                        <span>Lọc</span>
                     </div>
-
-                    <div className="space-y-1.5 sm:space-y-2">
-                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
-                            Trạng thái
-                        </label>
-
-                        <Select
-                            value={statusFilter}
-                            onValueChange={handleStatusFilterChange}
-                        >
-                            <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
-                            <SelectValue placeholder="Chọn trạng thái" />
-                            </SelectTrigger>
-
-                            <SelectContent className="bg-slate-900 border-slate-700">
-                            <SelectItem
-                                value="true"
-                                className="text-white text-xs sm:text-sm"
-                            >
-                                Đã duyệt
-                            </SelectItem>
-
-                            <SelectItem
-                                value="false"
-                                className="text-white text-xs sm:text-sm"
-                            >
-                                Chưa duyệt
-                            </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-
-
-                    <div className="space-y-1.5 sm:space-y-2">
-                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
-                        Loại mức độ
-                        </label>
-                        <Select value={priorityFilter} onValueChange={handlePriorityFilterChange}>
-                        <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
-                            <SelectValue placeholder="Chọn mức độ" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-700">
-                            <SelectItem value="all" className="text-white text-xs sm:text-sm">
-                            Tất cả
-                            </SelectItem>
-                            {priorityTask &&
-                            Array.isArray(priorityTask) &&
-                            priorityTask.map((kpi: TypeProps) => (
-                                <SelectItem 
-                                key={kpi.id} 
-                                value={kpi.id.toString()}
-                                className="text-white text-xs sm:text-sm"
-                                >
-                                {kpi.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* Project Filter */}
-                    <div className="space-y-1.5 sm:space-y-2">
-                        <label className="text-xs sm:text-sm font-semibold text-slate-300">
-                        Dự án
-                        </label>
-                        <FilterableSelector
-                            data={filteredProjects}
-                            onFilter={handleFilterProject}
-                            onSelect={(value) => handleProjectFilterChange(value)}
-                            value={projectFilter}
-                            placeholder="Chọn dự án"
-                            displayField="name"
-                            emptyMessage="Không có dự án"
-                        />
-                    </div>
-
-                </div>
-                <div className="space-y-1.5 sm:space-y-2">
-                    <div className="grid grid-cols-1 mt-4">
-                        <div className="relative">
+                    <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
                         <input
                             type="text"
                             value={searchFilter}
-                            onChange={(e) => {
-                                setCurrentPage(1)
-                                setSearchFilter(e.target.value)
-                            }}
-                            placeholder={"Tìm kiếm tên..."}
-                            className="
-                            w-full rounded-md
-                            bg-slate-900 border border-slate-700
-                            pl-9 pr-8 py-2 text-sm text-white
-                            placeholder:text-slate-500
-                            focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent
-                            disabled:opacity-50 disabled:cursor-not-allowed
-                            transition-colors duration-150
-                            "
+                            onChange={(e) => { setCurrentPage(1); setSearchFilter(e.target.value); }}
+                            placeholder="Tìm kiếm tên..."
+                            className="w-full rounded-md bg-slate-900 border border-slate-700 pl-9 pr-8 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-colors duration-150"
                         />
-                        {searchFilter  && (
-                            <button
-                            type="button"
-                            onClick={() => setSearchFilter("")}
-                            aria-label="Xóa tìm kiếm"
-                            className="
-                                absolute right-2.5 top-1/2 -translate-y-1/2
-                                text-slate-500 hover:text-white
-                                transition-colors duration-150
-                            "
-                            >
-                            <X className="h-4 w-4" />
+                        {searchFilter && (
+                            <button type="button" onClick={() => setSearchFilter("")}
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors duration-150">
+                                <X className="h-4 w-4" />
                             </button>
                         )}
+                    </div>
+                    {hasActiveFilter && (
+                        <button onClick={clearFilter}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-700 border border-slate-600 transition whitespace-nowrap shrink-0">
+                            <RotateCcw size={12} /> Xoá lọc
+                        </button>
+                    )}
+                </div>
+    
+                {/* Row 2: Selectors */}
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+    
+                    {/* Công ty */}
+                    <div className="space-y-1.5">
+                        <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                            Công ty
+                        </label>
+                        <FilterableSelector
+                            data={listCompanyTask ?? []}
+                            multi={false}
+                            onFilter={(search) => dispatch(getListCompanyTask({ search: search || null }) as any)}
+                            onSelect={(item) => handleCompanyChange(Array.isArray(item) ? (item[0] ?? null) : item)}
+                            value={selectedCompany}
+                            placeholder="Tất cả công ty"
+                            displayField="name"
+                            emptyMessage="Không có công ty"
+                        />
+                    </div>
+    
+                    {/* Dự án */}
+                    <div className="space-y-1.5">
+                        <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                            Dự án
+                            {!selectedCompany && <span className="ml-1 normal-case text-slate-600 font-normal">(chọn công ty trước)</span>}
+                        </label>
+                        <div className={!selectedCompany ? "opacity-40 pointer-events-none" : ""}>
+                            <FilterableSelector
+                                data={listProject ?? []}
+                                multi={false}
+                                onFilter={(search) => dispatch(getListProject({ filter: search || null, companies: selectedCompany ? String(selectedCompany.id) : null }) as any)}
+                                onSelect={(item) => handleProjectChange(Array.isArray(item) ? (item[0] ?? null) : item)}
+                                value={selectedProject}
+                                placeholder="Tất cả dự án"
+                                displayField="name"
+                                emptyMessage="Không có dự án"
+                            />
                         </div>
                     </div>
-
+    
+                    {/* Loại nhiệm vụ */}
+                    <div className="space-y-1.5">
+                        <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Loại nhiệm vụ</label>
+                        <Select value={taskFilter} onValueChange={handleFilterChange}>
+                            <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                                <SelectValue placeholder="Chọn loại nhiệm vụ" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-900 border-slate-700">
+                                <SelectItem value="all" className="text-white text-xs sm:text-sm">Tất cả</SelectItem>
+                                {typeTask && Array.isArray(typeTask) && typeTask.map((type: TypeProps) => (
+                                    <SelectItem key={type.id} value={type.id} className="text-white text-xs sm:text-sm">{type.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+    
+                    {/* Trạng thái duyệt */}
+                    <div className="space-y-1.5">
+                        <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Trạng thái</label>
+                        <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+                            <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                                <SelectValue placeholder="Chọn trạng thái" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-900 border-slate-700">
+                                <SelectItem value="true" className="text-white text-xs sm:text-sm">Đã duyệt</SelectItem>
+                                <SelectItem value="false" className="text-white text-xs sm:text-sm">Chưa duyệt</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+    
+                    {/* Mức độ */}
+                    <div className="space-y-1.5">
+                        <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Mức độ</label>
+                        <Select value={priorityFilter} onValueChange={handlePriorityFilterChange}>
+                            <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
+                                <SelectValue placeholder="Chọn mức độ" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-900 border-slate-700">
+                                <SelectItem value="all" className="text-white text-xs sm:text-sm">Tất cả</SelectItem>
+                                {priorityTask && Array.isArray(priorityTask) && priorityTask.map((kpi: TypeProps) => (
+                                    <SelectItem key={kpi.id} value={kpi.id.toString()} className="text-white text-xs sm:text-sm">{kpi.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
+    
+                {/* Active filter tags */}
+                {hasActiveFilter && (
+                    <div className="flex flex-wrap gap-1.5 pt-0.5">
+                        {selectedCompany && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-purple-500/15 text-purple-400 border border-purple-500/30">
+                                {selectedCompany.name}
+                                <button onClick={() => handleCompanyChange(null)} className="hover:text-white ml-0.5">×</button>
+                            </span>
+                        )}
+                        {selectedProject && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-blue-500/15 text-blue-400 border border-blue-500/30">
+                                {selectedProject.name}
+                                <button onClick={() => handleProjectChange(null)} className="hover:text-white ml-0.5">×</button>
+                            </span>
+                        )}
+                        {taskFilter !== "all" && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-slate-700 text-slate-300 border border-slate-600">
+                                {typeTask?.find((t: TypeProps) => t.id === taskFilter)?.name ?? taskFilter}
+                                <button onClick={() => handleFilterChange("all")} className="hover:text-white ml-0.5">×</button>
+                            </span>
+                        )}
+                        {statusFilter !== "false" && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-slate-700 text-slate-300 border border-slate-600">
+                                {statusFilter === "true" ? "Đã duyệt" : "Chưa duyệt"}
+                                <button onClick={() => handleStatusFilterChange("false")} className="hover:text-white ml-0.5">×</button>
+                            </span>
+                        )}
+                        {priorityFilter !== "all" && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-slate-700 text-slate-300 border border-slate-600">
+                                {priorityTask?.find((p: TypeProps) => p.id.toString() === priorityFilter)?.name ?? priorityFilter}
+                                <button onClick={() => handlePriorityFilterChange("all")} className="hover:text-white ml-0.5">×</button>
+                            </span>
+                        )}
+                        {searchFilter.trim() && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-slate-700 text-slate-300 border border-slate-600">
+                                "{searchFilter.trim()}"
+                                <button onClick={() => setSearchFilter("")} className="hover:text-white ml-0.5">×</button>
+                            </span>
+                        )}
+                    </div>
+                )}
             </div>
-        )
-    }
-
+        );
+    };
     return (
         <>
         <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6">

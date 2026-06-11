@@ -249,8 +249,10 @@ export const getListCompanyTask = createAsyncThunk(
 export const getListProject = createAsyncThunk(
     "task/getListProject",
     async (payload: any, thunkAPI) => {
+        
         try {
             const { filter, companies, token } = payload;
+
             const params = Object.fromEntries(
                 Object.entries({ filter, companies }).filter(
                     ([key, value]) => value != null

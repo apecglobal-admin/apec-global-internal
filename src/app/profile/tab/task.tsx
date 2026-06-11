@@ -24,10 +24,13 @@ import {
   ChevronRight,
   Building2,
   FolderKanban,
+  RotateCcw,
+  Filter,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import AssignTask from "./component/AssignTask";
+import FilterableSelector from "@/components/FilterableSelector";
 
 import {
   Pagination,
@@ -53,6 +56,7 @@ import {
   getStatusTask,
   getChildKpi,
   getListProject,
+  getListCompanyTask,
 } from "@/src/features/task/api";
 import { useTaskData } from "@/src/hooks/taskhook";
 import CheckedTask from "./component/CheckedTask";
@@ -86,13 +90,13 @@ function TasksTab() {
   const dispatch = useDispatch();
   const { tasks: tasksResponse, typeTask, detailTask, isLoadingDetailTask } = useProfileData();
   const { listDashboardTasks } = useDashboardData();
-  
 
   const {
     priorityTask,
     childKpi,
     statusTask,
-    listProject
+    listProject,
+    listCompanyTask,
   } = useTaskData();
 
   const [page, setPage] = useState(1);
@@ -106,6 +110,10 @@ function TasksTab() {
   const [showAssignTask, setShowAssignTask] = useState(false);
   const [isKpiDropdownOpen, setIsKpiDropdownOpen] = useState(false);
 
+  // ── Company / Project FilterableSelector state ──────────────────────────
+  const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
+  const [selectedProject, setSelectedProject] = useState<any | null>(null);
+  const [companyFilter, setCompanyFilter] = useState<number | null>(null);
 
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
@@ -125,6 +133,17 @@ function TasksTab() {
   const buildMonthParam = (month: number | null, year: number) =>
     month !== null ? `${String(month).padStart(2, '0')}/${year}` : undefined;
 
+  // ── Check if any filter is active ───────────────────────────────────────
+  const hasActiveFilter = !!(
+    companyFilter ||
+    (projectFilter !== "all") ||
+    (taskFilter !== "all") ||
+    (kpiFilter !== "all") ||
+    (statusFilter !== "2") ||
+    (priorityFilter !== "all") ||
+    searchFilter.trim()
+  );
+
   useEffect(() => {
     const token = localStorage.getItem("userToken");
     if (!typeTask) {
@@ -141,6 +160,9 @@ function TasksTab() {
     }
     if (!priorityTask) {
       dispatch(getPriorityTask() as any);
+    }
+    if (!listCompanyTask) {
+      dispatch(getListCompanyTask({ search: null }) as any);
     }
   }, []);
 
@@ -163,6 +185,7 @@ function TasksTab() {
           token,
           filter: taskFilter === "all" ? null : parseInt(taskFilter),
           projectFilter: projectFilter === "all" ? null : parseInt(projectFilter),
+          companyFilter: companyFilter ?? null,
           kpiFilter: kpiFilter === "all" ? null : parseInt(kpiFilter),
           statusFilter: statusFilter === "all" ? null : parseInt(statusFilter),
           priorityFilter: priorityFilter === "all" ? null : parseInt(priorityFilter),
@@ -171,43 +194,59 @@ function TasksTab() {
         };
 
         dispatch(personTasks(payload as any) as any);
-
-
       }
     }, 300)
     return () => clearTimeout(timer);
-  }, [dispatch, page, taskFilter, projectFilter, kpiFilter, statusFilter, priorityFilter, searchFilter]);
+  }, [dispatch, page, taskFilter, projectFilter, companyFilter, kpiFilter, statusFilter, priorityFilter, searchFilter]);
+
+  // ── Company change handler ───────────────────────────────────────────────
+  const handleCompanyChange = (item: any) => {
+    const company = item ?? null;
+    setSelectedCompany(company);
+    setSelectedProject(null);
+    setProjectFilter("all");
+    const companyId = company?.id ?? null;
+    setCompanyFilter(companyId);
+    if (companyId) {
+      dispatch(getListProject({ companies: String(companyId) }) as any);
+    }
+    setPage(1);
+  };
+
+  // ── Project change handler (FilterableSelector) ──────────────────────────
+  const handleProjectChange = (item: any) => {
+    const project = item ?? null;
+    setSelectedProject(project);
+    const projectId = project?.id ?? null;
+    setProjectFilter(projectId ? String(projectId) : "all");
+    setPage(1);
+  };
 
   const refreshFilter = () => {
     setTaskFilter("all");
     setProjectFilter("all");
+    setCompanyFilter(null);
+    setSelectedCompany(null);
+    setSelectedProject(null);
     setKpiFilter("all");
     setStatusFilter("2");
     setPriorityFilter("all");
     setSearchFilter("");
-  }
+  };
 
   const handleFilterChange = (filter: string) => {
     setTaskFilter(filter);
     setPage(1);
   };
 
-  const handleProjectFilterChange = (filter: string) => {
-    setProjectFilter(filter);
-    setPage(1);
-
-  };
-
   const handleKpiFilterChange = (filter: string) => {
     setKpiFilter(filter);
     setPage(1);
-
   };
 
   const handleStatusFilterChange = (filter: string) => {
     setStatusFilter(filter);
     setPage(1);
-
   };
 
   const handlePriorityFilterChange = (filter: string) => {
@@ -216,8 +255,8 @@ function TasksTab() {
   };
 
   const handleBack = () => {
-    setSelectedTask(null)
-  }
+    setSelectedTask(null);
+  };
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -228,36 +267,26 @@ function TasksTab() {
 
   const handleTaskClick = async (taskId: string) => {
     const token = localStorage.getItem("userToken");
-
-
     const payload1 = {
       token,
       id: taskId,
       key: "detailTasks"
-    }
-
+    };
     await dispatch(personTasks(payload1 as any) as any);
-
     setSelectedTask(taskId);
-
   };
-
 
   const refreshTasks = async (id: any) => {
     const token = localStorage.getItem("userToken");
-
-    const payload1 = {
-      id,
-      token,
-      key: "detailTasks"
-    };
-    const res = await dispatch(personTasks(payload1 as any) as any);
+    const payload1 = { id, token, key: "detailTasks" };
+    await dispatch(personTasks(payload1 as any) as any);
 
     const payload = {
       page: page,
       token,
       filter: taskFilter === "all" ? null : parseInt(taskFilter),
       projectFilter: projectFilter === "all" ? null : parseInt(projectFilter),
+      companyFilter: companyFilter ?? null,
       kpiFilter: kpiFilter === "all" ? null : parseInt(kpiFilter),
       statusFilter: statusFilter === "all" ? null : parseInt(statusFilter),
       priorityFilter: priorityFilter === "all" ? null : parseInt(priorityFilter),
@@ -266,8 +295,7 @@ function TasksTab() {
     };
 
     dispatch(personTasks(payload as any) as any);
-
-    refreshFilter()
+    refreshFilter();
   };
 
   const getTaskStatusBadge = (
@@ -278,7 +306,6 @@ function TasksTab() {
   ) => {
     if (!statusTask) return null;
     const status = statusTask.find((s: TypeProps) => parseInt(s.id) === statusId);
-
     if (!status) return null;
     switch (statusId) {
       case 1:
@@ -334,12 +361,8 @@ function TasksTab() {
 
   const getPriorityBadge = (priorityId: number) => {
     if (!priorityTask) return null;
-
-    const priority = priorityTask.find(
-      (p: TypeProps) => parseInt(p.id) === priorityId
-    );
+    const priority = priorityTask.find((p: TypeProps) => parseInt(p.id) === priorityId);
     if (!priority) return null;
-
     switch (priorityId) {
       case 1:
         return (
@@ -375,7 +398,6 @@ function TasksTab() {
     }
   };
 
-
   const calculateProgress = (task: Task): number => {
     return Math.round(task?.process || 0);
   };
@@ -385,70 +407,37 @@ function TasksTab() {
     const maxVisible = 5;
 
     if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) {
-        items.push(i);
-      }
+      for (let i = 1; i <= totalPages; i++) items.push(i);
     } else {
       items.push(1);
-
       let startPage = Math.max(2, currentPage - 1);
       let endPage = Math.min(totalPages - 1, currentPage + 1);
-
-      if (currentPage <= 3) {
-        endPage = 4;
-      } else if (currentPage >= totalPages - 2) {
-        startPage = totalPages - 3;
-      }
-
-      if (startPage > 2) {
-        items.push("ellipsis-start");
-      }
-
-      for (let i = startPage; i <= endPage; i++) {
-        items.push(i);
-      }
-
-      if (endPage < totalPages - 1) {
-        items.push("ellipsis-end");
-      }
-
+      if (currentPage <= 3) { endPage = 4; }
+      else if (currentPage >= totalPages - 2) { startPage = totalPages - 3; }
+      if (startPage > 2) items.push("ellipsis-start");
+      for (let i = startPage; i <= endPage; i++) items.push(i);
+      if (endPage < totalPages - 1) items.push("ellipsis-end");
       items.push(totalPages);
     }
-
     return items;
   };
 
   const handlePrevMonth = () => {
     if (selectedMonth === null) return;
-    if (selectedMonth === 1) {
-      setSelectedMonth(12);
-      setSelectedYear(y => y - 1);
-    } else {
-      setSelectedMonth(m => m! - 1);
-    }
+    if (selectedMonth === 1) { setSelectedMonth(12); setSelectedYear(y => y - 1); }
+    else { setSelectedMonth(m => m! - 1); }
   };
 
   const handleNextMonth = () => {
     if (isCurrentMonth) return;
     if (selectedMonth === null) return;
-    if (selectedMonth === 12) {
-      setSelectedMonth(1);
-      setSelectedYear(y => y + 1);
-    } else {
-      setSelectedMonth(m => m! + 1);
-    }
+    if (selectedMonth === 12) { setSelectedMonth(1); setSelectedYear(y => y + 1); }
+    else { setSelectedMonth(m => m! + 1); }
   };
 
   if (showAssignTask) {
-    return (
-      <AssignTask
-        onBack={() => setShowAssignTask(false)}
-        isAdmin={false}
-      // onAssignSuccess={handleAssignSuccess}
-      />
-    );
+    return <AssignTask onBack={() => setShowAssignTask(false)} isAdmin={false} />;
   }
-
 
   const renderDashboard = () => {
     return (
@@ -492,10 +481,7 @@ function TasksTab() {
                     <button
                       onClick={handlePrevMonth}
                       disabled={selectedMonth === null}
-                      className={`p-1 rounded transition-colors ${selectedMonth === null
-                        ? 'opacity-30 cursor-not-allowed'
-                        : 'hover:bg-slate-700'
-                        }`}
+                      className={`p-1 rounded transition-colors ${selectedMonth === null ? 'opacity-30 cursor-not-allowed' : 'hover:bg-slate-700'}`}
                     >
                       <ChevronLeft className="h-3.5 w-3.5 text-slate-400" />
                     </button>
@@ -532,9 +518,8 @@ function TasksTab() {
                   </div>
                 </div>
 
-                {/* Row 1: Tổng công việc & Quá hạn - 2 cột layout mới */}
+                {/* Row 1 */}
                 <div className="grid grid-cols-2 gap-0.5">
-                  {/* Tổng công việc */}
                   <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-2.5 shadow-md hover:shadow-lg transition-all duration-300">
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="p-1.5 bg-white/20 rounded-md">
@@ -552,7 +537,6 @@ function TasksTab() {
                     </div>
                   </div>
 
-                  {/* Công việc quá hạn */}
                   <div className="relative overflow-hidden bg-gradient-to-br from-red-600 to-red-700 rounded-lg p-2.5 shadow-md hover:shadow-lg transition-all duration-300">
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="p-1.5 bg-white/20 rounded-md animate-pulse">
@@ -571,9 +555,8 @@ function TasksTab() {
                   </div>
                 </div>
 
-                {/* Row 2: Theo trạng thái & Theo ưu tiên */}
+                {/* Row 2 */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-0.5">
-                  {/* Công việc theo trạng thái */}
                   <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg p-2.5 shadow-md">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
@@ -590,27 +573,20 @@ function TasksTab() {
                         </span>
                       </div>
                     </div>
-
                     <div className="space-y-1.5">
-                      {listDashboardTasks.tasks_by_status?.items &&
-                        listDashboardTasks.tasks_by_status.items.length > 0 ? (
+                      {listDashboardTasks.tasks_by_status?.items?.length > 0 ? (
                         listDashboardTasks.tasks_by_status.items.map((item: any, index: any) => {
                           const colorMap: any = {
-                            "2": { bg: "bg-blue-500", text: "text-blue-400" },
-                            "3": { bg: "bg-orange-500", text: "text-orange-400" },
-                            "4": { bg: "bg-green-500", text: "text-green-400" },
-                            "5": { bg: "bg-red-500", text: "text-red-400" },
+                            "2": { text: "text-blue-400" },
+                            "3": { text: "text-orange-400" },
+                            "4": { text: "text-green-400" },
+                            "5": { text: "text-red-400" },
                           };
-                          const colors = colorMap[item.task_status] || { bg: "bg-slate-500", text: "text-slate-400" };
-
+                          const colors = colorMap[item.task_status] || { text: "text-slate-400" };
                           return (
-                            <div key={index}>
-                              <div className="flex items-center justify-between">
-                                <span className={`text-[10px] font-medium ${colors.text}`}>{item.label}</span>
-                                <span className={`text-xs font-bold px-1.5 py-0.5 ${colors.text} rounded`}>
-                                  {item.total}
-                                </span>
-                              </div>
+                            <div key={index} className="flex items-center justify-between">
+                              <span className={`text-[10px] font-medium ${colors.text}`}>{item.label}</span>
+                              <span className={`text-xs font-bold px-1.5 py-0.5 ${colors.text} rounded`}>{item.total}</span>
                             </div>
                           );
                         })
@@ -623,7 +599,6 @@ function TasksTab() {
                     </div>
                   </div>
 
-                  {/* Công việc theo mức độ ưu tiên */}
                   <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg p-2.5 shadow-md">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
@@ -640,27 +615,20 @@ function TasksTab() {
                         </span>
                       </div>
                     </div>
-
                     <div className="space-y-1.5">
-                      {listDashboardTasks.tasks_by_priority?.items &&
-                        listDashboardTasks.tasks_by_priority.items.length > 0 ? (
+                      {listDashboardTasks.tasks_by_priority?.items?.length > 0 ? (
                         listDashboardTasks.tasks_by_priority.items.map((item: any, index: any) => {
                           const colorMap: any = {
-                            "1": { bg: "bg-red-600", text: "text-red-400" },
-                            "2": { bg: "bg-orange-500", text: "text-orange-400" },
-                            "3": { bg: "bg-yellow-500", text: "text-yellow-400" },
-                            "4": { bg: "bg-green-500", text: "text-green-400" },
+                            "1": { text: "text-red-400" },
+                            "2": { text: "text-orange-400" },
+                            "3": { text: "text-yellow-400" },
+                            "4": { text: "text-green-400" },
                           };
-                          const colors = colorMap[item.task_priority] || { bg: "bg-slate-500", text: "text-slate-400" };
-
+                          const colors = colorMap[item.task_priority] || { text: "text-slate-400" };
                           return (
-                            <div key={index}>
-                              <div className="flex items-center justify-between">
-                                <span className={`text-[10px] font-medium ${colors.text}`}>{item.label}</span>
-                                <span className={`text-xs font-bold px-1.5 py-0.5 ${colors.text} rounded`}>
-                                  {item.total}
-                                </span>
-                              </div>
+                            <div key={index} className="flex items-center justify-between">
+                              <span className={`text-[10px] font-medium ${colors.text}`}>{item.label}</span>
+                              <span className={`text-xs font-bold px-1.5 py-0.5 ${colors.text} rounded`}>{item.total}</span>
                             </div>
                           );
                         })
@@ -674,7 +642,7 @@ function TasksTab() {
                   </div>
                 </div>
 
-                {/* Row 3: Theo loại công việc */}
+                {/* Row 3 */}
                 <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg p-2.5 shadow-md">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-1.5">
@@ -691,10 +659,8 @@ function TasksTab() {
                       </span>
                     </div>
                   </div>
-
                   <div className={`${listDashboardTasks.tasks_by_type_task?.items?.length === 0 ? "" : "grid grid-cols-3 gap-1.5"}`}>
-                    {listDashboardTasks.tasks_by_type_task?.items &&
-                      listDashboardTasks.tasks_by_type_task.items.length > 0 ? (
+                    {listDashboardTasks.tasks_by_type_task?.items?.length > 0 ? (
                       listDashboardTasks.tasks_by_type_task.items.map((item: any, index: any) => {
                         const colorMap: any = {
                           "1": { bg: "bg-blue-600/20", border: "border-blue-500", text: "text-blue-400" },
@@ -702,7 +668,6 @@ function TasksTab() {
                           "3": { bg: "bg-teal-600/20", border: "border-teal-500", text: "text-teal-400" },
                         };
                         const colors = colorMap[item.type_task] || { bg: "bg-slate-600/20", border: "border-slate-500", text: "text-slate-400" };
-
                         return (
                           <div key={index} className={`${colors.bg} border ${colors.border} rounded-lg p-1.5 text-center`}>
                             <p className={`text-[10px] font-medium ${colors.text} mb-1`}>{item.label}</p>
@@ -719,7 +684,7 @@ function TasksTab() {
                   </div>
                 </div>
 
-                {/* Row 4: Công việc theo KPI - Dropdown */}
+                {/* Row 4 */}
                 <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-lg shadow-md">
                   <button
                     onClick={() => setIsKpiDropdownOpen(!isKpiDropdownOpen)}
@@ -739,30 +704,19 @@ function TasksTab() {
                           {listDashboardTasks.tasks_by_kpi_item?.items?.reduce((sum: any, item: any) => sum + item.total, 0) || 0}
                         </span>
                       </div>
-                      {isKpiDropdownOpen ? (
-                        <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
-                      ) : (
-                        <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
-                      )}
+                      {isKpiDropdownOpen ? <ChevronUp className="h-3.5 w-3.5 text-slate-400" /> : <ChevronDown className="h-3.5 w-3.5 text-slate-400" />}
                     </div>
                   </button>
-
                   {isKpiDropdownOpen && (
                     <div className="px-2.5 pb-2.5 space-y-1 max-h-56 overflow-y-auto">
-                      {listDashboardTasks.tasks_by_kpi_item?.items &&
-                        listDashboardTasks.tasks_by_kpi_item.items.length > 0 ? (
+                      {listDashboardTasks.tasks_by_kpi_item?.items?.length > 0 ? (
                         listDashboardTasks.tasks_by_kpi_item.items.map((item: any, index: any) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between bg-slate-700/50 hover:bg-slate-700 rounded-md px-2.5 py-1.5 transition-all duration-200"
-                          >
+                          <div key={index} className="flex items-center justify-between bg-slate-700/50 hover:bg-slate-700 rounded-md px-2.5 py-1.5 transition-all duration-200">
                             <div className="flex items-center gap-1.5">
                               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
                               <span className="text-[10px] font-medium text-slate-200">{item.label}</span>
                             </div>
-                            <span className="text-xs font-bold text-emerald-400 px-1.5 py-0.5 bg-emerald-600/20 rounded">
-                              {item.total}
-                            </span>
+                            <span className="text-xs font-bold text-emerald-400 px-1.5 py-0.5 bg-emerald-600/20 rounded">{item.total}</span>
                           </div>
                         ))
                       ) : (
@@ -779,16 +733,95 @@ function TasksTab() {
           </div>
         )}
       </div>
-    )
-  }
+    );
+  };
 
   const renderFilter = () => {
     return (
-      <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4">
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-          {/* Task Type Filter */}
-          <div className="space-y-1.5 sm:space-y-2">
-            <label className="text-xs sm:text-sm font-semibold text-slate-300">
+      <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 sm:p-4 space-y-3">
+
+        {/* ── Row 1: Search + Reset ── */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 text-slate-400 text-xs font-semibold uppercase tracking-wider shrink-0">
+            <Filter size={13} />
+            <span>Lọc</span>
+          </div>
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
+            <input
+              type="text"
+              value={searchFilter}
+              onChange={(e) => { setSearchFilter(e.target.value); setPage(1); }}
+              placeholder="Tìm kiếm tên, mô tả..."
+              className="w-full rounded-md bg-slate-900 border border-slate-700 pl-9 pr-8 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-colors duration-150"
+            />
+            {searchFilter && (
+              <button
+                type="button"
+                onClick={() => setSearchFilter("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors duration-150"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          {hasActiveFilter && (
+            <button
+              onClick={refreshFilter}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-700 border border-slate-600 transition whitespace-nowrap shrink-0"
+            >
+              <RotateCcw size={12} /> Xoá lọc
+            </button>
+          )}
+        </div>
+
+        {/* ── Row 2: Selectors grid ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+
+          {/* Công ty — FilterableSelector */}
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+              Công ty
+            </label>
+            <FilterableSelector
+              data={listCompanyTask ?? []}
+              multi={false}
+              onFilter={(search) => dispatch(getListCompanyTask({ search: search || null }) as any)}
+              onSelect={(item) => handleCompanyChange(Array.isArray(item) ? (item[0] ?? null) : item)}
+              value={selectedCompany}
+              placeholder="Tất cả công ty"
+              displayField="name"
+              emptyMessage="Không có công ty"
+            />
+          </div>
+
+          {/* Dự án — FilterableSelector (disabled khi chưa chọn công ty) */}
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+              Dự án
+              {!selectedCompany && (
+                <span className="ml-1 normal-case text-slate-600 font-normal">(chọn công ty trước)</span>
+              )}
+            </label>
+            <div className={!selectedCompany ? "opacity-40 pointer-events-none" : ""}>
+              <FilterableSelector
+                data={listProject ?? []}
+                multi={false}
+                onFilter={(search) =>
+                  dispatch(getListProject({ filter: search || null, companies: companyFilter ? String(companyFilter) : null }) as any)
+                }
+                onSelect={(item) => handleProjectChange(Array.isArray(item) ? (item[0] ?? null) : item)}
+                value={selectedProject}
+                placeholder="Tất cả dự án"
+                displayField="name"
+                emptyMessage="Không có dự án"
+              />
+            </div>
+          </div>
+
+          {/* Loại nhiệm vụ */}
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
               Loại nhiệm vụ
             </label>
             <Select value={taskFilter} onValueChange={handleFilterChange}>
@@ -796,139 +829,65 @@ function TasksTab() {
                 <SelectValue placeholder="Chọn loại nhiệm vụ" />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 border-slate-700">
-                <SelectItem value="all" className="text-white text-xs sm:text-sm">
-                  Tất cả
-                </SelectItem>
-                {typeTask &&
-                  Array.isArray(typeTask) &&
-                  typeTask.map((type: TypeProps) => (
-                    <SelectItem
-                      key={type.id}
-                      value={type.id}
-                      className="text-white text-xs sm:text-sm"
-                    >
-                      {type.name}
-                    </SelectItem>
-                  ))}
+                <SelectItem value="all" className="text-white text-xs sm:text-sm">Tất cả</SelectItem>
+                {typeTask && Array.isArray(typeTask) && typeTask.map((type: TypeProps) => (
+                  <SelectItem key={type.id} value={type.id} className="text-white text-xs sm:text-sm">{type.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Project Filter */}
-          <div className="space-y-1.5 sm:space-y-2">
-            <label className="text-xs sm:text-sm font-semibold text-slate-300">
-              Dự án
-            </label>
-            <Select value={projectFilter} onValueChange={handleProjectFilterChange}>
-              <SelectTrigger className="w-full max-w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10SSSSSSSSSSSS">
-                <SelectValue placeholder="Chọn dự án" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-slate-700 max-w-[330px]">
-                <SelectItem value="all" className="text-white text-xs sm:text-sm">
-                  Tất cả
-                </SelectItem>
-                {listProject &&
-                  Array.isArray(listProject) &&
-                  listProject.map((project: TypeProps) => (
-                    <SelectItem
-                      key={project.id}
-                      value={project.id.toString()}
-                      className="text-white text-xs sm:text-sm"
-                    >
-                      {project.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* KPI Filter */}
-          <div className="space-y-1.5 sm:space-y-2">
-            <label className="text-xs sm:text-sm font-semibold text-slate-300">
-              KPI
-            </label>
+          {/* KPI */}
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">KPI</label>
             <Select value={kpiFilter} onValueChange={handleKpiFilterChange}>
               <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
                 <SelectValue placeholder="Chọn KPI" />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 border-slate-700">
-                <SelectItem value="all" className="text-white text-xs sm:text-sm">
-                  Tất cả
-                </SelectItem>
-                {childKpi &&
-                  Array.isArray(childKpi) &&
-                  childKpi.map((kpi: TypeProps) => (
-                    <SelectItem
-                      key={kpi.id}
-                      value={kpi.id.toString()}
-                      className="text-white text-xs sm:text-sm"
-                    >
-                      {kpi.name}
-                    </SelectItem>
-                  ))}
+                <SelectItem value="all" className="text-white text-xs sm:text-sm">Tất cả</SelectItem>
+                {childKpi && Array.isArray(childKpi) && childKpi.map((kpi: TypeProps) => (
+                  <SelectItem key={kpi.id} value={kpi.id.toString()} className="text-white text-xs sm:text-sm">{kpi.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
-          <div className="space-y-1.5 sm:space-y-2">
-            <label className="text-xs sm:text-sm font-semibold text-slate-300">
-              Trạng thái
-            </label>
+          {/* Trạng thái */}
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Trạng thái</label>
             <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
               <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
-                <SelectValue placeholder="Chọn Status" />
+                <SelectValue placeholder="Chọn trạng thái" />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 border-slate-700">
-                <SelectItem value="all" className="text-white text-xs sm:text-sm">
-                  Tất cả
-                </SelectItem>
-                {statusTask &&
-                  Array.isArray(statusTask) &&
-                  statusTask.map((kpi: TypeProps) => (
-                    <SelectItem
-                      key={kpi.id}
-                      value={kpi.id.toString()}
-                      className="text-white text-xs sm:text-sm"
-                    >
-                      {kpi.name}
-                    </SelectItem>
-                  ))}
+                <SelectItem value="all" className="text-white text-xs sm:text-sm">Tất cả</SelectItem>
+                {statusTask && Array.isArray(statusTask) && statusTask.map((kpi: TypeProps) => (
+                  <SelectItem key={kpi.id} value={kpi.id.toString()} className="text-white text-xs sm:text-sm">{kpi.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5 sm:space-y-2">
-            <label className="text-xs sm:text-sm font-semibold text-slate-300">
-              Mức độ
-            </label>
+
+          {/* Mức độ */}
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Mức độ</label>
             <Select value={priorityFilter} onValueChange={handlePriorityFilterChange}>
               <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white text-xs sm:text-sm h-9 sm:h-10">
-                <SelectValue placeholder="Chọn Status" />
+                <SelectValue placeholder="Chọn mức độ" />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 border-slate-700">
-                <SelectItem value="all" className="text-white text-xs sm:text-sm">
-                  Tất cả
-                </SelectItem>
-                {priorityTask &&
-                  Array.isArray(priorityTask) &&
-                  priorityTask.map((kpi: TypeProps) => (
-                    <SelectItem
-                      key={kpi.id}
-                      value={kpi.id.toString()}
-                      className="text-white text-xs sm:text-sm"
-                    >
-                      {kpi.name}
-                    </SelectItem>
-                  ))}
+                <SelectItem value="all" className="text-white text-xs sm:text-sm">Tất cả</SelectItem>
+                {priorityTask && Array.isArray(priorityTask) && priorityTask.map((kpi: TypeProps) => (
+                  <SelectItem key={kpi.id} value={kpi.id.toString()} className="text-white text-xs sm:text-sm">{kpi.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
-
-          {/* View Mode Toggle */}
-          <div className="space-y-1.5 sm:space-y-2">
-            <label className="text-xs sm:text-sm font-semibold text-slate-300">
-              Chế độ xem
-            </label>
+          {/* Chế độ xem */}
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Chế độ xem</label>
             <div className="flex gap-2">
               <button
                 onClick={() => setViewMode("grid")}
@@ -936,7 +895,6 @@ function TasksTab() {
                   ? "bg-blue-600 text-white"
                   : "bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700"
                   }`}
-                title="Xem dạng lưới"
               >
                 <LayoutGrid size={16} className="mx-auto sm:hidden" />
                 <span className="hidden sm:inline">Lưới</span>
@@ -947,7 +905,6 @@ function TasksTab() {
                   ? "bg-blue-600 text-white"
                   : "bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700"
                   }`}
-                title="Xem dạng danh sách"
               >
                 <LayoutList size={16} className="mx-auto sm:hidden" />
                 <span className="hidden sm:inline">Danh sách</span>
@@ -955,46 +912,57 @@ function TasksTab() {
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-1 mt-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
-            <input
-              type="text"
-              value={searchFilter}
-              onChange={(e) => {
-                setSearchFilter(e.target.value)
-                setPage(1)
-              }}
-              placeholder={"Tìm kiếm tên, mô tả..."}
-              className="
-                w-full rounded-md
-                bg-slate-900 border border-slate-700
-                pl-9 pr-8 py-2 text-sm text-white
-                placeholder:text-slate-500
-                focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent
-                disabled:opacity-50 disabled:cursor-not-allowed
-                transition-colors duration-150
-                "
-            />
-            {searchFilter && (
-              <button
-                type="button"
-                onClick={() => setSearchFilter("")}
-                aria-label="Xóa tìm kiếm"
-                className="
-                    absolute right-2.5 top-1/2 -translate-y-1/2
-                    text-slate-500 hover:text-white
-                    transition-colors duration-150
-                "
-              >
-                <X className="h-4 w-4" />
-              </button>
+
+        {/* ── Active filter tags ── */}
+        {hasActiveFilter && (
+          <div className="flex flex-wrap gap-1.5 pt-0.5">
+            {selectedCompany && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-purple-500/15 text-purple-400 border border-purple-500/30">
+                {selectedCompany.name}
+                <button onClick={() => handleCompanyChange(null)} className="hover:text-white ml-0.5">×</button>
+              </span>
+            )}
+            {selectedProject && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-blue-500/15 text-blue-400 border border-blue-500/30">
+                {selectedProject.name}
+                <button onClick={() => handleProjectChange(null)} className="hover:text-white ml-0.5">×</button>
+              </span>
+            )}
+            {taskFilter !== "all" && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-slate-700 text-slate-300 border border-slate-600">
+                {typeTask?.find((t: TypeProps) => t.id === taskFilter)?.name ?? taskFilter}
+                <button onClick={() => handleFilterChange("all")} className="hover:text-white ml-0.5">×</button>
+              </span>
+            )}
+            {kpiFilter !== "all" && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-slate-700 text-slate-300 border border-slate-600">
+                {childKpi?.find((k: TypeProps) => k.id.toString() === kpiFilter)?.name ?? kpiFilter}
+                <button onClick={() => handleKpiFilterChange("all")} className="hover:text-white ml-0.5">×</button>
+              </span>
+            )}
+            {statusFilter !== "2" && statusFilter !== "all" && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-slate-700 text-slate-300 border border-slate-600">
+                {statusTask?.find((s: TypeProps) => s.id.toString() === statusFilter)?.name ?? statusFilter}
+                <button onClick={() => handleStatusFilterChange("2")} className="hover:text-white ml-0.5">×</button>
+              </span>
+            )}
+            {priorityFilter !== "all" && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-slate-700 text-slate-300 border border-slate-600">
+                {priorityTask?.find((p: TypeProps) => p.id.toString() === priorityFilter)?.name ?? priorityFilter}
+                <button onClick={() => handlePriorityFilterChange("all")} className="hover:text-white ml-0.5">×</button>
+              </span>
+            )}
+            {searchFilter.trim() && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-slate-700 text-slate-300 border border-slate-600">
+                "{searchFilter.trim()}"
+                <button onClick={() => setSearchFilter("")} className="hover:text-white ml-0.5">×</button>
+              </span>
             )}
           </div>
-        </div>
+        )}
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6">
@@ -1004,24 +972,15 @@ function TasksTab() {
           <>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-white">
-                  Quản lý nhiệm vụ cá nhân
-                </h2>
-                <p className="text-xs sm:text-sm tex t-slate-400 mt-1">
-                  Tổng số {totalItems} nhiệm vụ
-                </p>
+                <h2 className="text-xl sm:text-2xl font-bold text-white">Quản lý nhiệm vụ cá nhân</h2>
+                <p className="text-xs sm:text-sm text-slate-400 mt-1">Tổng số {totalItems} nhiệm vụ</p>
               </div>
               <button
                 onClick={() => setShowAssignTask(true)}
-                className="flex items-center justify-center gap-2 px-2.5 py-1.5 
-                              bg-blue-600 hover:bg-blue-700 text-white text-xs 
-                              font-semibold rounded-lg transition 
-                              shadow-lg shadow-blue-500/30 w-full sm:w-auto"
+                className="flex items-center justify-center gap-2 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition shadow-lg shadow-blue-500/30 w-full sm:w-auto"
               >
                 <Plus size={18} />
-                <span className="hidden sm:inline">
-                  Giao nhiệm vụ
-                </span>
+                <span className="hidden sm:inline">Giao nhiệm vụ</span>
               </button>
             </div>
 
@@ -1031,12 +990,7 @@ function TasksTab() {
                 className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition border border-slate-700"
               >
                 {showFilter ? "Ẩn bộ lọc" : "Hiện bộ lọc"}
-                <svg
-                  className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className={`w-4 h-4 transition-transform ${showFilter ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
@@ -1047,21 +1001,12 @@ function TasksTab() {
             {tasks.length === 0 ? (
               <div className="text-center py-12 sm:py-16 bg-slate-800/50 border border-slate-700 rounded-lg">
                 <ClipboardList className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-slate-600 mb-3 sm:mb-4" />
-                <p className="text-slate-400 text-base sm:text-lg">
-                  Không có nhiệm vụ nào
-                </p>
+                <p className="text-slate-400 text-base sm:text-lg">Không có nhiệm vụ nào</p>
               </div>
             ) : (
-              <div
-                className={
-                  viewMode === "grid"
-                    ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
-                    : "space-y-3"
-                }
-              >
+              <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4" : "space-y-3"}>
                 {tasks.map((task) => {
                   const progress = calculateProgress(task);
-
                   return (
                     <div
                       key={task.id}
@@ -1076,23 +1021,23 @@ function TasksTab() {
                           <div className="items-center gap-1.5 sm:gap-2 text-xs text-slate-500 mb-1">
                             <Building2 size={12} className="flex-shrink-0" />
                             {Array.isArray(task?.companies) && task.companies.length > 0
-                                ? task.companies.map((p: any, idx: number) => (
-                                    <Badge key={idx} variant="outline" className="text-blue-300 border-blue-500/30 bg-blue-500/15 my-1 mr-1 max-w-[160px]">
-                                        <span className="truncate">{p.name}</span>
-                                    </Badge>
-                                ))
-                                : <span className="text-white text-sm">-</span>
+                              ? task.companies.map((p: any, idx: number) => (
+                                <Badge key={idx} variant="outline" className="text-blue-300 border-blue-500/30 bg-blue-500/15 my-1 mr-1 max-w-[160px]">
+                                  <span className="truncate">{p.name}</span>
+                                </Badge>
+                              ))
+                              : <span className="text-white text-sm">-</span>
                             }
                           </div>
                           <div className="items-center gap-1.5 sm:gap-2 text-xs text-slate-500 mb-1">
                             <FolderKanban size={12} className="flex-shrink-0" />
                             {Array.isArray(task?.projects) && task.projects.length > 0
-                                ? task.projects.map((p: any, idx: number) => (
-                                    <Badge key={idx} variant="outline" className="text-blue-300 border-blue-500/30 bg-blue-500/15 my-1 mr-1 max-w-[160px]">
-                                        <span className="truncate">{p.name}</span>
-                                    </Badge>
-                                ))
-                                : <span className="text-white text-sm">-</span>
+                              ? task.projects.map((p: any, idx: number) => (
+                                <Badge key={idx} variant="outline" className="text-blue-300 border-blue-500/30 bg-blue-500/15 my-1 mr-1 max-w-[160px]">
+                                  <span className="truncate">{p.name}</span>
+                                </Badge>
+                              ))
+                              : <span className="text-white text-sm">-</span>
                             }
                           </div>
                           <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-slate-500">
@@ -1102,23 +1047,18 @@ function TasksTab() {
                           <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-slate-500">
                             <span>Chỉ tiêu: </span>
                             {task.units?.name !== "%" && task.units?.name !== null ? (
-                              <span className="">{formatNumber(Number(task.target_value))} {task.units?.name}</span>
+                              <span>{formatNumber(Number(task.target_value))} {task.units?.name}</span>
                             ) : (
-                              <span className="">100%</span>
-
+                              <span>100%</span>
                             )}
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-1 sm:gap-1.5 flex-shrink-0">
                           {task.is_overdue && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-600 text-white font-semibold">
-                              Trễ hạn
-                            </span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-600 text-white font-semibold">Trễ hạn</span>
                           )}
                           {task.is_due && !task.is_overdue && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-600 text-white font-semibold animate-pulse">
-                              Gần deadline
-                            </span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-600 text-white font-semibold animate-pulse">Gần deadline</span>
                           )}
                           {getTaskStatusBadge(task.status.id, task.checked)}
                           {getPriorityBadge(task.priority.id)}
@@ -1128,45 +1068,26 @@ function TasksTab() {
                       {task.units.name !== "%" && task.units.name !== null && (
                         <div className="space-y-1.5 sm:space-y-2 mb-2 sm:mb-3">
                           <div className="flex justify-between items-center">
-                            <span className="text-xs font-semibold text-slate-300">
-                              Mức đạt được
-                            </span>
-                            <span className="text-xs font-bold text-blue-400">
-                              {formatNumber(Number(task.value))} {task.units.name}
-                            </span>
+                            <span className="text-xs font-semibold text-slate-300">Mức đạt được</span>
+                            <span className="text-xs font-bold text-blue-400">{formatNumber(Number(task.value))} {task.units.name}</span>
                           </div>
                         </div>
                       )}
 
-
                       <div className="space-y-1.5 sm:space-y-2 mb-2 sm:mb-3">
                         <div className="flex justify-between items-center">
-                          <span className="text-xs font-semibold text-slate-300">
-                            Tiến độ
-                          </span>
-                          <span className="text-xs font-bold text-blue-400">
-                            {progress}%
-                          </span>
+                          <span className="text-xs font-semibold text-slate-300">Tiến độ</span>
+                          <span className="text-xs font-bold text-blue-400">{progress}%</span>
                         </div>
                         <div className="w-full h-1.5 sm:h-2 bg-slate-800 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full transition-all"
-                            style={{ width: `${progress}%` }}
-                          ></div>
+                          <div className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full transition-all" style={{ width: `${progress}%` }} />
                         </div>
                       </div>
 
-
-
                       <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-1 text-slate-400">
-                          <Calendar
-                            size={12}
-                            className="text-slate-500 flex-shrink-0"
-                          />
-                          <span className="truncate">
-                            {formatDate2(task.task.date_end)}
-                          </span>
+                          <Calendar size={12} className="text-slate-500 flex-shrink-0" />
+                          <span className="truncate">{formatDate2(task.task.date_end)}</span>
                         </div>
                         <div className="flex items-center gap-1 text-yellow-400 flex-shrink-0">
                           <Star size={12} className="fill-yellow-400" />
@@ -1177,14 +1098,11 @@ function TasksTab() {
                       <div className="flex items-center justify-between text-xs mt-1.5 sm:mt-2">
                         <div className="flex items-center gap-1 text-slate-400">
                           <span className="truncate">
-                            {/* Reject - chỉ hiện khi chưa checked */}
                             {task.reject_status && !task.checked && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-red-600/30 text-red-300 border border-red-600/40">
                                 Bị từ chối
                               </span>
                             )}
-
-                            {/* Checked */}
                             {task.checked && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-blue-600 text-white">
                                 Xác nhận hoàn thành
@@ -1192,8 +1110,6 @@ function TasksTab() {
                             )}
                           </span>
                         </div>
-
-                        {/* Ngày reject - chỉ hiện khi chưa checked */}
                         {task.last_reject_date && !task.checked && (
                           <div className="flex items-center gap-1 text-yellow-400 flex-shrink-0">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-red-600/30 text-red-300 border border-red-600/40">
@@ -1201,8 +1117,6 @@ function TasksTab() {
                             </span>
                           </div>
                         )}
-
-                        {/* Ngày hoàn thành */}
                         {task.checked && (
                           <div className="flex items-center gap-1 text-yellow-400 flex-shrink-0">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-blue-600 text-white">
@@ -1211,7 +1125,6 @@ function TasksTab() {
                           </div>
                         )}
                       </div>
-
                     </div>
                   );
                 })}
@@ -1225,55 +1138,31 @@ function TasksTab() {
                     <PaginationItem>
                       <PaginationPrevious
                         onClick={() => handlePageChange(currentPage - 1)}
-                        className={
-                          currentPage === 1
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                       />
                     </PaginationItem>
-
                     {getPaginationItems().map((item, index) => {
-                      if (
-                        item === "ellipsis-start" ||
-                        item === "ellipsis-end"
-                      ) {
-                        return (
-                          <PaginationItem key={`${item}-${index}`}>
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        );
+                      if (item === "ellipsis-start" || item === "ellipsis-end") {
+                        return <PaginationItem key={`${item}-${index}`}><PaginationEllipsis /></PaginationItem>;
                       }
-
                       return (
                         <PaginationItem key={item}>
-                          <PaginationLink
-                            onClick={() => handlePageChange(item as number)}
-                            isActive={currentPage === item}
-                            className="cursor-pointer"
-                          >
+                          <PaginationLink onClick={() => handlePageChange(item as number)} isActive={currentPage === item} className="cursor-pointer">
                             {item}
                           </PaginationLink>
                         </PaginationItem>
                       );
                     })}
-
                     <PaginationItem>
                       <PaginationNext
                         onClick={() => handlePageChange(currentPage + 1)}
-                        className={
-                          currentPage === totalPages
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                       />
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
-
                 <div className="text-center text-xs sm:text-sm text-slate-400">
-                  Trang {currentPage} / {totalPages} - Tổng số {tasks.length}{" "}
-                  nhiệm vụ
+                  Trang {currentPage} / {totalPages} - Tổng số {tasks.length} nhiệm vụ
                 </div>
               </div>
             )}
@@ -1292,7 +1181,6 @@ function TasksTab() {
           />
         )}
       </div>
-
     </div>
   );
 }
