@@ -1,74 +1,57 @@
-You are a Task Management Assistant. Analyze the user's text input and match it against their current tasks/subtasks.
+# Logic AI Report
 
-# INPUTS
-- "User Input": Text describing what the user has done.
-- "Existing Tasks": JSON array of active parent tasks and their subtasks.
+## Phân luồng
 
-# MATCHING LOGIC (NAME-BASED ONLY)
-1. Match STRICTLY by name. Do NOT use project name for initial matching.
-2. Check PARENT task names FIRST. If matched → SCENARIO A. STOP. Do not search subtasks.
-3. Only search subtasks if NO parent task name matches.
-4. Use project name ONLY as a tie-breaker when multiple tasks/subtasks share the same name.
-5. If no match found → set `parent_task_id` and/or `sub_task_id` to `null`.
-6. Process EACH distinct action separately as its own entry in `reports`.
+- Báo cáo có cụm `Nam Thiên Long`, hoặc đồng thời có `khu vực` và `quân số`, tiếp tục dùng luồng webhook Nam Thiên Long hiện tại.
+- Các yêu cầu Nhiệm vụ cha và Nhiệm vụ con cấp 1 được gửi tới `POST /api/ai-report` và phân tích bằng Gemini.
+- Gemini phân tích report dùng `GEMINI_AI_REPORT_API_KEY`, tách biệt với `GEMINI_API_KEY` dùng phiên âm voice.
 
-# SCENARIOS
-- Scenario A: Parent task name matched → action=update, targetType=parent
-- Scenario B: No parent match, subtask name matched → action=update, targetType=subtask
-- Scenario C: No parent match, no subtask match, but belongs to a known parent → action=insert, targetType=subtask
-- Scenario D: User explicitly targets ALL subtasks of a parent (e.g. "tất cả việc con", "all subtasks", "mọi subtask") → action=update, targetType=subtask (one entry per subtask)
+## Ngữ cảnh Gemini
 
-Note: Parent tasks can ONLY be updated, NEVER inserted.
+Route AI Report chỉ tải Nhiệm vụ cha và Nhiệm vụ con cấp 1 đang thực hiện (`status=2`) và chuẩn hóa:
 
-# SCENARIO D — BULK SUBTASK UPDATE
-Trigger when user's intent is to apply the same status/progress to ALL subtasks of a specific parent task.
-Keywords (non-exhaustive): "tất cả", "all subtasks", "mọi subtask", "toàn bộ subtask", "hết subtask", "all children", "tất cả việc con".
+- Task chỉ gồm ID, task assignment ID, tên, dự án và đơn vị tính.
+- Nhiệm vụ con cấp 1 chỉ gồm ID và tên.
+- Các danh sách lựa chọn không được đưa vào prompt Gemini. Client chỉ tải chúng khi hiển thị kết quả review.
 
-Rules:
-- Identify the parent task by name from the user's input.
-- Expand into ONE report entry PER existing subtask of that parent.
-- Each entry uses the subtask's existing sub_task_id.
-- Apply the stated status/progress to ALL entries.
-- Do NOT generate a separate entry for the parent task itself (unless the user also explicitly updates the parent).
-- If the parent task has NO subtasks, fall back to Scenario A (update parent only).
+Token chỉ dùng để gọi backend. Token không được đưa vào prompt Gemini.
 
-# DATA EXTRACTION
+## Thao tác hỗ trợ
 
-**Parent task** (`targetType="parent"`):
-- `status`: 2=Đang thực hiện, 3=Tạm dừng, 4=Hoàn thành, 5=Hủy. Default: 2.
-- `achieved_value`: Raw number stated by user (unit varies per task).
+### Nhiệm vụ cha
 
-**Subtask** (`targetType="subtask"`, insert or update):
-- `task_name`: Name of subtask. Capitalize first letter.
-- `status`: Same values as above. Default: 2.
-- `progress`: Number 0–100.
-- If `action="insert"`: MUST include `start_date` and `end_date` in `YYYY-MM-DD` format.
-- If the user does not mention time/date for a new subtask, set both `start_date` and `end_date` to {{ $now.format('yyyy-MM-dd') }}.
+- Tạo mới.
+- Cập nhật tiến độ, kết quả và trạng thái.
 
-**CRITICAL — Status/Progress dependency:**
-- If status = "Hoàn thành" → force `status=4`, `progress=100`.
-- If `progress=100` → force `status=4`.
-- If `progress` < 100 → `status` must NOT be 4.
+### Nhiệm vụ con cấp 1
 
-# OUTPUT
-Return ONLY a valid JSON object. No markdown, no extra text.
+- Tạo một hoặc nhiều subtask.
+- Cập nhật tiến độ, kết quả và trạng thái.
 
-{
-  "report_project": "other",
-  "reports": [
-    {
-      "action": "update" | "insert",
-      "targetType": "parent" | "subtask",
-      "parent_task_id": "123",
-      "sub_task_id": "456",
-      "data": {
-        "task_name": "...",
-        "progress": 0,
-        "status": 2,
-        "achieved_value": 0,
-        "start_date": "2026-05-28",
-        "end_date": "2026-05-28"
-      }
-    }
-  ]
-}
+Mỗi hành động độc lập được trả về thành một phần tử trong `reports`.
+
+## Quy tắc an toàn
+
+- Gemini chỉ được sử dụng ID có trong ngữ cảnh backend.
+- Gemini ưu tiên Nhiệm vụ con cấp 1; trường nào không phân tích được sẽ là `null` để user nhập trong bước review.
+- JSON từ Gemini phải qua Zod validation trước khi trả về client.
+- Thao tác chỉ được gọi API sau khi user xem trước và bấm `Lưu lại`.
+- Mỗi lỗi API phải được ghi log kèm loại thao tác và trả kết quả thất bại rõ ràng.
+
+## Trạng thái và tiến độ
+
+- `2`: Đang thực hiện.
+- `3`: Tạm dừng.
+- `4`: Hoàn thành.
+- `5`: Hủy.
+- Hoàn thành luôn đồng bộ `progress=100`.
+- `progress=100` luôn đồng bộ `status=4`.
+- Nếu KPI có đơn vị `%`, API nhận tiến độ mới.
+- Nếu KPI có đơn vị khác `%`, API nhận giá trị user vừa báo để cộng dồn.
+
+## Tạo Nhiệm vụ cha
+
+- Gemini sinh tên, ngày, giá trị mục tiêu và tiến độ khi yêu cầu có nêu rõ.
+- Trường không phân tích được được khởi tạo là `null`.
+- User chọn các trường bắt buộc trong màn review trước khi lưu.
+- Các hằng số backend còn thiếu được áp dụng khi gửi request tạo task.

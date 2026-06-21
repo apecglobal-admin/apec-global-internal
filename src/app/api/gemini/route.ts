@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Using gemini-2.0-flash for speed and multimodal capabilities
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    // Using gemini-3.5-flash for speed and multimodal capabilities
+    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
     // Convert File to bytes
     const arrayBuffer = await audioFile.arrayBuffer();
