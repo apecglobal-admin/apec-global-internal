@@ -2,11 +2,9 @@ import {
   FinishReason,
   GoogleGenerativeAI,
   GoogleGenerativeAIFetchError,
-  SchemaType,
   type EnhancedGenerateContentResponse,
   type GenerateContentResult,
   type GenerationConfig,
-  type ResponseSchema,
 } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -55,62 +53,8 @@ const formatZodErrorMessage = (error: z.ZodError): string => {
     "Dữ liệu AI Report không hợp lệ.";
 };
 
-const responseSchema: ResponseSchema = {
-  type: SchemaType.OBJECT,
-  properties: {
-    report_project: {
-      type: SchemaType.STRING,
-      format: "enum",
-      enum: ["other"],
-    },
-    reports: {
-      type: SchemaType.ARRAY,
-      items: {
-        type: SchemaType.OBJECT,
-        properties: {
-          action: {
-            type: SchemaType.STRING,
-            format: "enum",
-            enum: ["create", "update_progress"],
-          },
-          targetType: {
-            type: SchemaType.STRING,
-            format: "enum",
-            enum: ["personal_task", "subtask"],
-          },
-          parent_task_id: { type: SchemaType.STRING, nullable: true },
-          task_assignment_id: { type: SchemaType.STRING, nullable: true },
-          sub_task_id: { type: SchemaType.STRING, nullable: true },
-          data: {
-            type: SchemaType.OBJECT,
-            properties: {
-              task_name: { type: SchemaType.STRING, nullable: true },
-              date_start: { type: SchemaType.STRING, nullable: true },
-              date_end: { type: SchemaType.STRING, nullable: true },
-              target_value: { type: SchemaType.NUMBER, nullable: true },
-              progress: { type: SchemaType.NUMBER, nullable: true },
-              status: { type: SchemaType.INTEGER, nullable: true },
-              achieved_value: { type: SchemaType.NUMBER, nullable: true },
-            },
-          },
-        },
-        required: [
-          "action",
-          "targetType",
-          "parent_task_id",
-          "task_assignment_id",
-          "sub_task_id",
-          "data",
-        ],
-      },
-    },
-  },
-  required: ["report_project", "reports"],
-};
-
 const generationConfig: AIReportGenerationConfig = {
   responseMimeType: "application/json",
-  responseSchema,
   maxOutputTokens: 6096,
   temperature: 0.1,
   thinkingConfig: {

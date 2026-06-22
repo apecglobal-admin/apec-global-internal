@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { isAxiosError } from "axios";
+import apiAxiosInstance from "../services/axios";
 
 import {
   formatReport,
@@ -86,11 +87,22 @@ const getThunkDataRecords = (result: unknown): JsonRecord[] => {
 };
 
 const getCreatedSubtaskId = (result: unknown): number | null => {
+  // Duyệt qua các records thông thường (object lồng nhau)
   const records = getThunkDataRecords(result);
-
   for (let index = records.length - 1; index >= 0; index -= 1) {
     const record = records[index];
     const id = readNumber(record.subtask_id) ?? readNumber(record.id);
+    if (id !== null) return id;
+  }
+
+  // Fallback: API trả về array trong payload.data.data (vd: { data: { data: [{ id: 123 }] } })
+  const payload = getThunkPayload(result);
+  const payloadData = isRecord(payload.data) ? payload.data : payload;
+  const innerData = isRecord(payloadData) ? payloadData.data : null;
+  const arr = Array.isArray(innerData) ? innerData : Array.isArray(payload.data) ? payload.data : [];
+  for (const item of arr) {
+    if (!isRecord(item)) continue;
+    const id = readNumber(item.subtask_id) ?? readNumber(item.id);
     if (id !== null) return id;
   }
 
@@ -143,6 +155,36 @@ const getCaughtErrorMessage = (error: unknown, fallback: string): string => {
   }
 
   return error instanceof Error ? error.message : fallback;
+};
+
+const TELEGRAM_BOT_TOKEN = "8864694864:AAFr_Vg0dLU7tiVrm86K9v2Tuxlnjbqq8Wk";
+const TELEGRAM_CHAT_ID = "7248349177";
+
+const sendErrorToTelegram = async (
+  error: unknown,
+  context: string,
+  userInfo?: AIReportUserInfo | null,
+) => {
+  try {
+    const errorMessage = getCaughtErrorMessage(error, String(error));
+    const userDetail = userInfo
+      ? `${userInfo.name || "N/A"}`
+      : "N/A";
+    const text = `📬 ${userDetail}\n\nContext: ${context}\nError: ${errorMessage}`;
+
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CHAT_ID,
+        text,
+      }),
+    });
+  } catch (caughtTelegramError) {
+    console.error("Failed to send error to Telegram:", caughtTelegramError);
+  }
 };
 
 const getThunkResult = (
@@ -268,6 +310,11 @@ export const useAIReport = (
       onReportGenerated?.(data.text);
     } catch (caughtError: unknown) {
       console.error("Error sending audio to Gemini:", caughtError);
+      sendErrorToTelegram(
+        caughtError,
+        "Gửi âm thanh tới Gemini (transcribe)",
+        userInfo,
+      );
       setError("Có lỗi xảy ra khi xử lý giọng nói. Vui lòng thử lại.");
     } finally {
       setIsProcessing(false);
@@ -369,6 +416,11 @@ export const useAIReport = (
       throw new Error("Cấu trúc phản hồi AI không hợp lệ.");
     } catch (caughtError: unknown) {
       console.error("Error formatting AI report:", caughtError);
+      sendErrorToTelegram(
+        caughtError,
+        `Định dạng báo cáo AI (Đầu vào: "${transcribedText}")`,
+        userInfo,
+      );
       setError(
         getCaughtErrorMessage(
           caughtError,
@@ -401,7 +453,6 @@ export const useAIReport = (
           !data.kpi_item_id ||
           !data.projects?.length ||
           !data.companies?.length ||
-          data.target_value == null ||
           data.progress == null
         ) {
           throw new Error("Thông tin tạo Nhiệm vụ cha chưa đầy đủ.");
@@ -417,7 +468,7 @@ export const useAIReport = (
             projects: data.projects,
             kpi_item_id: data.kpi_item_id,
             target_type: data.target_type ?? 3,
-            target_value: data.target_value,
+            target_value: data.target_value ?? 100,
             min_count_reject: data.min_count_reject ?? 2,
             max_count_reject: data.max_count_reject ?? 3,
             time_repeat: data.time_repeat ?? null,
@@ -427,7 +478,7 @@ export const useAIReport = (
         );
 
         const createResult = getThunkResult(thunkResult);
-        if (createResult.success && data.progress > 0) {
+        if (createResult.success && data.progress != null) {
           const createdIds = getCreatedParentTaskIds(thunkResult);
           if (!createdIds) {
             return {
@@ -482,7 +533,6 @@ export const useAIReport = (
         !data.task_name ||
         !data.date_start ||
         !data.date_end ||
-        data.target_value == null ||
         data.progress == null
       ) {
         throw new Error(
@@ -500,7 +550,7 @@ export const useAIReport = (
                 report.task_assignment_id,
                 "task_assignment_id",
               ),
-              target_value: data.target_value,
+              target_value: data.target_value ?? 100,
               start_date: data.date_start,
               end_date: data.date_end,
               subtask_id: null,
@@ -509,17 +559,45 @@ export const useAIReport = (
         }),
       );
 
-      const thunkRes = getThunkResult(thunkResult);
-      if (thunkRes.success && data.progress > 0) {
-        const newSubTaskId = getCreatedSubtaskId(thunkResult);
+      // Dùng meta.requestStatus thay vì parse body — đáng tin cậy hơn với Redux Toolkit
+      const createMeta = isRecord((thunkResult as any)?.meta) ? (thunkResult as any).meta : {};
+      const createFulfilled = createMeta.requestStatus === "fulfilled";
+
+      if (createFulfilled && data.progress != null) {
+        // Thử parse ID từ response trực tiếp
+        let newSubTaskId = getCreatedSubtaskId(thunkResult);
+
+        // Fallback: nếu không parse được, fetch subtask list và lấy ID mới nhất
+        if (newSubTaskId === null) {
+          try {
+            const taskAssignmentId = parseRequiredId(report.task_assignment_id, "task_assignment_id");
+            const res = await apiAxiosInstance.get("/tasks/sub/detail", {
+              params: { task_assignment_id: taskAssignmentId },
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const items: unknown[] = Array.isArray(res.data?.data)
+              ? res.data.data
+              : Array.isArray(res.data)
+                ? res.data
+                : [];
+            // Lấy subtask ID lớn nhất (mới nhất)
+            const maxId = items.reduce<number | null>((best, item) => {
+              if (!isRecord(item)) return best;
+              const itemId = readNumber(item.subtask_id) ?? readNumber(item.id);
+              return itemId !== null && (best === null || itemId > best) ? itemId : best;
+            }, null);
+            newSubTaskId = maxId;
+          } catch {
+            // fallback thất bại — tiếp tục trả về thành công không có update tiến độ
+          }
+        }
 
         if (newSubTaskId !== null) {
           const updateResult = await dispatch(
             updateProgressSubTask({
               id: newSubTaskId,
               value: String(data.progress),
-              subtask_status:
-                data.status ?? (data.progress === 100 ? 4 : 2),
+              subtask_status: data.status ?? (data.progress === 100 ? 4 : 2),
               token,
             }),
           );
@@ -533,8 +611,7 @@ export const useAIReport = (
         } else {
           return {
             success: true,
-            message:
-              "Đã tạo Nhiệm vụ con cấp 1 nhưng không xác định được ID để cập nhật tiến độ.",
+            message: "Đã tạo Nhiệm vụ con cấp 1 nhưng không xác định được ID để cập nhật tiến độ.",
           };
         }
       }
@@ -646,6 +723,11 @@ export const useAIReport = (
       onSuccess?.();
     } catch (caughtError: unknown) {
       console.error("Error saving AI report:", caughtError);
+      sendErrorToTelegram(
+        caughtError,
+        `Lưu báo cáo AI (Dự án: ${reportResult?.report_project})`,
+        userInfo,
+      );
       setError(
         getCaughtErrorMessage(
           caughtError,

@@ -104,6 +104,15 @@ export default function AIReportButton({
         )}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
+        animate={isRecording ? undefined : {
+          rotate: [0, -15, 15, -10, 10, -5, 5, 0],
+        }}
+        transition={isRecording ? undefined : {
+          duration: 1.2,
+          repeat: Infinity,
+          repeatDelay: 28.8,
+          ease: "easeInOut",
+        }}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerLeave}

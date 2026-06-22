@@ -13,8 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const statusText = "Đang thực hiện / Tạm dừng / Hoàn thành / Hủy";
-
 const Example = ({ children }: { children: React.ReactNode }) => (
   <p className="rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2 text-xs italic text-slate-300">
     “{children}”
@@ -48,13 +46,13 @@ export const ReportInstructionButton = () => (
       <DialogHeader>
         <DialogTitle className="text-white text-lg font-bold">Hướng dẫn Báo cáo AI</DialogTitle>
         <DialogDescription className="text-slate-300 text-sm">
-          Bạn có thể nói hoặc nhập tự nhiên. Dùng đúng tên task sẽ giúp AI nhận
+          Có thể nói hoặc nhập tự nhiên. Dùng đúng tên task sẽ giúp AI nhận
           diện chính xác hơn.
         </DialogDescription>
       </DialogHeader>
 
       <Tabs defaultValue="nam-thien-long">
-        <TabsList className="grid w-full grid-cols-2 bg-slate-950/80 border border-slate-800 p-1 rounded-lg">
+        <TabsList className="grid w-full grid-cols-2 bg-slate-950/80 border border-slate-800 mt-3 rounded-lg">
           <TabsTrigger
             value="nam-thien-long"
             className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400"
@@ -69,56 +67,51 @@ export const ReportInstructionButton = () => (
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="nam-thien-long" className="mt-4">
-          <div className="flex flex-col gap-4">
+        <TabsContent value="nam-thien-long">
+          <div className="flex flex-col gap-2">
             <section className="flex flex-col gap-2 rounded-lg border border-slate-800 bg-slate-950/30 p-4">
-              <h4 className="text-sm font-semibold text-slate-200 border-b border-slate-800 pb-1.5 mb-1">
-                Thông tin cần báo cáo
+              <h4 className="text-sm font-bold text-slate-200 border-b border-slate-800 pb-1.5 mb-1 uppercase tracking-wide">
+                1. THÔNG TIN CẦN BÁO CÁO
               </h4>
               <ul className="list-disc pl-5 text-sm text-slate-300 space-y-2">
                 <li>
-                  <strong className="text-rose-400">Bắt buộc</strong> phải nói rõ{" "}
-                  <strong className="text-sky-400">khu vực</strong> và{" "}
-                  <strong className="text-sky-400">quân số</strong> thực tế/hợp đồng.
+                  <strong className="text-slate-100">Từ khóa bắt buộc:</strong>{" "}
+                  <span className="text-emerald-400">Khu vực [Tên nơi làm việc]</span>{" "}
+                  +{" "}
+                  <span className="text-amber-400">Quân số [Thực tế/Hợp đồng]</span>
                 </li>
                 <li>
-                  Thời gian mặc định là <strong>hôm nay</strong>; có thể báo cáo cho{" "}
-                  <strong>hôm qua</strong> hoặc ngày cụ thể.
+                  <strong className="text-pink-300">Ngày báo cáo:</strong> mặc định là hôm nay. Nếu báo cáo cho ngày khác, hãy nói rõ như "hôm qua" hoặc "ngày 25/1".
                 </li>
                 <li>
-                  Có thể báo cáo thêm:{" "}
-                  <span className="text-emerald-400 font-semibold">ra quân</span>,{" "}
-                  <span className="text-rose-400 font-semibold">rút quân (thanh lý)</span>,{" "}
-                  <span className="text-emerald-400 font-semibold">tăng/giảm vị trí</span>,{" "}
-                  <span className="text-emerald-400 font-semibold">nhân sự mới</span>,{" "}
-                  <span className="text-rose-400 font-semibold">nghỉ việc</span>,{" "}
-                  <span className="text-rose-400 font-semibold">vi phạm/sự cố</span> và{" "}
-                  <span className="text-sky-400 font-semibold">phản ánh của khách hàng</span>.
+                  Có thể thêm ra quân, rút quân, tăng/giảm vị trí, nhân sự mới/nghỉ, vi phạm, phản ánh của khách hàng.
                 </li>
               </ul>
             </section>
 
             <section className="flex flex-col gap-2 rounded-lg border border-slate-800 bg-slate-950/30 p-4">
-              <h4 className="text-sm font-semibold text-slate-200 border-b border-slate-800 pb-1.5 mb-1">
-                Ví dụ thực tế
+              <h4 className="text-sm font-bold text-slate-200 border-b border-slate-800 pb-1.5 mb-1 uppercase tracking-wide">
+                2. VÍ DỤ
               </h4>
-              <Example>
-                Báo cáo hôm qua khu vực{" "}
-                <span className="text-sky-400 font-bold">Bến Cát</span>, quân số{" "}
-                <span className="text-slate-100 font-bold">12/15</span>,{" "}
-                <span className="text-emerald-400 font-bold">tăng vị trí 1</span>, Trần
-                Văn B <span className="text-rose-400 font-bold">đi trễ</span>.
-              </Example>
-              <Example>
-                Khu vực <span className="text-sky-400 font-bold">Dĩ An</span>, quân số{" "}
-                <span className="text-slate-100 font-bold">30 trên 30</span>.
-              </Example>
+              <div className="flex flex-col gap-3 text-sm italic text-slate-300 pl-1 py-1">
+                <p>
+                  "Báo cáo hôm qua{" "}
+                  <span className="text-emerald-400 font-medium">khu vực Bến Cát</span>
+                  , quân số 12/15, tăng vị trí 1, Trần Văn B đi trễ."
+                </p>
+                <p>
+                  "
+                  <span className="text-emerald-400 font-medium">Khu vực Dĩ An</span>{" "}
+                  <span className="text-amber-400 font-medium">quân số 30 trên 30.</span>
+                  "
+                </p>
+              </div>
             </section>
           </div>
         </TabsContent>
 
-        <TabsContent value="task" className="mt-4">
-          <div className="flex flex-col gap-4">
+        <TabsContent value="task">
+          <div className="flex flex-col gap-2">
             <section className="flex flex-col gap-3 rounded-lg border border-slate-800 bg-slate-950/30 p-4">
               <h4 className="text-sm font-semibold text-slate-200 border-b border-slate-800 pb-1.5">
                 Chức năng hỗ trợ
@@ -144,9 +137,7 @@ export const ReportInstructionButton = () => (
                 </Badge>
               </div>
               <p className="text-xs text-slate-400">
-                Hỗ trợ các trạng thái:{" "}
-                <span className="text-slate-200 font-bold">{statusText}</span>. Bạn có
-                thể nói nhiều lệnh cùng lúc.
+                Có thể báo cáo nhiều việc cùng lúc.
               </p>
             </section>
 
@@ -156,40 +147,40 @@ export const ReportInstructionButton = () => (
               </h4>
               <ul className="list-disc pl-5 text-sm text-slate-300 space-y-2">
                 <li>
-                  <strong className="text-emerald-400">Tạo Nhiệm vụ cha mới:</strong>{" "}
-                  Chỉ cần nói rõ <strong className="text-sky-400">tên việc</strong>.
-                  Các thông tin còn lại sẽ được chọn trong bước xem trước.
+                  <strong className="text-emerald-400">Tạo việc:</strong> Nói rõ tên việc.
+                  <ul className="list-disc pl-5 mt-1 space-y-1 text-xs text-slate-400">
+                    <li>Mặc định tạo việc con (thêm từ khóa "cha" để tạo việc cha).</li>
+                    <li>Mặc định thời gian là <strong>hôm nay</strong> (hoặc nói rõ từ ngày... đến ngày...).</li>
+                    <li>Tự động đặt tiến độ <strong>100%</strong> nếu báo cáo việc đã xong.</li>
+                  </ul>
                 </li>
                 <li>
-                  <strong className="text-emerald-400">Tạo Nhiệm vụ con cấp 1:</strong>{" "}
-                  Nói rõ <strong className="text-sky-400">tên nhiệm vụ con</strong> và{" "}
-                  <strong className="text-sky-400">tên nhiệm vụ cha</strong>.
-                </li>
-                <li>
-                  <strong className="text-sky-400">Cập nhật báo cáo:</strong> Cần
-                  nói rõ <strong className="text-sky-400">tên nhiệm vụ cha/con</strong>,
-                  tiến độ hoặc trạng thái.
+                  <strong className="text-sky-400">Cập nhật tiến độ:</strong>
+                  <ul className="list-disc pl-5 mt-1 space-y-1 text-xs text-slate-400">
+                    <li>Nói rõ tên việc kèm số % (ví dụ: "lên 70%").</li>
+                    <li>Đạt 100% tự động đổi trạng thái thành Hoàn thành.</li>
+                  </ul>
                 </li>
               </ul>
             </section>
 
             <section className="flex flex-col gap-2 rounded-lg border border-slate-800 bg-slate-950/30 p-4">
               <h4 className="text-sm font-semibold text-slate-200 border-b border-slate-800 pb-1.5 mb-1">
-                Ví dụ thực tế
+                Ví dụ
               </h4>
               <Example>
-                <span className="text-emerald-400 font-bold">Tạo Nhiệm vụ cha</span>{" "}
-                <span className="text-sky-400 font-bold">Gọi khách hàng</span>.
+                <span className="text-emerald-400 font-bold">Tạo nhiệm vụ cha</span>{" "}
+                <span className="text-sky-400 font-bold">Tuyển dụng nhân sự</span>.
               </Example>
               <Example>
-                Trong <span className="text-sky-400 font-bold">Quản lý tài liệu</span>,{" "}
-                <span className="text-emerald-400 font-bold">thêm Nhiệm vụ con cấp 1</span>{" "}
-                <span className="text-white font-bold">Soạn hợp đồng</span> từ hôm nay
-                đến ngày 25/6.
+                Trong nhiệm vụ <span className="text-sky-400 font-bold">Tuyển dụng nhân sự</span>,{" "}
+                đã làm xong <span className="text-emerald-400 font-bold">Lọc hồ sơ ứng viên</span>.
               </Example>
               <Example>
-                <span className="text-sky-400 font-bold">Cập nhật</span>{" "}
-                <span className="text-white font-bold">Soạn hợp đồng</span> lên{" "}
+                Báo cáo <span className="text-emerald-400 font-bold">thiết kế xong banner</span> từ hôm nay đến 25/6.
+              </Example>
+              <Example>
+                Cập nhật <span className="text-sky-400 font-bold">Soạn hợp đồng</span> lên{" "}
                 <span className="text-amber-400 font-bold">70%</span>.
               </Example>
             </section>

@@ -169,15 +169,12 @@ const normalizeReport = (
         ? { ...emptyProgressReviewData, ...report.data }
         : { ...report.data };
 
-  if (data.status === 4 || data.progress === 100) {
+  if (data.progress === 100) {
     data.status = 4;
-    data.progress = 100;
-  } else if (
-    data.progress != null &&
-    data.progress < 100 &&
-    data.status === 4
-  ) {
+  } else if (data.progress != null && data.progress < 100) {
     data.status = 2;
+  } else if (data.progress == null) {
+    data.status = null;
   }
 
   if (report.targetType === "personal_task" && report.action === "create") {
