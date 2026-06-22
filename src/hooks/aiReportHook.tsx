@@ -1,96 +1,328 @@
-import { useState, useRef, useEffect } from "react";
+import { useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { isAxiosError } from "axios";
+import apiAxiosInstance from "../services/axios";
+
 import {
-  sendAudioToGemini,
   formatReport,
   saveReport,
+  sendAudioToGemini,
 } from "../features/ai-report/api/api";
-import { useSelector, useDispatch } from "react-redux";
+import type {
+  AIReportAnalysisResponse,
+  AIReportParentTask,
+  AIReportResponse,
+  GenericReportItem,
+  NTLReportItem,
+  TaskOperationResult,
+} from "../features/ai-report/types";
 import {
-  updateProgressTask,
-  updateProgressSubTask,
-  updateStatusSubTask,
+  createPersonalTask,
   createSubTask,
-  getSubTask,
+  updateProgressSubTask,
+  updateProgressTask,
+  updateStatusSubTask,
 } from "../features/task/api";
+import type { AppDispatch, RootState } from "../lib/store";
 
-export interface NTLReportItem {
-  report_date: string;
-  area: string;
-  new_customers_opened: string;
-  customers_closed_withdrawn: string;
-  positions_increased: string;
-  positions_decreased: string;
-  customer_feedback_incidents: string;
-  notes: string;
-  actual_vs_contracted_staff: string;
-  new_staff_hired: string;
-  staff_resigned: string;
-  staff_violations: string;
-  staff_suggestions_feedback: string;
+export type {
+  AIReportResponse,
+  GenericReportData,
+  GenericReportItem,
+  NTLReportItem,
+} from "../features/ai-report/types";
+
+interface AIReportUserInfo {
+  name?: string;
+  email?: string;
+  department_id?: number;
+  position_id?: number;
 }
 
-export interface GenericReportData {
-  task_name?: string;
-  progress?: number;
-  target_value?: number;
-  status: number;
-  achieved_value?: number;
-  start_date?: string;
-  end_date?: string;
+interface NamedOption {
+  id: number;
+  name?: string;
+  title?: string;
 }
 
-export interface GenericReportItem {
-  action: "insert" | "update";
-  targetType: "parent" | "subtask";
-  parent_task_id: string | null;
-  sub_task_id?: string | null;
-  data: GenericReportData;
+type PreventablePointerEvent = Pick<React.PointerEvent, "preventDefault">;
+
+type JsonRecord = Record<string, unknown>;
+
+const isRecord = (value: unknown): value is JsonRecord =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const readRecord = (value: unknown): JsonRecord => (isRecord(value) ? value : {});
+
+const readString = (value: unknown): string =>
+  typeof value === "string" ? value : "";
+
+const readNumber = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const getThunkPayload = (result: unknown): JsonRecord => {
+  const resultRecord = isRecord(result) ? result : {};
+  return isRecord(resultRecord.payload) ? resultRecord.payload : {};
+};
+
+const getThunkDataRecords = (result: unknown): JsonRecord[] => {
+  const records: JsonRecord[] = [];
+  let current: unknown = getThunkPayload(result);
+
+  for (let depth = 0; depth < 5; depth += 1) {
+    if (Array.isArray(current)) {
+      current = current[0];
+      continue;
+    }
+    if (!isRecord(current)) break;
+    records.push(current);
+    current = current.data;
+  }
+
+  return records;
+};
+
+const getCreatedSubtaskId = (result: unknown): number | null => {
+  // Duyệt qua các records thông thường (object lồng nhau)
+  const records = getThunkDataRecords(result);
+  for (let index = records.length - 1; index >= 0; index -= 1) {
+    const record = records[index];
+    const id = readNumber(record.subtask_id) ?? readNumber(record.id);
+    if (id !== null) return id;
+  }
+
+  // Fallback: API trả về array trong payload.data.data (vd: { data: { data: [{ id: 123 }] } })
+  const payload = getThunkPayload(result);
+  const payloadData = isRecord(payload.data) ? payload.data : payload;
+  const innerData = isRecord(payloadData) ? payloadData.data : null;
+  const arr = Array.isArray(innerData) ? innerData : Array.isArray(payload.data) ? payload.data : [];
+  for (const item of arr) {
+    if (!isRecord(item)) continue;
+    const id = readNumber(item.subtask_id) ?? readNumber(item.id);
+    if (id !== null) return id;
+  }
+
+  return null;
+};
+
+interface CreatedParentTaskIds {
+  taskId: number;
+  taskAssignmentId: number;
 }
 
-export type AIReportResponse =
-  | { report_project: "ntl"; reports: NTLReportItem[] }
-  | { report_project: "other"; reports: GenericReportItem[] };
+const getCreatedParentTaskIds = (
+  result: unknown,
+): CreatedParentTaskIds | null => {
+  const records = getThunkDataRecords(result);
+  let taskId: number | null = null;
+  let taskAssignmentId: number | null = null;
+
+  for (const record of records) {
+    taskId ??=
+      readNumber(record.task_id) ?? readNumber(readRecord(record.task).id);
+    taskAssignmentId ??=
+      readNumber(record.task_assignment_id) ??
+      readNumber(record.assignment_id);
+
+    if (taskId === null && taskAssignmentId !== null) {
+      taskId = readNumber(record.id);
+    }
+
+    if (taskId !== null && taskAssignmentId === null) {
+      taskAssignmentId = readNumber(record.id);
+    }
+  }
+
+  return taskId !== null && taskAssignmentId !== null
+    ? { taskId, taskAssignmentId }
+    : null;
+};
+
+const getCaughtErrorMessage = (error: unknown, fallback: string): string => {
+  if (isAxiosError(error)) {
+    const responseData = isRecord(error.response?.data) ? error.response.data : {};
+    const responseError = isRecord(responseData.error) ? responseData.error : {};
+    return (
+      readString(responseError.message) ||
+      readString(responseData.message) ||
+      error.message ||
+      fallback
+    );
+  }
+
+  return error instanceof Error ? error.message : fallback;
+};
+
+const TELEGRAM_BOT_TOKEN = "8864694864:AAFr_Vg0dLU7tiVrm86K9v2Tuxlnjbqq8Wk";
+const TELEGRAM_CHAT_ID = "7248349177";
+
+const sendErrorToTelegram = async (
+  error: unknown,
+  context: string,
+  userInfo?: AIReportUserInfo | null,
+) => {
+  try {
+    const errorMessage = getCaughtErrorMessage(error, String(error));
+    const userDetail = userInfo
+      ? `${userInfo.name || "N/A"}`
+      : "N/A";
+    const text = `📬 ${userDetail}\n\nContext: ${context}\nError: ${errorMessage}`;
+
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CHAT_ID,
+        text,
+      }),
+    });
+  } catch (caughtTelegramError) {
+    console.error("Failed to send error to Telegram:", caughtTelegramError);
+  }
+};
+
+const getThunkResult = (
+  result: unknown,
+): { success: boolean; message: string } => {
+  const resultRecord = isRecord(result) ? result : {};
+  const payload = getThunkPayload(result);
+  const data = isRecord(payload.data) ? payload.data : payload;
+  const meta = isRecord(resultRecord.meta) ? resultRecord.meta : {};
+  const status = readNumber(data.status);
+  const success =
+    data.success !== false &&
+    (data.success === true ||
+      status === 200 ||
+      status === 201 ||
+      status === 204 ||
+      meta.requestStatus === "fulfilled");
+  const message =
+    readString(data.message) ||
+    readString(payload.message) ||
+    (success ? "Thao tác thành công." : "Backend từ chối thao tác.");
+
+  return { success, message };
+};
+
+const parseRequiredId = (value: string | null | undefined, field: string): number => {
+  const parsed = readNumber(value);
+  if (parsed === null) throw new Error(`Thiếu hoặc sai ${field}.`);
+  return parsed;
+};
+
+const findParentTask = (
+  tasks: AIReportParentTask[],
+  report: GenericReportItem,
+): AIReportParentTask | undefined =>
+  tasks.find(
+    (task) =>
+      String(task.task?.id ?? "") === String(report.parent_task_id ?? "") ||
+      String(task.id) === String(report.task_assignment_id ?? ""),
+  );
+
+const ntlFields: Array<keyof NTLReportItem> = [
+  "report_date",
+  "area",
+  "new_customers_opened",
+  "customers_closed_withdrawn",
+  "positions_increased",
+  "positions_decreased",
+  "customer_feedback_incidents",
+  "notes",
+  "actual_vs_contracted_staff",
+  "new_staff_hired",
+  "staff_resigned",
+  "staff_violations",
+  "staff_suggestions_feedback",
+];
+
+const parseLegacyNTLReports = (value: unknown): NTLReportItem[] | null => {
+  if (!Array.isArray(value)) return null;
+
+  const reports = value.flatMap((item) => {
+    if (!isRecord(item)) return [];
+    const report = Object.fromEntries(
+      ntlFields.map((field) => [field, String(item[field] ?? "")]),
+    ) as unknown as NTLReportItem;
+    return [report];
+  });
+
+  return reports.length > 0 ? reports : null;
+};
 
 export const useAIReport = (
   onReportGenerated?: (text: string) => void,
   onSuccess?: () => void,
 ) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [transcribedText, setTranscribedText] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isSending, setIsSending] = useState(false); // Used for saving
-  const [isFormatting, setIsFormatting] = useState(false); // Used for formatting
-  const [reportResult, setReportResult] = useState<AIReportResponse | null>(
-    null,
-  );
+  const [isSending, setIsSending] = useState(false);
+  const [isFormatting, setIsFormatting] = useState(false);
+  const [reportResult, setReportResult] = useState<AIReportResponse | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const userInfo = useSelector((state: any) => state.user.userInfo.data);
-  const positions = useSelector((state: any) => state.user.positions.data);
-  const departments = useSelector((state: any) => state.user.departments.data);
-  const tasksData = useSelector((state: any) => state.user.tasks?.data);
-  const parentTasks: any[] = tasksData?.data || [];
+  const userInfo = useSelector(
+    (state: RootState) => state.user.userInfo.data,
+  ) as AIReportUserInfo | null;
+  const positions = useSelector(
+    (state: RootState) => state.user.positions.data,
+  ) as NamedOption[];
+  const departments = useSelector(
+    (state: RootState) => state.user.departments.data,
+  ) as NamedOption[];
 
   const userName = userInfo?.name || "Unknown User";
   const userEmail = userInfo?.email || "";
   const userDepartment =
-    departments?.find((d: any) => d.id === userInfo?.department_id)?.name ||
-    "Unknown Department";
+    departments.find((department) => department.id === userInfo?.department_id)
+      ?.name || "Unknown Department";
   const userPosition =
-    positions?.find((p: any) => p.id === userInfo?.position_id)?.title ||
+    positions.find((position) => position.id === userInfo?.position_id)?.title ||
     "Unknown Position";
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const isHoldingRef = useRef(false);
-  const startTimeRef = useRef<number>(0);
+  const startTimeRef = useRef(0);
 
-  const startRecording = async (e: React.PointerEvent) => {
-    e.preventDefault();
+  const handleSendAudio = async (audioBlob: Blob) => {
+    try {
+      const data = await sendAudioToGemini(audioBlob, transcribedText);
+
+      if (!data.text.trim() || data.text.trim() === ".") {
+        setError("Không nghe rõ thông tin. Vui lòng thử lại.");
+        return;
+      }
+
+      setTranscribedText((previousText) =>
+        previousText ? `${previousText} ${data.text}` : data.text,
+      );
+      onReportGenerated?.(data.text);
+    } catch (caughtError: unknown) {
+      console.error("Error sending audio to Gemini:", caughtError);
+      sendErrorToTelegram(
+        caughtError,
+        "Gửi âm thanh tới Gemini (transcribe)",
+        userInfo,
+      );
+      setError("Có lỗi xảy ra khi xử lý giọng nói. Vui lòng thử lại.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const startRecording = async (event: PreventablePointerEvent) => {
+    event.preventDefault();
     isHoldingRef.current = true;
 
     try {
@@ -106,10 +338,8 @@ export const useAIReport = (
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
+      mediaRecorder.ondataavailable = (audioEvent) => {
+        if (audioEvent.data.size > 0) audioChunksRef.current.push(audioEvent.data);
       };
 
       mediaRecorder.onstop = async () => {
@@ -125,21 +355,15 @@ export const useAIReport = (
           type: "audio/webm",
         });
         await handleSendAudio(audioBlob);
-
         stream.getTracks().forEach((track) => track.stop());
       };
-
-      if (!isHoldingRef.current) {
-        stream.getTracks().forEach((track) => track.stop());
-        return;
-      }
 
       mediaRecorder.start();
       startTimeRef.current = Date.now();
       setIsRecording(true);
       setShowModal(true);
-    } catch (err) {
-      console.error("Error accessing microphone:", err);
+    } catch (caughtError: unknown) {
+      console.error("Error accessing microphone:", caughtError);
       if (isHoldingRef.current) {
         setError(
           "Không thể truy cập microphone. Vui lòng kiểm tra quyền truy cập.",
@@ -151,316 +375,321 @@ export const useAIReport = (
 
   const stopRecording = () => {
     isHoldingRef.current = false;
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state === "recording"
-    ) {
+    if (mediaRecorderRef.current?.state === "recording") {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       setIsProcessing(true);
     }
   };
 
-  const handleSendAudio = async (audioBlob: Blob) => {
-    try {
-      const data = await sendAudioToGemini(audioBlob, transcribedText);
-
-      if (typeof data.text === "string") {
-        if (data.text.trim()) {
-          setTranscribedText((prev) =>
-            prev ? prev + " " + data.text : data.text,
-          );
-          if (onReportGenerated) {
-            onReportGenerated(data.text);
-          }
-        } else {
-          setError("Không nghe rõ thông tin. Vui lòng thử lại.");
-        }
-      } else {
-        setError("Không nhận được phản hồi từ AI.");
-      }
-    } catch (err: any) {
-      console.error("Error sending audio to API:", err);
-      setError("Có lỗi xảy ra khi xử lý báo cáo. Vui lòng thử lại.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   const handleFormat = async () => {
-    if (!transcribedText) return;
+    if (!transcribedText.trim()) return;
 
     setIsFormatting(true);
+    setError(null);
     try {
       const token = localStorage.getItem("userToken");
+      if (!token) throw new Error("Không tìm thấy phiên đăng nhập.");
+
       const response = await formatReport(
         transcribedText,
         userName,
-        token || "",
+        token,
       );
-      if (
-        response.data &&
-        (response.data.report_project === "ntl" ||
-          response.data.report_project === "other")
-      ) {
-        setReportResult(response.data);
-      } else {
-        console.warn("Unexpected response format:", response.data);
-        if (Array.isArray(response.data)) {
-          setReportResult({
-            report_project: "ntl",
-            reports: response.data,
-          } as any);
-        } else {
-          setReportResult(null);
-          setError("Cấu trúc dữ liệu không hợp lệ.");
-        }
+      const rawAnalysis: unknown = response.data;
+      const legacyNTLReports = parseLegacyNTLReports(rawAnalysis);
+      if (legacyNTLReports) {
+        setReportResult({ report_project: "ntl", reports: legacyNTLReports });
+        return;
       }
-    } catch (err: any) {
-      console.error("Error formatting report:", err);
-      setError("Xảy ra lỗi khi AI xử lý báo cáo. Vui lòng thử lại.");
+
+      const analysis = rawAnalysis as AIReportAnalysisResponse;
+
+      if (
+        analysis.report_project === "ntl" ||
+        analysis.report_project === "other"
+      ) {
+        setReportResult(analysis);
+        return;
+      }
+
+      throw new Error("Cấu trúc phản hồi AI không hợp lệ.");
+    } catch (caughtError: unknown) {
+      console.error("Error formatting AI report:", caughtError);
+      sendErrorToTelegram(
+        caughtError,
+        `Định dạng báo cáo AI (Đầu vào: "${transcribedText}")`,
+        userInfo,
+      );
+      setError(
+        getCaughtErrorMessage(
+          caughtError,
+          "Xảy ra lỗi khi AI xử lý báo cáo. Vui lòng thử lại.",
+        ),
+      );
     } finally {
       setIsFormatting(false);
     }
   };
 
-  // Execute actual task operations for "other" reports
-  const executeTaskOperations = async (
-    reports: GenericReportItem[],
-    modalParentTasks?: any[],
-  ): Promise<{ successes: number; failures: number }> => {
+  const executeReport = async (
+    report: GenericReportItem,
+    parentTasks: AIReportParentTask[],
+  ): Promise<{ success: boolean; message: string }> => {
     const token = localStorage.getItem("userToken");
-    let successes = 0;
-    let failures = 0;
+    if (!token) throw new Error("Không tìm thấy phiên đăng nhập.");
 
-    for (const report of reports) {
-      if (!report.parent_task_id) {
-        console.warn("Skipping report with null parent_task_id:", report);
-        failures++;
-        continue;
-      }
+    const { data } = report;
+    let thunkResult: unknown;
 
-      // Use modalParentTasks if available, otherwise fallback to Redux parentTasks
-      const tasksToUse = modalParentTasks?.length
-        ? modalParentTasks
-        : parentTasks;
+    if (report.targetType === "personal_task") {
+      if (report.action === "create") {
+        if (
+          !data.task_name ||
+          !data.date_start ||
+          !data.date_end ||
+          !data.type_task ||
+          !data.task_priority ||
+          !data.kpi_item_id ||
+          !data.projects?.length ||
+          !data.companies?.length ||
+          data.progress == null
+        ) {
+          throw new Error("Thông tin tạo Nhiệm vụ cha chưa đầy đủ.");
+        }
 
-      // Find the parent task - handle both task.id and assignment id
-      const parentTask = tasksToUse.find(
-        (t: any) =>
-          t?.task?.id?.toString() === report.parent_task_id?.toString() ||
-          t?.id?.toString() === report.parent_task_id?.toString(),
-      );
-
-      if (!parentTask) {
-        console.warn(
-          `Parent task not found for id: ${report.parent_task_id}`,
-          report,
+        thunkResult = await dispatch(
+          createPersonalTask({
+            name: data.task_name,
+            type_task: data.type_task,
+            date_start: data.date_start,
+            date_end: data.date_end,
+            task_priority: data.task_priority,
+            projects: data.projects,
+            kpi_item_id: data.kpi_item_id,
+            target_type: data.target_type ?? 3,
+            target_value: data.target_value ?? 100,
+            min_count_reject: data.min_count_reject ?? 2,
+            max_count_reject: data.max_count_reject ?? 3,
+            time_repeat: data.time_repeat ?? null,
+            companies: data.companies,
+            token,
+          }),
         );
-        failures++;
-        continue;
-      }
 
-      const taskId = parentTask?.task?.id; // actual task ID
-      const taskAssignmentId = parentTask?.id; // task assignment ID
-      const statusId = report.data.status ?? 2;
-
-      try {
-        if (report.action === "update" && report.targetType === "parent") {
-          const progressVal = report.data.progress;
-          const achievedVal = report.data.achieved_value;
-          const finalValue =
-            achievedVal !== undefined && achievedVal !== null
-              ? achievedVal
-              : (progressVal ?? 0);
-
-          // Update parent task progress
-          const payload = {
-            id: parseInt(taskAssignmentId),
-            task_id: parseInt(taskId),
-            status: statusId,
-            process: progressVal ?? 0,
-            value: finalValue,
-            token,
-          };
-          const result = await dispatch(updateProgressTask(payload) as any);
-          if (result?.payload?.data?.success) {
-            successes++;
-          } else {
-            console.error("Update parent task failed:", result?.payload);
-            failures++;
+        const createResult = getThunkResult(thunkResult);
+        if (createResult.success && data.progress != null) {
+          const createdIds = getCreatedParentTaskIds(thunkResult);
+          if (!createdIds) {
+            return {
+              success: true,
+              message:
+                "Đã tạo Nhiệm vụ cha nhưng không xác định được ID để cập nhật tiến độ.",
+            };
           }
-        } else if (
-          report.action === "update" &&
-          report.targetType === "subtask"
-        ) {
-          // Update subtask progress
-          if (!report.sub_task_id) {
-            console.warn(
-              "Skipping subtask update with null sub_task_id:",
-              report,
-            );
-            failures++;
-            continue;
-          }
-          const payload = {
-            id: parseInt(report.sub_task_id),
-            value: (report.data.progress ?? 0).toString(),
-            subtask_status: statusId,
-            token,
-          };
-          const result = await dispatch(updateProgressSubTask(payload) as any);
 
-          const statusPayload = {
-            ids: [report.sub_task_id],
-            status: statusId,
-            token,
-          };
-          const statusResult = await dispatch(
-            updateStatusSubTask(statusPayload) as any,
+          const updateResult = await dispatch(
+            updateProgressTask({
+              id: createdIds.taskAssignmentId,
+              task_id: createdIds.taskId,
+              status: data.status ?? (data.progress === 100 ? 4 : 2),
+              process: data.progress,
+              value: data.progress,
+              token,
+            }),
           );
-
-          if (
-            result?.payload?.data?.success ||
-            statusResult?.payload?.data?.success
-          ) {
-            successes++;
-          } else {
-            console.error("Update subtask failed:", result?.payload);
-            failures++;
-          }
-        } else if (
-          report.action === "insert" &&
-          report.targetType === "subtask"
-        ) {
-          // Create new subtask
-          const payload = {
-            token,
-            subtasks: [
-              {
-                name: report.data.task_name || "Nhiệm vụ con mới",
-                description: "",
-                task_id: parseInt(taskId),
-                task_assignment_id: parseInt(taskAssignmentId),
-                target_value: report.data.target_value ?? 100,
-                start_date: report.data.start_date,
-                end_date: report.data.end_date,
-              },
-            ],
-          };
-          const result = await dispatch(createSubTask(payload) as any);
-          if (result?.payload?.data?.success) {
-            successes++;
-
-            try {
-              let createdSubtask = result.payload.data.data;
-              let newSubtaskId = null;
-
-              if (Array.isArray(createdSubtask) && createdSubtask.length > 0) {
-                newSubtaskId = createdSubtask[0].id;
-              } else if (createdSubtask && createdSubtask.id) {
-                newSubtaskId = createdSubtask.id;
-              } else {
-                // Wait for DB insertion lag before refetching
-                await new Promise((resolve) => setTimeout(resolve, 1000));
-
-                const fetchResult = await dispatch(
-                  getSubTask({
-                    limit: 100,
-                    offset: 0,
-                    task_assignment_id: parseInt(taskAssignmentId),
-                    token,
-                  }) as any,
-                );
-
-                if (fetchResult?.payload?.data?.success) {
-                  const allSubtasks = fetchResult.payload.data.data;
-                  const matched = allSubtasks?.filter(
-                    (s: any) =>
-                      s.name === (report.data.task_name || "Nhiệm vụ con mới"),
-                  );
-                  if (matched && matched.length > 0) {
-                    newSubtaskId = matched[matched.length - 1].id;
-                  }
-                }
-              }
-
-              if (
-                newSubtaskId &&
-                report.data.progress !== undefined &&
-                report.data.progress !== null
-              ) {
-                const progressPayload = {
-                  id: newSubtaskId,
-                  value: report.data.progress.toString(),
-                  subtask_status: statusId,
-                  token,
-                };
-                await dispatch(updateProgressSubTask(progressPayload) as any);
-              }
-
-              if (newSubtaskId && statusId !== undefined) {
-                const statusPayload = {
-                  ids: [newSubtaskId.toString()],
-                  status: statusId,
-                  token,
-                };
-                await dispatch(updateStatusSubTask(statusPayload) as any);
-              }
-            } catch (err) {
-              console.error("Error setting progress for new subtask:", err);
-            }
-          } else {
-            console.error("Create subtask failed:", result?.payload);
-            failures++;
+          const updateResponse = getThunkResult(updateResult);
+          if (!updateResponse.success) {
+            return {
+              success: true,
+              message: `Đã tạo Nhiệm vụ cha nhưng cập nhật tiến độ thất bại: ${updateResponse.message}`,
+            };
           }
         }
-      } catch (err: any) {
-        console.error("Task operation error:", err);
-        failures++;
+      } else {
+        const parentTask = findParentTask(parentTasks, report);
+        const taskId = parseRequiredId(report.parent_task_id, "parent_task_id");
+        const taskAssignmentId = parseRequiredId(
+          report.task_assignment_id ?? String(parentTask?.id ?? ""),
+          "task_assignment_id",
+        );
+        thunkResult = await dispatch(
+          updateProgressTask({
+            id: taskAssignmentId,
+            task_id: taskId,
+            status: data.status ?? 2,
+            process: data.progress ?? parentTask?.process ?? 0,
+            value:
+              data.achieved_value ??
+              data.progress ??
+              parentTask?.value ??
+              0,
+            token,
+          }),
+        );
+      }
+    } else if (report.action === "create") {
+      if (
+        !data.task_name ||
+        !data.date_start ||
+        !data.date_end ||
+        data.progress == null
+      ) {
+        throw new Error(
+          "Thông tin tạo Nhiệm vụ con cấp 1 chưa đầy đủ.",
+        );
+      }
+      thunkResult = await dispatch(
+        createSubTask({
+          token,
+          subtasks: [
+            {
+              name: data.task_name,
+              task_id: parseRequiredId(report.parent_task_id, "parent_task_id"),
+              task_assignment_id: parseRequiredId(
+                report.task_assignment_id,
+                "task_assignment_id",
+              ),
+              target_value: data.target_value ?? 100,
+              start_date: data.date_start,
+              end_date: data.date_end,
+              subtask_id: null,
+            },
+          ],
+        }),
+      );
+
+      // Dùng meta.requestStatus thay vì parse body — đáng tin cậy hơn với Redux Toolkit
+      const createMeta = isRecord((thunkResult as any)?.meta) ? (thunkResult as any).meta : {};
+      const createFulfilled = createMeta.requestStatus === "fulfilled";
+
+      if (createFulfilled && data.progress != null) {
+        // Thử parse ID từ response trực tiếp
+        let newSubTaskId = getCreatedSubtaskId(thunkResult);
+
+        // Fallback: nếu không parse được, fetch subtask list và lấy ID mới nhất
+        if (newSubTaskId === null) {
+          try {
+            const taskAssignmentId = parseRequiredId(report.task_assignment_id, "task_assignment_id");
+            const res = await apiAxiosInstance.get("/tasks/sub/detail", {
+              params: { task_assignment_id: taskAssignmentId },
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const items: unknown[] = Array.isArray(res.data?.data)
+              ? res.data.data
+              : Array.isArray(res.data)
+                ? res.data
+                : [];
+            // Lấy subtask ID lớn nhất (mới nhất)
+            const maxId = items.reduce<number | null>((best, item) => {
+              if (!isRecord(item)) return best;
+              const itemId = readNumber(item.subtask_id) ?? readNumber(item.id);
+              return itemId !== null && (best === null || itemId > best) ? itemId : best;
+            }, null);
+            newSubTaskId = maxId;
+          } catch {
+            // fallback thất bại — tiếp tục trả về thành công không có update tiến độ
+          }
+        }
+
+        if (newSubTaskId !== null) {
+          const updateResult = await dispatch(
+            updateProgressSubTask({
+              id: newSubTaskId,
+              value: String(data.progress),
+              subtask_status: data.status ?? (data.progress === 100 ? 4 : 2),
+              token,
+            }),
+          );
+          const updateRes = getThunkResult(updateResult);
+          if (!updateRes.success) {
+            return {
+              success: true,
+              message: `Đã tạo Nhiệm vụ con cấp 1 nhưng cập nhật tiến độ thất bại: ${updateRes.message}`,
+            };
+          }
+        } else {
+          return {
+            success: true,
+            message: "Đã tạo Nhiệm vụ con cấp 1 nhưng không xác định được ID để cập nhật tiến độ.",
+          };
+        }
+      }
+    } else {
+      const parentTask = findParentTask(parentTasks, report);
+      const unitName = parentTask?.units?.name ?? "%";
+      const value =
+        unitName === "%"
+          ? data.progress
+          : (data.achieved_value ?? data.progress);
+      const subtaskId = parseRequiredId(report.sub_task_id, "sub_task_id");
+
+      if (value == null && data.status == null) {
+        throw new Error(
+          "Vui lòng nhập tiến độ, kết quả hoặc trạng thái.",
+        );
+      }
+
+      thunkResult =
+        value == null
+          ? await dispatch(
+              updateStatusSubTask({
+                ids: [subtaskId],
+                status: data.status,
+                token,
+              }),
+            )
+          : await dispatch(
+              updateProgressSubTask({
+                id: subtaskId,
+                value: String(value),
+                subtask_status: data.status ?? 2,
+                token,
+              }),
+            );
+    }
+
+    return getThunkResult(thunkResult);
+  };
+
+  const executeTaskOperations = async (
+    reports: GenericReportItem[],
+    parentTasks: AIReportParentTask[],
+  ): Promise<TaskOperationResult[]> => {
+    const results: TaskOperationResult[] = [];
+
+    for (let reportIndex = 0; reportIndex < reports.length; reportIndex += 1) {
+      const report = reports[reportIndex];
+      try {
+        const result = await executeReport(report, parentTasks);
+        results.push({ reportIndex, ...result });
+      } catch (caughtError: unknown) {
+        const message =
+          caughtError instanceof Error ? caughtError.message : String(caughtError);
+        console.error("AI task operation failed:", {
+          reportIndex,
+          action: report.action,
+          targetType: report.targetType,
+          message,
+        });
+        results.push({ reportIndex, success: false, message });
       }
     }
 
-    return { successes, failures };
+    return results;
   };
 
   const handleSave = async (
     updatedResult?: AIReportResponse,
-    modalParentTasks?: any[],
+    modalParentTasks: AIReportParentTask[] = [],
   ) => {
     const dataToSave = updatedResult || reportResult;
     if (!dataToSave) return;
 
     setIsSending(true);
-    // Force React to paint the loading state before executing heavy synchronous/asynchronous tasks
-    await new Promise((resolve) => setTimeout(resolve, 10));
-
+    setError(null);
     try {
-      if (dataToSave.report_project === "other") {
-        // For "other" reports: execute actual task operations, no webhook
-        const { successes, failures } = await executeTaskOperations(
-          dataToSave.reports as GenericReportItem[],
-          modalParentTasks,
-        );
-
-        if (failures > 0 && successes === 0) {
-          setError("Đã xảy ra lỗi hệ thống. Vui lòng thử lại.");
-          return;
-        }
-
-        if (failures > 0) {
-          toast.warning(
-            `Hoàn thành ${successes} thao tác, ${failures} thao tác thất bại.`,
-          );
-        }
-
-        setIsSuccess(true);
-        if (onSuccess) {
-          onSuccess();
-        }
-      } else {
-        const token = localStorage.getItem("userToken");
-        // For NTL reports: send to webhook as before
+      if (dataToSave.report_project === "ntl") {
         await saveReport(
           dataToSave,
           userName,
@@ -468,14 +697,43 @@ export const useAIReport = (
           userDepartment,
           userPosition,
         );
-        setIsSuccess(true);
-        if (onSuccess) {
-          onSuccess();
+      } else {
+        const results = await executeTaskOperations(
+          dataToSave.reports,
+          modalParentTasks,
+        );
+        const failures = results.filter((result) => !result.success);
+        const successCount = results.length - failures.length;
+
+        if (successCount === 0) {
+          const failureMessage = failures.map((failure) => failure.message).join("; ");
+          throw new Error(failureMessage || "Không có thao tác nào thành công.");
+        }
+
+        if (failures.length > 0) {
+          toast.warning(
+            `Hoàn thành ${successCount} thao tác, ${failures.length} thao tác thất bại: ${failures
+              .map((failure) => failure.message)
+              .join("; ")}`,
+          );
         }
       }
-    } catch (err: any) {
-      console.error("Error saving report:", err);
-      setError("Lưu báo cáo thất bại. Vui lòng thử lại.");
+
+      setIsSuccess(true);
+      onSuccess?.();
+    } catch (caughtError: unknown) {
+      console.error("Error saving AI report:", caughtError);
+      sendErrorToTelegram(
+        caughtError,
+        `Lưu báo cáo AI (Dự án: ${reportResult?.report_project})`,
+        userInfo,
+      );
+      setError(
+        getCaughtErrorMessage(
+          caughtError,
+          "Lưu báo cáo thất bại. Vui lòng thử lại.",
+        ),
+      );
     } finally {
       setIsSending(false);
     }
