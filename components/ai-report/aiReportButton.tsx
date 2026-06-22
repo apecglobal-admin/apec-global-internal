@@ -38,7 +38,9 @@ export default function AIReportButton({
     isProcessing,
   } = useAIReport(onReportGenerated, onSuccess);
 
-  const longPressTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const isLongPressRef = React.useRef(false);
 
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -50,10 +52,7 @@ export default function AIReportButton({
     // Start a timer to detect long press
     longPressTimerRef.current = setTimeout(() => {
       isLongPressRef.current = true;
-      // Start recording
-      // We pass a dummy object because the hook expects an event to call preventDefault
-      // but we already did that here.
-      startRecording({ preventDefault: () => {} } as any);
+      startRecording({ preventDefault: () => undefined });
     }, 200); // 200ms threshold for "Hold"
   };
 
@@ -98,13 +97,22 @@ export default function AIReportButton({
       {/* Floating Button */}
       <motion.button
         className={cn(
-          "fixed bottom-20 md:bottom-8 right-5 z-50 flex items-center justify-center w-10 h-10 rounded-full shadow-2xl transition-colors duration-300 cursor-pointer",
+          "fixed bottom-20 md:bottom-8 right-5 z-[105] flex items-center justify-center w-10 h-10 rounded-full shadow-2xl transition-colors duration-300 cursor-pointer",
           isRecording
             ? "bg-red-500 shadow-red-500/50"
             : "bg-gradient-to-r from-blue-600 to-cyan-500 shadow-blue-500/50 hover:shadow-blue-400/50",
         )}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
+        animate={isRecording ? undefined : {
+          rotate: [0, -15, 15, -10, 10, -5, 5, 0],
+        }}
+        transition={isRecording ? undefined : {
+          duration: 1.2,
+          repeat: Infinity,
+          repeatDelay: 28.8,
+          ease: "easeInOut",
+        }}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerLeave}
