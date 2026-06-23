@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
-      model: process.env.GEMINI_AI_REPORT_MODEL || "gemini-3.5-flash",
+      model: process.env.GEMINI_AI_REPORT_MODEL || "gemini-2.5-flash",
       generationConfig,
     });
     const controller = new AbortController();
