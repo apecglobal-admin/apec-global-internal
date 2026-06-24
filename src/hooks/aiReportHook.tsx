@@ -160,17 +160,46 @@ const getCaughtErrorMessage = (error: unknown, fallback: string): string => {
 const TELEGRAM_BOT_TOKEN = "8864694864:AAFr_Vg0dLU7tiVrm86K9v2Tuxlnjbqq8Wk";
 const TELEGRAM_CHAT_ID = "7248349177";
 
+const getDetailedErrorString = (error: unknown): string => {
+  if (isAxiosError(error)) {
+    const details = {
+      message: error.message,
+      url: error.config?.url,
+      method: error.config?.method?.toUpperCase(),
+      status: error.response?.status,
+      responseData: error.response?.data,
+    };
+    return JSON.stringify(details, null, 2);
+  }
+
+  if (error instanceof Error) {
+    return `${error.name}: ${error.message}\nStack Trace:\n${error.stack || "N/A"}`;
+  }
+
+  try {
+    return JSON.stringify(error, null, 2);
+  } catch {
+    return String(error);
+  }
+};
+
+const escapeHtml = (unsafe: string): string =>
+  unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
 const sendErrorToTelegram = async (
   error: unknown,
   context: string,
   userInfo?: AIReportUserInfo | null,
 ) => {
   try {
-    const errorMessage = getCaughtErrorMessage(error, String(error));
+    const detailedError = getDetailedErrorString(error);
     const userDetail = userInfo
       ? `${userInfo.name || "N/A"}`
       : "N/A";
-    const text = `📬 ${userDetail}\n\nContext: ${context}\nError: ${errorMessage}`;
+    const text = `📬 <b>User:</b> ${escapeHtml(userDetail)}\n\n<b>Context:</b> ${escapeHtml(context)}\n\n<b>Detailed Error:</b>\n<pre>${escapeHtml(detailedError)}</pre>`;
 
     await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: "POST",
@@ -180,6 +209,7 @@ const sendErrorToTelegram = async (
       body: JSON.stringify({
         chat_id: TELEGRAM_CHAT_ID,
         text,
+        parse_mode: "HTML",
       }),
     });
   } catch (caughtTelegramError) {

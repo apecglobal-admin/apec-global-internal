@@ -20,12 +20,6 @@ export const maxDuration = 60;
 
 const AI_REPORT_TIMEOUT_MS = 20_000;
 
-interface AIReportGenerationConfig extends GenerationConfig {
-  thinkingConfig: {
-    thinkingLevel: "low";
-  };
-}
-
 class AIReportTimeoutError extends Error {
   readonly timeoutMs: number;
 
@@ -53,13 +47,10 @@ const formatZodErrorMessage = (error: z.ZodError): string => {
     "Dữ liệu AI Report không hợp lệ.";
 };
 
-const generationConfig: AIReportGenerationConfig = {
+const generationConfig: GenerationConfig = {
   responseMimeType: "application/json",
   maxOutputTokens: 6096,
   temperature: 0.1,
-  thinkingConfig: {
-    thinkingLevel: "low",
-  },
 };
 
 const logGeminiError = (error: unknown): void => {
