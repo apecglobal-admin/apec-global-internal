@@ -97,27 +97,41 @@ export default function AIReportButton({
       {/* Floating Button */}
       <motion.button
         className={cn(
-          "fixed bottom-20 md:bottom-8 right-5 z-[105] flex items-center justify-center w-10 h-10 rounded-full shadow-2xl transition-colors duration-300 cursor-pointer",
+          "fixed bottom-20 md:bottom-8 right-5 z-[105] flex items-center justify-center w-10 h-10 rounded-full shadow-2xl cursor-pointer",
           isRecording
-            ? "bg-red-500 shadow-red-500/50"
-            : "bg-gradient-to-r from-blue-600 to-cyan-500 shadow-blue-500/50 hover:shadow-blue-400/50",
+            ? "shadow-red-500/50"
+            : "shadow-blue-500/50 hover:shadow-blue-400/50",
         )}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        animate={isRecording ? undefined : {
+        animate={isRecording ? { backgroundColor: "#ef4444" } : {
           rotate: [0, -15, 15, -10, 10, -5, 5, 0],
+          backgroundImage: [
+            "linear-gradient(to right, #2563eb, #06b6d4)", // frame 0: xanh
+            "linear-gradient(to right, #f97316, #fb923c)", // frame 1: cam (snap nhanh)
+            "linear-gradient(to right, #f97316, #fb923c)", // frame 2-5: giữ cam
+            "linear-gradient(to right, #f97316, #fb923c)",
+            "linear-gradient(to right, #f97316, #fb923c)",
+            "linear-gradient(to right, #f97316, #fb923c)",
+            "linear-gradient(to right, #f97316, #fb923c)", // frame 6: giữ cam
+            "linear-gradient(to right, #2563eb, #06b6d4)", // frame 7: về xanh
+          ],
         }}
         transition={isRecording ? undefined : {
           duration: 1.2,
+          times: [0, 0.05, 2/7, 3/7, 4/7, 5/7, 0.95, 1],
           repeat: Infinity,
-          repeatDelay: 28.8,
+          repeatDelay: 18.8,
           ease: "easeInOut",
         }}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerLeave}
         // Prevent default touch behaviors that might interfere with holding
-        style={{ touchAction: "none" }}
+        style={{
+          touchAction: "none",
+          backgroundImage: isRecording ? undefined : "linear-gradient(to right, #2563eb, #06b6d4)",
+        }}
         title="Nhấn để nhập văn bản, nhấn giữ để nói"
       >
         <Mic
