@@ -1,5 +1,6 @@
 import { useProfileData } from "@/src/hooks/profileHook";
 import { listTypeTask, personTasks } from "@/src/services/api";
+import apiAxiosInstance from "@/src/services/axios";
 import {
   Calendar,
   Clock,
@@ -119,6 +120,24 @@ function TasksTab() {
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const [isVisible, setIsVisible] = useState(false);
 
+  const [statsData, setStatsData] = useState<{
+    loading: boolean;
+    taskCount: number;
+    subtaskCount: number;
+    tasksList: Array<{
+      id: string;
+      name: string;
+      subtasks: string[];
+    }>;
+  }>({
+    loading: true,
+    taskCount: 0,
+    subtaskCount: 0,
+    tasksList: []
+  });
+  const [isStatsExpanded, setIsStatsExpanded] = useState(false);
+  const [statsTrigger, setStatsTrigger] = useState(0);
+
   const tasks: Task[] = tasksResponse?.data || [];
   const totalPages = tasksResponse?.total_pages || 1;
   const totalItems = tasksResponse?.total_items || 0;
@@ -198,6 +217,195 @@ function TasksTab() {
     }, 300)
     return () => clearTimeout(timer);
   }, [dispatch, page, taskFilter, projectFilter, companyFilter, kpiFilter, statusFilter, priorityFilter, searchFilter]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const token = localStorage.getItem("userToken");
+      if (!token) return;
+      try {
+        setStatsData(prev => ({ ...prev, loading: true }));
+        
+        // Fetch personal tasks
+        const personalResponse = await apiAxiosInstance.get("/profile/tasks", {
+          params: { limit: 1000 },
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const personalTasks = personalResponse.data?.data || [];
+
+        // Fetch manager created tasks
+        let createdTasks: any[] = [];
+        try {
+          const createdResponse = await apiAxiosInstance.get("/tasks/created", {
+            params: { limit: 1000 },
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const rawCreated = createdResponse.data?.data?.data || createdResponse.data?.data || [];
+          createdTasks = rawCreated.map((item: any) => ({
+            id: String(item.id),
+            task: {
+              id: item.id,
+              name: item.name,
+              description: item.description,
+              date_start: item.date_start,
+              date_end: item.date_end,
+              process: item.process
+            },
+            type: item.type_task || item.type || {},
+            task_assignment: item.task_assignment || [],
+            isCreatedTask: true
+          }));
+        } catch (e) {
+          // Ignore if user is not manager
+        }
+
+        // De-duplicate by actual task ID
+        const allTasksMap = new Map<number, any>();
+        personalTasks.forEach((item: any) => {
+          if (item?.task?.id) {
+            allTasksMap.set(item.task.id, item);
+          }
+        });
+        createdTasks.forEach((item: any) => {
+          if (item?.task?.id) {
+            if (!allTasksMap.has(item.task.id)) {
+              allTasksMap.set(item.task.id, item);
+            } else {
+              const existing = allTasksMap.get(item.task.id);
+              if (item.task_assignment && item.task_assignment.length > 0) {
+                existing.task_assignment = [
+                  ...(existing.task_assignment || []),
+                  ...item.task_assignment
+                ];
+              }
+            }
+          }
+        });
+        const allTasks = Array.from(allTasksMap.values());
+
+        const q2Start = new Date("2026-04-01T00:00:00");
+        const q2End = new Date("2026-06-30T23:59:59");
+
+        // Filter tasks active/overlapping Q2/2026
+        const targetTasks = allTasks.filter(item => {
+          const dateStartStr = item?.task?.date_start;
+          const dateEndStr = item?.task?.date_end;
+          if (!dateStartStr || !dateEndStr) return false;
+          const start = new Date(dateStartStr);
+          const end = new Date(dateEndStr);
+          return start <= q2End && end >= q2Start;
+        });
+
+        // Fetch sub-tasks
+        const tasksListWithSubtasks = await Promise.all(
+          targetTasks.map(async (item) => {
+            const taskName = item.task?.name || "Nhiệm vụ không tên";
+            const isNhiemVuChuyenMon = taskName.toLowerCase().includes("nhiệm vụ chuyên môn");
+
+            const assignmentIds: string[] = [];
+            if (item.id) {
+              assignmentIds.push(String(item.id));
+            }
+
+            let taskAssignmentList = item.task_assignment || [];
+            if (item.task?.id) {
+              try {
+                const detailResponse = await apiAxiosInstance.get("/tasks/created", {
+                  params: { id: item.task.id },
+                  headers: { Authorization: `Bearer ${token}` }
+                });
+                const detail = detailResponse.data?.data || detailResponse.data || {};
+                if (detail.task_assignment && Array.isArray(detail.task_assignment)) {
+                  taskAssignmentList = detail.task_assignment;
+                }
+              } catch (err) {
+                // Ignore error if user doesn't have manager permission
+              }
+            }
+
+            if (taskAssignmentList && Array.isArray(taskAssignmentList)) {
+              taskAssignmentList.forEach((assign: any) => {
+                if (assign?.id && !assignmentIds.includes(String(assign.id))) {
+                  assignmentIds.push(String(assign.id));
+                }
+              });
+            }
+
+            let taskSubtaskCount = 0;
+            const subtasksNameSet = new Set<string>();
+            await Promise.all(
+              assignmentIds.map(async (assignId) => {
+                try {
+                  const subResponse = await apiAxiosInstance.get("/tasks/sub", {
+                    params: { task_assignment_id: assignId, limit: 100 },
+                    headers: { Authorization: `Bearer ${token}` }
+                  });
+                  const subTasksArray: any[] = subResponse.data?.data || [];
+                  subTasksArray.forEach(sub => {
+                    const subDateStr = sub?.start_date || sub?.date_start;
+                    
+                    let isMatch = false;
+                    if (!subDateStr) {
+                      // If the subtask has no date, and it's NOT a "Nhiệm vụ chuyên môn" type task,
+                      // it matches because the parent task is in Q2.
+                      isMatch = !isNhiemVuChuyenMon;
+                    } else {
+                      if (isNhiemVuChuyenMon) {
+                        const subDate = new Date(subDateStr);
+                        const subMonth = subDate.getMonth() + 1;
+                        const subYear = subDate.getFullYear();
+                        if (subYear === 2026 && (subMonth === 4 || subMonth === 5 || subMonth === 6)) {
+                          isMatch = true;
+                        }
+                      } else {
+                        const subEndStrFull = sub?.end_date || sub?.date_end || subDateStr;
+                        const subStart = new Date(subDateStr);
+                        const subEnd = new Date(subEndStrFull);
+                        if (subStart <= q2End && subEnd >= q2Start) {
+                          isMatch = true;
+                        }
+                      }
+                    }
+
+                    if (isMatch) {
+                      taskSubtaskCount++;
+                      if (sub.name) subtasksNameSet.add(sub.name);
+                    }
+                  });
+                } catch (err) {
+                  // Ignore error
+                }
+              })
+            );
+
+            return {
+              id: item.id,
+              name: taskName,
+              subtasks: Array.from(subtasksNameSet),
+              actualSubtaskCount: taskSubtaskCount
+            };
+          })
+        );
+
+        const totalQ2Subtasks = tasksListWithSubtasks.reduce((sum, item) => sum + (item.actualSubtaskCount || 0), 0);
+
+        setStatsData({
+          loading: false,
+          taskCount: targetTasks.length,
+          subtaskCount: totalQ2Subtasks,
+          tasksList: tasksListWithSubtasks
+        });
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+        setStatsData({
+          loading: false,
+          taskCount: 0,
+          subtaskCount: 0,
+          tasksList: []
+        });
+      }
+    };
+    fetchStats();
+  }, [statsTrigger]);
 
   // ── Company change handler ───────────────────────────────────────────────
   const handleCompanyChange = (item: any) => {
@@ -296,6 +504,7 @@ function TasksTab() {
 
     dispatch(personTasks(payload as any) as any);
     refreshFilter();
+    setStatsTrigger(prev => prev + 1);
   };
 
   const getTaskStatusBadge = (
@@ -438,6 +647,119 @@ function TasksTab() {
   if (showAssignTask) {
     return <AssignTask onBack={() => setShowAssignTask(false)} isAdmin={false} />;
   }
+
+  const renderStatsCard = () => {
+    if (statsData.loading) {
+      return (
+        <div className="bg-slate-800 border border-slate-700 rounded-lg p-5 animate-pulse space-y-4 shadow-md">
+          <div className="h-5 w-48 bg-slate-700 rounded" />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="h-16 bg-slate-700 rounded" />
+            <div className="h-16 bg-slate-700 rounded" />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="bg-slate-800 border border-slate-700 rounded-lg p-5 space-y-4 shadow-md">
+        {/* Header */}
+        <div className="flex items-center justify-between pb-2 border-b border-slate-700">
+          <div className="flex items-center gap-2 text-white">
+            <Layers className="h-5 w-5 text-blue-500" />
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              Thống kê nhiệm vụ Q2/2026 (Tháng 4, 5, 6)
+            </h3>
+          </div>
+          <button
+            onClick={() => setIsStatsExpanded(!isStatsExpanded)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 border border-slate-700 text-white hover:bg-slate-750 transition"
+          >
+            {isStatsExpanded ? (
+              <>
+                <span>Ẩn chi tiết</span>
+                <ChevronUp className="h-3.5 w-3.5" />
+              </>
+            ) : (
+              <>
+                <span>Hiện chi tiết</span>
+                <ChevronDown className="h-3.5 w-3.5" />
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Tasks Count Card */}
+          <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nhiệm vụ mới</p>
+              <p className="text-2xl font-bold text-white mt-1">{statsData.taskCount}</p>
+            </div>
+            <div className="p-3 bg-blue-600/10 border border-blue-500/30 rounded-lg text-blue-400">
+              <ClipboardList className="h-6 w-6" />
+            </div>
+          </div>
+
+          {/* Sub-tasks Count Card */}
+          <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nhiệm vụ con mới</p>
+              <p className="text-2xl font-bold text-white mt-1">{statsData.subtaskCount}</p>
+            </div>
+            <div className="p-3 bg-emerald-600/10 border border-emerald-500/30 rounded-lg text-emerald-400">
+              <Layers className="h-6 w-6" />
+            </div>
+          </div>
+        </div>
+
+        {/* Expanded Tasks & Subtasks List */}
+        {isStatsExpanded && (
+          <div className="bg-slate-950 border border-slate-800 rounded-lg p-4 space-y-3 animate-in fade-in duration-200">
+            <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+              Danh sách chi tiết nhiệm vụ
+            </h4>
+            
+            {statsData.tasksList.length === 0 ? (
+              <p className="text-xs text-slate-500 text-center py-4">
+                Không có nhiệm vụ nào được tạo trong tháng 4, 5, 6
+              </p>
+            ) : (
+              <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                {statsData.tasksList.map((taskItem) => (
+                  <div key={taskItem.id} className="border-b border-slate-800/60 pb-3 last:border-b-0 last:pb-0">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
+                      <p className="text-xs font-bold text-white leading-normal">
+                        {taskItem.name}
+                      </p>
+                    </div>
+                    
+                    {/* Subtasks under this task */}
+                    <div className="mt-1.5 ml-4 pl-3 border-l border-slate-800 space-y-1">
+                      {taskItem.subtasks.length === 0 ? (
+                        <p className="text-[10px] text-slate-600 italic">
+                          Không có nhiệm vụ con trong tháng 4, 5, 6
+                        </p>
+                      ) : (
+                        taskItem.subtasks.map((subName, subIdx) => (
+                          <div key={subIdx} className="flex items-center gap-2 text-[11px] text-slate-300">
+                            <span className="text-slate-500">•</span>
+                            <span className="leading-relaxed">{subName}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderDashboard = () => {
     return (
@@ -967,6 +1289,7 @@ function TasksTab() {
   return (
     <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6">
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        {renderStatsCard()}
         {renderDashboard()}
         {selectedTask === null ? (
           <>
