@@ -54,8 +54,7 @@ const normalizeVietnameseText = (text: string): string =>
 const isNamThienLongReport = (text: string): boolean => {
   const normalizedText = normalizeVietnameseText(text);
   return (
-    normalizedText.includes("nam thien long") ||
-    (normalizedText.includes("khu vuc") && normalizedText.includes("quan so"))
+    normalizedText.includes("khu vuc") && normalizedText.includes("quan so")
   );
 };
 
