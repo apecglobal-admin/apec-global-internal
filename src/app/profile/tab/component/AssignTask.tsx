@@ -59,6 +59,7 @@ interface ValidationErrors {
     reject?: string;
     value?: any;
     companies?: string;
+    type_task?: string;
 }
 
 interface AssignTaskProps {
@@ -85,7 +86,7 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
 
     const [assignForm, setAssignForm] = useState<AssignFormData>({
         name: "",
-        type_task: 1,
+        type_task: 0,
         date_start: getToday(),
         date_end: "",
         task_priority: 1,
@@ -147,7 +148,6 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
 
         if (!listCompanyTask) dispatch(getListCompanyTask({ search: null }) as any);
         if (!statusTask) dispatch(getStatusTask() as any);
-        if (!typeTask) dispatch(getTypeTask() as any);
         if (!priorityTask) dispatch(getPriorityTask() as any);
         if (!listProject) dispatch(getListProject({token}) as any);
         if (!childKpi) dispatch(getChildKpi() as any);
@@ -163,6 +163,16 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
             }) as any
         );
     }, [dispatch]);
+
+    // Loại nhiệm vụ phụ thuộc vào dự án đã chọn: khi đổi dự án thì lấy lại data
+    // và bắt buộc người dùng chọn lại (không còn giá trị mặc định)
+    useEffect(() => {
+        const projectId = assignForm.projects[0]?.id;
+        if (projectId) {
+            dispatch(getTypeTask({ project_id: projectId }) as any);
+        }
+        setAssignForm((prev) => ({ ...prev, type_task: 0 }));
+    }, [assignForm.projects]);
 
     useEffect(() => {
         if (childKpi && childKpi.length > 0 && assignForm.kpi_item_id === 0) {
@@ -223,6 +233,10 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
             newErrors.projects = "Vui lòng chọn ít nhất 1 dự án";
         }
 
+        if (!assignForm.type_task || assignForm.type_task === 0) {
+            newErrors.type_task = "Vui lòng chọn loại nhiệm vụ";
+        }
+
         if (!assignForm.date_start) {
             newErrors.date_start = "Vui lòng chọn ngày bắt đầu";
         }
@@ -266,7 +280,7 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
     const resetForm = () => {
         setAssignForm({
             name: "",
-            type_task: 1,
+            type_task: 0,
             date_start: getToday(),
             date_end: "",
             task_priority: 1,
@@ -479,29 +493,136 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
                                 />
                             </div>
 
-                            {/* Loại nhiệm vụ + Độ ưu tiên */}
+                            {/* Công ty + Dự án */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                <div>
+                                <div ref={setErrorRef("companies")}>
                                     <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
-                                        Loại nhiệm vụ
+                                        Công ty <span className="text-red-400">*</span>
+                                    </label>
+                                    <FilterableSelector
+                                        data={listCompanyTask ?? []}
+                                        multi={true}
+                                        onFilter={(search) =>
+                                            dispatch(getListCompanyTask({ search: search || null }) as any)
+                                        }
+                                        onSelect={(selected) => {
+                                            const arr = Array.isArray(selected) ? selected : selected ? [selected] : [];
+                                            handleCompanyChange(arr);
+                                            if (arr.length > 0) setErrors((prev) => ({ ...prev, companies: undefined }));
+                                        }}
+                                        value={selectedCompanies}
+                                        placeholder="Chọn công ty"
+                                        displayField="name"
+                                        emptyMessage="Không có công ty"
+                                    />
+                                    {errors.companies && (
+                                        <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                                            <AlertCircle size={12} /> {errors.companies}
+                                        </p>
+                                    )}
+                                    {selectedCompanies.length > 0 && (
+                                        <div className="mt-2 flex flex-wrap gap-2">
+                                            {selectedCompanies.map((c: any) => (
+                                                <span
+                                                    key={c.id}
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-500/15 border border-purple-500/30 rounded-full text-xs text-purple-300"
+                                                >
+                                                    {c.name}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const next = selectedCompanies.filter((x: any) => x.id !== c.id);
+                                                            handleCompanyChange(next);
+                                                        }}
+                                                        className="text-purple-400 hover:text-white transition ml-0.5"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div ref={setErrorRef("projects")}>
+                                    <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
+                                        Dự án <span className="text-red-400">*</span>
+                                    </label>
+                                    <FilterableSelector
+                                        data={listProject ?? []}
+                                        onFilter={handleFilterChange}
+                                        onSelect={(selected) => handleProjectChange(selected ? [selected] : [])}
+                                        value={assignForm.projects[0] ?? null}
+                                        placeholder="Chọn dự án"
+                                        displayField="name"
+                                        emptyMessage="Không có dự án"
+                                    />
+                                    {errors.projects && (
+                                        <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                                            <AlertCircle size={12} /> {errors.projects}
+                                        </p>
+                                    )}
+                                    {assignForm.projects.length > 0 && (
+                                        <div className="mt-2 flex flex-wrap gap-2">
+                                            {assignForm.projects.map((p: any) => (
+                                                <span
+                                                    key={p.id}
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-500/15 border border-blue-500/30 rounded-full text-xs text-blue-300"
+                                                >
+                                                    {p.name}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const next = assignForm.projects.filter((x: any) => x.id !== p.id);
+                                                            setAssignForm((prev) => ({ ...prev, projects: next }));
+                                                        }}
+                                                        className="text-blue-400 hover:text-white transition ml-0.5"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Loại nhiệm vụ (phụ thuộc dự án) + Độ ưu tiên */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                                <div ref={setErrorRef("type_task")}>
+                                    <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
+                                        Loại nhiệm vụ <span className="text-red-400">*</span>
                                     </label>
                                     <select
                                         value={assignForm.type_task}
-                                        onChange={(e) =>
+                                        onChange={(e) => {
                                             setAssignForm({
                                                 ...assignForm,
                                                 type_task: parseInt(e.target.value),
                                                 time_repeat: "",
-                                            })
-                                        }
-                                        className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border border-slate-700 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-500 transition"
+                                            });
+                                            if (errors.type_task) setErrors((prev) => ({ ...prev, type_task: undefined }));
+                                        }}
+                                        disabled={assignForm.projects.length === 0}
+                                        className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed ${errors.type_task
+                                                ? "border-red-500 focus:border-red-500"
+                                                : "border-slate-700 focus:border-blue-500"
+                                            }`}
                                     >
+                                        <option value={0}>
+                                            {assignForm.projects.length === 0 ? "-- Chọn dự án trước --" : "-- Chọn loại nhiệm vụ --"}
+                                        </option>
                                         {typeTask?.map((type: any) => (
                                             <option key={type.id} value={type.id}>
                                                 {type.name}
                                             </option>
                                         ))}
                                     </select>
+                                    {errors.type_task && (
+                                        <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                                            <AlertCircle size={12} /> {errors.type_task}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
@@ -545,115 +666,51 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
                                 </div>
                             )} */}
 
-                            {/* Company multi-select */}
-                            <div ref={setErrorRef("companies")}>
-                                <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
-                                    Công ty <span className="text-red-400">*</span>
-                                </label>
-                                <FilterableSelector
-                                    data={listCompanyTask ?? []}
-                                    multi={true}
-                                    onFilter={(search) =>
-                                        dispatch(getListCompanyTask({ search: search || null }) as any)
-                                    }
-                                    onSelect={(selected) => {
-                                        const arr = Array.isArray(selected) ? selected : selected ? [selected] : [];
-                                        handleCompanyChange(arr);
-                                        if (arr.length > 0) setErrors((prev) => ({ ...prev, companies: undefined })); 
-                                    }}
-                                    value={selectedCompanies}
-                                    placeholder="Chọn công ty"
-                                    displayField="name"
-                                    emptyMessage="Không có công ty"
-                                />
-                                {errors.companies && ( // thêm hiển thị error
-                                    <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
-                                        <AlertCircle size={12} /> {errors.companies}
-                                    </p>
-                                )}
-                                {selectedCompanies.length > 0 && (
-                                    <div className="mt-2 flex flex-wrap gap-2">
-                                        {selectedCompanies.map((c: any) => (
-                                            <span
-                                                key={c.id}
-                                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-500/15 border border-purple-500/30 rounded-full text-xs text-purple-300"
-                                            >
-                                                {c.name}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const next = selectedCompanies.filter((x: any) => x.id !== c.id);
-                                                        handleCompanyChange(next);
-                                                    }}
-                                                    className="text-purple-400 hover:text-white transition ml-0.5"
-                                                >
-                                                    ×
-                                                </button>
-                                            </span>
+                            {/* Chỉ tiêu KPI + Mục tiêu cần đạt */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                                <div>
+                                    <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
+                                        Chỉ tiêu KPI
+                                    </label>
+                                    <select
+                                        value={assignForm.kpi_item_id}
+                                        onChange={(e) =>
+                                            setAssignForm({ ...assignForm, kpi_item_id: parseInt(e.target.value), process: 0 })
+                                        }
+                                        className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border border-slate-700 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-500 transition"
+                                    >
+                                        {childKpi?.map((item: any) => (
+                                            <option key={item.id} value={item.id}>{item.name}</option>
                                         ))}
-                                    </div>
-                                )}
-                            </div>
+                                    </select>
+                                </div>
 
-                            {/* Dự án */}
-                            <div ref={setErrorRef("projects")}>
-                                <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
-                                    Dự án <span className="text-red-400">*</span>
-                                </label>
-                                <FilterableSelector
-                                    data={listProject ?? []}
-                                    onFilter={handleFilterChange}
-                                    onSelect={(selected) => handleProjectChange(selected ? [selected] : [])}
-                                    value={assignForm.projects[0] ?? null}
-                                    placeholder="Chọn dự án"
-                                    displayField="name"
-                                    emptyMessage="Không có dự án"
-                                />
-                                {errors.projects && (
-                                    <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
-                                        <AlertCircle size={12} /> {errors.projects}
-                                    </p>
-                                )}
-                                {assignForm.projects.length > 0 && (
-                                    <div className="mt-2 flex flex-wrap gap-2">
-                                        {assignForm.projects.map((p: any) => (
-                                            <span
-                                                key={p.id}
-                                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-500/15 border border-blue-500/30 rounded-full text-xs text-blue-300"
-                                            >
-                                                {p.name}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const next = assignForm.projects.filter((x: any) => x.id !== p.id);
-                                                        setAssignForm((prev) => ({ ...prev, projects: next }));
-                                                    }}
-                                                    className="text-blue-400 hover:text-white transition ml-0.5"
-                                                >
-                                                    ×
-                                                </button>
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* KPI */}
-                            <div>
-                                <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
-                                    Chỉ tiêu KPI
-                                </label>
-                                <select
-                                    value={assignForm.kpi_item_id}
-                                    onChange={(e) =>
-                                        setAssignForm({ ...assignForm, kpi_item_id: parseInt(e.target.value), process: 0 })
-                                    }
-                                    className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border border-slate-700 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-500 transition"
-                                >
-                                    {childKpi?.map((item: any) => (
-                                        <option key={item.id} value={item.id}>{item.name}</option>
-                                    ))}
-                                </select>
+                                <div ref={setErrorRef("value")}>
+                                    <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
+                                        Mục tiêu cần đạt ({unit})
+                                        {unit !== "%" ? (
+                                            <span className="text-red-400"> *</span>
+                                        ) : (
+                                            <span className="text-slate-500 text-xs"> Mặc định 100</span>
+                                        )}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={unit === "%" ? 100 : formatNumber(assignForm.process)}
+                                        onChange={handleProcessChange}
+                                        disabled={unit === "%"}
+                                        className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white focus:outline-none transition ${errors.value
+                                                ? "border-red-500 focus:border-red-500"
+                                                : "border-slate-700 focus:border-blue-500"
+                                            } ${unit === "%" ? "opacity-60 cursor-not-allowed" : ""}`}
+                                    />
+                                    {errors.value && (
+                                        <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                                            <AlertCircle size={12} /> {errors.value}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Ngày bắt đầu / kết thúc */}
@@ -713,51 +770,22 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
                                 </div>
                             </div>
 
-                            {/* Trạng thái + Mục tiêu */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                <div>
-                                    <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
-                                        Trạng thái
-                                    </label>
-                                    <select
-                                        value={assignForm.task_status}
-                                        onChange={(e) =>
-                                            setAssignForm({ ...assignForm, task_status: parseInt(e.target.value) })
-                                        }
-                                        className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border border-slate-700 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-500 transition"
-                                    >
-                                        {statusTask?.map((status: any) => (
-                                            <option key={status.id} value={status.id}>{status.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div ref={setErrorRef("value")}>
-                                    <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
-                                        Mục tiêu cần đạt ({unit})
-                                        {unit !== "%" ? (
-                                            <span className="text-red-400"> *</span>
-                                        ) : (
-                                            <span className="text-slate-500 text-xs"> Mặc định 100</span>
-                                        )}
-                                    </label>
-                                    <input
-                                        type="text"
-                                        inputMode="numeric"
-                                        value={unit === "%" ? 100 : formatNumber(assignForm.process)}
-                                        onChange={handleProcessChange}
-                                        disabled={unit === "%"}
-                                        className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white focus:outline-none transition ${errors.value
-                                                ? "border-red-500 focus:border-red-500"
-                                                : "border-slate-700 focus:border-blue-500"
-                                            } ${unit === "%" ? "opacity-60 cursor-not-allowed" : ""}`}
-                                    />
-                                    {errors.value && (
-                                        <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
-                                            <AlertCircle size={12} /> {errors.value}
-                                        </p>
-                                    )}
-                                </div>
+                            {/* Trạng thái */}
+                            <div>
+                                <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
+                                    Trạng thái
+                                </label>
+                                <select
+                                    value={assignForm.task_status}
+                                    onChange={(e) =>
+                                        setAssignForm({ ...assignForm, task_status: parseInt(e.target.value) })
+                                    }
+                                    className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border border-slate-700 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-500 transition"
+                                >
+                                    {statusTask?.map((status: any) => (
+                                        <option key={status.id} value={status.id}>{status.name}</option>
+                                    ))}
+                                </select>
                             </div>
 
                             {/* Vi phạm */}
@@ -894,7 +922,7 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
                                         <p>
                                             <span className="text-slate-400">Loại nhiệm vụ:</span>{" "}
                                             <span className="text-white">
-                                                {typeTask?.find((t: any) => Number(t.id) === Number(assignForm.type_task))?.name}
+                                                {typeTask?.find((t: any) => Number(t.id) === Number(assignForm.type_task))?.name || "Chưa chọn"}
                                             </span>
                                         </p>
                                         {assignForm.type_task === 1 && assignForm.time_repeat && (

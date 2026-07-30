@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, X, Save, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 import FilterableSelector from '@/components/FilterableSelector';
 import { useDispatch } from 'react-redux';
-import { getListProject, getListCompanyTask } from '@/src/features/task/api';
+import { getListProject, getListCompanyTask, getTypeTask } from '@/src/features/task/api';
+import { useTaskData } from '@/src/hooks/taskhook';
 
 interface TaskEditFormProps {
     task: any;
-    typeTask: any[];
     priorityTask: any[];
     listProject: any[];
     listCompanyTask: any[];
@@ -23,7 +23,6 @@ interface TaskEditFormProps {
 
 const TaskEditForm: React.FC<TaskEditFormProps> = ({
     task,
-    typeTask,
     priorityTask,
     listProject,
     listCompanyTask,
@@ -36,9 +35,12 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
     onCancel,
     isLoading
 }) => {
-    console.log("ấd", task);
     
     const dispatch = useDispatch();
+
+    const {
+        typeTask,
+    } = useTaskData();
     
     const [formData, setFormData] = useState({
         name: '',
@@ -65,6 +67,10 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
         kpi: false,
         employees: false,
     });
+
+    // Lưu lại project_id trước đó để chỉ reset "Loại công việc" khi người dùng
+    // thực sự đổi dự án, không phải ở lần load dữ liệu ban đầu (edit task).
+    const prevProjectIdRef = useRef<number | null>(null);
 
     useEffect(() => {
         
@@ -97,6 +103,22 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
             });
         }
     }, [task]);
+
+    useEffect(() => {
+        const projectId = formData.projects[0]?.id ?? null;
+
+        if (projectId) {
+            // Truyền project_id để lấy danh sách Loại công việc tương ứng với dự án
+            dispatch(getTypeTask({ project_id: projectId }) as any);
+        }
+
+        // Chỉ reset "Loại công việc" khi người dùng đổi sang dự án khác,
+        // không reset ở lần khởi tạo dữ liệu đầu tiên (tránh mất giá trị đang chỉnh sửa)
+        if (prevProjectIdRef.current !== null && prevProjectIdRef.current !== projectId) {
+            setFormData((prev) => ({ ...prev, type_task: 0 }));
+        }
+        prevProjectIdRef.current = projectId;
+    }, [formData.projects]);
 
     const toVNDate = (dateString: string): string => {
         if (!dateString) return '';
@@ -402,10 +424,9 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        {/* Cột trái */}
-                        <div className="space-y-4">
-                            {/* Loại công việc */}
+                    <div className="space-y-4 mb-6">
+                        {/* Loại công việc - Độ ưu tiên */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="bg-slate-900/50 p-3 rounded-lg">
                                 <label className="text-sm font-semibold text-slate-400">Loại công việc</label>
                                 {!hasCompletedEmployee ? (
@@ -413,9 +434,13 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                                         <button
                                             type="button"
                                             onClick={() => toggleDropdown('type_task')}
-                                            className="w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-2 flex items-center justify-between focus:outline-none focus:border-blue-500"
+                                            disabled={formData.projects.length === 0}
+                                            className="w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-2 flex items-center justify-between focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
-                                            <span>{typeTask?.find((t: any) => t.id === formData.type_task)?.name || 'Chọn loại'}</span>
+                                            <span>
+                                                {typeTask?.find((t: any) => t.id === formData.type_task)?.name
+                                                    || (formData.projects.length === 0 ? 'Chọn dự án trước' : 'Chọn loại')}
+                                            </span>
                                             <ChevronDown size={16} />
                                         </button>
                                         {dropdownStates.type_task && (
@@ -437,7 +462,38 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                                 )}
                             </div>
 
-                            {/* KPI */}
+                            {!hasCompletedEmployee && (
+                                <div className="bg-slate-900/50 p-3 rounded-lg">
+                                    <label className="text-sm font-semibold text-slate-400">Độ ưu tiên</label>
+                                    <div className="relative mt-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleDropdown('priority')}
+                                            className="w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-2 flex items-center justify-between focus:outline-none focus:border-blue-500"
+                                        >
+                                            <span>{priorityTask?.find((p: any) => p.id === formData.task_priority)?.name || 'Chọn độ ưu tiên'}</span>
+                                            <ChevronDown size={16} />
+                                        </button>
+                                        {dropdownStates.priority && (
+                                            <div className="absolute z-10 w-full mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                                {priorityTask?.map((priority: any, id: number) => (
+                                                    <div
+                                                        key={id}
+                                                        onClick={() => { handleInputChange('task_priority', priority.id); toggleDropdown('priority'); }}
+                                                        className="px-4 py-2 hover:bg-slate-700 cursor-pointer text-white"
+                                                    >
+                                                        {priority.name}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* KPI - Mục tiêu */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="bg-slate-900/50 p-3 rounded-lg">
                                 <label className="text-sm font-semibold text-slate-400">KPI</label>
                                 {!hasCompletedEmployee ? (
@@ -469,7 +525,6 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                                 )}
                             </div>
 
-                            {/* Mục tiêu */}
                             <div className="bg-slate-900/50 p-3 rounded-lg">
                                 <label className="text-sm font-semibold text-slate-400">
                                     Mục tiêu ({currentUnit})
@@ -486,41 +541,10 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                                     <p className="text-white mt-1">{formatNumber(task.target_value)}</p>
                                 )}
                             </div>
-
-                            {/* Độ ưu tiên */}
-                            {!hasCompletedEmployee && (
-                                <div className="bg-slate-900/50 p-3 rounded-lg">
-                                    <label className="text-sm font-semibold text-slate-400">Độ ưu tiên</label>
-                                    <div className="relative mt-1">
-                                        <button
-                                            type="button"
-                                            onClick={() => toggleDropdown('priority')}
-                                            className="w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-2 flex items-center justify-between focus:outline-none focus:border-blue-500"
-                                        >
-                                            <span>{priorityTask?.find((p: any) => p.id === formData.task_priority)?.name || 'Chọn độ ưu tiên'}</span>
-                                            <ChevronDown size={16} />
-                                        </button>
-                                        {dropdownStates.priority && (
-                                            <div className="absolute z-10 w-full mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                                {priorityTask?.map((priority: any, id: number) => (
-                                                    <div
-                                                        key={id}
-                                                        onClick={() => { handleInputChange('task_priority', priority.id); toggleDropdown('priority'); }}
-                                                        className="px-4 py-2 hover:bg-slate-700 cursor-pointer text-white"
-                                                    >
-                                                        {priority.name}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
                         </div>
 
-                        {/* Cột phải */}
-                        <div className="space-y-4">
-                            {/* Ngày bắt đầu */}
+                        {/* Ngày bắt đầu - Ngày kết thúc */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="bg-slate-900/50 p-3 rounded-lg">
                                 <label className="text-sm font-semibold text-slate-400">Ngày bắt đầu</label>
                                 {!hasAllCompleted ? (
@@ -535,7 +559,6 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                                 )}
                             </div>
 
-                            {/* Ngày kết thúc */}
                             <div className="bg-slate-900/50 p-3 rounded-lg">
                                 <label className="text-sm font-semibold text-slate-400">Ngày kết thúc</label>
                                 {!hasAllCompleted ? (
@@ -549,8 +572,10 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                                     <p className="text-white mt-1">{formData.date_end}</p>
                                 )}
                             </div>
+                        </div>
 
-                            {/* Số lần từ chối tối thiểu */}
+                        {/* Số lần từ chối tối thiểu - Số lần từ chối tối đa */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="bg-slate-900/50 p-3 rounded-lg">
                                 <label className="text-sm font-semibold text-slate-400">Số lần từ chối tối thiểu</label>
                                 {!hasCompletedEmployee ? (
@@ -566,7 +591,6 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
                                 )}
                             </div>
 
-                            {/* Số lần từ chối tối đa */}
                             <div className="bg-slate-900/50 p-3 rounded-lg">
                                 <label className="text-sm font-semibold text-slate-400">Số lần từ chối tối đa</label>
                                 {!hasCompletedEmployee ? (

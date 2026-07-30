@@ -192,10 +192,15 @@ export const getSubTask = createAsyncThunk(
 
 export const getTypeTask = createAsyncThunk(
     "task/getTypeTask",
-    async (_, thunkAPI) => {
+    async (payload: { project_id?: number | string | null } | void, thunkAPI) => {
         try {
+            const project_id = payload?.project_id ?? null;
 
-            const response = await apiAxiosInstance.get("/cms/select/options/type_tasks");
+            const response = await apiAxiosInstance.get("/cms/select/options/type_tasks", {
+                params: {
+                    project_id,
+                },
+            });
             return {
                 data: response.data,
             };
