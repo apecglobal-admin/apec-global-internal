@@ -775,7 +775,7 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
                                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
                                     <div>
                                         <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
-                                            Số lần vi phạm (min)
+                                            SL vi phạm (min)
                                         </label>
                                         <input
                                             type="number" min="0" max="10"
@@ -788,7 +788,7 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
                                     </div>
                                     <div>
                                         <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
-                                            Số lần vi phạm (max)
+                                            SL vi phạm (max)
                                         </label>
                                         <input
                                             type="number" min="0" max="10"
