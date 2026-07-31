@@ -149,7 +149,7 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
         if (!listCompanyTask) dispatch(getListCompanyTask({ search: null }) as any);
         if (!statusTask) dispatch(getStatusTask() as any);
         if (!priorityTask) dispatch(getPriorityTask() as any);
-        if (!listProject) dispatch(getListProject({token}) as any);
+        if (!listProject) dispatch(getListProject({ token }) as any);
         if (!childKpi) dispatch(getChildKpi() as any);
         if (!listPosition) dispatch(getListPosition() as any);
         if (!listDepartment) dispatch(getListDepartment({}) as any);
@@ -305,13 +305,13 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
             scrollToFirstError(validationErrors);
             return;
         }
-    
+
         setIsSubmitting(true);
         try {
             const token = localStorage.getItem("userToken");
-    
+
             let result;
-    
+
             if (isAdmin) {
                 // Giữ nguyên taskData cũ + dispatch createTask
                 const taskData: any = {
@@ -337,7 +337,7 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
                     description: assignForm.description,
                     companies: selectedCompanies.map((c: any) => c.id),
                 };
-    
+
                 if (assignForm.target_type === 3) {
                     taskData.employees = assignForm.employees;
                 } else if (assignForm.target_type === 2) {
@@ -345,7 +345,7 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
                 } else if (assignForm.target_type === 1) {
                     taskData.department_id = assignForm.employees;
                 }
-    
+
                 result = await dispatch(createTask(taskData) as any);
             } else {
                 const personalTaskData = {
@@ -367,10 +367,10 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
                     companies: selectedCompanies.map((c: any) => c.id),
                     token,
                 };
-    
+
                 result = await dispatch(createPersonalTask(personalTaskData) as any);
             }
-    
+
             if (result.payload.data.status === 200 || result.payload.data.status === 201 || result.payload.data.success) {
                 toast.success("Giao nhiệm vụ thành công!");
                 resetForm();
@@ -466,8 +466,8 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
                                     }}
                                     placeholder="Ví dụ: Xây dựng API login..."
                                     className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white placeholder-slate-500 focus:outline-none transition ${errors.name
-                                            ? "border-red-500 focus:border-red-500"
-                                            : "border-slate-700 focus:border-blue-500"
+                                        ? "border-red-500 focus:border-red-500"
+                                        : "border-slate-700 focus:border-blue-500"
                                         }`}
                                 />
                                 {errors.name && (
@@ -605,8 +605,8 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
                                         }}
                                         disabled={assignForm.projects.length === 0}
                                         className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed ${errors.type_task
-                                                ? "border-red-500 focus:border-red-500"
-                                                : "border-slate-700 focus:border-blue-500"
+                                            ? "border-red-500 focus:border-red-500"
+                                            : "border-slate-700 focus:border-blue-500"
                                             }`}
                                     >
                                         <option value={0}>
@@ -701,8 +701,8 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
                                         onChange={handleProcessChange}
                                         disabled={unit === "%"}
                                         className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white focus:outline-none transition ${errors.value
-                                                ? "border-red-500 focus:border-red-500"
-                                                : "border-slate-700 focus:border-blue-500"
+                                            ? "border-red-500 focus:border-red-500"
+                                            : "border-slate-700 focus:border-blue-500"
                                             } ${unit === "%" ? "opacity-60 cursor-not-allowed" : ""}`}
                                     />
                                     {errors.value && (
@@ -730,8 +730,8 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
                                                 if (errors.date_start) setErrors((prev) => ({ ...prev, date_start: undefined }));
                                             }}
                                             className={`w-full pl-10 sm:pl-11 pr-3 py-2.5 sm:pr-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white focus:outline-none transition ${errors.date_start
-                                                    ? "border-red-500 focus:border-red-500"
-                                                    : "border-slate-700 focus:border-blue-500"
+                                                ? "border-red-500 focus:border-red-500"
+                                                : "border-slate-700 focus:border-blue-500"
                                                 }`}
                                         />
                                     </div>
@@ -757,8 +757,8 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
                                                 if (errors.date_end) setErrors((prev) => ({ ...prev, date_end: undefined }));
                                             }}
                                             className={`w-full pl-10 sm:pl-11 pr-3 py-2.5 sm:pr-4 sm:py-3 bg-slate-900 border rounded-lg text-sm sm:text-base text-white focus:outline-none transition ${errors.date_end
-                                                    ? "border-red-500 focus:border-red-500"
-                                                    : "border-slate-700 focus:border-blue-500"
+                                                ? "border-red-500 focus:border-red-500"
+                                                : "border-slate-700 focus:border-blue-500"
                                                 }`}
                                         />
                                     </div>
@@ -770,53 +770,56 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
                                 </div>
                             </div>
 
-                            {/* Trạng thái */}
-                            <div>
-                                <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
-                                    Trạng thái
-                                </label>
-                                <select
-                                    value={assignForm.task_status}
-                                    onChange={(e) =>
-                                        setAssignForm({ ...assignForm, task_status: parseInt(e.target.value) })
-                                    }
-                                    className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border border-slate-700 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-500 transition"
-                                >
-                                    {statusTask?.map((status: any) => (
-                                        <option key={status.id} value={status.id}>{status.name}</option>
-                                    ))}
-                                </select>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                                {/* Vi phạm - gộp min/max chung 1 cột bên trái */}
+                                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                                    <div>
+                                        <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
+                                            Số lần vi phạm (min)
+                                        </label>
+                                        <input
+                                            type="number" min="0" max="10"
+                                            value={assignForm.min_reject}
+                                            onChange={(e) =>
+                                                setAssignForm({ ...assignForm, min_reject: parseInt(e.target.value) || 0 })
+                                            }
+                                            className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border border-slate-700 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-500 transition"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
+                                            Số lần vi phạm (max)
+                                        </label>
+                                        <input
+                                            type="number" min="0" max="10"
+                                            value={assignForm.max_reject}
+                                            onChange={(e) =>
+                                                setAssignForm({ ...assignForm, max_reject: parseInt(e.target.value) || 0 })
+                                            }
+                                            className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border border-slate-700 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-500 transition"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Trạng thái - bên phải, ngang hàng với cả cụm min/max */}
+                                <div>
+                                    <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
+                                        Trạng thái
+                                    </label>
+                                    <select
+                                        value={assignForm.task_status}
+                                        onChange={(e) =>
+                                            setAssignForm({ ...assignForm, task_status: parseInt(e.target.value) })
+                                        }
+                                        className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border border-slate-700 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-500 transition"
+                                    >
+                                        {statusTask?.map((status: any) => (
+                                            <option key={status.id} value={status.id}>{status.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
 
-                            {/* Vi phạm */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                <div>
-                                    <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
-                                        Số lần vi phạm (min)
-                                    </label>
-                                    <input
-                                        type="number" min="0" max="10"
-                                        value={assignForm.min_reject}
-                                        onChange={(e) =>
-                                            setAssignForm({ ...assignForm, min_reject: parseInt(e.target.value) || 0 })
-                                        }
-                                        className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border border-slate-700 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-500 transition"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
-                                        Số lần vi phạm (max)
-                                    </label>
-                                    <input
-                                        type="number" min="0" max="10"
-                                        value={assignForm.max_reject}
-                                        onChange={(e) =>
-                                            setAssignForm({ ...assignForm, max_reject: parseInt(e.target.value) || 0 })
-                                        }
-                                        className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-900 border border-slate-700 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:border-blue-500 transition"
-                                    />
-                                </div>
-                            </div>
                             {errors.reject && (
                                 <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
                                     <AlertCircle size={12} /> {errors.reject}
