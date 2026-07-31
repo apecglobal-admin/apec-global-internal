@@ -190,7 +190,6 @@ const TaskDetailAssign: React.FC<TaskDetailProps> = ({ task, onBack, onUpdate, i
             <div className="max-w-7xl mx-auto p-6">
                 <TaskEditForm
                     task={task}
-                    typeTask={typeTask}
                     priorityTask={priorityTask}
                     listProject={listProject}
                     childKpi={childKpi}

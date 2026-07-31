@@ -833,7 +833,12 @@ const TaskListAssign: React.FC = () => {
                                                 <span className="flex flex-wrap gap-1.5">
                                                     {Array.isArray(task?.projects) && task.projects.length > 0
                                                         ? task.projects.map((p: any) => (
-                                                            <Badge key={p.id} variant="outline" className="text-blue-300 border-blue-500/30 bg-blue-500/15">
+                                                            <Badge
+                                                                key={p.id}
+                                                                variant="outline"
+                                                                title={p.name}
+                                                                className="text-blue-300 border-blue-500/30 bg-blue-500/15 max-w-[140px] truncate inline-block align-middle"
+                                                            >
                                                                 {p.name}
                                                             </Badge>
                                                         ))

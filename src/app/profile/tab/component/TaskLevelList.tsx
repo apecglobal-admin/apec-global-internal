@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux';
 
 
-import { getDetailListTaskAssign, getListTaskLevel, getTypeTask, getStatusTask, getPriorityTask, getListProject, getListDepartmentTaskLevel } from '@/src/features/task/api';
+import { getDetailListTaskAssign, getListTaskLevel, getStatusTask, getPriorityTask, getListProject, getListDepartmentTaskLevel } from '@/src/features/task/api';
 import { useTaskData } from '@/src/hooks/taskhook';
 import { listTypeTask } from '@/src/services/api';
 
