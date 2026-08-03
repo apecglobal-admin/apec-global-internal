@@ -495,54 +495,50 @@ function AssignTask({ onBack, onAssignSuccess, isAdmin = true }: AssignTaskProps
 
                             {/* Công ty + Dự án */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                <div ref={setErrorRef("companies")}>
-                                    <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
-                                        Công ty <span className="text-red-400">*</span>
-                                    </label>
-                                    <FilterableSelector
-                                        data={listCompanyTask ?? []}
-                                        multi={true}
-                                        onFilter={(search) =>
-                                            dispatch(getListCompanyTask({ search: search || null }) as any)
-                                        }
-                                        onSelect={(selected) => {
-                                            const arr = Array.isArray(selected) ? selected : selected ? [selected] : [];
-                                            handleCompanyChange(arr);
-                                            if (arr.length > 0) setErrors((prev) => ({ ...prev, companies: undefined }));
-                                        }}
-                                        value={selectedCompanies}
-                                        placeholder="Chọn công ty"
-                                        displayField="name"
-                                        emptyMessage="Không có công ty"
-                                    />
-                                    {errors.companies && (
-                                        <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
-                                            <AlertCircle size={12} /> {errors.companies}
-                                        </p>
-                                    )}
-                                    {selectedCompanies.length > 0 && (
-                                        <div className="mt-2 flex flex-wrap gap-2">
-                                            {selectedCompanies.map((c: any) => (
-                                                <span
-                                                    key={c.id}
-                                                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-500/15 border border-purple-500/30 rounded-full text-xs text-purple-300"
+                            <div ref={setErrorRef("companies")}>
+                                <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
+                                    Công ty <span className="text-red-400">*</span>
+                                </label>
+                                <FilterableSelector
+                                    data={listCompanyTask ?? []}
+                                    onFilter={(search) =>
+                                        dispatch(getListCompanyTask({ search: search || null }) as any)
+                                    }
+                                    onSelect={(selected) => {
+                                        const arr = selected ? [selected as any] : [];
+                                        handleCompanyChange(arr);
+                                        if (arr.length > 0) setErrors((prev) => ({ ...prev, companies: undefined }));
+                                    }}
+                                    value={selectedCompanies[0] ?? null}
+                                    placeholder="Chọn công ty"
+                                    displayField="name"
+                                    emptyMessage="Không có công ty"
+                                />
+                                {errors.companies && (
+                                    <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                                        <AlertCircle size={12} /> {errors.companies}
+                                    </p>
+                                )}
+                                {selectedCompanies.length > 0 && (
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                        {selectedCompanies.map((c: any) => (
+                                            <span
+                                                key={c.id}
+                                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-500/15 border border-purple-500/30 rounded-full text-xs text-purple-300"
+                                            >
+                                                {c.name}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleCompanyChange([])}
+                                                    className="text-purple-400 hover:text-white transition ml-0.5"
                                                 >
-                                                    {c.name}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            const next = selectedCompanies.filter((x: any) => x.id !== c.id);
-                                                            handleCompanyChange(next);
-                                                        }}
-                                                        className="text-purple-400 hover:text-white transition ml-0.5"
-                                                    >
-                                                        ×
-                                                    </button>
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                                                    ×
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
 
                                 <div ref={setErrorRef("projects")}>
                                     <label className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2">
