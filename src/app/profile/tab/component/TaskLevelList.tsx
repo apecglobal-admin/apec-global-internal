@@ -647,7 +647,7 @@ const TaskLevelList = () => {
                           />
                         ) : (
                           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs border-2 border-slate-600 flex-shrink-0">
-                            {task.assignee.name.charAt(0).toUpperCase()}
+                            {task?.assignee?.name?.charAt(0).toUpperCase() ?? ""}
                           </div>
                         )}
                         <div className="min-w-0">

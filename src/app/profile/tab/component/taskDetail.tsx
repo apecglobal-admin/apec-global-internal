@@ -969,7 +969,7 @@ function TaskDetail({
                             </div>
                             <div className="flex items-start gap-2 text-xs sm:text-sm text-slate-300 bg-slate-900 px-3 py-2 rounded-lg">
                                 <Building2 size={16} className="text-slate-500 flex-shrink-0 mt-0.5" color="blue" />
-                                <span className="font-semibold flex-shrink-0">Dự án:</span>
+                                <span className="font-semibold flex-shrink-0">Công ty:</span>
                                 <div className="flex flex-wrap gap-1.5">
                                     {Array.isArray(task?.companies) && task.companies.length > 0
                                         ? task.companies.map((p: any, idx: number) => (
