@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { createAsyncReducer, createAsyncReducerDynamic } from "@/src/utils/createAsyncReducer";
 import { initState } from "@/src/services/interface";
-import { getListEmployeeLetter, getListLetter, getListStatusLetter } from "./api";
+import { getListEmployeeLetter, getListLetter, getListStatusLetter, listRefundAttendanceEmployeesAbsences, listRefundAttendanceManagersAbsences } from "./api";
 import { getTypeAttendanceAbsences, getStatusAttendanceAbsences, getHistoryCheckin, getPersonalAttendance, getListAttendanceManagerAbsences } from "./api";
 
 interface EventMessage {
@@ -20,7 +20,8 @@ interface AttendanceState {
     detailListAttendanceManagerAbsences: initState<any[]>;
     listTypeAttendanceAbsences: initState<any[]>;
     listStatusAttendanceAbsences: initState<any[]>;
-
+    listRefundAttendanceEmployeesAbsences: initState<any[]>;
+    listRefundAttendanceManagersAbsences: initState<any[]>;
 }
 
 const createInitState = () => ({ data: [], loading: false, error: null, status: null });
@@ -37,7 +38,8 @@ const initialState: AttendanceState = {
     detailListAttendanceManagerAbsences:  createInitState(),
     listTypeAttendanceAbsences: createInitState(),
     listStatusAttendanceAbsences: createInitState(),
-
+    listRefundAttendanceEmployeesAbsences: createInitState(),
+    listRefundAttendanceManagersAbsences: createInitState(),
 };
 
 const attendanceSlice = createSlice({
@@ -51,7 +53,11 @@ const attendanceSlice = createSlice({
         createAsyncReducer(builder, getListEmployeeLetter, ["employeeLetter", "totalEmployeeLetter"]);
         createAsyncReducer(builder, getTypeAttendanceAbsences, "listTypeAttendanceAbsences");
         createAsyncReducer(builder, getStatusAttendanceAbsences, "listStatusAttendanceAbsences");
+        createAsyncReducer(builder, listRefundAttendanceEmployeesAbsences, "listRefundAttendanceEmployeesAbsences");
+        createAsyncReducer(builder, listRefundAttendanceManagersAbsences, "listRefundAttendanceManagersAbsences");
 
+        
+        
 
         createAsyncReducerDynamic(builder, getPersonalAttendance);
         createAsyncReducerDynamic(builder, getListAttendanceManagerAbsences);
