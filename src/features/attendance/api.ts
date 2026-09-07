@@ -390,3 +390,146 @@ export const rejectAttendanceAbsences = createAsyncThunk(
         }
     }
 );
+
+export const refundAttendanceAbsences = createAsyncThunk(
+  "attendance/refundAttendanceAbsences",
+  async (payload: any, thunkAPI) => {
+      const {id, token} = payload;
+      try {
+          const response = await apiAxiosInstance.post("/attendance/refund", 
+              {id}, 
+              {
+                  headers: {
+                      Authorization: `Bearer ${token}`,
+                  },
+              }
+          );
+          return {
+              data: response.data,
+          };
+      } catch (error: any) {
+          return thunkAPI.rejectWithValue(
+              error?.response?.data || error?.message
+          );
+      }
+  }
+);
+
+export const listRefundAttendanceManagersAbsences = createAsyncThunk(
+  "attendance/listRefundAttendanceManagersAbsences",
+  async (payload: any, thunkAPI) => {
+      const {token} = payload;
+      try {
+          const response = await apiAxiosInstance.get("/attendance/refund/managers", 
+              {
+                  headers: {
+                      Authorization: `Bearer ${token}`,
+                  },
+              }
+          );
+          return {
+              data: response.data,
+          };
+      } catch (error: any) {
+          return thunkAPI.rejectWithValue(
+              error?.response?.data || error?.message
+          );
+      }
+  }
+);
+
+export const listRefundAttendanceEmployeesAbsences = createAsyncThunk(
+  "attendance/listRefundAttendanceEmployeesAbsences",
+  async (payload: any, thunkAPI) => {
+      const {token} = payload;
+      try {
+          const response = await apiAxiosInstance.get("/attendance/refund/employees", 
+              {
+                  headers: {
+                      Authorization: `Bearer ${token}`,
+                  },
+              }
+          );
+                    
+          return {
+              data: response.data,
+          };
+      } catch (error: any) {
+          return thunkAPI.rejectWithValue(
+              error?.response?.data || error?.message
+          );
+      }
+  }
+);
+
+export const rejectRefundAttendanceAbsences = createAsyncThunk(
+  "attendance/rejectRefundAttendanceAbsences",
+  async (payload: any, thunkAPI) => {
+      const {id, token} = payload;
+      try {
+          const response = await apiAxiosInstance.post("/attendance/refund/reject", 
+              {id},
+              {
+                  headers: {
+                      Authorization: `Bearer ${token}`,
+                  },
+              }
+          );
+          return {
+              data: response.data,
+          };
+      } catch (error: any) {
+          return thunkAPI.rejectWithValue(
+              error?.response?.data || error?.message
+          );
+      }
+  }
+);
+
+export const approveRefundAttendanceAbsences = createAsyncThunk(
+  "attendance/approveRefundAttendanceAbsences",
+  async (payload: any, thunkAPI) => {
+      const {id, token} = payload;
+      try {
+          const response = await apiAxiosInstance.post("/attendance/refund/approve", 
+              {id},
+              {
+                  headers: {
+                      Authorization: `Bearer ${token}`,
+                  },
+              }
+          );
+          return {
+              data: response.data,
+          };
+      } catch (error: any) {
+          return thunkAPI.rejectWithValue(
+              error?.response?.data || error?.message
+          );
+      }
+  }
+);
+
+export const deleteRefundAttendanceAbsences = createAsyncThunk(
+  "attendance/deleteRefundAttendanceAbsences",
+  async (payload: any, thunkAPI) => {
+      const {id, token} = payload;
+      try {
+          const response = await apiAxiosInstance.delete("/attendance/refund/delete", 
+            {
+                data: { id },
+                  headers: {
+                      Authorization: `Bearer ${token}`,
+                  },
+              }
+          );
+          return {
+              data: response.data,
+          };
+      } catch (error: any) {
+          return thunkAPI.rejectWithValue(
+              error?.response?.data || error?.message
+          );
+      }
+  }
+);

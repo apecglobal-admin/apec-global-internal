@@ -17,7 +17,8 @@ export const useAttendanceData = () => {
     detailListAttendanceManagerAbsences:  attendance.detailListAttendanceManagerAbsences.data.data,
     listTypeAttendanceAbsences: attendance.listTypeAttendanceAbsences.data.data,
     listStatusAttendanceAbsences: attendance.listStatusAttendanceAbsences.data.data,
-    
+    listRefundAttendanceManagersAbsences: attendance.listRefundAttendanceManagersAbsences.data.data,
+    listRefundAttendanceEmployeesAbsences: attendance.listRefundAttendanceEmployeesAbsences.data.data,
     // Loading states
     loadingHistoryCheckin: attendance.historyCheckin.loading,
 
@@ -25,7 +26,8 @@ export const useAttendanceData = () => {
     loadingDetailPersonalAttendance: attendance.detailPersonalAttendance.loading,
     loadingListAttendanceManagerAbsences:  attendance.listAttendanceManagerAbsences.loading,
     loadingDetailListAttendanceManagerAbsences:  attendance.detailListAttendanceManagerAbsences.loading,
-
+    loadingListRefundAttendanceManagersAbsences: attendance.listRefundAttendanceManagersAbsences.loading,
+    loadingListRefundAttendanceEmployeesAbsences: attendance.listRefundAttendanceEmployeesAbsences.loading,
     // Error states
 
 

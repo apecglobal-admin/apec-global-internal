@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { FilePlus, Calendar, FileText, MapPin, User, Search, X, ChevronDown, Check, Ban, Loader2, ClipboardList } from "lucide-react";
+import {
+  FilePlus, Calendar, FileText, MapPin, User, Search, X, ChevronDown,
+  Check, Ban, Loader2, ClipboardList, Trash2, RotateCcw,
+} from "lucide-react";
 import { useDispatch } from "react-redux";
 import { useAttendanceData } from "@/src/hooks/attendanceHook";
 import {
@@ -11,6 +14,12 @@ import {
   getListAttendanceManagerAbsences,
   approveAttendanceAbsences,
   rejectAttendanceAbsences,
+  refundAttendanceAbsences,
+  listRefundAttendanceManagersAbsences,
+  listRefundAttendanceEmployeesAbsences,
+  rejectRefundAttendanceAbsences,
+  approveRefundAttendanceAbsences,
+  deleteRefundAttendanceAbsences,
 } from "@/src/features/attendance/api";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -45,13 +54,30 @@ interface PaginationData {
   totalPages: number;
 }
 
+interface RefundAbsenceItem {
+  id: string;
+  check_time: string | null;
+  check_date: string | null;
+  created_at: string;
+  employee: { id: number; name: string; avatar: string | null };
+  manager: { id: number; name: string; avatar: string | null };
+  absence: {
+    id: number;
+    start_time: string;
+    end_time: string;
+    start_date: string;
+    reason: string;
+    type: { id: number; name: string };
+  };
+}
+
 /* ─────────────────────────────────────────────
    Constants
 ───────────────────────────────────────────── */
 const STATUS_COLORS: Record<number, { bg: string; text: string; border: string; dot: string }> = {
-  1: { bg: "bg-amber-500/10",   text: "text-amber-400",   border: "border-amber-500/30",   dot: "bg-amber-400"   },
+  1: { bg: "bg-amber-500/10", text: "text-amber-400", border: "border-amber-500/30", dot: "bg-amber-400" },
   2: { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/30", dot: "bg-emerald-400" },
-  3: { bg: "bg-red-500/10",     text: "text-red-400",     border: "border-red-500/30",     dot: "bg-red-400"     },
+  3: { bg: "bg-red-500/10", text: "text-red-400", border: "border-red-500/30", dot: "bg-red-400" },
 };
 
 const ABSENCE_COLORS: Record<number, string> = {
@@ -72,108 +98,292 @@ const formatTime = (t: string) => t?.slice(0, 5) ?? "";
 /* ─────────────────────────────────────────────
    Sub-tab: Đơn từ của tôi
 ───────────────────────────────────────────── */
+type MyLetterView = "letters" | "refund_list";
+
 function MyLettersTab() {
-  const { employeeLetter } = useAttendanceData();
+  const dispatch = useDispatch();
+
+  const {
+    employeeLetter,
+    listRefundAttendanceEmployeesAbsences: refundEmployeesState,
+    loadingListRefundAttendanceEmployeesAbsences,
+  } = useAttendanceData();
+
+  const [view, setView] = useState<MyLetterView>("letters");
+  const [refundLoadingId, setRefundLoadingId] = useState<string | null>(null);
+
+  const handleRequestRefund = async (id: string) => {
+    const token = localStorage.getItem("userToken");
+    if (refundLoadingId) return;
+    setRefundLoadingId(id);
+    try {
+      const res = await dispatch(refundAttendanceAbsences({ id, token }) as any);
+      if (res?.payload?.data?.status) {
+        toast.success(res.payload.data.message);
+        dispatch(listRefundAttendanceEmployeesAbsences({ token }) as any);
+      } else {
+        toast.error(res?.payload?.data?.message ?? "Yêu cầu xóa đơn thất bại");
+      }
+    } finally {
+      setRefundLoadingId(null);
+    }
+  };
+
+  // ─── Danh sách đơn cần xóa (theo dõi) ───
+  const [refundItems, setRefundItems] = useState<RefundAbsenceItem[]>([]);
+  const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
+
+  const fetchRefundList = () => {
+    const token = localStorage.getItem("userToken");
+    dispatch(listRefundAttendanceEmployeesAbsences({ token }) as any);
+  };
+
+  useEffect(() => {
+    if (view === "refund_list") fetchRefundList();
+  }, [view]);
+
+  useEffect(() => {
+    if (refundEmployeesState) {
+      setRefundItems(refundEmployeesState);
+    }
+  }, [refundEmployeesState]);
+
+  const handleDeleteRefund = async (id: string) => {
+    const token = localStorage.getItem("userToken");
+    if (deleteLoadingId) return;
+    setDeleteLoadingId(id);
+    try {
+      const res = await dispatch(deleteRefundAttendanceAbsences({ id, token }) as any);
+      if (res?.payload?.data?.status) {
+        toast.success(res.payload.data.message);
+        fetchRefundList();
+      } else {
+        toast.error(res?.payload?.data?.message ?? "Xóa đơn thất bại");
+      }
+    } finally {
+      setDeleteLoadingId(null);
+    }
+  };
 
   return (
     <div className="px-4">
       <div className="flex items-center justify-between mb-3">
+        <div className="flex rounded-lg overflow-hidden border border-gray-200">
+          <button
+            onClick={() => setView("letters")}
+            className="px-3 py-1.5 text-xs font-semibold transition-colors"
+            style={{
+              background: view === "letters" ? "#111827" : "#fff",
+              color: view === "letters" ? "#fff" : "#6b7280",
+            }}
+          >
+            Đơn từ của tôi
+          </button>
+          <button
+            onClick={() => setView("refund_list")}
+            className="px-3 py-1.5 text-xs font-semibold transition-colors flex items-center gap-1.5"
+            style={{
+              background: view === "refund_list" ? "#111827" : "#fff",
+              color: view === "refund_list" ? "#fff" : "#6b7280",
+            }}
+          >
+            <RotateCcw size={12} />
+            Đơn cần xóa
+          </button>
+        </div>
+
         <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
-          {employeeLetter?.length ?? 0} đơn
+          {view === "letters" ? employeeLetter?.length ?? 0 : refundItems.length} đơn
         </span>
       </div>
 
-      {!employeeLetter || employeeLetter.length === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-4">Không có dữ liệu</p>
-      ) : (
-        <div
-          className="flex flex-col gap-3 max-h-72 overflow-y-auto pr-1"
-          style={{ overscrollBehavior: "contain", touchAction: "pan-y" }}
-        >
-          {employeeLetter.map((letter: any) => {
-            const statusColor =
-              letter.status?.id === 1
-                ? { bg: "#fff7ed", text: "#f97316", dot: "#f97316" }
-                : letter.status?.id === 3
-                  ? { bg: "#f0fdf4", text: "#22c55e", dot: "#22c55e" }
-                  : { bg: "#fef2f2", text: "#ef4444", dot: "#ef4444" };
+      {/* ── Danh sách đơn từ của tôi (giữ nguyên như cũ, chỉ thêm nút yêu cầu xóa) ── */}
+      {view === "letters" && (
+        !employeeLetter || employeeLetter.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-4">Không có dữ liệu</p>
+        ) : (
+          <div
+            className="flex flex-col gap-3 max-h-72 overflow-y-auto pr-1"
+            style={{ overscrollBehavior: "contain", touchAction: "pan-y" }}
+          >
+            {employeeLetter.map((letter: any) => {
+              const statusColor =
+                letter.status?.id === 1
+                  ? { bg: "#fff7ed", text: "#f97316", dot: "#f97316" }
+                  : letter.status?.id === 2
+                    ? { bg: "#fef2f2", text: "#ef4444", dot: "#ef4444" }
+                    : { bg: "#f0fdf4", text: "#22c55e", dot: "#22c55e" };
 
-            const startDate = formatDate(letter.start_date);
-            const endDate = formatDate(letter.end_date);
-            const startTime = letter.start_time?.slice(0, 5);
-            const endTime = letter.end_time?.slice(0, 5);
+              const startDate = formatDate(letter.start_date);
+              const endDate = formatDate(letter.end_date);
+              const startTime = letter.start_time?.slice(0, 5);
+              const endTime = letter.end_time?.slice(0, 5);
+              const isRefunding = refundLoadingId === letter.id;
 
-            return (
-              <div key={letter.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-                {/* Top row */}
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-bold text-gray-900">
-                    {letter.absence?.name ?? "Đơn từ"}
-                  </span>
-                  <span
-                    className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
-                    style={{ background: statusColor.bg, color: statusColor.text }}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor.dot }} />
-                    {letter.status?.name}
-                  </span>
-                </div>
-
-                {/* Date/time */}
-                <div className="flex items-center gap-2 mb-2">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
-                  </svg>
-                  <span className="text-xs text-gray-500">
-                    {startDate} {startTime} – {endDate} {endTime}
-                  </span>
-                </div>
-
-                {/* Reason */}
-                {letter.reason && (
-                  <div className="flex items-start gap-2 mb-2">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 flex-shrink-0">
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
-                    <span className="text-xs text-gray-500 line-clamp-2">{letter.reason}</span>
-                  </div>
-                )}
-
-                {/* Approver */}
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
-                  <div className="flex items-center gap-2">
-                    {letter.approver?.avatar ? (
-                      <img src={letter.approver.avatar} alt={letter.approver.name} className="w-5 h-5 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
-                        </svg>
-                      </div>
-                    )}
-                    <span className="text-xs text-gray-400">
-                      {letter.approver?.name ?? "Chưa có người duyệt"}
+              return (
+                <div key={letter.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-bold text-gray-900">
+                      {letter.absence?.name ?? "Đơn từ"}
+                    </span>
+                    <span
+                      className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
+                      style={{ background: statusColor.bg, color: statusColor.text }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor.dot }} />
+                      {letter.status?.name}
                     </span>
                   </div>
 
-                  {letter.document && (
-                    <a
-                      href={letter.document}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs font-semibold text-blue-600"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    <span className="text-xs text-gray-500">
+                      {startDate} {startTime} – {endDate} {endTime}
+                    </span>
+                  </div>
+
+                  {letter.reason && (
+                    <div className="flex items-start gap-2 mb-2">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 flex-shrink-0">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                       </svg>
-                      Xem tài liệu
-                    </a>
+                      <span className="text-xs text-gray-500 line-clamp-2">{letter.reason}</span>
+                    </div>
                   )}
+
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                    <div className="flex items-center gap-2">
+                      {letter.approver?.avatar ? (
+                        <img src={letter.approver.avatar} alt={letter.approver.name} className="w-5 h-5 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                          </svg>
+                        </div>
+                      )}
+                      <span className="text-xs text-gray-400">
+                        {letter.approver?.name ?? "Chưa có người duyệt"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      {letter.document && (
+                        <a
+                          href={letter.document}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs font-semibold text-blue-600"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+                          </svg>
+                          Xem tài liệu
+                        </a>
+                      )}
+
+                      {letter.refund ? (
+                        <span className="flex items-center gap-1 text-xs font-semibold text-slate-400">
+                          <RotateCcw size={12} />
+                          Đã hoàn tác
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleRequestRefund(letter.id)}
+                          disabled={isRefunding}
+                          title="Yêu cầu xóa đơn"
+                          className="flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isRefunding ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                          Hoàn tác đơn
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )
+      )}
+
+      {/* ── Danh sách đơn cần xóa (theo dõi) — theo cấu trúc RefundAbsenceItem ── */}
+      {view === "refund_list" && (
+        loadingListRefundAttendanceEmployeesAbsences && refundItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 gap-3">
+            <div className="w-8 h-8 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
+            <p className="text-sm text-gray-400">Đang tải...</p>
+          </div>
+        ) : refundItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 bg-gray-50 rounded-xl border border-gray-100">
+            <RotateCcw className="text-gray-300 mb-2" size={40} />
+            <p className="text-sm text-gray-400">Không có đơn nào chờ xóa</p>
+          </div>
+        ) : (
+          <div
+            className="flex flex-col gap-3 max-h-72 overflow-y-auto pr-1"
+            style={{ overscrollBehavior: "contain", touchAction: "pan-y" }}
+          >
+            {refundItems.map((item) => {
+              const isDeleting = deleteLoadingId === item.id;
+              const isPending = !item.check_date && !item.check_time;
+
+              return (
+                <div key={item.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-bold text-gray-900">
+                      {item.absence.type.name}
+                    </span>
+                    <span
+                      className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${isPending ? "bg-amber-50 text-amber-600" : "bg-slate-100 text-slate-500"
+                        }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${isPending ? "bg-amber-400" : "bg-slate-400"}`} />
+                      {isPending ? "Chờ xử lý" : "Đã xử lý"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 mb-3">
+                    <Calendar className="text-gray-400" size={13} />
+                    <span className="text-xs text-gray-500">
+                      {formatDate(item.absence.start_date)} {formatTime(item.absence.start_time)} – {formatTime(item.absence.end_time)}
+                    </span>
+                  </div>
+
+                  {item.absence.reason && (
+                    <p className="text-xs text-gray-500 line-clamp-2 mb-3">{item.absence.reason}</p>
+                  )}
+
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                    <div className="flex items-center gap-2">
+                      {item.manager?.avatar ? (
+                        <img src={item.manager.avatar} alt={item.manager.name} className="w-5 h-5 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center">
+                          <User size={10} className="text-gray-400" />
+                        </div>
+                      )}
+                      <span className="text-xs text-gray-400">{item.manager?.name ?? "Chưa có người duyệt"}</span>
+                    </div>
+
+                    {isPending && (
+                      <button
+                        onClick={() => handleDeleteRefund(item.id)}
+                        disabled={isDeleting}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-red-500 text-xs font-semibold hover:bg-red-100 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isDeleting ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                        Xóa đơn
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
       )}
     </div>
   );
@@ -191,14 +401,17 @@ function ApprovalTab() {
     loadingDetailListAttendanceManagerAbsences,
     listTypeAttendanceAbsences,
     listStatusAttendanceAbsences,
+    // Alias để tránh đè tên với action creator cùng tên import ở trên
+    listRefundAttendanceManagersAbsences: refundManagersState,
+    loadingListRefundAttendanceManagersAbsences,
   } = useAttendanceData();
 
-  const [items, setItems]             = useState<AbsenceItem[]>([]);
-  const [pagination, setPagination]   = useState<PaginationData>({ total: 0, limit: 5, totalPages: 1 });
+  const [items, setItems] = useState<AbsenceItem[]>([]);
+  const [pagination, setPagination] = useState<PaginationData>({ total: 0, limit: 5, totalPages: 1 });
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [searchFilter, setSearchFilter]   = useState("");
-  const [statusFilter, setStatusFilter]   = useState("all");
+  const [searchFilter, setSearchFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [absenceFilter, setAbsenceFilter] = useState("all");
 
   const [detailItem, setDetailItem] = useState<AbsenceItem | null>(null);
@@ -207,10 +420,15 @@ function ApprovalTab() {
 
   const [actionLoading, setActionLoading] = useState<{ id: string; type: "approve" | "reject" } | null>(null);
 
+  // ─── Yêu cầu hoàn tác (xóa đơn) từ nhân viên ───
+  const [refundItems, setRefundItems] = useState<RefundAbsenceItem[]>([]);
+  const [refundActionLoading, setRefundActionLoading] = useState<{ id: string; type: "approve" | "reject" } | null>(null);
+
   /* initial loads */
   useEffect(() => {
     dispatch(getTypeAttendanceAbsences() as any);
     dispatch(getStatusAttendanceAbsences() as any);
+    fetchRefundList();
   }, []);
 
   /* list on page change */
@@ -238,15 +456,27 @@ function ApprovalTab() {
     setDetailItem(Array.isArray(data) ? (data[0] ?? null) : (data ?? null));
   }, [detailListAttendanceManagerAbsences]);
 
+  /* sync refund list redux → local */
+  useEffect(() => {
+    if (refundManagersState) {
+      setRefundItems(refundManagersState);
+    }
+  }, [refundManagersState]);
+
   const fetchList = (page: number) => {
     const token = localStorage.getItem("userToken");
     dispatch(getListAttendanceManagerAbsences({
       token, page,
-      search:     searchFilter  || undefined,
-      status:     statusFilter  !== "all" ? statusFilter  : undefined,
+      search: searchFilter || undefined,
+      status: statusFilter !== "all" ? statusFilter : undefined,
       absence_id: absenceFilter !== "all" ? absenceFilter : undefined,
       key: "listAttendanceManagerAbsences",
     }) as any);
+  };
+
+  const fetchRefundList = () => {
+    const token = localStorage.getItem("userToken");
+    dispatch(listRefundAttendanceManagersAbsences({ token }) as any);
   };
 
   const handleViewDetail = (id: string) => {
@@ -265,15 +495,15 @@ function ApprovalTab() {
     const token = localStorage.getItem("userToken");
     setActionLoading({ id, type: "approve" });
     try {
-        const res = await dispatch(approveAttendanceAbsences({ id, token }) as any);
-        if(res.payload.data.success){
-            toast.success(res.payload.data.message)
-            fetchList(currentPage);
+      const res = await dispatch(approveAttendanceAbsences({ id, token }) as any);
+      if (res.payload.data.success) {
+        toast.success(res.payload.data.message)
+        fetchList(currentPage);
 
-        }else{
-            toast.success(res.payload.data.message)
-        }
-      
+      } else {
+        toast.success(res.payload.data.message)
+      }
+
     } finally { setActionLoading(null); }
   };
 
@@ -284,21 +514,60 @@ function ApprovalTab() {
     setActionLoading({ id, type: "reject" });
     try {
       const res = await dispatch(rejectAttendanceAbsences({ id, token }) as any);
-        if(res.payload.data.success){
-            toast.success(res.payload.data.message)
-            fetchList(currentPage);
+      if (res.payload.data.success) {
+        toast.success(res.payload.data.message)
+        fetchList(currentPage);
 
-        }else{
-            toast.success(res.payload.data.message)
-        }
+      } else {
+        toast.success(res.payload.data.message)
+      }
     } finally { setActionLoading(null); }
   };
 
-  const statusColor  = (id: number) => STATUS_COLORS[id]  ?? STATUS_COLORS[1];
+  const handleApproveRefund = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (refundActionLoading) return;
+    const token = localStorage.getItem("userToken");
+    setRefundActionLoading({ id, type: "approve" });
+    try {
+      const res = await dispatch(approveRefundAttendanceAbsences({ id, token }) as any);
+      console.log("action res", res);
+      
+      if (res?.payload?.data?.status) {
+        toast.success(res.payload.data.message);
+        fetchRefundList();
+        fetchList(currentPage);
+      } else {
+        toast.error(res?.payload?.data?.message ?? "Duyệt hoàn tác thất bại");
+      }
+    } finally {
+      setRefundActionLoading(null);
+    }
+  };
+
+  const handleRejectRefund = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (refundActionLoading) return;
+    const token = localStorage.getItem("userToken");
+    setRefundActionLoading({ id, type: "reject" });
+    try {
+      const res = await dispatch(rejectRefundAttendanceAbsences({ id, token }) as any);
+      if (res?.payload?.data?.status) {
+        toast.success(res.payload.data.message);
+        fetchRefundList();
+      } else {
+        toast.error(res?.payload?.data?.message ?? "Từ chối hoàn tác thất bại");
+      }
+    } finally {
+      setRefundActionLoading(null);
+    }
+  };
+
+  const statusColor = (id: number) => STATUS_COLORS[id] ?? STATUS_COLORS[1];
   const absenceColor = (id: number) => ABSENCE_COLORS[id] ?? "text-slate-400";
 
   const activeFilterCount = [
-    statusFilter  !== "all" ? statusFilter  : "",
+    statusFilter !== "all" ? statusFilter : "",
     absenceFilter !== "all" ? absenceFilter : "",
   ].filter(Boolean).length;
 
@@ -350,7 +619,7 @@ function ApprovalTab() {
         <div className="grid grid-cols-2 gap-3">
           {[
             { label: "Bắt đầu", date: item.start_date, time: item.start_time },
-            { label: "Kết thúc", date: item.end_date,  time: item.end_time   },
+            { label: "Kết thúc", date: item.end_date, time: item.end_time },
           ].map(({ label, date, time }) => (
             <div key={label} className="p-3 bg-slate-900/50 rounded-xl border border-slate-700/50">
               <p className="text-xs text-slate-500 mb-1.5 font-medium">{label}</p>
@@ -511,7 +780,10 @@ function ApprovalTab() {
           </div>
         ) : (
           <>
-            <div className="flex flex-col gap-3 mb-4">
+            <div
+              className="flex flex-col gap-3 mb-4 max-h-72 overflow-y-auto pr-1"
+              style={{ overscrollBehavior: "contain", touchAction: "pan-y" }}
+            >
               {items.map(item => {
                 const sc = statusColor(item.status.id);
                 const isPending = item.status.id === 1;
@@ -573,8 +845,8 @@ function ApprovalTab() {
                     {/* time */}
                     <div className="grid grid-cols-2 gap-2 mb-3">
                       {[
-                        { label: "Từ",  date: item.start_date, time: item.start_time },
-                        { label: "Đến", date: item.end_date,   time: item.end_time   },
+                        { label: "Từ", date: item.start_date, time: item.start_time },
+                        { label: "Đến", date: item.end_date, time: item.end_time },
                       ].map(({ label, date, time }) => (
                         <div key={label} className="flex items-center gap-2 bg-gray-50 rounded-lg p-2.5">
                           <Calendar className="text-gray-400 flex-shrink-0" size={13} />
@@ -628,6 +900,107 @@ function ApprovalTab() {
             )}
           </>
         )}
+
+        {/* ── Yêu cầu hoàn tác (xóa đơn) từ nhân viên ── */}
+        <div className="mt-6">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1 h-4 rounded-full bg-red-500" />
+            <h3 className="text-sm font-extrabold text-gray-900">Yêu cầu hoàn tác từ nhân viên</h3>
+            <span className="text-xs font-semibold text-red-500 bg-red-50 px-2 py-0.5 rounded-full">
+              {refundItems.length}
+            </span>
+          </div>
+
+          {loadingListRefundAttendanceManagersAbsences && refundItems.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 gap-2">
+              <div className="w-6 h-6 border-4 border-gray-200 border-t-red-400 rounded-full animate-spin" />
+              <p className="text-xs text-gray-400">Đang tải...</p>
+            </div>
+          ) : refundItems.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 bg-gray-50 rounded-xl border border-gray-100">
+              <RotateCcw className="text-gray-300 mb-2" size={32} />
+              <p className="text-sm text-gray-400">Không có yêu cầu hoàn tác nào</p>
+            </div>
+          ) : (
+            <div
+              className="flex flex-col gap-3 max-h-72 overflow-y-auto pr-1"
+              style={{ overscrollBehavior: "contain", touchAction: "pan-y" }}
+            >
+              {refundItems.map((item) => {
+                const isApprovingRefund = refundActionLoading?.id === item.id && refundActionLoading.type === "approve";
+                const isRejectingRefund = refundActionLoading?.id === item.id && refundActionLoading.type === "reject";
+                const isPending = !item.check_date && !item.check_time;
+
+                return (
+                  <div key={item.id} className="rounded-2xl border border-red-100 bg-red-50/30 p-4 shadow-sm">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="flex-shrink-0">
+                        {item.employee?.avatar ? (
+                          <img src={item.employee.avatar} alt={item.employee.name}
+                            className="w-10 h-10 rounded-full object-cover ring-2 ring-red-100" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-red-50 ring-2 ring-red-100 flex items-center justify-center">
+                            <User className="text-red-400" size={18} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-gray-900 leading-tight">{item.employee?.name}</p>
+                        <span className={`text-xs font-medium ${absenceColor(item.absence.type.id)}`}>{item.absence.type.name}</span>
+                      </div>
+
+                      {isPending ? (
+                        <div className="flex-shrink-0 flex items-center gap-1.5">
+                          <button
+                            onClick={(e) => handleApproveRefund(e, item.id)}
+                            disabled={!!refundActionLoading}
+                            title="Duyệt hoàn tác"
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs font-semibold hover:bg-emerald-100 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isApprovingRefund ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                            <span className="hidden sm:inline">Duyệt</span>
+                          </button>
+                          <button
+                            onClick={(e) => handleRejectRefund(e, item.id)}
+                            disabled={!!refundActionLoading}
+                            title="Từ chối hoàn tác"
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-50 border border-red-200 text-red-500 text-xs font-semibold hover:bg-red-100 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isRejectingRefund ? <Loader2 size={13} className="animate-spin" /> : <Ban size={13} />}
+                            <span className="hidden sm:inline">Từ chối</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="flex-shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">
+                          Đã xử lý
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2 mb-3">
+                      <div className="flex items-center gap-2 bg-white rounded-lg p-2.5 border border-red-100">
+                        <Calendar className="text-gray-400 flex-shrink-0" size={13} />
+                        <div>
+                          <p className="text-xs text-gray-800 font-medium">{formatDate(item.absence.start_date)}</p>
+                          <p className="text-xs text-gray-500">{formatTime(item.absence.start_time)} – {formatTime(item.absence.end_time)}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {item.absence.reason && (
+                      <div className="bg-white border border-red-100 rounded-lg px-3 py-2">
+                        <div className="flex items-start gap-2">
+                          <FileText className="text-gray-400 mt-0.5 flex-shrink-0" size={12} />
+                          <p className="text-xs text-gray-600 leading-relaxed line-clamp-2">{item.absence.reason}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Detail Modal */}
@@ -735,7 +1108,7 @@ export function EmployeeLettersSection() {
                 className="flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-semibold transition-colors"
                 style={{
                   background: activeTab === t.key ? "#111827" : "#fff",
-                  color:      activeTab === t.key ? "#fff"    : "#6b7280",
+                  color: activeTab === t.key ? "#fff" : "#6b7280",
                 }}
               >
                 {t.icon}
