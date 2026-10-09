@@ -11,6 +11,7 @@ import {
 } from "@/src/features/attendance/api";
 import { uploadFileTask, uploadImageTask } from "@/src/features/task/api";
 import { useAttendanceData } from "@/src/hooks/attendanceHook";
+import { useProfileData } from "@/src/hooks/profileHook";
 import { ChevronLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState, useRef, Suspense } from "react";
@@ -26,6 +27,23 @@ const isImage = (filename: string) =>
 const fmtDate = (iso: string) => {
   const d = new Date(iso);
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+};
+
+type ShiftWork = { id?: number; name?: string; checkin?: string; checkout?: string } | null | undefined;
+
+const parseHM = (t: string | undefined, fallbackH: number) => {
+  const [h, m] = (t || "").split(":").map(Number);
+  return {
+    h: Number.isFinite(h) ? h : fallbackH,
+    m: Number.isFinite(m) ? m : 0,
+  };
+};
+
+// Lấy giờ mặc định theo ca làm việc, fallback 09:00 - 18:00
+const getShiftTimes = (shift?: ShiftWork) => {
+  const from = parseHM(shift?.checkin, 9);
+  const to   = parseHM(shift?.checkout, 18);
+  return { fromHour: from.h, fromMin: from.m, toHour: to.h, toMin: to.m };
 };
 
 const statusColor: Record<string, string> = {
@@ -437,6 +455,7 @@ interface LetterFormProps {
   initialCalValue?:  CalendarValue;
   initialAbsenceId?: number;
   fromParams?:       boolean;
+  shiftWork?:        ShiftWork;
   onSuccess?:        () => void;
 }
 
@@ -449,6 +468,7 @@ function LetterForm({
   initialCalValue,
   initialAbsenceId,
   fromParams = false,
+  shiftWork, 
   onSuccess,
 }: LetterFormProps) {
   const dispatch = useDispatch();
@@ -465,10 +485,11 @@ function LetterForm({
   };
 
   const today        = new Date();
+  const shiftTimes   = getShiftTimes(shiftWork);
   const initFromDay  = editData ? parseISODay(editData.start_date) : { y: today.getFullYear(), m: today.getMonth() + 1, d: today.getDate() };
   const initToDay    = editData ? parseISODay(editData.end_date)   : initFromDay;
-  const initFromTime = editData ? parseTime(editData.start_time)   : { h: 9,  m: 0 };
-  const initToTime   = editData ? parseTime(editData.end_time)     : { h: 18, m: 0 };
+  const initFromTime = editData ? parseTime(editData.start_time)   : { h: shiftTimes.fromHour, m: shiftTimes.fromMin };
+  const initToTime   = editData ? parseTime(editData.end_time)     : { h: shiftTimes.toHour,   m: shiftTimes.toMin };
 
   const [selectedLetter, setSelectedLetter] = useState<any | null>(resolveInitAbsence);
   const [showTypeScreen, setShowTypeScreen]  = useState(false);
@@ -723,6 +744,9 @@ function LetterPage() {
   const [deletePopup, setDeletePopup] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
   const { letters, statusLetter, employeeLetter, totalEmployeeLetter } = useAttendanceData();
 
+  const {userInfo} = useProfileData();  
+  const shiftWork: ShiftWork = userInfo?.shift_work;
+
   const [page,         setPage]         = useState<"menu" | string>("menu");
   const [viewMode,     setViewMode]     = useState<ViewMode>("list");
   const [filterStatus, setFilterStatus] = useState<number | null>(null);
@@ -730,9 +754,13 @@ function LetterPage() {
   const [showForm,     setShowForm]     = useState(false);
   const [editItem,     setEditItem]     = useState<any | null>(null);
 
-  const [paramCalValue,  setParamCalValue]  = useState<CalendarValue | null>(null);
+  const [paramDay,       setParamDay]       = useState<{ y: number; m: number; d: number } | null>(null);
   const [paramAbsenceId, setParamAbsenceId] = useState<number | null>(null);
   const [fromParams,     setFromParams]     = useState(false);
+
+  const paramCalValue: CalendarValue | undefined = paramDay
+  ? { fromDay: paramDay, toDay: paramDay, ...getShiftTimes(shiftWork) }
+  : undefined;
 
   useEffect(() => {
     dispatch(getListLetter()       as any);
@@ -745,13 +773,7 @@ function LetterPage() {
     const yearParam  = searchParams.get("year");
 
     if (dayParam && monthParam && yearParam) {
-      const d = { y: Number(yearParam), m: Number(monthParam), d: Number(dayParam) };
-      const cv: CalendarValue = {
-        fromDay: d, toDay: d,
-        fromHour: 9, fromMin: 0,
-        toHour: 18, toMin: 0,
-      };
-      setParamCalValue(cv);
+      setParamDay({ y: Number(yearParam), m: Number(monthParam), d: Number(dayParam) });
       setParamAbsenceId(DEFAULT_ABSENCE_ID_FROM_PARAMS);
       setFromParams(true);
       setEditItem(null);
@@ -792,7 +814,7 @@ function LetterPage() {
 
   const handleEditClick = (item: any) => {
     setEditItem(item);
-    setParamCalValue(null);
+    setParamDay(null);
     setParamAbsenceId(null);
     setFromParams(false);
     setShowForm(true);
@@ -804,14 +826,14 @@ function LetterPage() {
   const handleFormClose = () => {
     setShowForm(false);
     setEditItem(null);
-    setParamCalValue(null);
+    setParamDay(null);
     setParamAbsenceId(null);
     setFromParams(false);
   };
 
   const openNewForm = () => {
     setEditItem(null);
-    setParamCalValue(null);
+    setParamDay(null);
     setParamAbsenceId(null);
     setFromParams(false);
     setShowForm(true);
@@ -835,14 +857,16 @@ function LetterPage() {
 
       {showForm && (
         <LetterForm
+          key={shiftWork?.id ?? "no-shift"}   // remount khi shift_work load xong
           onClose={handleFormClose}
           letters={letters || []}
           token={token}
           editData={editItem || undefined}
           defaultAbsence={editItem || paramAbsenceId ? undefined : currentLetter}
-          initialCalValue={paramCalValue ?? undefined}
+          initialCalValue={paramCalValue}
           initialAbsenceId={paramAbsenceId ?? undefined}
           fromParams={fromParams}
+          shiftWork={shiftWork}
           onSuccess={handleSuccess}
         />
       )}
